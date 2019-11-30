@@ -3,7 +3,7 @@ grails.plugin.springsecurity.rest.token.storage.jwt.secret = '***REMOVED***'
 grails.plugin.springsecurity.filterChain.chainMap = [
         //Stateless chain
         [
-                pattern: '/secret/**',
+                pattern: '/api/**',
                 filters: 'JOINED_FILTERS,-anonymousAuthenticationFilter,-exceptionTranslationFilter,-authenticationProcessingFilter,-securityContextPersistenceFilter,-rememberMeAuthenticationFilter'
         ],
 
