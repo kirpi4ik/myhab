@@ -1,0 +1,39 @@
+ext {
+    grailsApps = ['app']
+    grailsPlugins = ['plugin']
+}
+
+subprojects { project ->
+    boolean isGrailsApp = grailsApps.contains(project.name)
+    boolean isGrailsPlugin = grailsPlugins.contains(project.name)
+    boolean isGrailsProject = isGrailsApp || isGrailsPlugin
+
+    if (isGrailsProject) {
+        apply plugin: "idea"
+    }
+}
+task copyClientResources(dependsOn: ':web-vue:build') { // <1>
+    group = 'build'
+    description = 'Copy client resources into server'
+}
+
+task assembleServerAndClient(dependsOn: ['copyClientResources', ':server:assemble']) { // <2>
+    group = 'build'
+    description = 'Build combined server & web-vue JAR/WAR'
+
+    doLast {
+        copy {
+            from fileTree(dir: "${project(':server').buildDir}/libs/") // <3>
+            into "$rootDir/build/"
+        }
+
+        logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue projects."
+    }
+}
+
+copyClientResources.doFirst { // <4>
+    copy {
+        from "${project(':web-vue').projectDir}/dist"
+        into "${project(':server').buildDir}/resources/main/public"
+    }
+}
