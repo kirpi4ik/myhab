@@ -2,16 +2,11 @@ ext {
     grailsApps = ['app']
     grailsPlugins = ['plugin']
 }
-
 subprojects { project ->
-    boolean isGrailsApp = grailsApps.contains(project.name)
-    boolean isGrailsPlugin = grailsPlugins.contains(project.name)
-    boolean isGrailsProject = isGrailsApp || isGrailsPlugin
-
-    if (isGrailsProject) {
-        apply plugin: "idea"
-    }
+    version "2.0.0"
+    group "eu.devexpert.madhouse"
 }
+
 task copyClientResources(dependsOn: ':web-vue:build') { // <1>
     group = 'build'
     description = 'Copy client resources into server'
