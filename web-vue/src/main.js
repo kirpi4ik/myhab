@@ -1,13 +1,18 @@
 import Vue from 'vue'
-import App from './App.vue'
+import App from './App'
 import router from './router'
-import './assets/css/bootstrap.css'
-import './assets/css/grails.css'
-import './assets/css/main.css'
+import CoreuiVue from '@coreui/vue'
+import { iconsSet as icons } from './assets/icons/icons.js'
 
-Vue.config.productionTip = false
+Vue.config.performance = true
+Vue.use(CoreuiVue)
 
 new Vue({
+  el: '#app',
   router,
-  render: h => h(App),
-}).$mount('#app')
+  icons,
+  template: '<App/>',
+  components: {
+    App
+  },
+})
