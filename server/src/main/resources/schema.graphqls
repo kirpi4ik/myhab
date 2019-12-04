@@ -1,0 +1,14 @@
+type Query{
+    additionalField : EventType
+    additionalFieldNonNull : EventType!
+    additionalFields : [EventType]
+    additionalFieldsNonNull : [EventType!]!
+    coolODSBasedField: EventType
+    freestyleBasedField: EventType
+}
+type Mutation {
+    save(name: String) : EventType
+}
+type EventType{
+    permaLink: String
+}
