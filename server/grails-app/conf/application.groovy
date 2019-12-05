@@ -42,9 +42,11 @@ grails.plugin.springsecurity.controllerAnnotations.staticRules = [
         [pattern: '/**/images/**', access: ['permitAll']],
         [pattern: '/**/favicon.ico', access: ['permitAll']],
         [pattern: '/graphql/**', access: 'isAuthenticated()'],
+        [pattern: '/actuator/**', access: ['permitAll']],
         [pattern: '/admin/**', access: ['ROLE_ADMIN', 'isFullyAuthenticated()']]
 ]
 grails.plugin.springsecurity.filterChain.chainMap = [
+        [pattern: '/actuator/**', filters: 'anonymousAuthenticationFilter,restTokenValidationFilter,restExceptionTranslationFilter,filterInvocationInterceptor'],
         [pattern: '/api/public/**', filters: 'anonymousAuthenticationFilter,restTokenValidationFilter,restExceptionTranslationFilter,filterInvocationInterceptor'],
         [pattern: '/api/**', filters: 'JOINED_FILTERS,-anonymousAuthenticationFilter,-exceptionTranslationFilter,-authenticationProcessingFilter,-securityContextPersistenceFilter'],
         [pattern: '/graphql', filters: 'JOINED_FILTERS,-anonymousAuthenticationFilter,-exceptionTranslationFilter,-authenticationProcessingFilter,-securityContextPersistenceFilter', access: ['ROLE_ADMIN']],

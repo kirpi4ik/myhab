@@ -1,163 +1,172 @@
 ---
 grails:
-    profile: vue
-    codegen:
-        defaultPackage: madhouse.v2
-    gorm:
-        reactor:
-            # Whether to translate GORM events into Reactor events
-            # Disabled by default for performance reasons
-            events: false
+  profile: vue
+  codegen:
+    defaultPackage: madhouse.v2
+  gorm:
+    reactor:
+      # Whether to translate GORM events into Reactor events
+      # Disabled by default for performance reasons
+      events: false
 info:
-    app:
-        name: '@info.app.name@'
-        version: '@info.app.version@'
-        grailsVersion: '@info.app.grailsVersion@'
+  app:
+    name: '@info.app.name@'
+    version: '@info.app.version@'
+    grailsVersion: '@info.app.grailsVersion@'
 spring:
-    jmx:
-        unique-names: true
-    main:
-        banner-mode: "off"
-    groovy:
-        template:
-            check-template-location: false
-    devtools:
-        restart:
-            additional-exclude:
-                - '*.gsp'
-                - '**/*.gsp'
-                - '*.gson'
-                - '**/*.gson'
-                - 'logback.groovy'
-                - '*.properties'
+  jmx:
+    unique-names: true
+  main:
+    banner-mode: "off"
+  groovy:
+    template:
+      check-template-location: false
+  devtools:
+    restart:
+      additional-exclude:
+        - '*.gsp'
+        - '**/*.gsp'
+        - '*.gson'
+        - '**/*.gson'
+        - 'logback.groovy'
+        - '*.properties'
 management:
-    endpoints:
-        enabled-by-default: false
+  endpoints:
+    enabled-by-default: true
+    web:
+      base-path: "/actuator"
+      path-mapping.health: healthcheck
+  endpoint:
+    info:
+      enabled: true
+    health:
+        show-details: when_authorized
+
 
 ---
 grails:
-    mime:
-        disable:
-            accept:
-                header:
-                    userAgents:
-                        - Gecko
-                        - WebKit
-                        - Presto
-                        - Trident
-        types:
-            json:
-              - application/json
-              - text/json   
-            hal:
-              - application/hal+json
-              - application/hal+xml  
-            xml:
-              - text/xml
-              - application/xml                                 
-            atom: application/atom+xml
-            css: text/css
-            csv: text/csv
-            js: text/javascript
-            rss: application/rss+xml
-            text: text/plain
-            all: '*/*'            
-    urlmapping:
-        cache:
-            maxsize: 1000
-    controllers:
-        defaultScope: singleton
-    converters:
-        encoding: UTF-8
+  mime:
+    disable:
+      accept:
+        header:
+          userAgents:
+            - Gecko
+            - WebKit
+            - Presto
+            - Trident
+    types:
+      json:
+        - application/json
+        - text/json
+      hal:
+        - application/hal+json
+        - application/hal+xml
+      xml:
+        - text/xml
+        - application/xml
+      atom: application/atom+xml
+      css: text/css
+      csv: text/csv
+      js: text/javascript
+      rss: application/rss+xml
+      text: text/plain
+      all: '*/*'
+  urlmapping:
+    cache:
+      maxsize: 1000
+  controllers:
+    defaultScope: singleton
+  converters:
+    encoding: UTF-8
 
 ---
 grails:
-    cors:
-        enabled: true
+  cors:
+    enabled: true
 ---
 hibernate:
-    cache:
-        queries: false
-        use_second_level_cache: false
-        use_query_cache: false
+  cache:
+    queries: false
+    use_second_level_cache: false
+    use_query_cache: false
 dataSource:
-    pooled: true
-    jmxExport: true
-    driverClassName: org.h2.Driver
-    username: sa
-    password: ''
+  pooled: true
+  jmxExport: true
+  driverClassName: org.h2.Driver
+  username: sa
+  password: ''
 
 environments:
-    development:
-        dataSource:
-            dbCreate: update
-            url: jdbc:postgresql://localhost:5432/madhouse_v2_0
-            username: "madhouse"
-            password: "kirpi4ik"
-            driverClassName: "org.postgresql.Driver"
-            dialect: "org.hibernate.dialect.PostgreSQLDialect"
-            logSql: false
-            properties:
-                jmxEnabled: true
-                initialSize: 5
-                maxActive: 50
-                minIdle: 5
-                maxIdle: 25
-                maxWait: 10000
-                maxAge: 600000
-                timeBetweenEvictionRunsMillis: 5000
-                minEvictableIdleTimeMillis: 60000
-                validationQuery: SELECT 1
-                validationQueryTimeout: 3
-                validationInterval: 15000
-                testOnBorrow: true
-                testWhileIdle: true
-                testOnReturn: false
-                jdbcInterceptors: ConnectionState
-                defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
-        logging:
-            jul:
-                usebridge: true
-        plugin:
-            springsecurity:
-                debug:
-                    useFilter: true
-    test:
-        dataSource:
-            dbCreate: update
-            url: jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
-    production:
-        dataSource:
-            dbCreate: update
-            url: jdbc:postgresql://localhost:5432/madhouse_v2_0
-            username: "madhouse"
-            password: "kirpi4ik"
-            driverClassName: "org.postgresql.Driver"
-            dialect: "org.hibernate.dialect.PostgreSQLDialect"
-            logSql: false
-            properties:
-                jmxEnabled: true
-                initialSize: 5
-                maxActive: 50
-                minIdle: 5
-                maxIdle: 25
-                maxWait: 10000
-                maxAge: 600000
-                timeBetweenEvictionRunsMillis: 5000
-                minEvictableIdleTimeMillis: 60000
-                validationQuery: SELECT 1
-                validationQueryTimeout: 3
-                validationInterval: 15000
-                testOnBorrow: true
-                testWhileIdle: true
-                testOnReturn: false
-                jdbcInterceptors: ConnectionState
-                defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+  development:
+    dataSource:
+      dbCreate: update
+      url: jdbc:postgresql://localhost:5432/madhouse_v2_0
+      username: "madhouse"
+      password: "kirpi4ik"
+      driverClassName: "org.postgresql.Driver"
+      dialect: "org.hibernate.dialect.PostgreSQLDialect"
+      logSql: false
+      properties:
+        jmxEnabled: true
+        initialSize: 5
+        maxActive: 50
+        minIdle: 5
+        maxIdle: 25
+        maxWait: 10000
+        maxAge: 600000
+        timeBetweenEvictionRunsMillis: 5000
+        minEvictableIdleTimeMillis: 60000
+        validationQuery: SELECT 1
+        validationQueryTimeout: 3
+        validationInterval: 15000
+        testOnBorrow: true
+        testWhileIdle: true
+        testOnReturn: false
+        jdbcInterceptors: ConnectionState
+        defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+    logging:
+      jul:
+        usebridge: true
+    plugin:
+      springsecurity:
+        debug:
+          useFilter: true
+  test:
+    dataSource:
+      dbCreate: update
+      url: jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+  production:
+    dataSource:
+      dbCreate: update
+      url: jdbc:postgresql://localhost:5432/madhouse_v2_0
+      username: "madhouse"
+      password: "kirpi4ik"
+      driverClassName: "org.postgresql.Driver"
+      dialect: "org.hibernate.dialect.PostgreSQLDialect"
+      logSql: false
+      properties:
+        jmxEnabled: true
+        initialSize: 5
+        maxActive: 50
+        minIdle: 5
+        maxIdle: 25
+        maxWait: 10000
+        maxAge: 600000
+        timeBetweenEvictionRunsMillis: 5000
+        minEvictableIdleTimeMillis: 60000
+        validationQuery: SELECT 1
+        validationQueryTimeout: 3
+        validationInterval: 15000
+        testOnBorrow: true
+        testWhileIdle: true
+        testOnReturn: false
+        jdbcInterceptors: ConnectionState
+        defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
 graphql:
+  enabled: true
+  graphiql:
     enabled: true
-    graphiql:
-        enabled: true
-        path: /graphiql
-        template-path: classpath:graphiql/index.html
-        template-parameters:
-        page-title: GraphiQL
+    path: /graphiql
+    template-path: classpath:graphiql/index.html
+    template-parameters:
+    page-title: GraphiQL
