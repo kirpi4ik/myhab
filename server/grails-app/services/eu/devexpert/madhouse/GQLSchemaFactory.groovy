@@ -9,11 +9,13 @@ import graphql.schema.GraphQLSchema
 import graphql.schema.idl.*
 import org.grails.datastore.mapping.model.MappingContext
 import org.grails.gorm.graphql.Schema
+import org.springframework.core.io.ClassPathResource
+import org.springframework.core.io.Resource
 
 import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition
 
 class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
-    org.springframework.core.io.Resource gqlSchema
+    Resource gqlSchema
     def schemaGenerator = new SchemaGenerator()
     def schemaParser = new SchemaParser();
 
@@ -30,8 +32,8 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
     }
 
     def loadidl(GraphQLSchema initialSchemaBuilder) {
-        initialSchemaBuilder.codeRegistry
-        def schemasContent = [gqlSchema.file.text, new SchemaPrinter().print(initialSchemaBuilder)]
+        def stream = new ClassPathResource("schema.graphqls").inputStream
+        def schemasContent = [ stream.text, new SchemaPrinter().print(initialSchemaBuilder)]
         TypeDefinitionRegistry loadedFromFileDefRegistry
         schemasContent.each { idlSchemaContent ->
             loadedFromFileDefRegistry = schemaParser.parse(idlSchemaContent);
@@ -45,12 +47,13 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
                     schemaDefinitionRegistry.add(definition);
                 }
             }
-
-
         }
         schemaDefinitionRegistry.add(newObjectTypeDefinition().fieldDefinitions(queryDefList).name(TYPE_QUERY).build());
         schemaDefinitionRegistry.add(newObjectTypeDefinition().fieldDefinitions(mutationDefList).name(TYPE_MUTATION).build());
-        schemaDefinitionRegistry.addAll(objectTypeExtensions);
+        objectTypeExtensions.each {
+            schemaDefinitionRegistry.add(it)
+        }
+
 
         def schema = schemaGenerator.makeExecutableSchema(schemaDefinitionRegistry, RuntimeWiring.newRuntimeWiring().wiringFactory(new WireFactory()).codeRegistry(initialSchemaBuilder.codeRegistry).build())
         return schema
