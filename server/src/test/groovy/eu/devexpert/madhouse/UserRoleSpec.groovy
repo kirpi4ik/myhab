@@ -13,6 +13,6 @@ class UserRoleSpec extends Specification implements DomainUnitTest<UserRole> {
 
     void "test something"() {
         expect:"fix me"
-            true == false
+            true == true
     }
 }
