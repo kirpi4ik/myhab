@@ -1,7 +1,10 @@
 import eu.devexpert.madhouse.GQLSchemaFactory
 import eu.devexpert.madhouse.UserPasswordEncoderListener
+import eu.devexpert.madhouse.auth.ClaimProvider
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 beans = {
+    passwordEncoder(BCryptPasswordEncoder)
     userPasswordEncoderListener(UserPasswordEncoderListener)
     graphQLSchemaGenerator(GQLSchemaFactory) {
         deleteResponseHandler = ref("graphQLDeleteResponseHandler")
@@ -18,5 +21,6 @@ beans = {
         listArguments = '#{grailsGraphQLConfiguration.getListArguments()}'
         gqlSchema = "classpath:schema.graphqls"
     }
+    customClaimProvider(ClaimProvider)
 
 }

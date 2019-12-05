@@ -11,6 +11,10 @@ class Role implements Serializable {
 
     String authority
 
+    Role(String authority) {
+        this()
+        this.authority = authority
+    }
     static constraints = {
         authority nullable: false, blank: false, unique: true
     }
