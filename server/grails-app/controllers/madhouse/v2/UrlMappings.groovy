@@ -15,8 +15,10 @@ class UrlMappings {
         //tag::defaultPage[]
         if ( Environment.current == Environment.PRODUCTION ) {
             '/'(uri: '/index.html')
+            '/error'(uri: '/index.html')
         } else {
             '/'(controller: 'application', action:'index')
+            '/error'(controller: 'application', action:'index')
         }
         //end::defaultPage[]
 

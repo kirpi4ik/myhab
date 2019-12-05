@@ -66,6 +66,7 @@ dependencies {
     runtime "com.h2database:h2"
     compile 'org.postgresql:postgresql:9.4.1212'
 
+    compile "org.grails.plugins:spring-security-rest:3.0.0.RC1"
     runtime "org.apache.tomcat:tomcat-jdbc"
     runtime "javax.xml.bind:jaxb-api:2.3.0"
     testCompile "org.grails:grails-gorm-testing-support"

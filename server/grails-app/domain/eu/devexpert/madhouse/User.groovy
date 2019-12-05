@@ -24,6 +24,12 @@ class User implements Serializable {
     String lastName
     String name
 
+    User(String username, String password) {
+        this()
+        this.username = username
+        this.password = password
+    }
+
     Set<Role> getAuthorities() {
         (UserRole.findAllByUser(this) as List<UserRole>)*.role as Set<Role>
     }

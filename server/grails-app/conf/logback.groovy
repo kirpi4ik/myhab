@@ -35,3 +35,10 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
 }
 root(ERROR, ['STDOUT'])
+
+logger 'eu.devexpert', DEBUG, ['STDOUT', 'FULL_STACKTRACE']
+logger 'org.springframework.security', DEBUG, ['STDOUT']
+logger 'grails.plugin.springsecurity', DEBUG, ['STDOUT']
+logger 'grails.plugin.springsecurity.web.filter.DebugFilter', INFO, ['STDOUT']
+logger 'org.springframework', ERROR, ['STDOUT']
+logger 'org.hibernate.', ERROR, ['STDOUT']

@@ -115,6 +115,13 @@ environments:
                 testOnReturn: false
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+        logging:
+            jul:
+                usebridge: true
+        plugin:
+            springsecurity:
+                debug:
+                    useFilter: true
     test:
         dataSource:
             dbCreate: update
