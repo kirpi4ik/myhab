@@ -60,7 +60,7 @@ dependencies {
 
     compileOnly "io.micronaut:micronaut-inject-groovy"
     console "org.grails:grails-console"
-    profile "org.grails.profiles:angular"
+    profile "org.grails.profiles:vue"
     runtime "org.glassfish.web:el-impl:2.1.2-b03"
 
     runtime "com.h2database:h2"
@@ -84,27 +84,6 @@ bootRun {
     systemProperty springProfilesActive, System.getProperty(springProfilesActive)
 }
 
-task copyDependencies() {
-    def libs = [:]
-    configurations.runtime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
-        def prefix = ""
-        if (libs["${artifact.name}.${artifact.extension}"] != null) {
-            prefix = "-${new Random().nextInt(2)}"
-            print("DUPLICATES")
-        } else {
-            libs << ["${artifact.name}.${artifact.extension}": artifact.file]
-        }
-
-        copy {
-            from artifact.file
-            into new File("$buildDir/dependencies")
-            rename { name -> "${artifact.name}${prefix}.${artifact.extension}" }
-        }
-
-    }
-}
-
-//bootJar.dependsOn("copyDependencies")
 bootJar {
     rootSpec.filesMatching('**/*.jar', { jar ->
         String groupId = jar.file.parentFile.parentFile.parentFile.parentFile.name
