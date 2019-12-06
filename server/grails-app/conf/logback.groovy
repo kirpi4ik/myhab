@@ -1,40 +1,164 @@
 import grails.util.BuildSettings
 import grails.util.Environment
-import org.springframework.boot.logging.logback.ColorConverter
-import org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter
+import net.logstash.logback.composite.GlobalCustomFieldsJsonProvider
+import net.logstash.logback.composite.loggingevent.*
+import net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder
+import net.logstash.logback.stacktrace.ShortenedThrowableConverter
+import org.springframework.boot.system.ApplicationPid
 
-import java.nio.charset.StandardCharsets
+import static groovy.json.JsonOutput.toJson
 
-conversionRule 'clr', ColorConverter
-conversionRule 'wex', WhitespaceThrowableProxyConverter
+//conversionRule 'clr', ColorConverterrter
+//conversionRule 'wex', WhitespaceThrowableProxyConverteronverter
 
+def jsonPattern = """{"log":{"ts_date":"%d{ISO8601}", "thread":"[%t]", "level" : "%level", "reqMethod":"%X{reqMethod}","reqUrl":"%X{reqUrl}","reqPayload":%X{reqPayload},"reqHeaders":%X{reqHeaders},"authUser":"%X{authUser}","remoteIp":"%X{remoteIp}", "requestId":"%X{requestId}","respStatus":"%X{respStatus}", "logger":"%logger{36}", "message": "%msg", "stacktrace":"%xThrowable" }}%n"""
 // See http://logback.qos.ch/manual/groovy.html for details on configuration
 appender('STDOUT', ConsoleAppender) {
-    encoder(PatternLayoutEncoder) {
-        charset = StandardCharsets.UTF_8
+    encoder(LoggingEventCompositeJsonEncoder) {
+        providers(LoggingEventJsonProviders) {
+            timestamp(LoggingEventFormattedTimestampJsonProvider) {
+                fieldName = 'ts_date'
+                timeZone = 'UTC'
+                pattern = 'yyyy-MM-dd HH:mm:ss.SSS'
+            }
+            logLevel(LogLevelJsonProvider) {
+                fieldName = "level"
+            }
+            loggerName(LoggerNameJsonProvider) {
+                fieldName = 'logger'
+                shortenedLoggerNameLength = 35
+            }
+            message(MessageJsonProvider) {
+                fieldName = 'message'
+            }
+            globalCustomFields(GlobalCustomFieldsJsonProvider) {
+                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "1.3.2")}"
+            }
+            threadName(ThreadNameJsonProvider) {
+                fieldName = 'thread'
+            }
+            mdc(MdcJsonProvider) {
+//        includeMdcKeyNames = ["reqMethod", "reqUrl", "request", "authUser", "remoteIp", "requestId", "respStatus"]
 
-        pattern =
-                '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} ' + // Date
-                        '%clr(%5p) ' + // Log level
-                        '%clr(---){faint} %clr([%15.15t]){faint} ' + // Thread
-                        '%clr(%-40.40logger{39}){cyan} %clr(:){faint} ' + // Logger
-                        '%m%n%wex' // Message
+            }
+            arguments(ArgumentsJsonProvider)
+            stackTrace(StackTraceJsonProvider) {
+                fieldName = "stacktrace"
+                throwableConverter(ShortenedThrowableConverter) {
+                    maxDepthPerThrowable = 20
+                    maxLength = 8192
+                    shortenedClassNameLength = 35
+                    exclude = /sun\..*/
+                    exclude = /java\..*/
+                    exclude = /groovy\..*/
+                    exclude = /com\.sun\..*/
+                    rootCauseFirst = true
+                }
+            }
+        }
     }
 }
 
 def targetDir = BuildSettings.TARGET_DIR
 if (Environment.isDevelopmentMode() && targetDir != null) {
     appender("FULL_STACKTRACE", FileAppender) {
-        file = "${targetDir}/stacktrace.log"
+        file = "/var/log/madhouse.log"
         append = true
-        encoder(PatternLayoutEncoder) {
-            charset = StandardCharsets.UTF_8
-            pattern = "%level %logger - %msg%n"
+        encoder(LoggingEventCompositeJsonEncoder) {
+            providers(LoggingEventJsonProviders) {
+                timestamp(LoggingEventFormattedTimestampJsonProvider) {
+                    fieldName = 'ts_date'
+                    timeZone = 'UTC'
+                    pattern = 'yyyy-MM-dd HH:mm:ss.SSS'
+                }
+                logLevel(LogLevelJsonProvider) {
+                    fieldName = "level"
+                }
+                loggerName(LoggerNameJsonProvider) {
+                    fieldName = 'logger'
+                    shortenedLoggerNameLength = 35
+                }
+                message(MessageJsonProvider) {
+                    fieldName = 'message'
+                }
+                globalCustomFields(GlobalCustomFieldsJsonProvider) {
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "1.3.2")}"
+                }
+                threadName(ThreadNameJsonProvider) {
+                    fieldName = 'thread'
+                }
+                mdc(MdcJsonProvider) {
+//          includeMdcKeyNames = ["reqMethod", "reqUrl", "request", "authUser", "remoteIp", "requestId", "respStatus"]
+                }
+                arguments(ArgumentsJsonProvider)
+                stackTrace(StackTraceJsonProvider) {
+                    fieldName = "stacktrace"
+                    throwableConverter(ShortenedThrowableConverter) {
+                        maxDepthPerThrowable = 20
+                        maxLength = 8192
+                        shortenedClassNameLength = 35
+                        exclude = /sun\..*/
+                        exclude = /java\..*/
+                        exclude = /groovy\..*/
+                        exclude = /com\.sun\..*/
+                        rootCauseFirst = true
+                    }
+                }
+            }
         }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
+    root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
+} else {
+    appender("FULL_STACKTRACE", FileAppender) {
+        file = "/var/log/madhouse.log"
+        append = true
+        encoder(LoggingEventCompositeJsonEncoder) {
+            providers(LoggingEventJsonProviders) {
+                timestamp(LoggingEventFormattedTimestampJsonProvider) {
+                    fieldName = 'ts_date'
+                    timeZone = 'UTC'
+                    pattern = 'yyyy-MM-dd HH:mm:ss.SSS'
+                }
+                logLevel(LogLevelJsonProvider) {
+                    fieldName = "level"
+                }
+                loggerName(LoggerNameJsonProvider) {
+                    fieldName = 'logger'
+                    shortenedLoggerNameLength = 35
+                }
+                message(MessageJsonProvider) {
+                    fieldName = 'message'
+                }
+                globalCustomFields(GlobalCustomFieldsJsonProvider) {
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "1.3.2")}"
+                }
+                threadName(ThreadNameJsonProvider) {
+                    fieldName = 'thread'
+                }
+                mdc(MdcJsonProvider) {
+//          includeMdcKeyNames = ["reqMethod", "reqUrl", "request", "authUser", "remoteIp", "requestId", "respStatus"]
+
+                }
+                arguments(ArgumentsJsonProvider)
+                stackTrace(StackTraceJsonProvider) {
+                    fieldName = "stacktrace"
+                    throwableConverter(ShortenedThrowableConverter) {
+                        maxDepthPerThrowable = 20
+                        maxLength = 8192
+                        shortenedClassNameLength = 35
+                        exclude = /sun\..*/
+                        exclude = /java\..*/
+                        exclude = /groovy\..*/
+                        exclude = /com\.sun\..*/
+                        rootCauseFirst = true
+                    }
+                }
+            }
+        }
+    }
+    root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
 }
-root(ERROR, ['STDOUT'])
 
 logger 'eu.devexpert', DEBUG, ['STDOUT', 'FULL_STACKTRACE']
 logger 'org.springframework.security', DEBUG, ['STDOUT']
