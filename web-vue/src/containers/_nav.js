@@ -14,17 +14,23 @@ export default [
             },
             {
                 _name: 'CSidebarNavTitle',
-                _children: ['Theme']
+                _children: ['Control']
             },
             {
                 _name: 'CSidebarNavItem',
-                name: 'Colors',
+                name: 'Lumina',
                 to: '/theme/colors',
                 icon: 'cil-drop'
             },
             {
                 _name: 'CSidebarNavItem',
-                name: 'Typography',
+                name: 'Incalzire',
+                to: '/theme/typography',
+                icon: 'cil-pencil'
+            },
+            {
+                _name: 'CSidebarNavItem',
+                name: 'Temperatura',
                 to: '/theme/typography',
                 icon: 'cil-pencil'
             },
@@ -34,12 +40,12 @@ export default [
             },
             {
                 _name: 'CSidebarNavDropdown',
-                name: 'Cabluri',
+                name: 'Utilizatori',
                 route: '/users',
                 icon: 'cil-puzzle',
                 items: [
                     {
-                        name: 'PDF',
+                        name: 'Lista utilizatorilor',
                         to: '/users',
                         icon: 'cil-puzzle'
                     }

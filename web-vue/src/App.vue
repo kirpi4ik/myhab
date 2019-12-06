@@ -20,12 +20,6 @@
     },
     created () {
       authenticationService.currentUser.subscribe(x => this.currentUser = x);
-    },
-    methods: {
-      logout () {
-        authenticationService.logout();
-        router.push('/login');
-      }
     }
   };
 </script>
