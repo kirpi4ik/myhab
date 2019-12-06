@@ -124,7 +124,6 @@ router.beforeEach((to, from, next) => {
         const hasRole = currentUser.permissions.filter(function (userRole) {
             return authorize.includes(userRole);
         }).length > 0
-        debugger
         if (authorize.length && !hasRole) {
             // role not authorised so redirect to home page
             return next({path: '/pages/403'});
