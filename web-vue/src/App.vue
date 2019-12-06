@@ -3,9 +3,31 @@
 </template>
 
 <script>
-export default {
-  name: 'App'
-}
+  import { authenticationService } from '@/_services';
+  import { router, Role } from '@/_helpers';
+
+  export default {
+    name: 'App',
+    data () {
+      return {
+        currentUser: null
+      };
+    },
+    computed: {
+      isAdmin () {
+        return this.currentUser && this.currentUser.role === Role.Admin;
+      }
+    },
+    created () {
+      authenticationService.currentUser.subscribe(x => this.currentUser = x);
+    },
+    methods: {
+      logout () {
+        authenticationService.logout();
+        router.push('/login');
+      }
+    }
+  };
 </script>
 
 <style lang="scss">
