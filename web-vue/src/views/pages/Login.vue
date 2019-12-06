@@ -95,7 +95,7 @@
                     .then(
                         user => router.push(this.returnUrl),
                         error => {
-                          debugger
+
                             this.error = error;
                             this.loading = false;
                         }
