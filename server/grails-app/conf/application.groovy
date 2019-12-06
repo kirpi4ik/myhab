@@ -31,7 +31,7 @@ grails.plugin.springsecurity.rest.token.validation.enableAnonymousAccess = true
 
 grails.plugin.springsecurity.rejectIfNoRule = false
 grails.plugin.springsecurity.controllerAnnotations.staticRules = [
-        [pattern: '/', access: ['permitAll']],
+        [pattern: '/**', access: ['permitAll']],
         [pattern: '/error', access: ['permitAll']],
         [pattern: '/index', access: ['permitAll']],
         [pattern: '/index.gsp', access: ['permitAll']],
@@ -46,9 +46,10 @@ grails.plugin.springsecurity.controllerAnnotations.staticRules = [
         [pattern: '/admin/**', access: ['ROLE_ADMIN', 'isFullyAuthenticated()']]
 ]
 grails.plugin.springsecurity.filterChain.chainMap = [
-        [pattern: '/actuator/**', filters: 'anonymousAuthenticationFilter,restTokenValidationFilter,restExceptionTranslationFilter,filterInvocationInterceptor'],
         [pattern: '/api/public/**', filters: 'anonymousAuthenticationFilter,restTokenValidationFilter,restExceptionTranslationFilter,filterInvocationInterceptor'],
-        [pattern: '/api/**', filters: 'JOINED_FILTERS,-anonymousAuthenticationFilter,-exceptionTranslationFilter,-authenticationProcessingFilter,-securityContextPersistenceFilter'],
+        [pattern: '/actuator/**', filters: 'anonymousAuthenticationFilter,restTokenValidationFilter,restExceptionTranslationFilter,filterInvocationInterceptor'],
         [pattern: '/graphql', filters: 'JOINED_FILTERS,-anonymousAuthenticationFilter,-exceptionTranslationFilter,-authenticationProcessingFilter,-securityContextPersistenceFilter', access: ['ROLE_ADMIN']],
-        [pattern: '/**', filters: 'JOINED_FILTERS,-restTokenValidationFilter,-restExceptionTranslationFilter']
+        [pattern: '/api/**', filters: 'JOINED_FILTERS,-anonymousAuthenticationFilter,-exceptionTranslationFilter,-authenticationProcessingFilter,-securityContextPersistenceFilter'],
+        [pattern: '/#/**', filters: 'anonymousAuthenticationFilter,restTokenValidationFilter,restExceptionTranslationFilter,filterInvocationInterceptor'],
+        [pattern: '/**', filters: 'anonymousAuthenticationFilter,restTokenValidationFilter,restExceptionTranslationFilter,filterInvocationInterceptor']
 ]
