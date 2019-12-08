@@ -1,8 +1,8 @@
 type Query{
     additionalField : EventType
-    additionalFieldNonNull : EventType!
-    additionalFields : [EventType]
-    additionalFieldsNonNull : [EventType!]!
+#    additionalFieldNonNull : EventType!
+#    additionalFields : [EventType]
+#    additionalFieldsNonNull : [EventType!]!
     coolODSBasedField: EventType
     freestyleBasedField: EventType
 }

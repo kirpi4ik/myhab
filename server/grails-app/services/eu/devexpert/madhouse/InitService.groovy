@@ -1,5 +1,8 @@
 package eu.devexpert.madhouse
 
+import eu.devexpert.madhouse.domain.Role
+import eu.devexpert.madhouse.domain.User
+import eu.devexpert.madhouse.domain.UserRole
 import grails.gorm.transactions.Transactional
 
 @Transactional
