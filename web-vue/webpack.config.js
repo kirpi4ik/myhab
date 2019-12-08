@@ -4,9 +4,6 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 module.exports = {
     mode: 'development',
-    resolve: {
-        extensions: ['.js', '.vue']
-    },
     module: {
         rules: [
             {
@@ -16,6 +13,11 @@ module.exports = {
             {
                 test: /\.js?$/,
                 loader: 'babel-loader'
+            },
+            {
+                test: /\.(graphql|gql)$/,
+                loader: 'graphql-tag/loader',
+                exclude: /node_modules/
             }
         ]
     },
@@ -27,7 +29,7 @@ module.exports = {
     },
     plugins: [
         new VueLoaderPlugin(),
-        new HtmlWebpackPlugin({ template: './src/index.html' })
+        new HtmlWebpackPlugin({template: './src/index.html'})
     ],
     devServer: {
         historyApiFallback: true
@@ -37,5 +39,6 @@ module.exports = {
         config: JSON.stringify({
             apiUrl: 'http://localhost:4000'
         })
-    }
+    },
+
 }
