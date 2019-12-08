@@ -1,5 +1,6 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.domain
 
+import eu.devexpert.madhouse.domain.job.Job
 import grails.rest.Resource
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
@@ -46,10 +47,15 @@ class User implements Serializable {
         email nullable: true
     }
 
+    static hasMany = [favJobs: Job]
+
     static mapping = {
         table '`users`'
         password column: '`password`'
         name formula: 'concat(FIRST_NAME,\' \',LAST_NAME)'
+        version false
+        autowire true
+        favJobs joinTable: [name: "users_fav_jobs", key: 'user_id']
     }
 
 

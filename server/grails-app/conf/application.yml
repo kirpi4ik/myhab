@@ -100,7 +100,7 @@ environments:
   development:
     dataSource:
       dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse_v2_0
+      url: jdbc:postgresql://localhost:5432/madhouse_prod_10_19
       username: "madhouse"
       password: "kirpi4ik"
       driverClassName: "org.postgresql.Driver"
@@ -138,7 +138,7 @@ environments:
   production:
     dataSource:
       dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse_v2_0
+      url: jdbc:postgresql://localhost:5432/madhouse_prod_10_19
       username: "madhouse"
       password: "kirpi4ik"
       driverClassName: "org.postgresql.Driver"

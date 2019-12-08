@@ -1,13 +1,13 @@
 grails.resources.pattern = '/**'
 
-grails.plugin.springsecurity.userLookup.userDomainClassName = 'eu.devexpert.madhouse.User'
+grails.plugin.springsecurity.userLookup.userDomainClassName = 'eu.devexpert.madhouse.domain.User'
 grails.plugin.springsecurity.userLookup.authoritiesPropertyName = 'authorities'
 grails.plugin.springsecurity.userLookup.enabledPropertyName = 'enabled'
 grails.plugin.springsecurity.userLookup.accountExpiredPropertyName = 'accountExpired'
 grails.plugin.springsecurity.userLookup.accountLockedPropertyName = 'accountLocked'
 grails.plugin.springsecurity.userLookup.passwordExpiredPropertyName = 'passwordExpired'
-grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'eu.devexpert.madhouse.UserRole'
-grails.plugin.springsecurity.authority.className = 'eu.devexpert.madhouse.Role'
+grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'eu.devexpert.madhouse.domain.UserRole'
+grails.plugin.springsecurity.authority.className = 'eu.devexpert.madhouse.domain.Role'
 
 grails.plugin.springsecurity.rest.login.active = true
 grails.plugin.springsecurity.rest.login.endpointUrl = "/api/login"
@@ -16,7 +16,7 @@ grails.plugin.springsecurity.rest.logout.endpointUrl = "/api/logout"
 //grails.plugin.springsecurity.rest.token.validation.headerName = "X-Auth-Token"
 
 grails.plugin.springsecurity.rest.token.storage.jwt.useSignedJwt = true
-grails.plugin.springsecurity.rest.token.storage.jwt.expiration = 3600
+grails.plugin.springsecurity.rest.token.storage.jwt.expiration = 36000
 grails.plugin.springsecurity.rest.token.storage.jwt.secret = '***REMOVED***'
 grails.plugin.springsecurity.rest.token.generation.jwt.algorithm = "HS256"
 grails.plugin.springsecurity.rest.token.generation.jwt.jweAlgorithm = "RSA-OAEP"

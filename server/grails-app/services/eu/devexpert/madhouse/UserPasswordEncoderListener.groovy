@@ -1,5 +1,6 @@
 package eu.devexpert.madhouse
 
+import eu.devexpert.madhouse.domain.User
 import grails.plugin.springsecurity.SpringSecurityService
 import org.grails.datastore.mapping.engine.event.AbstractPersistenceEvent
 import org.grails.datastore.mapping.engine.event.PreInsertEvent
