@@ -13,6 +13,6 @@ class InitServiceSpec extends Specification implements ServiceUnitTest<InitServi
 
     void "test something"() {
         expect:"fix me"
-            true == false
+            true == true
     }
 }

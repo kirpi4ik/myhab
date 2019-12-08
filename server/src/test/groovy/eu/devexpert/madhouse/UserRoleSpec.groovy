@@ -1,5 +1,6 @@
 package eu.devexpert.madhouse
 
+import eu.devexpert.madhouse.domain.UserRole
 import grails.testing.gorm.DomainUnitTest
 import spock.lang.Specification
 

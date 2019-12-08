@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.domain
 
 import grails.gorm.DetachedCriteria
 import groovy.transform.ToString
@@ -106,5 +106,6 @@ class UserRole implements Serializable {
         id composite: ['user', 'role']
         version false
     }
+//    static graphql = true
 }
 

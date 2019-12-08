@@ -161,8 +161,10 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
 }
 
 logger 'eu.devexpert', DEBUG, ['STDOUT', 'FULL_STACKTRACE']
-logger 'org.springframework.security', DEBUG, ['STDOUT']
-logger 'grails.plugin.springsecurity', DEBUG, ['STDOUT']
-logger 'grails.plugin.springsecurity.web.filter.DebugFilter', INFO, ['STDOUT']
+logger 'org.springframework.security', ERROR, ['STDOUT']
+logger 'grails.plugin.springsecurity', ERROR, ['STDOUT']
+logger 'grails.plugin.springsecurity.web.filter.DebugFilter', ERROR, ['STDOUT']
 logger 'org.springframework', ERROR, ['STDOUT']
 logger 'org.hibernate.', ERROR, ['STDOUT']
+logger 'org.hibernate.type.descriptor.sql.BasicBinder', TRACE, ['STDOUT']
+logger 'org.hibernate.SQL', TRACE, ['STDOUT']

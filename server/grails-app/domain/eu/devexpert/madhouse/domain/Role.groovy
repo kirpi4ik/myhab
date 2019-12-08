@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.domain
 
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
@@ -23,4 +23,5 @@ class Role implements Serializable {
         table '`sec_roles`'
         cache true
     }
+    static graphql = true
 }
