@@ -1,6 +1,6 @@
 <template>
     <div>
-        <WidgetsBrand/>
+        <ZoneActionsControl/>
 
         <WidgetsDropdown/>
         <CCard>
@@ -459,14 +459,14 @@
 </template>
 
 <script>
-    import WidgetsBrand from './widgets/WidgetsBrand'
-    import MainChartExample from './charts/MainChartExample'
-    import WidgetsDropdown from './widgets/WidgetsDropdown'
+    import ZoneActionsControl from './ZoneActionsControl'
+    import MainChartExample from '../charts/MainChartExample'
+    import WidgetsDropdown from '../widgets/WidgetsDropdown'
 
     export default {
         name: 'Dashboard',
         components: {
-            WidgetsBrand,
+            ZoneActionsControl,
             MainChartExample,
             WidgetsDropdown
         },
@@ -548,15 +548,6 @@
                     $color = 'danger'
                 }
                 return $color
-            },
-            allUsers() {
-                this.$apollo.query({
-                    query: require("../graphql/allUsers.graphql"),
-                    variables: {}
-                })
-                    .then(response => {
-                        this.userList = response.data.userList;
-                    });
             }
         }
     }
