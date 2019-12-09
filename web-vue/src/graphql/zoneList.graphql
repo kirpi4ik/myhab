@@ -1,0 +1,22 @@
+query {
+    zoneList{
+        uid
+        name
+        description
+        parent{
+            uid
+        }
+        peripherals{
+            uid
+            name
+            description
+            category{
+                uid
+                name
+            }
+            connectedTo{
+                uid
+                value
+            }
+        }
+    } }
