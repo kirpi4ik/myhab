@@ -8,7 +8,9 @@ import {Role} from '@/_helpers';
 const TheContainer = () => import('@/containers/TheContainer')
 
 // Views
-const Dashboard = () => import('@/views/Dashboard')
+const Dashboard = () => import('@/views/dashboard/Dashboard')
+
+const Light = () => import('@/views/zones/ZoneLight')
 // Users
 const Users = () => import('@/views/users/Users')
 const User = () => import('@/views/users/User')
@@ -42,6 +44,12 @@ function configRoutes() {
                     path: 'dashboard',
                     name: 'Dashboard',
                     component: Dashboard,
+                    meta: {authorize: [Role.Admin]}
+                },
+                {
+                    path: 'light',
+                    name: 'Light',
+                    component: Light,
                     meta: {authorize: [Role.Admin]}
                 },
                 {

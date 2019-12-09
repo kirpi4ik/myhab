@@ -1,9 +1,0 @@
-query {
-    zoneList{
-        name
-        description
-        parent{
-            uid
-        }
-    }
-}
