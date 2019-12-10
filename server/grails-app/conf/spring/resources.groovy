@@ -1,4 +1,5 @@
 import eu.devexpert.madhouse.GQLSchemaFactory
+import eu.devexpert.madhouse.GraphQLGenerator
 import eu.devexpert.madhouse.UserPasswordEncoderListener
 import eu.devexpert.madhouse.auth.ClaimProvider
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -21,6 +22,11 @@ beans = {
         listArguments = '#{grailsGraphQLConfiguration.getListArguments()}'
         gqlSchema = "classpath:schema.graphqls"
     }
+//    graphQLSchema(graphQLSchemaGenerator: "generate")
+    graphQLGenrator(GraphQLGenerator) {
+        schema = ref("graphQLSchema")
+    }
+    graphQL(graphQLGenrator: "generate")
     customClaimProvider(ClaimProvider)
 
 }
