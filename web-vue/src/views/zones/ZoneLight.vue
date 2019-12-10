@@ -1,7 +1,7 @@
 <template>
     <CRow>
         <template>
-            <CCol md="3" sm="6" v-for="peripheral in peripherals">
+            <CCol md="3" sm="6" v-for="peripheral in peripherals" v-bind:key="peripheral.uid">
                 <div class="card" :class="`card-background text-white`">
                     <div class="card-body pb-2">
                         <slot></slot>
@@ -13,9 +13,9 @@
                             <toggle-button v-model="peripheral.state" color="#82C7EB" :sync="true"
                                            :labels="{checked: 'Aprinde', unchecked: 'Stinge'}"
                                            :switch-color="{checked: 'linear-gradient( #8DFF73, green)', unchecked: 'linear-gradient(#BF0000, #FFBE62)'}"
-                                           :color="{checked: '#00b679', unchecked: '#FF0000', disabled: '#CCCCCC'}"
-                                           :speed="100"
-                                           @change="periphStateChangeHandler({value:peripheral.state, uid:peripheral.data.uid})"
+                                           :color="{checked: '#009663', unchecked: '#FF0000', disabled: '#CCCCCC'}"
+                                           :speed="300"
+                                           @change="periphStateChangeHandler({value:peripheral.state, id:peripheral.data.id, uid:peripheral.data.uid})"
                                            :font-size="14"
                                            :width="250"
                                            :height="40"/>
@@ -27,6 +27,8 @@
     </CRow>
 </template>
 <script>
+    import {GET_ALL_ZONES, UPDATE_PORT_VALUE} from "../../graphql/zones";
+
     export default {
         name: 'ZoneLight',
         data() {
@@ -40,11 +42,7 @@
         },
         methods: {
             loadInitial() {
-                this.$apollo.query({
-                    query: require("../../graphql/zoneList.graphql"),
-                    variables: {}
-                }).then(response => {
-
+                this.$apollo.query({query: GET_ALL_ZONES, variables: {}}).then(response => {
                     this.zone = response.data.zoneList.filter(function (item) {
                         return item.parent == null
                     })[0];
@@ -60,14 +58,18 @@
                 });
             },
             periphStateChangeHandler: function (value, srcEvent) {
-                debugger
+                this.$apollo.mutate({
+                    mutation: UPDATE_PORT_VALUE, variables: {id: 6816, portValue: {value: "OFF"}}
+                }).then(response => {
+
+                });
             }
         }
     }
 </script>
 <style scoped>
     .card-background {
-        background-image: linear-gradient(#5ca2e5, #71c1e6);
+        background-image: linear-gradient(#156cb8, #60a3c2);
     }
 
     .card-footer {
@@ -76,5 +78,9 @@
 
     .toggle-btn {
         margin: auto;
+    }
+
+    div.v-switch-core {
+        border: 1px solid #000000 !important;
     }
 </style>
