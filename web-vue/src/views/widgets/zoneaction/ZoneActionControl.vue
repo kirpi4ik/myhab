@@ -7,7 +7,7 @@
         </div>
         <slot name="body">
             <div class="card-body row text-center">
-                <div class="col" v-on:click="lightNav('xxx')">
+                <div class="col" v-on:click="lightNav(zoneUid, categoryUid)">
                     <div v-if="leftHeader" class="text-value-lg">
                         {{leftHeader}}
                     </div>
@@ -31,6 +31,7 @@
 
 <script>
     import {router} from '@/_helpers';
+
     export default {
         name: 'ZoneActionControl',
         props: {
@@ -40,11 +41,13 @@
             rightFooter: String,
             leftHeader: String,
             leftFooter: String,
+            zoneUid: String,
+            categoryUid: String,
             addHeaderClasses: [String, Array, Object]
         },
         methods: {
-            lightNav: function (parentZone) {
-                router.push({ path: 'light', query: { parentZone: parentZone } })
+            lightNav: function (zoneUid, categoryUid) {
+                router.push({path: 'light', query: {zoneUid: zoneUid, categoryUid: categoryUid}})
             }
         }
     }

@@ -6,17 +6,12 @@ export const GET_ALL_ZONES = gql`
             uid
             name
             description
-            parent{
-                uid
-            }
             peripherals{
-                id
                 uid
                 name
                 description
                 category{
                     uid
-                    name
                 }
                 connectedTo{
                     uid
@@ -24,6 +19,58 @@ export const GET_ALL_ZONES = gql`
                 }
             }
         } }
+`
+export const GET_ZONE_BY_UID = gql`
+    query zoneByUid($uid: String!) {
+        zoneByUid(uid: $uid) {
+            uid
+            name
+            zones {
+                 uid
+                name
+                description
+                peripherals {
+                    uid
+                    name
+                    description
+                    category {
+                        uid
+                    }
+                }
+            }
+            peripherals {
+                uid
+                name
+                description
+                category {
+                    uid
+                }
+            }
+        }
+    }
+
+`
+export const GET_ZONES_ROOT = gql`
+    {
+        zonesRoot {
+            uid
+            name
+            description
+            zones {
+                uid
+                name
+                description
+            }
+            peripherals {
+                uid
+                name
+                description
+                category {
+                    uid
+                }
+            }
+        }
+    }
 `
 
 export const UPDATE_PORT_VALUE = gql`

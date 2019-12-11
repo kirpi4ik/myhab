@@ -9,6 +9,8 @@
                         right-header="Exterior"
                         right-footer="Iluminat"
                         icon="lightbulb"
+                        zoneUid=""
+                        categoryUid="487f2d81-4420-46cd-88b8-d856cba4a374"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -19,7 +21,10 @@
                         left-footer="Temperatura"
                         right-header="Exterior"
                         right-footer="Temperatura"
-                        icon="thermometer-half">
+                        icon="thermometer-half"
+                        zoneUid=""
+                        categoryUid="487f2d81-4420-46cd-88b8-d856cba4a374"
+                >
                 </ZoneActionControl>
             </CCol>
             <CCol md="3" sm="6">
@@ -29,7 +34,10 @@
                         left-footer="Incalzire"
                         right-header="Parter"
                         right-footer="Incalzire"
-                        icon="fire">
+                        icon="fire"
+                        zoneUid=""
+                        categoryUid="487f2d81-4420-46cd-88b8-d856cba4a374"
+                >
                 </ZoneActionControl>
             </CCol>
         </template>
