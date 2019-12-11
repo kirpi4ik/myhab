@@ -33,7 +33,7 @@ public enum EntityType {
 //        return (Class<T>)typeClass;
 //    }
 
-    boolean isEqual(String name) {
+    public boolean isEqual(String name) {
         return this.name().equalsIgnoreCase(name);
     }
 }
