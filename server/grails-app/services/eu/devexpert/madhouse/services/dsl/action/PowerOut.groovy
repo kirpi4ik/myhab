@@ -16,7 +16,7 @@ class PowerOut implements EventPublisher {
 
     @Transactional
     def callAction(params) {
-        if (params != null) {
+        if (params != null) {Collections.emptyList()
             def ports = []
             if (params.portUids != null) {
                 params.portUids.each { uid ->

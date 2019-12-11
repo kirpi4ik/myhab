@@ -199,6 +199,18 @@ type EventData {
     uid: String
 }
 
+type EventDataResponse {
+    id: Long
+    p0: String
+    p1: String
+    p2: String
+    p3: String
+    p4: String
+    p5: String
+    p6: String
+    uid: String
+}
+
 type EventDefinition {
     entityType: EntityType
     "A list of validation errors on the entity"
@@ -248,10 +260,6 @@ type EventTrigger {
     tsCreated: Date
     tsUpdated: Date
     uid: String
-}
-
-type EventType {
-    permaLink: String
 }
 
 type Job {
@@ -335,13 +343,13 @@ type Mutation {
     portValueCreate(portValue: PortValueCreate): PortValue
     portValueDelete(id: Long!): DeleteResult
     portValueUpdate(id: Long!, portValue: PortValueUpdate): PortValue
+    pushEvent(input: EventDatInput): EventDataResponse
     rackCreate(rack: RackCreate): Rack
     rackDelete(id: Long!): DeleteResult
     rackUpdate(id: Long!, rack: RackUpdate): Rack
     roleCreate(role: RoleCreate): Role
     roleDelete(id: Long!): DeleteResult
     roleUpdate(id: Long!, role: RoleUpdate): Role
-    save(name: String): EventType
     scenarioCreate(scenario: ScenarioCreate): Scenario
     scenarioDelete(id: Long!): DeleteResult
     scenarioUpdate(id: Long!, scenario: ScenarioUpdate): Scenario
@@ -402,68 +410,62 @@ type PortValue {
 }
 
 type Query {
-    additionalField: EventType
     cable(id: Long!): Cable
     cableCount: Int
-    cableList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Cable]
-    """
-    additionalFieldNonNull : EventType!
-    additionalFields : [EventType]
-    additionalFieldsNonNull : [EventType!]!
-    """
-    coolODSBasedField: EventType
+    cableList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Cable]
     device(id: Long!): Device
     deviceAccount(id: Long!): DeviceAccount
     deviceAccountCount: Int
-    deviceAccountList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceAccount]
+    deviceAccountList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DeviceAccount]
     deviceCategory(id: Long!): DeviceCategory
     deviceCategoryCount: Int
-    deviceCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceCategory]
+    deviceCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DeviceCategory]
     deviceCount: Int
-    deviceList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Device]
+    deviceList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Device]
     devicePeripheral(id: Long!): DevicePeripheral
     devicePeripheralCount: Int
-    devicePeripheralList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DevicePeripheral]
+    devicePeripheralList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DevicePeripheral]
     devicePort(id: Long!): DevicePort
     devicePortCount: Int
-    devicePortList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DevicePort]
+    devicePortList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DevicePort]
     deviceType(id: Long!): DeviceType
     deviceTypeCount: Int
-    deviceTypeList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceType]
+    deviceTypeList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DeviceType]
     entityConfiguration(id: Long!): EntityConfiguration
     entityConfigurationCount: Int
-    entityConfigurationList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [EntityConfiguration]
+    entityConfigurationList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [EntityConfiguration]
     eventLog(id: Long!): EventLog
     eventLogCount: Int
-    eventLogList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [EventLog]
-    freestyleBasedField: EventType
+    eventLogList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [EventLog]
     layer(id: Long!): Layer
     layerCount: Int
-    layerList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Layer]
+    layerList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Layer]
     patchPanel(id: Long!): PatchPanel
     patchPanelCount: Int
-    patchPanelList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PatchPanel]
+    patchPanelList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [PatchPanel]
     peripheralCategory(id: Long!): PeripheralCategory
     peripheralCategoryCount: Int
-    peripheralCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PeripheralCategory]
+    peripheralCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [PeripheralCategory]
     portValue(id: Long!): PortValue
     portValueCount: Int
-    portValueList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PortValue]
+    portValueList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [PortValue]
     rack(id: Long!): Rack
     rackCount: Int
-    rackList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Rack]
+    rackList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Rack]
     role(id: Long!): Role
     roleCount: Int
-    roleList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Role]
+    roleList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Role]
     scenario(id: Long!): Scenario
     scenarioCount: Int
-    scenarioList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Scenario]
+    scenarioList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Scenario]
     user(id: Long!): User
     userCount: Int
-    userList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [User]
+    userList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [User]
     zone(id: Long!): Zone
+    zoneByUid(uid: String!): Zone
     zoneCount: Int
-    zoneList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Zone]
+    zoneList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Zone]
+    zonesByParentUid(uid: String!): ZonePagedResult
 }
 
 type Rack {
@@ -538,6 +540,11 @@ type Zone {
     uid: String
     version: Long
     zones: [Zone]
+}
+
+type ZonePagedResult {
+    results: [Zone]
+    totalCount: Long
 }
 
 enum DeviceModel {
@@ -1029,6 +1036,16 @@ input EntityConfigurationUpdate {
     uid: String
     value: String
     version: Long
+}
+
+input EventDatInput {
+    p0: String
+    p1: String
+    p2: String
+    p3: String
+    p4: String
+    p5: String
+    p6: String
 }
 
 input EventDataCreateNested {
