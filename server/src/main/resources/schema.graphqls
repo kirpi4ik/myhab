@@ -1,14 +1,25 @@
-type Query{
-    additionalField : EventType
-#    additionalFieldNonNull : EventType!
-#    additionalFields : [EventType]
-#    additionalFieldsNonNull : [EventType!]!
-    coolODSBasedField: EventType
-    freestyleBasedField: EventType
-}
 type Mutation {
-    save(name: String) : EventType
+    pushEvent(input:EventDatInput) : EventDataResponse
 }
-type EventType{
-    permaLink: String
+
+type EventDataResponse {
+    id: Long
+    p0: String
+    p1: String
+    p2: String
+    p3: String
+    p4: String
+    p5: String
+    p6: String
+    uid: String
+}
+
+input EventDatInput {
+    p0: String
+    p1: String
+    p2: String
+    p3: String
+    p4: String
+    p5: String
+    p6: String
 }

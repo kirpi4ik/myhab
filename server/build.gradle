@@ -60,8 +60,8 @@ dependencies {
     compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.2'
 
     compile "com.graphql-java:graphql-java:13.0"
-    compile "org.grails.plugins:gorm-graphql:2.0.0.BUILD-SNAPSHOT"
-    compile "org.grails:gorm-graphql:2.0.0.BUILD-SNAPSHOT"
+    compile "org.grails.plugins:gorm-graphql:2.0.1.BUILD-SNAPSHOT"
+    compile "org.grails:gorm-graphql:2.0.1.BUILD-SNAPSHOT"
 
 
     compileOnly "io.micronaut:micronaut-inject-groovy"
@@ -73,6 +73,9 @@ dependencies {
     compile 'org.postgresql:postgresql:9.4.1212'
 
     compile "org.grails.plugins:spring-security-rest:3.0.0.RC1"
+    compile group: 'org.kohsuke', name: 'groovy-sandbox', version: '1.18'
+    compile 'org.jsoup:jsoup:1.11.2'
+
     runtime "org.apache.tomcat:tomcat-jdbc"
     runtime "javax.xml.bind:jaxb-api:2.3.0"
     testCompile "org.grails:grails-gorm-testing-support"
