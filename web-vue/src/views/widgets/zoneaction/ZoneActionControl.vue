@@ -1,5 +1,5 @@
 <template>
-    <div class="card">
+    <div >
         <div class="card-header content-center text-white p-2" :class="[`header-color-${color}`, addHeaderClasses]">
             <slot/>
             <font-awesome-icon :icon="['fas', `${icon}`]" size="3x"/>

@@ -1,6 +1,16 @@
 <template>
     <div>
         <CRow>
+            <div class="bottom-space">
+                <CLink v-on:click="navRoot">Acasa</CLink>
+                >
+            </div>
+            <div v-for="link in breadcrumb" v-bind:key="link.zoneUid" class="bottom-space">
+                <CLink v-text="link.name" v-on:click="navZone(link.zoneUid)"></CLink>
+                >
+            </div>
+        </CRow>
+        <CRow>
             <CCol md="3" sm="6" v-for="zone in zones" v-bind:key="zone.uid">
                 <div class="card" :class="`zone-card-background text-white`"
                      v-on:click="navZone(zone.uid)">
@@ -18,7 +28,6 @@
             </CCol>
         </CRow>
         <CRow>
-
             <CCol md="3" sm="6" v-for="peripheral in peripherals" v-bind:key="peripheral.uid">
                 <div class="card" :class="`card-background text-white`">
                     <div class="card-body pb-2">
@@ -46,7 +55,7 @@
 </template>
 <script>
     import {router} from '@/_helpers';
-    import {GET_ZONE_BY_UID, GET_ZONES_ROOT, UPDATE_PORT_VALUE} from "../../graphql/zones";
+    import {GET_ZONE_BY_UID, GET_ZONES_ROOT, NAV_BREADCRUMB, UPDATE_PORT_VALUE} from "../../graphql/zones";
 
     export default {
         name: 'ZoneLight',
@@ -54,7 +63,8 @@
             return {
                 zone: [],
                 zones: [],
-                peripherals: []
+                peripherals: [],
+                breadcrumb: []
             }
         },
         created() {
@@ -114,9 +124,22 @@
                         this.peripherals = peripherals.filter(peripheralFilter);
                     });
                 }
+                let zoneUid = null
+                if (this.$route.query.zoneUid !== "") {
+                    zoneUid = this.$route.query.zoneUid
+                }
+                this.$apollo.query({
+                    query: NAV_BREADCRUMB,
+                    variables: {zoneUid: zoneUid}
+                }).then(response => {
+                    this.breadcrumb = response.data.navigation.breadcrumb;
+                });
             },
             navZone: function (zoneUid) {
                 router.push({path: 'light', query: {zoneUid: zoneUid, categoryUid: this.$route.query.categoryUid}})
+            },
+            navRoot: function () {
+                router.push({path: 'light', query: {zoneUid: "", categoryUid: this.$route.query.categoryUid}})
             },
             periphStateChangeHandler: function (value, srcEvent) {
                 this.$apollo.mutate({
@@ -151,5 +174,16 @@
 
     div.v-switch-core {
         border: 1px solid #000000 !important;
+    }
+
+    div.bottom-space {
+        margin-bottom: 15pt;
+        margin-left: 5pt;
+        color: #8e949f;
+        text-decoration-color: #6c757d;
+    }
+
+    div.bottom-space > a:link, div.bottom-space > a:visited {
+        color: #8e949f;
     }
 </style>

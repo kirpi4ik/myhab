@@ -19,14 +19,24 @@ export const GET_ALL_ZONES = gql`
                 }
             }
         } }
-`
+`;
+export const NAV_BREADCRUMB = gql`
+    query navigation($zoneUid:String){
+        navigation {
+            breadcrumb(zoneUid:$zoneUid) {
+                name
+                zoneUid
+            }
+        }
+    }
+`;
 export const GET_ZONE_BY_UID = gql`
     query zoneByUid($uid: String!) {
         zoneByUid(uid: $uid) {
             uid
             name
             zones {
-                 uid
+                uid
                 name
                 description
                 peripherals {
@@ -49,7 +59,7 @@ export const GET_ZONE_BY_UID = gql`
         }
     }
 
-`
+`;
 export const GET_ZONES_ROOT = gql`
     {
         zonesRoot {
@@ -71,7 +81,7 @@ export const GET_ZONES_ROOT = gql`
             }
         }
     }
-`
+`;
 
 export const UPDATE_PORT_VALUE = gql`
     mutation ($id:Long!, $portValue:PortValueUpdate) {
@@ -80,4 +90,4 @@ export const UPDATE_PORT_VALUE = gql`
             uid
         }
     }
-`
+`;

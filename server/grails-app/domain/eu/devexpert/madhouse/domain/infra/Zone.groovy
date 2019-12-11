@@ -68,6 +68,15 @@ class Zone extends BaseEntity {
                 }
             })
         }
+        query('zonesRoot', [Zone]) {
+            dataFetcher(new EntityDataFetcher<Zone>(Zone.gormPersistentEntity) {
+                @Override
+                protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
+                    Zone.where { parent == null }
+
+                }
+            })
+        }
     }
 
 }
