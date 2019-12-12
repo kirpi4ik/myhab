@@ -10,7 +10,7 @@ const TheContainer = () => import('@/containers/TheContainer')
 // Views
 const Dashboard = () => import('@/views/dashboard/Dashboard')
 
-const Light = () => import('@/views/zones/ZoneLight')
+const Light = () => import('@/views/zones/ZoneCombinedView')
 // Users
 const Users = () => import('@/views/users/Users')
 const User = () => import('@/views/users/User')
