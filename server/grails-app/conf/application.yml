@@ -83,7 +83,32 @@ grails:
 grails:
   cors:
     enabled: true
----
+quartz:
+  autoStartup: true
+  jdbcStore: true
+  threadPool:
+    class: 'org.quartz.simpl.SimpleThreadPool'
+    threadCount: 25
+    threadPriority: 5
+  jobStore:
+    class: 'org.quartz.impl.jdbcjobstore.JobStoreTX'
+    driverDelegateClass: 'org.quartz.impl.jdbcjobstore.PostgreSQLDelegate'
+    useProperties: false
+    dataSource: 'production'
+    tablePrefix: 'qrtz_'
+  dataSource:
+    development:
+      driver: 'org.postgresql.Driver'
+      URL: 'jdbc:postgresql://localhost:5432/madhouse_prod_10_19'
+      user: 'madhouse'
+      password: 'kirpi4ik'
+      maxConnections: 5
+    production:
+      driver: 'org.postgresql.Driver'
+      URL: 'jdbc:postgresql://localhost:5432/madhouse_prod_10_19'
+      user: 'madhouse'
+      password: 'madhouse'
+      maxConnections: 5
 hibernate:
   cache:
     queries: false

@@ -35,17 +35,25 @@ class http {
 
     def url() {
         if (device != null && device.model == DeviceModel.MEGAD_2561_RTC) {
-            def url = "http://${device.networkAddress.ip}:${device.networkAddress.port}/${device.authAccounts.first().password}/${uri != null ? uri : ''}"
+            def url = "http://${device?.networkAddress?.ip}:${device.networkAddress.port}/${device?.authAccounts?.first()?.password}/${uri != null ? uri : ''}"
             log.debug("GET ${url}")
-            return connect(url).get()
+            try {
+                return connect(url).get()
+            } catch (ConnectException | HttpStatusException ce) {
+                log.error("Http failed for ${url}: ${ce.message}")
+            }
         } else if (device != null && device.model == DeviceModel.ESP8266_1) {
-            return connect("http://${device.networkAddress.ip}:${device.networkAddress.port}/${uri != null ? uri : ''}")
-                    .timeout(DEVICE_URL_TIMEOUT)
-                    .ignoreContentType(true)
-                    .header("Authorization", "Basic " + new String(encodeBase64("${device.authAccounts.first().username}:${device.authAccounts.first().password}".bytes)))
-                    .header("Content-Type", "application/json")
-                    .header("Accept", "application/json")
-                    .get()
+            try {
+                return connect("http://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}")
+                        .timeout(DEVICE_URL_TIMEOUT)
+                        .ignoreContentType(true)
+                        .header("Authorization", "Basic " + new String(encodeBase64("${device.authAccounts?.first()?.username}:${device.authAccounts?.first()?.password}".bytes)))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/json")
+                        .get()
+            } catch (ConnectException | HttpStatusException ce) {
+                log.error("Http failed for ${url}: ${ce.message}")
+            }
         }
     }
 

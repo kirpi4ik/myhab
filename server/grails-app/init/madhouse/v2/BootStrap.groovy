@@ -2,12 +2,12 @@ package madhouse.v2
 
 class BootStrap {
 
-    def initService
-
+    def schedulerService
     def init = { servletContext ->
-//        initService.initUsers()
+        schedulerService.startAll()
     }
     def destroy = {
+        schedulerService.shutdown()
     }
 
 }
