@@ -42,7 +42,7 @@
                                            :switch-color="{checked: 'linear-gradient( #8DFF73, green)', unchecked: 'linear-gradient(#BF0000, #FFBE62)'}"
                                            :color="{checked: '#009663', unchecked: '#FF0000', disabled: '#CCCCCC'}"
                                            :speed="300"
-                                           @change="periphStateChangeHandler({value:peripheral.state, id:peripheral.data.id, uid:peripheral.data.uid})"
+                                           @change="periphStateChangeHandler(peripheral)"
                                            :font-size="14"
                                            :width="250"
                                            :height="40"/>
@@ -55,8 +55,9 @@
 </template>
 <script>
     import {router} from '@/_helpers';
-    import {GET_ZONE_BY_UID, GET_ZONES_ROOT, NAV_BREADCRUMB, UPDATE_PORT_VALUE} from "../../graphql/zones";
-    console.log(process.env.VUE_APP_TITLE)
+    import {authenticationService} from '@/_services';
+    import {GET_ZONE_BY_UID, GET_ZONES_ROOT, NAV_BREADCRUMB, PUSH_EVENT} from "../../graphql/zones";
+
     export default {
         name: 'ZoneCombinedView',
         data() {
@@ -75,19 +76,24 @@
         },
         methods: {
             loadInitial() {
-                let peripherals = []
-                let peripheralUids = []
-                let zones = []
-                let zone = []
-                let categoryUid = this.$route.query.categoryUid
+                let peripherals = [];
+                let peripheralUids = [];
+                let zones = [];
+                let zone = [];
+                let categoryUid = this.$route.query.categoryUid;
                 let periphInitCallback = function (peripheral) {
                     let state = false;
+                    let portId = null;
+                    let portUid = null;
                     if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
-                        state = peripheral.connectedTo[0].value === 'ON'
+                        let port = peripheral.connectedTo[0];
+                        state = port.value === 'ON'
+                        portId = port.id;
+                        portUid = port.uid;
                     }
 
                     if (peripheralUids.indexOf(peripheral.uid) === -1) {
-                        peripherals.push({data: peripheral, state: state});
+                        peripherals.push({data: peripheral, state: state, portId: portId, portUid: portUid});
                         peripheralUids.push(peripheral.uid)
                     }
                 };
@@ -141,9 +147,17 @@
             navRoot: function () {
                 router.push({path: 'zones', query: {zoneUid: "", categoryUid: this.$route.query.categoryUid}})
             },
-            periphStateChangeHandler: function (value, srcEvent) {
+            periphStateChangeHandler: function (peripheral) {
+                let event = {
+                    "p0": "light",
+                    "p1": "PERIPHERAL",
+                    "p2": peripheral.data.uid,
+                    "p3": "mweb",
+                    "p4": peripheral.state === true ? "off" : "on",
+                    "p6": authenticationService.currentUserValue.login
+                };
                 this.$apollo.mutate({
-                    mutation: UPDATE_PORT_VALUE, variables: {id: 6816, portValue: {value: "OFF"}}
+                    mutation: PUSH_EVENT, variables: {input: event}
                 }).then(response => {
 
                 });
