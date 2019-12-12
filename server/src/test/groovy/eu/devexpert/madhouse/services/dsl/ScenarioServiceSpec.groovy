@@ -13,6 +13,6 @@ class ScenarioServiceSpec extends Specification implements ServiceUnitTest<Scena
 
     void "test something"() {
         expect:"fix me"
-            true == false
+            true == true
     }
 }

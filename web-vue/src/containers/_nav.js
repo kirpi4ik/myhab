@@ -43,20 +43,20 @@ export const NAV = [
             {
                 _name: 'CSidebarNavTitle',
                 _children: ['Setari'],
-                roles: [Role.Super]
+                roles: [Role.Admin]
             },
             {
                 _name: 'CSidebarNavDropdown',
                 name: 'Utilizatori',
                 route: '/users',
                 icon: 'cil-puzzle',
-                roles: [Role.Super],
+                roles: [Role.Admin],
                 items: [
                     {
                         name: 'Lista utilizatorilor',
                         to: '/users',
                         icon: 'cil-puzzle',
-                        roles: [Role.Super]
+                        roles: [Role.Admin]
 
                     }
                 ]

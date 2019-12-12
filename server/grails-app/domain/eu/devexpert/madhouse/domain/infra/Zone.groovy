@@ -29,7 +29,6 @@ class Zone extends BaseEntity {
         table '`zones`'
         peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id']
         cables joinTable: [name: "zones_cables_join", key: 'zone_id']
-        sort parent: "asc"
     }
     static constraints = {
         peripherals cascade: 'save-update'
@@ -55,15 +54,7 @@ class Zone extends BaseEntity {
                         parent {
                             eq('uid', environment.getArgument('uid') as String)
                         }
-                    }
-                }
-            })
-        }
-        query('zonesRoot', [Zone]) {
-            dataFetcher(new EntityDataFetcher<Zone>(Zone.gormPersistentEntity) {
-                @Override
-                protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
-                    Zone.where { parent == null }
+                    }.order("name", "desc")
 
                 }
             })
@@ -72,8 +63,16 @@ class Zone extends BaseEntity {
             dataFetcher(new EntityDataFetcher<Zone>(Zone.gormPersistentEntity) {
                 @Override
                 protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
-                    Zone.where { parent == null }
+                    Zone.where { parent == null }.order("name", "desc")
 
+                }
+            })
+        }
+        query('zonesRoot', [Zone]) {
+            dataFetcher(new EntityDataFetcher<Zone>(Zone.gormPersistentEntity) {
+                @Override
+                protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
+                    Zone.where { parent == null }.order("name", "desc")
                 }
             })
         }
