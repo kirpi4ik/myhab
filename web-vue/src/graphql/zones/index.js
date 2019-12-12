@@ -46,6 +46,10 @@ export const GET_ZONE_BY_UID = gql`
                     category {
                         uid
                     }
+                    connectedTo{
+                        uid
+                        value
+                    }
                 }
             }
             peripherals {
@@ -54,6 +58,10 @@ export const GET_ZONE_BY_UID = gql`
                 description
                 category {
                     uid
+                }
+                connectedTo{
+                    uid
+                    value
                 }
             }
         }
@@ -78,6 +86,10 @@ export const GET_ZONES_ROOT = gql`
                 category {
                     uid
                 }
+                connectedTo{
+                    uid
+                    value
+                }
             }
         }
     }
@@ -88,6 +100,13 @@ export const UPDATE_PORT_VALUE = gql`
         portValueUpdate(id:$id, portValue: $portValue){
             id,
             uid
+        }
+    }
+`;
+export const PUSH_EVENT = gql`
+    mutation pushEvent($input: EventDatInput){
+        pushEvent(input:$input){
+            p0
         }
     }
 `;
