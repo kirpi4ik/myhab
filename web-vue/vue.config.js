@@ -1,7 +1,15 @@
 module.exports = {
     lintOnSave: false,
     runtimeCompiler: true,
-    devServer: {port: 9999},
+    devServer: {
+        port: 9999,
+        compress: false,
+        headers: {
+            'X-Madhouse-mode': 'dev'
+        },
+        liveReload: true
+
+    },
     publicPath: "/",
     configureWebpack: {
         //Necessary to run npm link https://webpack.js.org/configuration/resolve/#resolve-symlinks
