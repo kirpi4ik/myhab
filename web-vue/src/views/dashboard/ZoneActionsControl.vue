@@ -9,8 +9,9 @@
                         right-header="Exterior"
                         right-footer="Iluminat"
                         icon="lightbulb"
-                        zoneUid=""
-                        categoryUid="487f2d81-4420-46cd-88b8-d856cba4a374"
+                        :zoneUidLeft="zoneIntUid"
+                        :zoneUidRight="zoneExtUid"
+                        :categoryUid="peripheralLightUid"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -22,8 +23,9 @@
                         right-header="Exterior"
                         right-footer="Temperatura"
                         icon="thermometer-half"
-                        zoneUid=""
-                        categoryUid="487f2d81-4420-46cd-88b8-d856cba4a374"
+                        :zoneUidLeft="zoneIntUid"
+                        :zoneUidRight="zoneExtUid"
+                        :categoryUid="peripheralTempUid"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -35,8 +37,9 @@
                         right-header="Parter"
                         right-footer="Incalzire"
                         icon="fire"
-                        zoneUid=""
-                        categoryUid="487f2d81-4420-46cd-88b8-d856cba4a374"
+                        :zoneUidLeft="zoneEtajUid"
+                        :zoneUidRight="zoneParterUid"
+                        :categoryUid="peripheralHeatUid"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -51,6 +54,20 @@
         name: 'ZoneActionsControl',
         components: {
             ZoneActionControl
+        },
+        data() {
+            return {
+                peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
+                peripheralTempUid: process.env.VUE_APP_CONF_PH_TEMP_UID,
+                peripheralHeatUid: process.env.VUE_APP_CONF_PH_HEAT_UID,
+
+                zoneIntUid: process.env.VUE_APP_CONF_ZONE_INT_UID,
+                zoneExtUid: process.env.VUE_APP_CONF_ZONE_EXT_UID,
+
+                zoneEtajUid: process.env.VUE_APP_CONF_ZONE_ETAJ_UID,
+                zoneParterUid: process.env.VUE_APP_CONF_ZONE_PARTER_UID
+
+            }
         }
     }
 

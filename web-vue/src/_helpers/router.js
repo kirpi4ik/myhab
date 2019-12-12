@@ -10,7 +10,7 @@ const TheContainer = () => import('@/containers/TheContainer')
 // Views
 const Dashboard = () => import('@/views/dashboard/Dashboard')
 
-const Light = () => import('@/views/zones/ZoneCombinedView')
+const Zones = () => import('@/views/zones/ZoneCombinedView')
 // Users
 const Users = () => import('@/views/users/Users')
 const User = () => import('@/views/users/User')
@@ -47,9 +47,9 @@ function configRoutes() {
                     meta: {authorize: [Role.Admin]}
                 },
                 {
-                    path: 'light',
-                    name: 'Light',
-                    component: Light,
+                    path: 'zones',
+                    name: 'Zones',
+                    component: Zones,
                     meta: {authorize: [Role.Admin]}
                 },
                 {

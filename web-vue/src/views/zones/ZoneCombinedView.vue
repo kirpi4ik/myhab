@@ -56,7 +56,7 @@
 <script>
     import {router} from '@/_helpers';
     import {GET_ZONE_BY_UID, GET_ZONES_ROOT, NAV_BREADCRUMB, UPDATE_PORT_VALUE} from "../../graphql/zones";
-
+    console.log(process.env.VUE_APP_TITLE)
     export default {
         name: 'ZoneCombinedView',
         data() {
@@ -136,10 +136,10 @@
                 });
             },
             navZone: function (zoneUid) {
-                router.push({path: 'light', query: {zoneUid: zoneUid, categoryUid: this.$route.query.categoryUid}})
+                router.push({path: 'zones', query: {zoneUid: zoneUid, categoryUid: this.$route.query.categoryUid}})
             },
             navRoot: function () {
-                router.push({path: 'light', query: {zoneUid: "", categoryUid: this.$route.query.categoryUid}})
+                router.push({path: 'zones', query: {zoneUid: "", categoryUid: this.$route.query.categoryUid}})
             },
             periphStateChangeHandler: function (value, srcEvent) {
                 this.$apollo.mutate({
