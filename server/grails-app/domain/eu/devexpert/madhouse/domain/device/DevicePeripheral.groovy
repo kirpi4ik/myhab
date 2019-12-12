@@ -28,7 +28,7 @@ class DevicePeripheral extends BaseEntity {
     table '`device_peripherals`'
     connectedTo joinTable: [name: "device_ports_peripherals_join", key: 'peripheral_id']
     zones joinTable: [name: "zones_peripherals_join", key: 'peripheral_id']
-    sort code: "asc"
+    sort name: "asc"
   }
 
   static graphql = true

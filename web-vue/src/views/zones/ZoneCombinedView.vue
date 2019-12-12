@@ -87,7 +87,7 @@
                     let portUid = null;
                     if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
                         let port = peripheral.connectedTo[0];
-                        state = port.value === 'ON'
+                        state = port.value === 'OFF'
                         portId = port.id;
                         portUid = port.uid;
                     }
@@ -98,7 +98,7 @@
                     }
                 };
                 let zoneInitCallback = function (childZone) {
-                    childZone.peripherals.forEach(periphInitCallback);
+                    childZone.peripherals.sort((a, b) => (a.name > b.name) ? 1 : -1).forEach(periphInitCallback);
                 };
                 let peripheralFilter = function (peripheral) {
                     return peripheral.data.category.uid === categoryUid
@@ -110,7 +110,7 @@
                     }).then(response => {
                         zone = response.data.zoneByUid;
                         zones = zone.zones;
-                        zone.peripherals.forEach(periphInitCallback);
+                        zone.peripherals.sort((a, b) => (a.name > b.name) ? 1 : -1).forEach(periphInitCallback);
                         zones.forEach(zoneInitCallback);
 
                         this.zone = zone;
