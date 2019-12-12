@@ -1,11 +1,11 @@
 <template>
-    <div >
+    <div class="card">
         <div class="card-header content-center text-white p-2" :class="[`header-color-${color}`, addHeaderClasses]">
             <slot/>
             <font-awesome-icon :icon="['fas', `${icon}`]" size="3x"/>
 
         </div>
-        <slot name="body">
+        <slot name="body" class="card-footer">
             <div class="card-body row text-center">
                 <div class="col" v-on:click="lightNav(zoneUid, categoryUid)">
                     <div v-if="leftHeader" class="text-value-lg">
@@ -63,5 +63,8 @@
 
     .header-color-temp {
         background-color: #4d80e0 !important;
+    }
+    .card-footer {
+        border-color: #edf3fa !important;
     }
 </style>
