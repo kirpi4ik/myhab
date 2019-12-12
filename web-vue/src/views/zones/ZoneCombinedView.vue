@@ -14,10 +14,10 @@
             <CCol md="3" sm="6" v-for="zone in zones" v-bind:key="zone.uid">
                 <div class="card" :class="`zone-card-background text-white`"
                      v-on:click="navZone(zone.uid)">
-                    <div class="card-body pb-2">
-                        <slot></slot>
-                        <h4 class="mb-1"> {{zone.name}}</h4>
-
+                    <div class="card-body">
+                        <div>
+                            <h2 class="mb-0">{{zone.name}}</h2>
+                        </div>
                     </div>
                     <slot name="footer" class="card-footer">
                         <div class="zone-card-footer">
@@ -32,7 +32,10 @@
                 <div class="card" :class="`card-background text-white`">
                     <div class="card-body pb-2">
                         <slot></slot>
-                        <h4 class="mb-1"> {{peripheral.data.name}}</h4>
+                        <div>
+                            <font-awesome-icon icon="lightbulb" size="3x" :class="`zone-icon-${peripheral.state}`"/>
+                            <h4 class="mb-1"> {{peripheral.data.name}}</h4>
+                        </div>
 
                     </div>
                     <slot name="footer" class="card-footer">
@@ -199,5 +202,16 @@
 
     div.bottom-space > a:link, div.bottom-space > a:visited {
         color: #8e949f;
+    }
+
+    .zone-icon-false {
+        float: right;
+        color: yellow;
+    }
+
+    .zone-icon-true {
+        float: right;
+        fill: #044B9466;
+        fill-opacity: 0.5;
     }
 </style>
