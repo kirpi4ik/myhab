@@ -44,13 +44,13 @@ function configRoutes() {
                     path: 'dashboard',
                     name: 'Dashboard',
                     component: Dashboard,
-                    meta: {authorize: [Role.Admin]}
+                    meta: {authorize: [Role.Admin, Role.User]}
                 },
                 {
                     path: 'zones',
                     name: 'Zones',
                     component: Zones,
-                    meta: {authorize: [Role.Admin]}
+                    meta: {authorize: [Role.Admin, Role.User]}
                 },
                 {
                     path: 'users',
