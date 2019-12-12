@@ -58,7 +58,7 @@
     import {GET_ZONE_BY_UID, GET_ZONES_ROOT, NAV_BREADCRUMB, UPDATE_PORT_VALUE} from "../../graphql/zones";
 
     export default {
-        name: 'ZoneLight',
+        name: 'ZoneCombinedView',
         data() {
             return {
                 zone: [],
