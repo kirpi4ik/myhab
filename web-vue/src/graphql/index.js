@@ -36,10 +36,18 @@ const onErrorLink = onError(({graphQLErrors, networkError}) => {
     }
     // When a 401 error occur, we log-out the user.
     if (networkError) {
+        let error = {path: '/pages/500', code: 'ERROR_UNKNOW'};
         if (networkError.statusCode === 401) {
             authenticationService.logout();
-            router.push('/pages/login');
+            error.path = '/pages/login';
+            error.code = 'ERROR_NOT_AUTHENTICATED';
         }
+        debugger
+        if (networkError.message === 'Failed to fetch') {
+            error.code = "ERROR_SERVER_DOWN";
+        }
+        console.log(`[Network error]: ${networkError}`);
+        router.push({path: error.path, query: {error: error.code}});
     }
 });
 
