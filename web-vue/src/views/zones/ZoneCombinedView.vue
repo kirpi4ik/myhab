@@ -29,46 +29,40 @@
         </CRow>
         <CRow>
             <CCol md="3" sm="6" v-for="peripheral in peripherals" v-bind:key="peripheral.uid">
-                <div class="card" :class="`card-background text-white`">
-                    <div class="card-body pb-2">
-                        <slot></slot>
-                        <div>
-                            <font-awesome-icon icon="lightbulb" size="3x" :class="`zone-icon-${peripheral.state}`"/>
-                            <h4 class="mb-1"> {{peripheral.data.name}}</h4>
-                        </div>
-
-                    </div>
-                    <slot name="footer" class="card-footer">
-                        <div class="toggle-btn">
-                            <toggle-button v-model="peripheral.state" color="#82C7EB" :sync="true"
-                                           :labels="{checked: 'Aprinde', unchecked: 'Stinge'}"
-                                           :switch-color="{checked: 'linear-gradient( #8DFF73, green)', unchecked: 'linear-gradient(#BF0000, #FFBE62)'}"
-                                           :color="{checked: '#009663', unchecked: '#FF0000', disabled: '#CCCCCC'}"
-                                           :speed="300"
-                                           @change="periphStateChangeHandler(peripheral)"
-                                           :font-size="14"
-                                           :width="250"
-                                           :height="40"/>
-                        </div>
-                    </slot>
-                </div>
+                <PeriphLightControl :peripheral="peripheral"
+                                    v-if="categoryUid === peripheralLightUid"></PeriphLightControl>
+                <PeriphTempControl :peripheral="peripheral"
+                                   v-if="categoryUid === peripheralTempUid"></PeriphTempControl>
+                <PeriphHeatControl :peripheral="peripheral"
+                                   v-if="categoryUid === peripheralHeatUid"></PeriphHeatControl>
             </CCol>
         </CRow>
     </div>
 </template>
 <script>
     import {router} from '@/_helpers';
-    import {authenticationService} from '@/_services';
-    import {GET_ZONE_BY_UID, GET_ZONES_ROOT, NAV_BREADCRUMB, PUSH_EVENT} from "../../graphql/zones";
+    import {GET_ZONE_BY_UID, GET_ZONES_ROOT, NAV_BREADCRUMB} from "../../graphql/zones";
+    import PeriphLightControl from './PeriphLightControl'
+    import PeriphHeatControl from './PeriphHeatControl'
+    import PeriphTempControl from './PeriphTempControl'
 
     export default {
         name: 'ZoneCombinedView',
+        components: {
+            PeriphLightControl,
+            PeriphTempControl,
+            PeriphHeatControl
+        },
         data() {
             return {
                 zone: [],
                 zones: [],
                 peripherals: [],
-                breadcrumb: []
+                breadcrumb: [],
+                categoryUid: "",
+                peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
+                peripheralTempUid: process.env.VUE_APP_CONF_PH_TEMP_UID,
+                peripheralHeatUid: process.env.VUE_APP_CONF_PH_HEAT_UID,
             }
         },
         created() {
@@ -85,18 +79,25 @@
                 let zone = [];
                 let categoryUid = this.$route.query.categoryUid;
                 let periphInitCallback = function (peripheral) {
+                    let portValue = null;
                     let state = false;
                     let portId = null;
                     let portUid = null;
                     if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
                         let port = peripheral.connectedTo[0];
-                        state = port.value === 'OFF'
+                        portValue = port.value;
+                        state = portValue === 'OFF'
                         portId = port.id;
                         portUid = port.uid;
                     }
-
                     if (peripheralUids.indexOf(peripheral.uid) === -1) {
-                        peripherals.push({data: peripheral, state: state, portId: portId, portUid: portUid});
+                        peripherals.push({
+                            data: peripheral,
+                            portValue: portValue,
+                            state: state,
+                            portId: portId,
+                            portUid: portUid
+                        });
                         peripheralUids.push(peripheral.uid)
                     }
                 };
@@ -143,6 +144,7 @@
                 }).then(response => {
                     this.breadcrumb = response.data.navigation.breadcrumb;
                 });
+                this.categoryUid = categoryUid
             },
             navZone: function (zoneUid) {
                 router.push({path: 'zones', query: {zoneUid: zoneUid, categoryUid: this.$route.query.categoryUid}})
@@ -150,21 +152,7 @@
             navRoot: function () {
                 router.push({path: 'zones', query: {zoneUid: "", categoryUid: this.$route.query.categoryUid}})
             },
-            periphStateChangeHandler: function (peripheral) {
-                let event = {
-                    "p0": "light",
-                    "p1": "PERIPHERAL",
-                    "p2": peripheral.data.uid,
-                    "p3": "mweb",
-                    "p4": peripheral.state === true ? "off" : "on",
-                    "p6": authenticationService.currentUserValue.login
-                };
-                this.$apollo.mutate({
-                    mutation: PUSH_EVENT, variables: {input: event}
-                }).then(response => {
 
-                });
-            }
         }
     }
 </script>
@@ -185,13 +173,6 @@
         height: 50pt;
     }
 
-    .toggle-btn {
-        margin: auto;
-    }
-
-    div.v-switch-core {
-        border: 1px solid #000000 !important;
-    }
 
     div.bottom-space {
         margin-bottom: 15pt;
@@ -204,14 +185,5 @@
         color: #8e949f;
     }
 
-    .zone-icon-false {
-        float: right;
-        color: yellow;
-    }
 
-    .zone-icon-true {
-        float: right;
-        fill: #044B9466;
-        fill-opacity: 0.5;
-    }
 </style>
