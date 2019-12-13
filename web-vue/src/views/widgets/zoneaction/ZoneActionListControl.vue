@@ -48,10 +48,10 @@
 </template>
 
 <script>
-    import ZoneActionControl from '../widgets/zoneaction/ZoneActionControl'
+    import ZoneActionControl from './ZoneActionControl'
 
     export default {
-        name: 'ZoneActionsControl',
+        name: 'ZoneActionListControl',
         components: {
             ZoneActionControl
         },
