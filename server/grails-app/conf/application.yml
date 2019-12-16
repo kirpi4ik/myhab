@@ -105,7 +105,7 @@ quartz:
       maxConnections: 5
     production:
       driver: 'org.postgresql.Driver'
-      URL: 'jdbc:postgresql://localhost:5432/madhouse_prod_10_19'
+      URL: 'jdbc:postgresql://localhost:5432/madhouse'
       user: 'madhouse'
       password: 'madhouse'
       maxConnections: 5

@@ -27,7 +27,7 @@ describe('Service: Nav', () => {
         expect(data.expects).toEqual('JSON');
       });
 
-      backend.expectOne({url: 'http://localhost:8080/applications', method: 'GET'}).flush({expects: "JSON"});
+      backend.expectOne({url: 'http://localhost:8181/applications', method: 'GET'}).flush({expects: "JSON"});
 
       backend.verify()
     })));
