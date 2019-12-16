@@ -4,10 +4,10 @@ class BootStrap {
 
     def schedulerService
     def init = { servletContext ->
-        schedulerService.startAll()
+//        schedulerService.startAll()
     }
     def destroy = {
-        schedulerService.shutdown()
+//        schedulerService.shutdown()
     }
 
 }
