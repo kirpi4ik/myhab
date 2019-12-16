@@ -103,4 +103,5 @@ bootJar {
         String groupId = jar.file.parentFile.parentFile.parentFile.parentFile.name
         jar.name = "$groupId-${jar.name}"
     })
+    archiveFileName = "madhouse-${project.version}.jar"
 }
