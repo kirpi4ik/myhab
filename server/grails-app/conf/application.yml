@@ -10,9 +10,9 @@ grails:
       events: false
 info:
   app:
-    name: '@info.app.name@'
-    version: '@info.app.version@'
-    grailsVersion: '@info.app.grailsVersion@'
+    name: "@info.app.name@"
+    version: "@info.app.version@"
+    grailsVersion: "@info.app.grailsVersion@"
 spring:
   jmx:
     unique-names: true
@@ -24,12 +24,12 @@ spring:
   devtools:
     restart:
       additional-exclude:
-        - '*.gsp'
-        - '**/*.gsp'
-        - '*.gson'
-        - '**/*.gson'
-        - 'logback.groovy'
-        - '*.properties'
+        - "*.gsp"
+        - "**/*.gsp"
+        - "*.gson"
+        - "**/*.gson"
+        - "logback.groovy"
+        - "*.properties"
 management:
   endpoints:
     enabled-by-default: true
@@ -40,8 +40,7 @@ management:
     info:
       enabled: true
     health:
-        show-details: when_authorized
-
+      show-details: when_authorized
 
 ---
 grails:
@@ -70,7 +69,7 @@ grails:
       js: text/javascript
       rss: application/rss+xml
       text: text/plain
-      all: '*/*'
+      all: "*/*"
   urlmapping:
     cache:
       maxsize: 1000
@@ -78,36 +77,38 @@ grails:
     defaultScope: singleton
   converters:
     encoding: UTF-8
-
 ---
 grails:
   cors:
     enabled: true
+
+quartz.jdbcStore: true
 quartz:
+  pluginEnabled: true
   autoStartup: true
-  jdbcStore: true
+  purgeQuartzTablesOnStartup: false
   threadPool:
-    class: 'org.quartz.simpl.SimpleThreadPool'
+    class: "org.quartz.simpl.SimpleThreadPool"
     threadCount: 25
     threadPriority: 5
   jobStore:
-    class: 'org.quartz.impl.jdbcjobstore.JobStoreTX'
-    driverDelegateClass: 'org.quartz.impl.jdbcjobstore.PostgreSQLDelegate'
+    class: "org.quartz.impl.jdbcjobstore.JobStoreTX"
+    driverDelegateClass: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
     useProperties: false
-    dataSource: 'production'
-    tablePrefix: 'qrtz_'
+    dataSource: "production"
+    tablePrefix: "qrtz_"
   dataSource:
     development:
-      driver: 'org.postgresql.Driver'
-      URL: 'jdbc:postgresql://localhost:5432/madhouse_prod_10_19'
-      user: 'madhouse'
-      password: 'kirpi4ik'
+      driver: "org.postgresql.Driver"
+      URL: "jdbc:postgresql://localhost:5432/madhouse_prod_10_19"
+      user: "madhouse"
+      password: "kirpi4ik"
       maxConnections: 5
     production:
-      driver: 'org.postgresql.Driver'
-      URL: 'jdbc:postgresql://localhost:5432/madhouse'
-      user: 'madhouse'
-      password: 'madhouse'
+      driver: "org.postgresql.Driver"
+      URL: "jdbc:postgresql://localhost:5432/madhouse"
+      user: "madhouse"
+      password: "madhouse"
       maxConnections: 5
 hibernate:
   cache:
@@ -119,7 +120,7 @@ dataSource:
   jmxExport: true
   driverClassName: org.h2.Driver
   username: sa
-  password: ''
+  password: ""
 
 environments:
   development:
@@ -156,37 +157,40 @@ environments:
       springsecurity:
         debug:
           useFilter: true
-  test:
+  production:
     dataSource:
       dbCreate: update
-      url: jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
-    production:
-      dataSource:
-        dbCreate: update
-        url: jdbc:postgresql://localhost:5432/madhouse
-        username : "madhouse"
-        password : "madhouse"
-        driverClassName : "org.postgresql.Driver"
-        dialect : "org.hibernate.dialect.PostgreSQLDialect"
-        logSql : false
-        properties:
-          jmxEnabled: true
-          initialSize: 5
-          maxActive: 50
-          minIdle: 5
-          maxIdle: 25
-          maxWait: 10000
-          maxAge: 600000
-          timeBetweenEvictionRunsMillis: 5000
-          minEvictableIdleTimeMillis: 60000
-          validationQuery: SELECT 1
-          validationQueryTimeout: 3
-          validationInterval: 15000
-          testOnBorrow: true
-          testWhileIdle: true
-          testOnReturn: false
-          jdbcInterceptors: ConnectionState
-          defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+      url: jdbc:postgresql://localhost:5432/madhouse
+      username: "madhouse"
+      password: "madhouse"
+      driverClassName: "org.postgresql.Driver"
+      dialect: "org.hibernate.dialect.PostgreSQLDialect"
+      logSql: false
+      properties:
+        jmxEnabled: true
+        initialSize: 5
+        maxActive: 50
+        minIdle: 5
+        maxIdle: 25
+        maxWait: 10000
+        maxAge: 600000
+        timeBetweenEvictionRunsMillis: 5000
+        minEvictableIdleTimeMillis: 60000
+        validationQuery: SELECT 1
+        validationQueryTimeout: 3
+        validationInterval: 15000
+        testOnBorrow: true
+        testWhileIdle: true
+        testOnReturn: false
+        jdbcInterceptors: ConnectionState
+        defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+    logging:
+      jul:
+        usebridge: true
+    plugin:
+      springsecurity:
+        debug:
+          useFilter: true
 graphql:
   enabled: true
   graphiql:
