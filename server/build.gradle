@@ -65,7 +65,7 @@ dependencies {
     compile "org.grails:gorm-graphql:2.0.1.BUILD-SNAPSHOT"
 
     compile 'org.grails.plugins:quartz:2.0.13'
-    compile 'org.quartz-scheduler:quartz:2.2.1' // Is not pulled in by default?
+    compile 'org.quartz-scheduler:quartz:2.3.2' // Is not pulled in by default?
 
     compileOnly "io.micronaut:micronaut-inject-groovy"
     console "org.grails:grails-console"
