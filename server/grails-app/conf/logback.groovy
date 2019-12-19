@@ -32,7 +32,7 @@ appender('STDOUT', ConsoleAppender) {
                 fieldName = 'message'
             }
             globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "1.3.2")}"
+                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.0")}"
             }
             threadName(ThreadNameJsonProvider) {
                 fieldName = 'thread'
@@ -82,7 +82,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     fieldName = 'message'
                 }
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "1.3.2")}"
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.0")}"
                 }
                 threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
@@ -131,7 +131,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     fieldName = 'message'
                 }
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "1.3.2")}"
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.0")}"
                 }
                 threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
