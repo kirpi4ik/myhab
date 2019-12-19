@@ -20,11 +20,11 @@ import org.quartz.JobExecutionException
  *
  */
 @Transactional
-class PortStatusReaderJob implements Job, EventPublisher {
+class PortValueReaderJob implements Job, EventPublisher {
   MegaDriverService megaDriverService
   EspDeviceService espDeviceService
   static triggers = {
-    simple name: 'portStatusReader', repeatInterval: 5000
+    simple name: 'portValueReader', repeatInterval: 5000
   }
   static group = "Internal"
   static description = "Read port status"
@@ -60,7 +60,7 @@ class PortStatusReaderJob implements Job, EventPublisher {
           maxResults(1)
         }
         if (devicePort.type.syncMs != -1) {
-          if (portLatestValues.size() == 0 || DateTime.now().minus(portLatestValues[0].tsCreated.time).isAfter(devicePort.type.syncMs))
+          if (portLatestValues.size() == 0 || DateTime.now().minus(portLatestValues[0]?.tsCreated?.time).isAfter(devicePort?.type?.syncMs))
             if (devicePort.value == null || !devicePort.value.equalsIgnoreCase(ValueParser.parser(devicePort).apply(newValue))) {
               EventData eventData = new EventData().with {
                 p0 = TopicName.PORT_VALUE_CHANGE.id()

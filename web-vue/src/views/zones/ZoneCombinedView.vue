@@ -59,7 +59,7 @@
                 zones: [],
                 peripherals: [],
                 breadcrumb: [],
-                categoryUid: "",
+                categoryUid: this.$route.query.categoryUid,
                 peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
                 peripheralTempUid: process.env.VUE_APP_CONF_PH_TEMP_UID,
                 peripheralHeatUid: process.env.VUE_APP_CONF_PH_HEAT_UID,
@@ -77,7 +77,6 @@
                 let peripheralUids = [];
                 let zones = [];
                 let zone = [];
-                let categoryUid = this.$route.query.categoryUid;
                 let periphInitCallback = function (peripheral) {
                     let portValue = null;
                     let state = false;
@@ -105,9 +104,12 @@
                     childZone.peripherals.sort((a, b) => (a.name > b.name) ? 1 : -1).forEach(periphInitCallback);
                 };
                 let peripheralFilter = function (peripheral) {
-                    return peripheral.data.category.uid === categoryUid
-                };
-                if (this.$route.query.zoneUid !== "") {
+                    //filter out peripheral which has categories different from the one requested in url
+                    return peripheral.data.category.uid === this.$route.query.categoryUid
+                }.bind(this);
+                //query for root zones , where zones has parent zone null
+
+                if (this.$route.query.zoneUid !=null && this.$route.query.zoneUid !== "") {
                     this.$apollo.query({
                         query: GET_ZONE_BY_UID,
                         variables: {uid: this.$route.query.zoneUid}
@@ -116,7 +118,6 @@
                         zones = zone.zones;
                         zone.peripherals.sort((a, b) => (a.name > b.name) ? 1 : -1).forEach(periphInitCallback);
                         zones.forEach(zoneInitCallback);
-
                         this.zone = zone;
                         this.zones = zones;
                         this.peripherals = peripherals.filter(peripheralFilter)
@@ -131,6 +132,7 @@
 
                         this.zone = zone;
                         this.zones = zones;
+                        debugger
                         this.peripherals = peripherals.filter(peripheralFilter);
                     });
                 }
@@ -144,7 +146,6 @@
                 }).then(response => {
                     this.breadcrumb = response.data.navigation.breadcrumb;
                 });
-                this.categoryUid = categoryUid
             },
             navZone: function (zoneUid) {
                 router.push({path: 'zones', query: {zoneUid: zoneUid, categoryUid: this.$route.query.categoryUid}})

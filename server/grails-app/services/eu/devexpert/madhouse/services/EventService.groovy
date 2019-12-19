@@ -14,6 +14,7 @@ import groovy.util.logging.Slf4j
 class EventService implements EventPublisher {
 
     def scenarioService
+    def heatService
 
     @Subscriber('light')
     def recieveLightEvent(event) {
@@ -53,6 +54,28 @@ class EventService implements EventPublisher {
                 case "rev":
                     scenarioService.lightsReverse(eventArg)
                     break
+            }
+        }
+    }
+
+    @Subscriber('heat')
+    def heat(event) {
+        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
+            def peripheral = DevicePeripheral.findByUid(event.data.p2)
+            if (peripheral.category.uid == "7rer7ewh-f77a-451f-835e-ee21383503e5") {
+                def args = [:]
+                args.portUids = []
+                peripheral.getConnectedTo().each { port ->
+                    args.portUids << port.uid
+                }
+                switch (event.data.p4) {
+                    case "on":
+                        heatService.heatOn(peripheral)
+                        break
+                    case "off":
+                        heatService.heatOff(peripheral)
+                        break
+                }
             }
         }
     }
