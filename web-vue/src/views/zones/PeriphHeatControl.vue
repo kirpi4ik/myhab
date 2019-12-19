@@ -1,5 +1,5 @@
 <template>
-    <div class="card" :class="`card-background-heat text-white`">
+    <div class="card" :class="`card-background-heat-${peripheral.state} text-white`">
         <div class="card-body pb-2">
             <slot></slot>
             <div>
@@ -11,7 +11,7 @@
         <slot name="footer" class="card-footer">
             <div class="toggle-btn">
                 <toggle-button v-model="peripheral.state" color="#82C7EB" :sync="true"
-                               :labels="{checked: 'Aprinde', unchecked: 'Stinge'}"
+                               :labels="{checked: 'Porneste', unchecked: 'Opreste'}"
                                :switch-color="{checked: 'linear-gradient( #8DFF73, green)', unchecked: 'linear-gradient(#BF0000, #FFBE62)'}"
                                :color="{checked: '#809687', unchecked: '#b90000', disabled: '#CCCCCC'}"
                                :speed="300"
@@ -37,7 +37,7 @@
         methods: {
             periphStateChangeHandler: function (peripheral) {
                 let event = {
-                    "p0": "light",
+                    "p0": "heat",
                     "p1": "PERIPHERAL",
                     "p2": peripheral.data.uid,
                     "p3": "mweb",
@@ -58,8 +58,11 @@
         background-image: linear-gradient(#4f6167, #8e949f);
     }
 
-    .card-background-heat {
+    .card-background-heat-false {
         background-image: linear-gradient(#b8303c, #c25751);
+    }
+    .card-background-heat-true {
+        background-image: linear-gradient(#b88586, #c27973);
     }
 
     .card-footer {

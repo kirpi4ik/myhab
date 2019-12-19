@@ -42,7 +42,6 @@ const onErrorLink = onError(({graphQLErrors, networkError}) => {
             error.path = '/pages/login';
             error.code = 'ERROR_NOT_AUTHENTICATED';
         }
-        debugger
         if (networkError.message === 'Failed to fetch') {
             error.code = "ERROR_SERVER_DOWN";
         }

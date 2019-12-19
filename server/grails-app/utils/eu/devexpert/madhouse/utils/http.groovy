@@ -34,26 +34,31 @@ class http {
     }
 
     def url() {
+        def url = "[node defined]"
         if (device != null && device.model == DeviceModel.MEGAD_2561_RTC) {
-            def url = "http://${device?.networkAddress?.ip}:${device.networkAddress.port}/${device?.authAccounts?.first()?.password}/${uri != null ? uri : ''}"
-            log.debug("GET ${url}")
+            url = "http://${device?.networkAddress?.ip}:${device.networkAddress.port}/${device?.authAccounts?.first()?.password}/${uri != null ? uri : ''}"
+            log.debug("READ STAT for [${DeviceModel.MEGAD_2561_RTC}] from : ${url}")
             try {
                 return connect(url).get()
-            } catch (ConnectException | HttpStatusException ce) {
+            } catch (Exception ce) {
                 log.error("Http failed for ${url}: ${ce.message}")
             }
         } else if (device != null && device.model == DeviceModel.ESP8266_1) {
             try {
-                return connect("http://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}")
+                url = "http://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}"
+                log.debug("READ STAT for [${DeviceModel.ESP8266_1}] from ${url}")
+                return connect(url)
                         .timeout(DEVICE_URL_TIMEOUT)
                         .ignoreContentType(true)
                         .header("Authorization", "Basic " + new String(encodeBase64("${device.authAccounts?.first()?.username}:${device.authAccounts?.first()?.password}".bytes)))
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
                         .get()
-            } catch (ConnectException | HttpStatusException ce) {
+            } catch (Exception ce) {
                 log.error("Http failed for ${url}: ${ce.message}")
             }
+        } else {
+            log.error("Wrong device definition ${device}")
         }
     }
 
