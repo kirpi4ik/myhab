@@ -25,7 +25,6 @@
 </template>
 
 <script>
-    import {router} from '@/_helpers';
     import {authenticationService} from '@/_services';
     import { PUSH_EVENT} from "../../graphql/zones";
 
