@@ -1,7 +1,10 @@
 package eu.devexpert.madhouse.domain
 
+import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.job.Job
 import grails.rest.Resource
+import graphql.schema.DataFetcher
+import graphql.schema.DataFetchingEnvironment
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
@@ -9,7 +12,7 @@ import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 @Resource(uri = '/user')
 @EqualsAndHashCode(includes = 'username')
 @ToString(includes = 'username', includeNames = true, includePackage = false)
-class User implements Serializable {
+class User extends BaseEntity {
     private static final long serialVersionUID = 1
     transient springSecurityService
 
@@ -35,8 +38,16 @@ class User implements Serializable {
         (UserRole.findAllByUser(this) as List<UserRole>)*.role as Set<Role>
     }
 
-    static graphql = GraphQLMapping.build {
-        property 'name', deprecationReason: 'To be removed August 1st, 2020', description : 'some name'
+    static graphql = GraphQLMapping.lazy {
+        query('userByUid', User) {
+            argument('uid', String)
+            dataFetcher(new DataFetcher() {
+                @Override
+                Object get(DataFetchingEnvironment environment) {
+                    User.findByUid(environment.getArgument('uid'))
+                }
+            })
+        }
     }
 
     static constraints = {
