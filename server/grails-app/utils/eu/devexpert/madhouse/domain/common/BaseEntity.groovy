@@ -32,8 +32,9 @@ abstract class BaseEntity implements Serializable {
 //  }
 
   static constraints = {
-    tsCreated column: "ts_created"
-    tsUpdated column: "ts_updated"
+    uid column: "uid", nullable: true
+    tsCreated column: "ts_created", nullable: true
+    tsUpdated column: "ts_updated", nullable: true
     entityType column: "en_type", nullable: true
   }
 }
