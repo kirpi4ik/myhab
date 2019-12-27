@@ -24,7 +24,7 @@ class PortValueReaderJob implements Job, EventPublisher {
   MegaDriverService megaDriverService
   EspDeviceService espDeviceService
   static triggers = {
-    simple name: 'portValueReader', repeatInterval: 5000
+    simple name: 'portValueReader', repeatInterval: 500000
   }
   static group = "Internal"
   static description = "Read port status"

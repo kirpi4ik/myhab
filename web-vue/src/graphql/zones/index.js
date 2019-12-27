@@ -110,3 +110,35 @@ export const PUSH_EVENT = gql`
         }
     }
 `;
+export const USERS_GET_ALL = gql`
+    {
+        userList{
+            id
+            uid
+            username
+            enabled
+            accountExpired
+            accountLocked
+            passwordExpired
+            email
+            firstName
+            lastName
+        }
+    }
+`;
+export const USER_GET_BY_ID = gql`
+    query findUserByUid($uid:String!){
+        userByUid(uid: $uid) {
+            id
+            uid
+            username
+            enabled
+            accountExpired
+            accountLocked
+            passwordExpired
+            email
+            firstName
+            lastName
+        }
+    }
+`;
