@@ -133,7 +133,8 @@ environments:
       password: "madhouse"
       driverClassName: "org.postgresql.Driver"
       dialect: "org.hibernate.dialect.PostgreSQLDialect"
-      logSql: false
+      logSql: true
+      formatSql: true
       properties:
         jmxEnabled: true
         initialSize: 5
