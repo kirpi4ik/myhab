@@ -102,9 +102,9 @@ quartz:
   dataSource:
     development:
       driver: "org.postgresql.Driver"
-      URL: "jdbc:postgresql://localhost:5432/madhouse_v2_0"
+      URL: "jdbc:postgresql://localhost:5432/madhouse_12_19"
       user: "madhouse"
-      password: "kirpi4ik"
+      password: "madhouse"
       maxConnections: 5
     production:
       driver: "org.postgresql.Driver"
@@ -128,9 +128,9 @@ environments:
   development:
     dataSource:
       dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse_v2_0
+      url: jdbc:postgresql://localhost:5432/madhouse_12_19
       username: "madhouse"
-      password: "kirpi4ik"
+      password: "madhouse"
       driverClassName: "org.postgresql.Driver"
       dialect: "org.hibernate.dialect.PostgreSQLDialect"
       logSql: false
