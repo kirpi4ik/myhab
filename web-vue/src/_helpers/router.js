@@ -14,6 +14,7 @@ const Zones = () => import('@/views/zones/ZoneCombinedView')
 // Users
 const Users = () => import('@/views/users/Users')
 const User = () => import('@/views/users/User')
+const UserEdit = () => import('@/views/users/UserEdit')
 
 // Views - Pages
 const Page403 = () => import('@/views/pages/Page403')
@@ -70,6 +71,13 @@ function configRoutes() {
                             meta: {label: 'User Details'},
                             name: 'User',
                             component: User,
+                            children: [
+                                {
+                                    path: 'edit',
+                                    component: UserEdit,
+                                    meta: {label: 'Edit'}
+                                }
+                            ]
                         },
                     ]
                 }
