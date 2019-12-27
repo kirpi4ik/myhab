@@ -84,7 +84,7 @@
                             : status === 'Banned' ? 'danger' : 'primary'
             },
             userLink(uid) {
-                return `users/${uid.toString()}`
+                return `users/${uid}`
             },
             rowClicked(item, index) {
                 const userLink = this.userLink(item.uid)

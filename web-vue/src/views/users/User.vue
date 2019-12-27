@@ -13,7 +13,7 @@
                             small
                             fixed
                             :items="userDetails"
-                            :fields="fields"
+                            :fields="$options.fields"
                             @row-clicked="rowClicked"
                     />
                 </CCardBody>
