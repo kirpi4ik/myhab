@@ -62,11 +62,11 @@
             previousButtonHtml: 'prev',
             nextButtonHtml: 'next'
         },
-        created() {
+        mounted() {
             this.loadUsers();
         },
         watch: {
-            '$route.path': 'loadUsers'
+            '$route.fullPath': 'loadUsers'
         },
         methods: {
             loadUsers() {

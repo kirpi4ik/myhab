@@ -103,6 +103,14 @@ export const UPDATE_PORT_VALUE = gql`
         }
     }
 `;
+export const UPDATE_USER_VALUE = gql`
+    mutation ($id:Long!, $user:UserUpdate) {
+        userUpdate(id:$id, user: $user){
+            id,
+            uid
+        }
+    }
+`;
 export const PUSH_EVENT = gql`
     mutation pushEvent($input: EventDatInput){
         pushEvent(input:$input){

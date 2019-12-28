@@ -15,6 +15,7 @@ const Zones = () => import('@/views/zones/ZoneCombinedView')
 const Users = () => import('@/views/users/Users')
 const User = () => import('@/views/users/User')
 const UserEdit = () => import('@/views/users/UserEdit')
+const RouteContainer = () => import('@/containers/RouteContainer')
 
 // Views - Pages
 const Page403 = () => import('@/views/pages/Page403')
@@ -56,26 +57,32 @@ function configRoutes() {
                 {
                     path: 'users',
                     meta: {label: 'Users'},
-                    component: {
-                        render(c) {
-                            return c('router-view')
-                        }
-                    },
+                    component: RouteContainer,
                     children: [
                         {
                             path: '',
                             component: Users,
+                            meta: {
+                                reload: true,
+                            }
                         },
                         {
                             path: ':id',
-                            meta: {label: 'User Details'},
-                            name: 'User',
-                            component: User,
+                            props: true,
+                            name: "Details",
+                            component: RouteContainer,
+                            meta: {
+                                reload: true,
+                            },
                             children: [
                                 {
+                                    path: '',
+                                    component: User
+                                },
+                                {
                                     path: 'edit',
-                                    component: UserEdit,
-                                    meta: {label: 'Edit'}
+                                    name: 'Edit',
+                                    component: UserEdit
                                 }
                             ]
                         },
