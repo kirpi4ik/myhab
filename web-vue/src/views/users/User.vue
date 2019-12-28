@@ -3,18 +3,21 @@
         <CCol col="12" lg="6">
             <CCard>
                 <CCardHeader>
-                    User id: {{ $route.params.id }}
+                    <strong>User details {{ $route.params.id }} </strong> <small>Form</small>
+                    <div class="card-header-actions" @click="rowClicked">
+                        <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
+                            <small class="text-muted">edit</small>
+                        </a>
+                    </div>
                 </CCardHeader>
                 <CCardBody>
                     <CDataTable
                             striped
-                            dark
                             hover
                             small
                             fixed
                             :items="userDetails"
                             :fields="$options.fields"
-                            @row-clicked="rowClicked"
                     />
                 </CCardBody>
                 <CCardFooter>
@@ -27,7 +30,6 @@
 
 <script>
     import {USER_GET_BY_ID} from "../../graphql/zones";
-    import {router} from '@/_helpers';
 
 
     export default {
@@ -36,18 +38,25 @@
             {key: 'key', _style: 'width:150px'},
             {key: 'value', _style: 'width:150px;'}
         ],
-        name: 'Users',
         data: () => {
             return {
-                userDetails: []
+                userDetails: [],
+                readonly: ["id", "__typename", "uid"]
             }
         },
-        created() {
-            this.loadUsers();
+        mounted() {
+            this.loadUser();
+        },
+        watch: {
+            '$route.fullPath': 'loadUser'
         },
         methods: {
-            loadUsers() {
-                let user = []
+            loadUser() {
+                let user = [];
+                let removeReadonly = function (keyMap) {
+                    return !this.readonly.includes(keyMap.key)
+                }.bind(this);
+
                 this.$apollo.query({
                     query: USER_GET_BY_ID,
                     variables: {uid: this.$route.params.id}
@@ -56,7 +65,7 @@
                     const userDetailsToMap = user ? Object.entries(user) : [['id', 'Not found']]
                     this.userDetails = userDetailsToMap.map(([key, value]) => {
                         return {key, value}
-                    })
+                    }).filter(removeReadonly)
                 });
             },
             rowClicked(item, index) {

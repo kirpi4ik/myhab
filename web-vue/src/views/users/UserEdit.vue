@@ -1,48 +1,61 @@
 <template>
     <div>
         <CRow>
-            <CCol sm="12">
-                <CInput
-                        label="Name"
-                        placeholder="Enter your name"
-                />
-            </CCol>
-        </CRow>
-        <CRow>
-            <CCol sm="12">
-                <CInput
-                        label="Credit Card Number"
-                        placeholder="0000 0000 0000 0000"
-                />
-            </CCol>
-        </CRow>
-        <CRow>
-            <CCol sm="4">
-                <CSelect
-                        label="Month"
-                        :options="[1,2,3,4,5,6,7,8,9,10,11,12]"
-                />
-            </CCol>
-            <CCol sm="4">
-                <CSelect
-                        label="Year"
-                        :options="[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]"
-                />
-            </CCol>
-            <CCol sm="4">
-                <CInput
-                        label="CVV/CVC"
-                        placeholder="123"
-                />
+            <CCol sm="6">
+                <CCard>
+                    <CForm>
+                        <CCardHeader>
+                            <strong>Edit user </strong> <small>Form</small>
+                            <div class="card-header-actions">
+                                <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener"
+                                   @click="$router.go(-1)">
+                                    <small class="text-muted">Cancel</small>
+                                </a>
+                            </div>
+                        </CCardHeader>
+                        <CCardBody>
+                            <CRow v-for="(userDetail, index) in userDetails" :key="`detail-${index}`">
+                                <CCol sm="12">
+                                    <CInputCheckbox
+                                            v-if="userDetail.key.endsWith('ed')"
+                                            :key="userDetail.key"
+                                            :label="userDetail.key"
+                                            :value="userDetail.value"
+                                            :name="userDetail.value"
+                                            :checked="userDetail.value"
+                                            @update:checked="check($event, userDetail.key)"
+                                            :inline="true"
+                                            :ref="userDetail.key"
+                                    />
+                                    <CInput v-if="!userDetail.key.endsWith('ed')"
+                                            :label="userDetail.key"
+                                            :placeholder="userDetail.key"
+                                            :value="userDetail.value"
+                                            @input="updateFieldValue($event, userDetail.key)"
+                                            :ref="userDetail.key"/>
+                                </CCol>
+                            </CRow>
+                        </CCardBody>
+                        <CCardFooter>
+                            <CButton type="submit" size="sm" color="primary" @click="save">
+                                <CIcon name="cil-check-circle"/>
+                                Save
+                            </CButton>
+                            <CButton type="reset" size="sm" color="danger" @click="$router.go(-1)">
+                                <CIcon name="cil-ban"/>
+                                Cancel
+                            </CButton>
+                        </CCardFooter>
+                    </CForm>
+                </CCard>
             </CCol>
         </CRow>
     </div>
 </template>
 
-<script>
-    import {USER_GET_BY_ID} from "../../graphql/zones";
-    import {router} from '@/_helpers';
 
+<script>
+    import {UPDATE_USER_VALUE, USER_GET_BY_ID} from "../../graphql/zones";
 
     export default {
         name: 'User',
@@ -53,31 +66,45 @@
         name: 'Users',
         data: () => {
             return {
-                userDetails: []
+                userDetails: [],
+                user: [],
+                userToUpdate: {},
+                readonly: ["id", "__typename", "uid"]
             }
         },
         created() {
-            this.loadUsers();
+            this.loadUserByUidFromGet();
         },
         methods: {
-            loadUsers() {
-                let user = []
+            check(value, key) {
+                this.userToUpdate[key] = value
+
+            },
+            updateFieldValue(value, key) {
+                this.userToUpdate[key] = value
+            },
+            save() {
+                this.$apollo.mutate({
+                    mutation: UPDATE_USER_VALUE, variables: {id: this.user.id, user: this.userToUpdate}
+                }).then(response => {
+                    this.$router.go(-1)
+                });
+            },
+            loadUserByUidFromGet() {
+                let removeReadonly = function (keyMap) {
+                    return !this.readonly.includes(keyMap.key)
+                }.bind(this);
+
                 this.$apollo.query({
                     query: USER_GET_BY_ID,
                     variables: {uid: this.$route.params.id}
                 }).then(response => {
-                    user = response.data.userByUid;
-                    const userDetailsToMap = user ? Object.entries(user) : [['id', 'Not found']]
+                    this.user = response.data.userByUid;
+                    const userDetailsToMap = this.user ? Object.entries(this.user) : [['id', 'Not found']]
                     this.userDetails = userDetailsToMap.map(([key, value]) => {
                         return {key, value}
-                    })
+                    }).filter(removeReadonly)
                 });
-            },
-            rowClicked(item, index) {
-                this.$router.push({path: this.$route.params.id + "/edit"})
-            },
-            goBack() {
-                this.$router.go(-1)
             }
         }
     }
