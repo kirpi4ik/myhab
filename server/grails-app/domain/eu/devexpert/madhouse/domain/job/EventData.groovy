@@ -12,11 +12,11 @@ class EventData extends BaseEntity {
   String p4 // event parameter( like port action : on/off/rev  - see PortAction.class)
   String p5 // json parameter
   String p6  // event producer reference(username)
-
-  def beforeInsert() {
-    super.beforeInsert()
-    entityType = EntityType.EVENT_DATA
-  }
+//
+//  def beforeInsert() {
+//    super.beforeInsert()
+//    entityType = EntityType.EVENT_DATA
+//  }
   static mapping = {
     table '`event_log`'
     version false
