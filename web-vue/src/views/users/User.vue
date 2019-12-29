@@ -69,7 +69,7 @@
                 });
             },
             rowClicked(item, index) {
-                this.$router.push({path: this.$route.params.id + "/edit"})
+                this.$router.push({path: "/users/"+this.$route.params.id + "/edit"})
             },
             goBack() {
                 this.$router.go(-1)
