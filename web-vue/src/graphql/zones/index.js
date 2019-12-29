@@ -151,3 +151,10 @@ export const USER_GET_BY_ID = gql`
         }
     }
 `;
+export const USER_CREATE = gql`
+    mutation($user: UserCreate) {
+      userCreate(user: $user) {
+        uid
+      }
+    }
+`;
