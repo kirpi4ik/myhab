@@ -15,6 +15,7 @@ const Zones = () => import('@/views/zones/ZoneCombinedView')
 const Users = () => import('@/views/users/Users')
 const User = () => import('@/views/users/User')
 const UserEdit = () => import('@/views/users/UserEdit')
+const UserNew = () => import('@/views/users/UserNew')
 const RouteContainer = () => import('@/containers/RouteContainer')
 
 // Views - Pages
@@ -78,6 +79,11 @@ function configRoutes() {
                             path: '/users/:id/edit',
                             name: "Edit",
                             component: UserEdit
+                        },
+                        {
+                            path: '/users/create',
+                            name: "New user",
+                            component: UserNew
                         }
                     ]
                 }

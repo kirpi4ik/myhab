@@ -33,6 +33,9 @@
                             </template>
                         </CDataTable>
                     </CCardBody>
+                    <CCardFooter>
+                        <CButton color="success" @click="addNew">Add new</CButton>
+                    </CCardFooter>
                 </CCard>
             </transition>
         </CCol>
@@ -69,10 +72,14 @@
             '$route.fullPath': 'loadUsers'
         },
         methods: {
+            addNew(){
+                this.$router.push({path: "/users/create"})
+            },
             loadUsers() {
                 this.$apollo.query({
                     query: USERS_GET_ALL,
-                    variables: {}
+                    variables: {},
+                    fetchPolicy: 'network-only'
                 }).then(response => {
                     this.items = response.data.userList;
                 });
