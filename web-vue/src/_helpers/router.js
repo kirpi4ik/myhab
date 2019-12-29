@@ -72,12 +72,12 @@ function configRoutes() {
                         {
                             path: '/users/:id/profile',
                             name: "Details",
-                            component: User,
+                            component: User
                         },
                         {
                             path: '/users/:id/edit',
                             name: "Edit",
-                            component: UserEdit,
+                            component: UserEdit
                         }
                     ]
                 }
