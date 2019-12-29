@@ -13,7 +13,6 @@
                                 :items="items"
                                 :fields="fields"
                                 :items-per-page="perPage"
-                                @row-clicked="rowClicked"
                                 :pagination="$options.paginationProps"
                                 index-column
                                 clickable-rows
@@ -26,9 +25,11 @@
 
                             <template #status="data">
                                 <td>
-                                    <CBadge :color="getBadge(data.item.status)">
-                                        {{data.item.status}}
-                                    </CBadge>
+                                    <CButton color="success" @click="viewUserDetails(data.item.uid)">View</CButton>
+                                    |
+                                    <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto">
+                                        Remove
+                                    </CButton>
                                 </td>
                             </template>
                         </CDataTable>
@@ -36,6 +37,13 @@
                     <CCardFooter>
                         <CButton color="success" @click="addNew">Add new</CButton>
                     </CCardFooter>
+                    <CModal title="Delete user" color="danger" :show.sync="deleteConfirmShow">
+                        Do you want delete : <strong>{{selectedItem.username}}</strong> ?
+                        <template #footer>
+                            <CButton @click="removeUser" color="danger">Delete</CButton>
+                            <CButton @click="deleteConfirmShow = false" color="success">Cancel</CButton>
+                        </template>
+                    </CModal>
                 </CCard>
             </transition>
         </CCol>
@@ -43,7 +51,7 @@
 </template>
 
 <script>
-    import {USERS_GET_ALL} from "../../graphql/zones";
+    import {USERS_GET_ALL, USER_DELETE} from "../../graphql/zones";
 
     export default {
         name: 'Users',
@@ -57,6 +65,8 @@
                     {key: 'status'}
                 ],
                 perPage: 5,
+                deleteConfirmShow: false,
+                selectedItem: {}
             }
         },
         paginationProps: {
@@ -72,7 +82,19 @@
             '$route.fullPath': 'loadUsers'
         },
         methods: {
-            addNew(){
+            modalCheck(item) {
+                this.deleteConfirmShow = true;
+                this.selectedItem = item
+            },
+            removeUser() {
+                this.$apollo.mutate({
+                    mutation: USER_DELETE, variables: {id: this.selectedItem.id}
+                }).then(response => {
+                    this.deleteConfirmShow = false
+                    this.loadUsers();
+                });
+            },
+            addNew() {
                 this.$router.push({path: "/users/create"})
             },
             loadUsers() {
@@ -93,8 +115,8 @@
             userLink(uid) {
                 return `users/${uid}/profile`
             },
-            rowClicked(item, index) {
-                const userLink = this.userLink(item.uid)
+            viewUserDetails(uid) {
+                const userLink = this.userLink(uid)
                 this.$router.push({path: userLink})
             }
         }
