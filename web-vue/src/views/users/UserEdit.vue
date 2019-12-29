@@ -5,7 +5,7 @@
                 <CCard>
                     <CForm>
                         <CCardHeader>
-                            <strong>Edit user </strong> <small>Form</small>
+                            <strong>Edit user </strong> <small>{{user.name}}</small>
                             <div class="card-header-actions">
                                 <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener"
                                    @click="$router.go(-1)">
@@ -21,7 +21,6 @@
                                             :key="userDetail.key"
                                             :label="userDetail.key"
                                             :value="userDetail.value"
-                                            :name="userDetail.value"
                                             :checked="userDetail.value"
                                             @update:checked="check($event, userDetail.key)"
                                             :inline="true"
@@ -69,7 +68,7 @@
                 userDetails: [],
                 user: [],
                 userToUpdate: {},
-                readonly: ["id", "__typename", "uid"]
+                readonly: ["id", "__typename", "uid", "name"]
             }
         },
         created() {
@@ -87,7 +86,7 @@
                 this.$apollo.mutate({
                     mutation: UPDATE_USER_VALUE, variables: {id: this.user.id, user: this.userToUpdate}
                 }).then(response => {
-                    this.$router.go(-1)
+                    this.$router.push({path: "/users/" + this.$route.params.id + "/profile"})
                 });
             },
             loadUserByUidFromGet() {
@@ -97,7 +96,8 @@
 
                 this.$apollo.query({
                     query: USER_GET_BY_ID,
-                    variables: {uid: this.$route.params.id}
+                    variables: {uid: this.$route.params.id},
+                    fetchPolicy: 'network-only'
                 }).then(response => {
                     this.user = response.data.userByUid;
                     const userDetailsToMap = this.user ? Object.entries(this.user) : [['id', 'Not found']]

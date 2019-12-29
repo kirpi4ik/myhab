@@ -139,6 +139,7 @@ export const USER_GET_BY_ID = gql`
         userByUid(uid: $uid) {
             id
             uid
+            name
             username
             enabled
             accountExpired

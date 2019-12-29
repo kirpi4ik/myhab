@@ -52,7 +52,18 @@ const onErrorLink = onError(({graphQLErrors, networkError}) => {
 
 const apolloClient = new ApolloClient({
     link: onErrorLink.concat(withAuthToken).concat(httpLink),
-    cache: new InMemoryCache()
+    cache: new InMemoryCache(),
+    watchQuery: {
+        fetchPolicy: 'cache-and-network',
+        errorPolicy: 'ignore',
+    },
+    query: {
+        fetchPolicy: 'network-only',
+        errorPolicy: 'all',
+    },
+    mutate: {
+        errorPolicy: 'all'
+    }
 });
 
 export default new VueApollo({
