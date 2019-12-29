@@ -158,3 +158,10 @@ export const USER_CREATE = gql`
       }
     }
 `;
+export const USER_DELETE = gql`
+    mutation($id: Long!) {
+      userDelete(id: $id) {
+        success
+      }
+    }
+`;
