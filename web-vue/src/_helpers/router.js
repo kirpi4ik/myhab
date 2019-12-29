@@ -56,7 +56,10 @@ function configRoutes() {
                 },
                 {
                     path: 'users',
-                    meta: {label: 'Users'},
+                    meta: {
+                        label: 'Users',
+                        reload: true,
+                    },
                     component: RouteContainer,
                     children: [
                         {
@@ -67,25 +70,15 @@ function configRoutes() {
                             }
                         },
                         {
-                            path: ':id',
-                            props: true,
+                            path: '/users/:id/profile',
                             name: "Details",
-                            component: RouteContainer,
-                            meta: {
-                                reload: true,
-                            },
-                            children: [
-                                {
-                                    path: '',
-                                    component: User
-                                },
-                                {
-                                    path: 'edit',
-                                    name: 'Edit',
-                                    component: UserEdit
-                                }
-                            ]
+                            component: User,
                         },
+                        {
+                            path: '/users/:id/edit',
+                            name: "Edit",
+                            component: UserEdit,
+                        }
                     ]
                 }
                 // otherwise redirect to home
