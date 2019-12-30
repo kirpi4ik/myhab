@@ -165,3 +165,23 @@ export const USER_DELETE = gql`
       }
     }
 `;
+export const ROLES_GET_FOR_USER = gql`
+    query rolesForUser($uid: String!) {
+        roleList {
+            id
+            authority
+        }
+        userRolesForUser(userUid: $uid) {
+            userId
+            roleId
+        }
+    }
+
+`;
+export const ROLES_SAVE = gql`
+    mutation save($input:SaveUserRoles){
+        userRolesSave(input:$input){
+            success
+        }
+    }
+`;

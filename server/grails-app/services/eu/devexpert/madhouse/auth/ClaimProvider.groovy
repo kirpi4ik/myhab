@@ -9,7 +9,7 @@ class ClaimProvider implements CustomClaimProvider {
 
     @Override
     void provideCustomClaims(JWTClaimsSet.Builder builder, UserDetails details, String principal, Integer expiration) {
-        builder.expirationTime(DateTime.now().plusMinutes(300).toDate())
+        builder.expirationTime(DateTime.now().plusMinutes(300000).toDate())
         builder.issuer("madhouse-v2")
     }
 

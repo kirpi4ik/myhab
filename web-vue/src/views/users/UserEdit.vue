@@ -34,6 +34,19 @@
                                             :ref="userDetail.key"/>
                                 </CCol>
                             </CRow>
+                            <CRow v-for="(role, index) in roles" :key="`role-${index}`">
+                                <CCol sm="12">
+                                    <CInputCheckbox
+                                            :key="role.authority"
+                                            :label="role.authority"
+                                            :value="role.checked"
+                                            :checked="role.checked"
+                                            :inline="true"
+                                            @update:checked="updateRoleValue($event, role.id)"
+                                            :ref="role.authority"
+                                    />
+                                </CCol>
+                            </CRow>
                         </CCardBody>
                         <CCardFooter>
                             <CButton type="submit" size="sm" color="primary" @click="save">
@@ -54,7 +67,7 @@
 
 
 <script>
-    import {UPDATE_USER_VALUE, USER_GET_BY_ID} from "../../graphql/zones";
+    import {UPDATE_USER_VALUE, USER_GET_BY_ID, ROLES_GET_FOR_USER, ROLES_SAVE} from "../../graphql/zones";
 
     export default {
         name: 'User',
@@ -67,6 +80,7 @@
             return {
                 userDetails: [],
                 user: [],
+                roles: [],
                 userToUpdate: {},
                 readonly: ["id", "__typename", "uid", "name"]
             }
@@ -82,16 +96,54 @@
             updateFieldValue(value, key) {
                 this.userToUpdate[key] = value
             },
+            updateRoleValue(value, key) {
+                debugger
+                this.roles.forEach(function (role, index) {
+                    if (role.id == key) {
+                        role.checked = value;
+                    }
+                });
+
+            },
             save() {
                 this.$apollo.mutate({
                     mutation: UPDATE_USER_VALUE, variables: {id: this.user.id, user: this.userToUpdate}
                 }).then(response => {
-                    this.$router.push({path: "/users/" + this.$route.params.id + "/profile"})
+                    let roles = {
+                        "userUid": this.user.uid,
+                        "userRoles": this.roles.filter(function (role) {
+                            debugger
+                            return role.checked
+                        }.bind(this)).map(function (role, index) {
+                            return {"userId": this.user.id, "roleId": role.id};
+                        }.bind(this))
+                    };
+                    this.$apollo.mutate({
+                        mutation: ROLES_SAVE, variables: {input: roles}
+                    }).then(response => {
+                        this.$router.push({path: "/users/" + this.$route.params.id + "/profile"})
+                    });
                 });
             },
             loadUserByUidFromGet() {
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)
+                }.bind(this);
+
+
+                let loadRoles = function () {
+                    this.$apollo.query({
+                        query: ROLES_GET_FOR_USER,
+                        variables: {uid: this.user.uid},
+                        fetchPolicy: 'network-only'
+                    }).then(response => {
+                        this.roles = response.data.roleList.map(function (role, index) {
+                            let found = response.data.userRolesForUser.filter(function (hasRole) {
+                                return role.id == hasRole.roleId
+                            });
+                            return {id: role.id, authority: role.authority, checked: found.length > 0};
+                        });
+                    });
                 }.bind(this);
 
                 this.$apollo.query({
@@ -104,6 +156,7 @@
                     this.userDetails = userDetailsToMap.map(([key, value]) => {
                         return {key, value}
                     }).filter(removeReadonly)
+                    loadRoles()
                 });
             }
         }

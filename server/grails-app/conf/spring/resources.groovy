@@ -2,6 +2,7 @@ import eu.devexpert.madhouse.GQLSchemaFactory
 import eu.devexpert.madhouse.GraphQLGenerator
 import eu.devexpert.madhouse.UserPasswordEncoderListener
 import eu.devexpert.madhouse.auth.ClaimProvider
+import eu.devexpert.madhouse.gql.fetchers.Mutation
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 beans = {
@@ -22,6 +23,7 @@ beans = {
         listArguments = '#{grailsGraphQLConfiguration.getListArguments()}'
         gqlSchema = "classpath:schema.graphqls"
     }
+    mutation(Mutation)
 //    graphQLSchema(graphQLSchemaGenerator: "generate")
     graphQLGenrator(GraphQLGenerator) {
         schema = ref("graphQLSchema")
