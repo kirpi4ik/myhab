@@ -8,6 +8,8 @@ import graphql.schema.DataFetchingEnvironment
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
+import org.grails.gorm.graphql.fetcher.impl.DeleteEntityDataFetcher
+import org.grails.gorm.graphql.fetcher.impl.EntityDataFetcher
 
 @Resource(uri = '/user')
 @EqualsAndHashCode(includes = 'username')
@@ -45,6 +47,26 @@ class User extends BaseEntity {
                 @Override
                 Object get(DataFetchingEnvironment environment) {
                     User.findByUid(environment.getArgument('uid'))
+                }
+            })
+        }
+        mutation('userDeleteCascade', "DeleteResponseCustom") {
+            argument('id', Long)
+            returns {
+                field('error', String)
+                field('success', Boolean)
+            }
+            dataFetcher(new DeleteEntityDataFetcher(User.gormPersistentEntity) {
+                @Override
+                Object get(DataFetchingEnvironment environment) throws Exception {
+                    withTransaction(false) {
+                        def currentUser = User.findById(environment.getArgument("id"))
+                        UserRole.where {
+                            user == currentUser
+                        }.deleteAll()
+                        currentUser.delete()
+                    }
+                    return [success: true, error: null]
                 }
             })
         }
