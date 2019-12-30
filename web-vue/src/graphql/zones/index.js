@@ -151,6 +151,32 @@ export const USER_GET_BY_ID = gql`
         }
     }
 `;
+export const USER_GET_BY_ID_WITH_ROLES = gql`
+    query findUserByUid($uid:String!){
+        userByUid(uid: $uid) {
+            id
+            uid
+            name
+            username
+            enabled
+            accountExpired
+            accountLocked
+            passwordExpired
+            email
+            firstName
+            lastName
+        }
+        userRolesForUser(userUid: $uid) {
+            userId
+            roleId
+        }
+        roleList {
+            id
+            authority
+        }
+        
+    }
+`;
 export const USER_CREATE = gql`
     mutation($user: UserCreate) {
       userCreate(user: $user) {
@@ -160,7 +186,7 @@ export const USER_CREATE = gql`
 `;
 export const USER_DELETE = gql`
     mutation($id: Long!) {
-      userDelete(id: $id) {
+        userDeleteCascade(id: $id) {
         success
       }
     }
