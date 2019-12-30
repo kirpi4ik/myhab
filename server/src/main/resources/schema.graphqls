@@ -1,9 +1,20 @@
 type Query{
     navigation : Navigation
+    userRolesForUser(userUid: String!): [UserRole]
+}
+
+type UserRole {
+    userId: ID!
+    roleId: ID!
 }
 
 type Navigation {
     breadcrumb(zoneUid: String) : [BradCrumbLink]
+}
+
+type MutationResponse {
+    success : Boolean
+    error : String
 }
 
 type BradCrumbLink {
@@ -12,6 +23,7 @@ type BradCrumbLink {
 }
 type Mutation {
     pushEvent(input:EventDatInput) : EventDataResponse
+    userRolesSave(input: SaveUserRoles): MutationResponse
 }
 
 type EventDataResponse {
@@ -34,4 +46,13 @@ input EventDatInput {
     p4: String
     p5: String
     p6: String
+}
+
+input SaveUserRoles {
+    userUid: String!
+    userRoles: [UserRoleRef]
+}
+input UserRoleRef {
+    userId : ID!
+    roleId: ID!
 }
