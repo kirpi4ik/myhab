@@ -67,7 +67,7 @@
 
 
 <script>
-    import {UPDATE_USER_VALUE, USER_GET_BY_ID, ROLES_GET_FOR_USER, ROLES_SAVE} from "../../graphql/zones";
+    import {USER_VALUE_UPDATE, USER_GET_BY_ID, ROLES_GET_FOR_USER, ROLES_SAVE} from "../../graphql/zones";
 
     export default {
         name: 'User',
@@ -107,7 +107,7 @@
             },
             save() {
                 this.$apollo.mutate({
-                    mutation: UPDATE_USER_VALUE, variables: {id: this.user.id, user: this.userToUpdate}
+                    mutation: USER_VALUE_UPDATE, variables: {id: this.user.id, user: this.userToUpdate}
                 }).then(response => {
                     let roles = {
                         "userUid": this.user.uid,
