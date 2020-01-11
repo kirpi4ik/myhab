@@ -2,16 +2,13 @@
   "name": "@madhouse/madhouse-vue",
   "description": "MadHouse AI",
   "author": "Dumitru Ciubenco",
-  "homepage": "http://madhouse.app",
-  "copyright": "Copyright 2019 Dumitru Ciubenco",
-  "license": "MIT",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build --mode production",
-    "buildProd": "vue-cli-service build --mode production",
-    "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
+    "lint": "vue-cli-service lint",
+    "buildProd": "vue-cli-service build --mode production",
     "start": "webpack-dev-server --open"
   },
   "dependencies": {
@@ -32,11 +29,11 @@
   "devDependencies": {
     "@babel/core": "7.7.4",
     "@babel/plugin-syntax-dynamic-import": "^7.7.4",
-    "@vue/cli-plugin-babel": "^4.1.1",
-    "@vue/cli-plugin-e2e-nightwatch": "^4.1.1",
-    "@vue/cli-plugin-eslint": "^4.1.1",
-    "@vue/cli-plugin-unit-jest": "^4.1.1",
-    "@vue/cli-service": "^4.1.1",
+    "@vue/cli-plugin-babel": "^4.1.2",
+    "@vue/cli-plugin-e2e-nightwatch": "^4.1.2",
+    "@vue/cli-plugin-eslint": "^4.1.2",
+    "@vue/cli-plugin-unit-jest": "^4.1.2",
+    "@vue/cli-service": "^4.1.2",
     "@vue/test-utils": "1.0.0-beta.30",
     "apollo-cache-inmemory": "^1.6.3",
     "apollo-client": "^2.6.4",
@@ -73,8 +70,11 @@
     "last 2 versions",
     "not ie <= 9"
   ],
+  "copyright": "Copyright 2019 Dumitru Ciubenco",
   "engines": {
     "node": ">= 8.10.x",
     "npm": ">= 5.6.0"
-  }
+  },
+  "homepage": "http://madhouse.app",
+  "license": "MIT"
 }

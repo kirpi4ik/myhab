@@ -41,7 +41,7 @@
 </template>
 <script>
     import {router} from '@/_helpers';
-    import {GET_ZONE_BY_UID, GET_ZONES_ROOT, NAV_BREADCRUMB} from "../../graphql/zones";
+    import {ZONE_GET_BY_UID, ZONES_GET_ROOT, NAV_BREADCRUMB} from "../../graphql/zones";
     import PeriphLightControl from './PeriphLightControl'
     import PeriphHeatControl from './PeriphHeatControl'
     import PeriphTempControl from './PeriphTempControl'
@@ -111,7 +111,7 @@
 
                 if (this.$route.query.zoneUid !=null && this.$route.query.zoneUid !== "") {
                     this.$apollo.query({
-                        query: GET_ZONE_BY_UID,
+                        query: ZONE_GET_BY_UID,
                         variables: {uid: this.$route.query.zoneUid}
                     }).then(response => {
                         zone = response.data.zoneByUid;
@@ -124,7 +124,7 @@
                     });
                 } else {
                     this.$apollo.query({
-                        query: GET_ZONES_ROOT,
+                        query: ZONES_GET_ROOT,
                         variables: {}
                     }).then(response => {
                         zones = response.data.zonesRoot;
