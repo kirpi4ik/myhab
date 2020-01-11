@@ -1,6 +1,6 @@
 import gql from "graphql-tag";
 
-export const GET_ALL_ZONES = gql`
+export const ZONES_GET_ALL = gql`
     query {
         zoneList{
             uid
@@ -30,7 +30,7 @@ export const NAV_BREADCRUMB = gql`
         }
     }
 `;
-export const GET_ZONE_BY_UID = gql`
+export const ZONE_GET_BY_UID = gql`
     query zoneByUid($uid: String!) {
         zoneByUid(uid: $uid) {
             uid
@@ -68,7 +68,7 @@ export const GET_ZONE_BY_UID = gql`
     }
 
 `;
-export const GET_ZONES_ROOT = gql`
+export const ZONES_GET_ROOT = gql`
     {
         zonesRoot {
             uid
@@ -95,7 +95,7 @@ export const GET_ZONES_ROOT = gql`
     }
 `;
 
-export const UPDATE_PORT_VALUE = gql`
+export const PORT_VALUE_UPDATE = gql`
     mutation ($id:Long!, $portValue:PortValueUpdate) {
         portValueUpdate(id:$id, portValue: $portValue){
             id,
@@ -103,7 +103,7 @@ export const UPDATE_PORT_VALUE = gql`
         }
     }
 `;
-export const UPDATE_USER_VALUE = gql`
+export const USER_VALUE_UPDATE = gql`
     mutation ($id:Long!, $user:UserUpdate) {
         userUpdate(id:$id, user: $user){
             id,
