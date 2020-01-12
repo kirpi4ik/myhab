@@ -7,7 +7,7 @@
         <CSidebarBrand
                 :imgFull="{ width: 118, height: 46, alt: 'Logo', src: 'img/brand/coreui-base-white.svg'}"
                 :imgMinimized="{ width: 118, height: 46, alt: 'Logo', src: 'img/brand/coreui-signet-white.svg'}"
-                :wrappedInLink="{ href: 'https://madhouse.app/', target: '_blank'}"
+                :wrappedInLink="{ href: 'https://madhouse.app/', target: '_self'}"
         />
         <CRenderFunction flat :content-to-render="navItems"/>
         <CSidebarMinimizer
@@ -49,11 +49,11 @@
             };
             this.navItems = NAV.filter(filterNav);
             this.$root.$on('toggle-sidebar', () => {
-                const sidebarOpened = this.show === true || this.show === 'responsive'
+                const sidebarOpened = this.show === true || this.show === 'responsive';
                 this.show = sidebarOpened ? false : 'responsive'
-            })
+            });
             this.$root.$on('toggle-sidebar-mobile', () => {
-                const sidebarClosed = this.show === 'responsive' || this.show === false
+                const sidebarClosed = this.show === 'responsive' || this.show === false;
                 this.show = sidebarClosed ? true : 'responsive'
             })
         }

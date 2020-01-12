@@ -51,11 +51,12 @@
     import {USER_CREATE} from "../../graphql/zones";
 
     export default {
-        name: 'UserNew',
+        name: 'DeviceNew',
         fields: [
             {key: 'key', _style: 'width:150px'},
             {key: 'value', _style: 'width:150px;'}
         ],
+        name: 'Users',
         data: () => {
             return {
                 user: [],
