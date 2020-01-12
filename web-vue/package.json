@@ -9,8 +9,13 @@
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
     "buildProd": "vue-cli-service build --mode production",
+    "electron:build": "vue-cli-service electron:build",
+    "electron:serve": "vue-cli-service electron:serve",
+    "postinstall": "electron-builder install-app-deps",
+    "postuninstall": "electron-builder install-app-deps",
     "start": "webpack-dev-server --open"
   },
+  "main": "background.js",
   "dependencies": {
     "@coreui/coreui": "^3.0.0-beta.3",
     "@coreui/coreui-vue-chartjs": "^1.0.0",
@@ -49,8 +54,9 @@
     "chromedriver": "^78.0.1",
     "core-js": "^3.4.7",
     "css-loader": "^3.2.1",
-    "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^6.0.1",
+    "electron": "^6.0.0",
+    "eslint": "^5.16.0",
+    "eslint-plugin-vue": "^5.0.0",
     "graphql": "^14.5.8",
     "graphql-tag": "^2.10.1",
     "html-webpack-plugin": "^3.2.0",
@@ -58,12 +64,33 @@
     "path": "^0.12.7",
     "sass-loader": "^8.0.0",
     "vue-apollo": "^3.0.2",
+    "vue-cli-plugin-electron-builder": "^1.4.4",
     "vue-headful": "^2.0.1",
     "vue-loader": "^15.7.0",
     "vue-template-compiler": "^2.6.10",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.2.3",
     "webpack-dev-server": "^3.2.1"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "rules": {
+      "no-console": "off",
+      "no-debugger": "off",
+      "no-unused-vars": "off",
+      "no-undef": "off",
+      "no-dupe-keys": "off"
+    },
+    "parserOptions": {
+      "parser": "babel-eslint"
+    }
   },
   "browserslist": [
     "> 1%",
