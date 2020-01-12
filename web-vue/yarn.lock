@@ -747,10 +747,10 @@
   dependencies:
     vue "^2.6.10"
 
-"@coreui/icons@^1.0.0-beta.3":
-  version "1.0.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@coreui/icons/-/icons-1.0.0-beta.3.tgz#ecf91d3f91287a13d3a427d8fae6339999248c11"
-  integrity sha512-jaNQSIYPcrC2RxgUqdVGGh4aGz6GaJNODa3cqBw7HTP3AdHm8NyejrgmO/ILmY3J8JldVqdTMfUwegaTc0kQmA==
+"@coreui/icons@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@coreui/icons/-/icons-1.0.0.tgz#72ad7f98d387fe62572b6a8fe3d7ca7fafb2ef56"
+  integrity sha512-a5zbcmnlYqZkPen2iJvd0G1VGAK4S+40pV6KIJgLt1H04ALyqVoaVPiIEx3VOOmxlrxAHvIaua8Qq0+/hA+AGQ==
 
 "@coreui/icons@coreui/coreui-icons#1.0.0-beta.1":
   version "1.0.0-beta.1"

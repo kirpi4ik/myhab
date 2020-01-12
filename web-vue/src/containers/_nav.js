@@ -43,23 +43,40 @@ export const NAV = [
             {
                 _name: 'CSidebarNavTitle',
                 _children: ['Setari'],
-                roles: [Role.Admin]
+                roles: [Role.Admin],
+                icon: 'cil-puzzle',
             },
             {
-                _name: 'CSidebarNavDropdown',
+                _name: 'CSidebarNavItem',
                 name: 'Utilizatori',
-                route: '/users',
-                icon: 'cil-puzzle',
-                roles: [Role.Admin],
-                items: [
-                    {
-                        name: 'Lista utilizatorilor',
-                        to: '/users',
-                        icon: 'cil-puzzle',
-                        roles: [Role.Admin]
+                to: '/users',
+                icon: 'cil-list',
+                roles: [Role.Admin]
 
-                    }
-                ]
+            },
+            {
+                _name: 'CSidebarNavItem',
+                name: 'Dispozitive',
+                to: '/devices',
+                icon: 'cil-list',
+                roles: [Role.Admin]
+
+            },
+            {
+                _name: 'CSidebarNavItem',
+                name: 'Periferice',
+                to: '/peripherals',
+                icon: 'cil-list',
+                roles: [Role.Admin]
+
+            },
+            {
+                _name: 'CSidebarNavItem',
+                name: 'Cabluri',
+                to: '/cables',
+                icon: 'cil-list',
+                roles: [Role.Admin]
+
             }
         ]
     }

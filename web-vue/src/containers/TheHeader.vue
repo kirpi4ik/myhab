@@ -15,7 +15,7 @@
                 src="img/brand/coreui-base.svg"
                 width="97"
                 height="46"
-                alt="CoreUI Logo"
+                alt="MadHouse Logo"
         />
         <CHeaderNav class="d-md-down-none mr-auto">
             <CHeaderNavItem class="px-3">
@@ -28,28 +28,11 @@
                     Users
                 </CHeaderNavLink>
             </CHeaderNavItem>
-            <CHeaderNavItem class="px-3" v-if="hasRole(['ROLE_ADMIN'])">
-                <CHeaderNavLink>
-                    Settings
-                </CHeaderNavLink>
-            </CHeaderNavItem>
         </CHeaderNav>
         <CHeaderNav class="mr-4">
-            <CHeaderNavItem class="d-md-down-none mx-2">
-                <CHeaderNavLink>
-                    <CIcon name="cil-bell"/>
-                </CHeaderNavLink>
-            </CHeaderNavItem>
-            <CHeaderNavItem class="d-md-down-none mx-2" v-if="hasRole(['ROLE_ADMIN'])">
-                <CHeaderNavLink>
-                    <CIcon name="cil-list"/>
-                </CHeaderNavLink>
-            </CHeaderNavItem>
-            <CHeaderNavItem class="d-md-down-none mx-2" v-if="hasRole(['ROLE_ADMIN'])">
-                <CHeaderNavLink>
-                    <CIcon name="cil-envelope-open"/>
-                </CHeaderNavLink>
-            </CHeaderNavItem>
+            <TheHeaderDropdownNotif/>
+            <TheHeaderDropdownTaskList  v-if="hasRole(['ROLE_ADMIN'])"/>
+            <TheHeaderDropdownMsgInbox />
             <TheHeaderDropdownAccnt/>
         </CHeaderNav>
         <CSubheader class="px-3">
@@ -60,13 +43,19 @@
 
 <script>
     import TheHeaderDropdownAccnt from './TheHeaderDropdownAccnt'
+    import TheHeaderDropdownMsgInbox from './TheHeaderDropdownMsgInbox'
+    import TheHeaderDropdownNotif from './TheHeaderDropdownNotif'
+    import TheHeaderDropdownTaskList from './TheHeaderDropdownTaskList'
     import {authenticationService} from '@/_services';
     import {Role} from '@/_helpers';
 
     export default {
         name: 'TheHeader',
         components: {
-            TheHeaderDropdownAccnt
+            TheHeaderDropdownAccnt,
+            TheHeaderDropdownNotif,
+            TheHeaderDropdownMsgInbox,
+            TheHeaderDropdownTaskList
         },
         methods: {
             hasRole: function (roles) {
