@@ -3,7 +3,7 @@
         <CCol col="12" lg="6">
             <CCard>
                 <CCardHeader>
-                    <strong>User details : <span class="field-value">{{ user.name }}</span> </strong>
+                    <strong>Device details : <span class="field-value">{{ device.uid }}</span> </strong>
                     <div class="card-header-actions" @click="rowClicked">
                         <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
                             <small class="text-muted">edit</small>
@@ -18,7 +18,7 @@
                                     hover
                                     small
                                     fixed
-                                    :items="userDetails"
+                                    :items="deviceDetails"
                                     :fields="$options.fields"
                             />
                         </CCol>
@@ -46,7 +46,7 @@
 </template>
 
 <script>
-    import {USER_GET_BY_ID_WITH_ROLES} from "../../graphql/zones";
+    import {DEVICE_GET_BY_ID_CHILDS} from "../../graphql/zones";
 
 
     export default {
@@ -57,40 +57,40 @@
         ],
         data: () => {
             return {
-                userDetails: [],
+                deviceDetails: [],
                 roles: [],
-                readonly: ["id", "__typename", "uid", "name"],
-                user: {}
+                readonly: ["id", "__typename", "uid"],
+                device: {}
             }
         },
         mounted() {
-            this.loadUser();
+            this.loadDevice();
         },
         watch: {
-            '$root.componentKey': 'loadUser'
+            '$root.componentKey': 'loadDevice'
         },
         methods: {
-            loadUser() {
-                this.loading = true
-                let user = {};
+            loadDevice() {
+                this.loading = true;
+                let device = {};
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)
                 }.bind(this);
 
                 this.$apollo.query({
-                    query: USER_GET_BY_ID_WITH_ROLES,
+                    query: DEVICE_GET_BY_ID_CHILDS,
                     variables: {uid: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    user = response.data.userByUid;
-                    const userDetailsToMap = user ? Object.entries(user) : [['id', 'Not found']]
-                    this.userDetails = userDetailsToMap.map(([key, value]) => {
+                    device = response.data.deviceByUid;
+                    const deviceDetailsToMap = device ? Object.entries(device) : [['id', 'Not found']]
+                    this.deviceDetails = deviceDetailsToMap.map(([key, value]) => {
                         return {key, value}
-                    }).filter(removeReadonly)
-                    this.user = user
+                    }).filter(removeReadonly);
+                    this.device = device;
 
                     this.roles = response.data.roleList.map(function (role, index) {
-                        let found = response.data.userRolesForUser.filter(function (hasRole) {
+                        let found = response.data.deviceRolesForDevice.filter(function (hasRole) {
                             return role.id == hasRole.roleId
                         });
                         return {id: role.id, authority: role.authority, checked: found.length > 0};
@@ -99,7 +99,7 @@
                 this.loading = false
             },
             rowClicked(item, index) {
-                this.$router.push({path: "/users/" + this.$route.params.id + "/edit"})
+                this.$router.push({path: "/devices/" + this.$route.params.id + "/edit"})
             },
             goBack() {
                 this.$router.go(-1)

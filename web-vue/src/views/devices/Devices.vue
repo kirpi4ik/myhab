@@ -15,17 +15,20 @@
                                 :items-per-page="perPage"
                                 :pagination="$options.paginationProps"
                                 index-column
+                                table-filter
+                                sorter
                                 clickable-rows
+                                pagination
                         >
-                            <template #username="data">
+                            <template #name="data">
                                 <td>
-                                    <strong>{{data.item.username}}</strong>
+                                    <strong>{{data.item.name}}</strong>
                                 </td>
                             </template>
 
-                            <template #status="data">
+                            <template #actions="data">
                                 <td>
-                                    <CButton color="success" @click="viewUserDetails(data.item.uid)">View</CButton>
+                                    <CButton color="success" @click="viewDeviceDetails(data.item.uid)">View</CButton>
                                     |
                                     <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto">
                                         Remove
@@ -37,10 +40,10 @@
                     <CCardFooter>
                         <CButton color="success" @click="addNew">Add new</CButton>
                     </CCardFooter>
-                    <CModal title="Delete user" color="danger" :show.sync="deleteConfirmShow">
-                        Do you want delete : <strong>{{selectedItem.username}}</strong> ?
+                    <CModal title="Delete device" color="danger" :show.sync="deleteConfirmShow">
+                        Do you want delete : <strong>{{selectedItem.name}}</strong> ?
                         <template #footer>
-                            <CButton @click="removeUser" color="danger">Delete</CButton>
+                            <CButton @click="removeDevice" color="danger">Delete</CButton>
                             <CButton @click="deleteConfirmShow = false" color="success">Cancel</CButton>
                         </template>
                     </CModal>
@@ -51,7 +54,7 @@
 </template>
 
 <script>
-    import {USERS_GET_ALL, USER_DELETE} from "../../graphql/zones";
+    import {DEVICE_LIST_ALL, DEVICE_DELETE} from "../../graphql/zones";
 
     export default {
         name: 'Devices',
@@ -59,10 +62,16 @@
             return {
                 items: [],
                 fields: [
-                    {key: 'username', label: 'Name'},
-                    {key: 'registered'},
-                    {key: 'role'},
-                    {key: 'status'}
+                    {key: 'id', label: 'ID'},
+                    {key: 'name', label: 'Name'},
+                    {key: 'code', label: 'Code'},
+                    {key: 'description', label: 'Description'},
+                    {
+                        key: 'actions', label: 'Action',
+                        sorter: false,
+                        filter: false
+                    }
+
                 ],
                 perPage: 5,
                 deleteConfirmShow: false,
@@ -76,48 +85,42 @@
             nextButtonHtml: 'next'
         },
         mounted() {
-            this.loadUsers();
+            this.loadDevices();
         },
         watch: {
-            '$route.fullPath': 'loadUsers'
+            '$route.fullPath': 'loadDevices'
         },
         methods: {
             modalCheck(item) {
                 this.deleteConfirmShow = true;
                 this.selectedItem = item
             },
-            removeUser() {
+            removeDevice() {
                 this.$apollo.mutate({
-                    mutation: USER_DELETE, variables: {id: this.selectedItem.id}
+                    mutation: DEVICE_DELETE, variables: {id: this.selectedItem.id}
                 }).then(response => {
-                    this.deleteConfirmShow = false
-                    this.loadUsers();
+                    this.deleteConfirmShow = false;
+                    this.loadDevices();
                 });
             },
             addNew() {
-                this.$router.push({path: "/users/create"})
+                this.$router.push({path: "/devices/create"})
             },
-            loadUsers() {
+            loadDevices() {
                 this.$apollo.query({
-                    query: USERS_GET_ALL,
+                    query: DEVICE_LIST_ALL,
                     variables: {},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.items = response.data.userList;
+                    this.items = response.data.deviceList;
                 });
             },
-            getBadge(status) {
-                return status === 'Active' ? 'success'
-                    : status === 'Inactive' ? 'secondary'
-                        : status === 'Pending' ? 'warning'
-                            : status === 'Banned' ? 'danger' : 'primary'
+            deviceLink(uid) {
+                return `devices/${uid}/view`
             },
-            userLink(uid) {
-                return `users/${uid}/profile`
-            },
-            viewUserDetails(uid) {
-                const userLink = this.userLink(uid)
-                this.$router.push({path: userLink})
+            viewDeviceDetails(uid) {
+                const deviceLink = this.deviceLink(uid);
+                this.$router.push({path: deviceLink})
             }
         }
     }

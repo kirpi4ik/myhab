@@ -184,13 +184,6 @@ export const USER_CREATE = gql`
       }
     }
 `;
-export const USER_DELETE = gql`
-    mutation($id: Long!) {
-        userDeleteCascade(id: $id) {
-        success
-      }
-    }
-`;
 export const ROLES_GET_FOR_USER = gql`
     query rolesForUser($uid: String!) {
         roleList {
@@ -208,6 +201,43 @@ export const ROLES_SAVE = gql`
     mutation save($input:SaveUserRoles){
         userRolesSave(input:$input){
             success
+        }
+    }
+`;
+export const DEVICE_LIST_ALL = gql`
+    {
+        deviceList{
+            id
+            uid
+            code
+            name
+            description
+        }
+    }
+`;
+export const USER_DELETE = gql`
+    mutation($id: Long!) {
+        userDeleteCascade(id: $id) {
+            success
+        }
+    }
+`;
+export const DEVICE_DELETE = gql`
+    mutation($id: Long!) {
+        deviceDelete(id: $id) {
+            success
+        }
+    }
+`;
+export const DEVICE_GET_BY_ID_CHILDS = gql`
+    query findDeviceByUid($uid:String!){
+        deviceByUid(uid: $uid) {
+            id
+            uid
+            name
+            description
+            code
+
         }
     }
 `;

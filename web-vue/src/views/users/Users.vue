@@ -4,7 +4,7 @@
             <transition name="slide">
                 <CCard>
                     <CCardHeader>
-                        Users
+                        Utilizatori
                     </CCardHeader>
                     <CCardBody>
                         <CDataTable

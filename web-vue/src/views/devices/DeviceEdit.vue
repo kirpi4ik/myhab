@@ -5,7 +5,7 @@
                 <CCard>
                     <CForm>
                         <CCardHeader>
-                            <strong>Edit user </strong> <small>{{user.name}}</small>
+                            <strong>Edit device </strong> <small>{{device.name}}</small>
                             <div class="card-header-actions">
                                 <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener"
                                    @click="$router.go(-1)">
@@ -14,24 +14,24 @@
                             </div>
                         </CCardHeader>
                         <CCardBody>
-                            <CRow v-for="(userDetail, index) in userDetails" :key="`detail-${index}`">
+                            <CRow v-for="(deviceDetail, index) in deviceDetails" :key="`detail-${index}`">
                                 <CCol sm="12">
                                     <CInputCheckbox
-                                            v-if="userDetail.key.endsWith('ed')"
-                                            :key="userDetail.key"
-                                            :label="userDetail.key"
-                                            :value="userDetail.value"
-                                            :checked="userDetail.value"
-                                            @update:checked="check($event, userDetail.key)"
+                                            v-if="deviceDetail.key.endsWith('ed')"
+                                            :key="deviceDetail.key"
+                                            :label="deviceDetail.key"
+                                            :value="deviceDetail.value"
+                                            :checked="deviceDetail.value"
+                                            @update:checked="check($event, deviceDetail.key)"
                                             :inline="true"
-                                            :ref="userDetail.key"
+                                            :ref="deviceDetail.key"
                                     />
-                                    <CInput v-if="!userDetail.key.endsWith('ed')"
-                                            :label="userDetail.key"
-                                            :placeholder="userDetail.key"
-                                            :value="userDetail.value"
-                                            @input="updateFieldValue($event, userDetail.key)"
-                                            :ref="userDetail.key"/>
+                                    <CInput v-if="!deviceDetail.key.endsWith('ed')"
+                                            :label="deviceDetail.key"
+                                            :placeholder="deviceDetail.key"
+                                            :value="deviceDetail.value"
+                                            @input="updateFieldValue($event, deviceDetail.key)"
+                                            :ref="deviceDetail.key"/>
                                 </CCol>
                             </CRow>
                             <CRow v-for="(role, index) in roles" :key="`role-${index}`">
@@ -77,23 +77,23 @@
         ],
         data: () => {
             return {
-                userDetails: [],
-                user: [],
+                deviceDetails: [],
+                device: [],
                 roles: [],
-                userToUpdate: {},
+                deviceToUpdate: {},
                 readonly: ["id", "__typename", "uid", "name"]
             }
         },
         created() {
-            this.loadUserByUidFromGet();
+            this.loadDeviceByUidFromGet();
         },
         methods: {
             check(value, key) {
-                this.userToUpdate[key] = value
+                this.deviceToUpdate[key] = value
 
             },
             updateFieldValue(value, key) {
-                this.userToUpdate[key] = value
+                this.deviceToUpdate[key] = value
             },
             updateRoleValue(value, key) {
                 debugger
@@ -106,25 +106,25 @@
             },
             save() {
                 this.$apollo.mutate({
-                    mutation: USER_VALUE_UPDATE, variables: {id: this.user.id, user: this.userToUpdate}
+                    mutation: USER_VALUE_UPDATE, variables: {id: this.device.id, device: this.deviceToUpdate}
                 }).then(response => {
                     let roles = {
-                        "userUid": this.user.uid,
-                        "userRoles": this.roles.filter(function (role) {
+                        "deviceUid": this.device.uid,
+                        "deviceRoles": this.roles.filter(function (role) {
                             debugger
                             return role.checked
                         }.bind(this)).map(function (role, index) {
-                            return {"userId": this.user.id, "roleId": role.id};
+                            return {"deviceId": this.device.id, "roleId": role.id};
                         }.bind(this))
                     };
                     this.$apollo.mutate({
                         mutation: ROLES_SAVE, variables: {input: roles}
                     }).then(response => {
-                        this.$router.push({path: "/users/" + this.$route.params.id + "/profile"})
+                        this.$router.push({path: "/devices/" + this.$route.params.id + "/profile"})
                     });
                 });
             },
-            loadUserByUidFromGet() {
+            loadDeviceByUidFromGet() {
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)
                 }.bind(this);
@@ -133,11 +133,11 @@
                 let loadRoles = function () {
                     this.$apollo.query({
                         query: ROLES_GET_FOR_USER,
-                        variables: {uid: this.user.uid},
+                        variables: {uid: this.device.uid},
                         fetchPolicy: 'network-only'
                     }).then(response => {
                         this.roles = response.data.roleList.map(function (role, index) {
-                            let found = response.data.userRolesForUser.filter(function (hasRole) {
+                            let found = response.data.deviceRolesForDevice.filter(function (hasRole) {
                                 return role.id == hasRole.roleId
                             });
                             return {id: role.id, authority: role.authority, checked: found.length > 0};
@@ -150,9 +150,9 @@
                     variables: {uid: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.user = response.data.userByUid;
-                    const userDetailsToMap = this.user ? Object.entries(this.user) : [['id', 'Not found']]
-                    this.userDetails = userDetailsToMap.map(([key, value]) => {
+                    this.device = response.data.deviceByUid;
+                    const deviceDetailsToMap = this.device ? Object.entries(this.device) : [['id', 'Not found']]
+                    this.deviceDetails = deviceDetailsToMap.map(([key, value]) => {
                         return {key, value}
                     }).filter(removeReadonly)
                     loadRoles()
