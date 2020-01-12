@@ -5,7 +5,7 @@
                 <CCard>
                     <CForm>
                         <CCardHeader>
-                            <strong>New user </strong> <small>{{user.name}}</small>
+                            <strong>New cable </strong> <small>{{cable.name}}</small>
                             <div class="card-header-actions">
                                 <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener"
                                    @click="$router.go(-1)">
@@ -17,10 +17,10 @@
                             <CRow>
                                 <CCol sm="12">
                                     <CInput
-                                            label="Username"
-                                            placeholder="username"
-                                            @input="updateFieldValue($event, 'username')"
-                                            ref="username"/>
+                                            label="Cablename"
+                                            placeholder="cablename"
+                                            @input="updateFieldValue($event, 'cablename')"
+                                            ref="cablename"/>
                                     <CInput
                                             label="Password"
                                             placeholder="password"
@@ -56,11 +56,11 @@
             {key: 'key', _style: 'width:150px'},
             {key: 'value', _style: 'width:150px;'}
         ],
-        name: 'Users',
+        name: 'Cables',
         data: () => {
             return {
-                user: [],
-                userToCreate: {
+                cable: [],
+                cableToCreate: {
                     passwordExpired: true,
                     accountLocked: true,
                     accountExpired: true,
@@ -71,13 +71,13 @@
         },
         methods: {
             updateFieldValue(value, key) {
-                this.userToCreate[key] = value
+                this.cableToCreate[key] = value
             },
             save() {
                 this.$apollo.mutate({
-                    mutation: USER_CREATE, variables: {user: this.userToCreate}
+                    mutation: USER_CREATE, variables: {cable: this.cableToCreate}
                 }).then(response => {
-                    this.$router.push({path: "/users/" + response.data.userCreate.uid+ "/profile"})
+                    this.$router.push({path: "/cables/" + response.data.cableCreate.uid+ "/profile"})
                 });
             }
         }
