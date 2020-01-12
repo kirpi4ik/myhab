@@ -3,7 +3,7 @@
         <CCol col="12" lg="6">
             <CCard>
                 <CCardHeader>
-                    <strong>User details : <span class="field-value">{{ user.name }}</span> </strong>
+                    <strong>Detalii utilizator : <span class="field-value">{{ user.name }}</span> </strong>
                     <div class="card-header-actions" @click="rowClicked">
                         <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
                             <small class="text-muted">edit</small>

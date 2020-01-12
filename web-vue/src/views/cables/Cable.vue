@@ -3,7 +3,7 @@
         <CCol col="12" lg="6">
             <CCard>
                 <CCardHeader>
-                    <strong>User details : <span class="field-value">{{ user.name }}</span> </strong>
+                    <strong>Cable details : <span class="field-value">{{ cable.name }}</span> </strong>
                     <div class="card-header-actions" @click="rowClicked">
                         <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
                             <small class="text-muted">edit</small>
@@ -18,7 +18,7 @@
                                     hover
                                     small
                                     fixed
-                                    :items="userDetails"
+                                    :items="cableDetails"
                                     :fields="$options.fields"
                             />
                         </CCol>
@@ -57,22 +57,22 @@
         ],
         data: () => {
             return {
-                userDetails: [],
+                cableDetails: [],
                 roles: [],
                 readonly: ["id", "__typename", "uid", "name"],
-                user: {}
+                cable: {}
             }
         },
         mounted() {
-            this.loadUser();
+            this.loadCable();
         },
         watch: {
-            '$root.componentKey': 'loadUser'
+            '$root.componentKey': 'loadCable'
         },
         methods: {
-            loadUser() {
+            loadCable() {
                 this.loading = true
-                let user = {};
+                let cable = {};
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)
                 }.bind(this);
@@ -82,15 +82,15 @@
                     variables: {uid: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    user = response.data.userByUid;
-                    const userDetailsToMap = user ? Object.entries(user) : [['id', 'Not found']]
-                    this.userDetails = userDetailsToMap.map(([key, value]) => {
+                    cable = response.data.cableByUid;
+                    const cableDetailsToMap = cable ? Object.entries(cable) : [['id', 'Not found']]
+                    this.cableDetails = cableDetailsToMap.map(([key, value]) => {
                         return {key, value}
                     }).filter(removeReadonly)
-                    this.user = user
+                    this.cable = cable
 
                     this.roles = response.data.roleList.map(function (role, index) {
-                        let found = response.data.userRolesForUser.filter(function (hasRole) {
+                        let found = response.data.cableRolesForCable.filter(function (hasRole) {
                             return role.id == hasRole.roleId
                         });
                         return {id: role.id, authority: role.authority, checked: found.length > 0};
@@ -99,7 +99,7 @@
                 this.loading = false
             },
             rowClicked(item, index) {
-                this.$router.push({path: "/users/" + this.$route.params.id + "/edit"})
+                this.$router.push({path: "/cables/" + this.$route.params.id + "/edit"})
             },
             goBack() {
                 this.$router.go(-1)

@@ -17,15 +17,15 @@
                                 index-column
                                 clickable-rows
                         >
-                            <template #username="data">
+                            <template #cablename="data">
                                 <td>
-                                    <strong>{{data.item.username}}</strong>
+                                    <strong>{{data.item.cablename}}</strong>
                                 </td>
                             </template>
 
                             <template #status="data">
                                 <td>
-                                    <CButton color="success" @click="viewUserDetails(data.item.uid)">View</CButton>
+                                    <CButton color="success" @click="viewCableDetails(data.item.uid)">View</CButton>
                                     |
                                     <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto">
                                         Remove
@@ -37,10 +37,10 @@
                     <CCardFooter>
                         <CButton color="success" @click="addNew">Add new</CButton>
                     </CCardFooter>
-                    <CModal title="Delete user" color="danger" :show.sync="deleteConfirmShow">
-                        Do you want delete : <strong>{{selectedItem.username}}</strong> ?
+                    <CModal title="Delete cable" color="danger" :show.sync="deleteConfirmShow">
+                        Do you want delete : <strong>{{selectedItem.cablename}}</strong> ?
                         <template #footer>
-                            <CButton @click="removeUser" color="danger">Delete</CButton>
+                            <CButton @click="removeCable" color="danger">Delete</CButton>
                             <CButton @click="deleteConfirmShow = false" color="success">Cancel</CButton>
                         </template>
                     </CModal>
@@ -59,7 +59,7 @@
             return {
                 items: [],
                 fields: [
-                    {key: 'username', label: 'Name'},
+                    {key: 'cablename', label: 'Name'},
                     {key: 'registered'},
                     {key: 'role'},
                     {key: 'status'}
@@ -76,34 +76,34 @@
             nextButtonHtml: 'next'
         },
         mounted() {
-            this.loadUsers();
+            this.loadCables();
         },
         watch: {
-            '$route.fullPath': 'loadUsers'
+            '$route.fullPath': 'loadCables'
         },
         methods: {
             modalCheck(item) {
                 this.deleteConfirmShow = true;
                 this.selectedItem = item
             },
-            removeUser() {
+            removeCable() {
                 this.$apollo.mutate({
                     mutation: USER_DELETE, variables: {id: this.selectedItem.id}
                 }).then(response => {
                     this.deleteConfirmShow = false
-                    this.loadUsers();
+                    this.loadCables();
                 });
             },
             addNew() {
-                this.$router.push({path: "/users/create"})
+                this.$router.push({path: "/cables/create"})
             },
-            loadUsers() {
+            loadCables() {
                 this.$apollo.query({
                     query: USERS_GET_ALL,
                     variables: {},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.items = response.data.userList;
+                    this.items = response.data.cableList;
                 });
             },
             getBadge(status) {
@@ -112,12 +112,12 @@
                         : status === 'Pending' ? 'warning'
                             : status === 'Banned' ? 'danger' : 'primary'
             },
-            userLink(uid) {
-                return `users/${uid}/profile`
+            cableLink(uid) {
+                return `cables/${uid}/profile`
             },
-            viewUserDetails(uid) {
-                const userLink = this.userLink(uid)
-                this.$router.push({path: userLink})
+            viewCableDetails(uid) {
+                const cableLink = this.cableLink(uid)
+                this.$router.push({path: cableLink})
             }
         }
     }
