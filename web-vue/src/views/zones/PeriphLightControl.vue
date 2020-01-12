@@ -10,7 +10,7 @@
         </div>
         <slot name="footer" class="card-footer">
             <div class="toggle-btn">
-                <toggle-button v-model="peripheral.state" color="#82C7EB" :sync="true"
+                <toggle-button v-model="peripheral.state" :sync="true"
                                :labels="{checked: 'Aprinde', unchecked: 'Stinge'}"
                                :switch-color="{checked: 'linear-gradient( #8DFF73, green)', unchecked: 'linear-gradient(#BF0000, #FFBE62)'}"
                                :color="{checked: '#009663', unchecked: '#FF0000', disabled: '#CCCCCC'}"
