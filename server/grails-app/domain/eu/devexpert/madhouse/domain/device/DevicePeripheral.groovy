@@ -3,6 +3,9 @@ package eu.devexpert.madhouse.domain.device
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.infra.Zone
+import graphql.schema.DataFetcher
+import graphql.schema.DataFetchingEnvironment
+import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 
 class DevicePeripheral extends BaseEntity {
   String code
@@ -31,5 +34,15 @@ class DevicePeripheral extends BaseEntity {
     sort name: "asc"
   }
 
-  static graphql = true
+  static graphql = GraphQLMapping.lazy {
+    query('devicePeripheralByUid', DevicePeripheral) {
+      argument('uid', String)
+      dataFetcher(new DataFetcher() {
+        @Override
+        Object get(DataFetchingEnvironment environment) {
+          DevicePeripheral.findByUid(environment.getArgument('uid'))
+        }
+      })
+    }
+  }
 }
