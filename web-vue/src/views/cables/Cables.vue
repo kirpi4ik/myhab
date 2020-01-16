@@ -16,14 +16,16 @@
                                 :pagination="$options.paginationProps"
                                 index-column
                                 clickable-rows
+                                table-filter
+                                sorter
                         >
-                            <template #cablename="data">
+                            <template #code="data">
                                 <td>
-                                    <strong>{{data.item.cablename}}</strong>
+                                    <strong>{{data.item.code}}</strong>
                                 </td>
                             </template>
 
-                            <template #status="data">
+                            <template #actions="data">
                                 <td>
                                     <CButton color="success" @click="viewCableDetails(data.item.uid)">View</CButton>
                                     |
@@ -51,7 +53,7 @@
 </template>
 
 <script>
-    import {USERS_GET_ALL, USER_DELETE} from "../../graphql/zones";
+    import {CABLE_LIST_ALL, CABLE_DELETE} from "../../graphql/zones";
 
     export default {
         name: 'Cables',
@@ -59,10 +61,14 @@
             return {
                 items: [],
                 fields: [
-                    {key: 'cablename', label: 'Name'},
-                    {key: 'registered'},
-                    {key: 'role'},
-                    {key: 'status'}
+                    {key: 'id', label: 'ID'},
+                    {key: 'code', label: 'Code'},
+                    {key: 'description', label: 'Description'},
+                    {
+                        key: 'actions', label: 'Action',
+                        sorter: false,
+                        filter: false
+                    }
                 ],
                 perPage: 5,
                 deleteConfirmShow: false,
@@ -88,7 +94,7 @@
             },
             removeCable() {
                 this.$apollo.mutate({
-                    mutation: USER_DELETE, variables: {id: this.selectedItem.id}
+                    mutation: CABLE_DELETE, variables: {id: this.selectedItem.id}
                 }).then(response => {
                     this.deleteConfirmShow = false
                     this.loadCables();
@@ -99,21 +105,15 @@
             },
             loadCables() {
                 this.$apollo.query({
-                    query: USERS_GET_ALL,
+                    query: CABLE_LIST_ALL,
                     variables: {},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.items = response.data.cableList;
                 });
             },
-            getBadge(status) {
-                return status === 'Active' ? 'success'
-                    : status === 'Inactive' ? 'secondary'
-                        : status === 'Pending' ? 'warning'
-                            : status === 'Banned' ? 'danger' : 'primary'
-            },
             cableLink(uid) {
-                return `cables/${uid}/profile`
+                return `cables/${uid}/view`
             },
             viewCableDetails(uid) {
                 const cableLink = this.cableLink(uid)

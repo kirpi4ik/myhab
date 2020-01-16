@@ -174,14 +174,21 @@ export const USER_GET_BY_ID_WITH_ROLES = gql`
             id
             authority
         }
-        
+
     }
 `;
 export const USER_CREATE = gql`
     mutation($user: UserCreate) {
-      userCreate(user: $user) {
-        uid
-      }
+        userCreate(user: $user) {
+            uid
+        }
+    }
+`;
+export const USER_DELETE = gql`
+    mutation($id: Long!) {
+        userDeleteCascade(id: $id) {
+            success
+        }
     }
 `;
 export const ROLES_GET_FOR_USER = gql`
@@ -204,6 +211,20 @@ export const ROLES_SAVE = gql`
         }
     }
 `;
+export const DEVICE_CREATE = gql`
+    mutation($device: DeviceCreate) {
+        deviceCreate(device: $device) {
+            uid
+        }
+    }
+`;
+export const DEVICE_DELETE = gql`
+    mutation($id: Long!) {
+        deviceDelete(id: $id) {
+            success
+        }
+    }
+`;
 export const DEVICE_LIST_ALL = gql`
     {
         deviceList{
@@ -215,26 +236,100 @@ export const DEVICE_LIST_ALL = gql`
         }
     }
 `;
-export const USER_DELETE = gql`
-    mutation($id: Long!) {
-        userDeleteCascade(id: $id) {
-            success
-        }
-    }
-`;
-export const DEVICE_DELETE = gql`
-    mutation($id: Long!) {
-        deviceDelete(id: $id) {
-            success
-        }
-    }
-`;
 export const DEVICE_GET_BY_ID_CHILDS = gql`
     query findDeviceByUid($uid:String!){
         deviceByUid(uid: $uid) {
             id
             uid
             name
+            description
+            code
+
+        }
+    }
+`;
+export const PERIPHERAL_CREATE = gql`
+    mutation($devicePeripheral: DevicePeripheralCreate) {
+        devicePeripheralCreate(devicePeripheral: $devicePeripheral) {
+            uid
+        }
+    }
+`;
+export const PERIPHERAL_VALUE_UPDATE = gql`
+    mutation ($id:Long!, $devicePeripheralUpdate:DevicePeripheralUpdate) {
+        devicePeripheralUpdate(id:$id, devicePeripheral: $devicePeripheralUpdate){
+            id,
+            uid
+        }
+    }
+`;
+export const PERIPHERAL_DELETE = gql`
+    mutation($id: Long!) {
+        devicePeripheralDelete(id: $id) {
+            success
+        }
+    }
+`;
+export const PERIPHERAL_LIST_ALL = gql`
+    {
+        devicePeripheralList{
+            id
+            uid
+            code
+            name
+            description
+        }
+    }
+`;
+export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
+    query devicePeripheralByUid($uid:String!){
+        devicePeripheralByUid(uid: $uid) {
+            id
+            uid
+            name
+            description
+            code
+
+        }
+    }
+`;
+export const CABLE_CREATE = gql`
+    mutation($cable: CableCreate) {
+        cableCreate(cable: $cable) {
+            uid
+        }
+    }
+`;
+export const CABLE_VALUE_UPDATE = gql`
+    mutation ($id:Long!, $cableUpdate:CableUpdate) {
+        cableUpdate(id:$id, cable: $cableUpdate){
+            id,
+            uid
+        }
+    }
+`;
+export const CABLE_DELETE = gql`
+    mutation($id: Long!) {
+        cableDelete(id: $id) {
+            success
+        }
+    }
+`;
+export const CABLE_LIST_ALL = gql`
+    {
+        cableList{
+            id
+            uid
+            code
+            description
+        }
+    }
+`;
+export const CABLE_GET_BY_ID_CHILDS = gql`
+    query cableByUid($uid:String!){
+        cableByUid(uid: $uid) {
+            id
+            uid
             description
             code
 

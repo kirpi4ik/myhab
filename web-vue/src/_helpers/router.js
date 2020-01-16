@@ -88,7 +88,7 @@ function configRoutes() {
                         },
                         {
                             path: '/users/:id/profile',
-                            name: "Details",
+                            name: "Detalii utilizator",
                             component: User
                         },
                         {
@@ -120,17 +120,17 @@ function configRoutes() {
                         },
                         {
                             path: '/devices/:id/view',
-                            name: "Details",
+                            name: "Detalii dispozitiv",
                             component: Device
                         },
                         {
                             path: '/devices/:id/edit',
-                            name: "Edit",
+                            name: "Editare dispozitiv",
                             component: DeviceEdit
                         },
                         {
                             path: '/devices/create',
-                            name: "New device",
+                            name: "Dispozitiv nou",
                             component: DeviceNew
                         }
                     ]
@@ -152,17 +152,17 @@ function configRoutes() {
                         },
                         {
                             path: '/peripherals/:id/view',
-                            name: "Peripheral",
+                            name: "Periferic",
                             component: Peripheral
                         },
                         {
                             path: '/peripherals/:id/edit',
-                            name: "Edit",
+                            name: "Editeaza periferic",
                             component: PeripheralEdit
                         },
                         {
                             path: '/peripherals/create',
-                            name: "New peripheral",
+                            name: "Periferic nou",
                             component: PeripheralNew
                         }
                     ]
@@ -184,17 +184,17 @@ function configRoutes() {
                         },
                         {
                             path: '/cables/:id/view',
-                            name: "Cables",
+                            name: "Cablu",
                             component: Cable
                         },
                         {
                             path: '/cables/:id/edit',
-                            name: "Edit",
+                            name: "Editare cablu",
                             component: CableEdit
                         },
                         {
                             path: '/cables/create',
-                            name: "New cable",
+                            name: "Cablu nou",
                             component: CableNew
                         }
                     ]

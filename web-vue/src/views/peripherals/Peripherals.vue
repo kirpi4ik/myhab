@@ -16,14 +16,16 @@
                                 :pagination="$options.paginationProps"
                                 index-column
                                 clickable-rows
+                                table-filter
+                                sorter
                         >
-                            <template #peripheralname="data">
+                            <template #name="data">
                                 <td>
-                                    <strong>{{data.item.peripheralname}}</strong>
+                                    <strong>{{data.item.name}}</strong>
                                 </td>
                             </template>
 
-                            <template #status="data">
+                            <template #actions="data">
                                 <td>
                                     <CButton color="success" @click="viewPeripheralDetails(data.item.uid)">View</CButton>
                                     |
@@ -38,7 +40,7 @@
                         <CButton color="success" @click="addNew">Add new</CButton>
                     </CCardFooter>
                     <CModal title="Delete peripheral" color="danger" :show.sync="deleteConfirmShow">
-                        Do you want delete : <strong>{{selectedItem.peripheralname}}</strong> ?
+                        Do you want delete : <strong>{{selectedItem.name}}</strong> ?
                         <template #footer>
                             <CButton @click="removePeripheral" color="danger">Delete</CButton>
                             <CButton @click="deleteConfirmShow = false" color="success">Cancel</CButton>
@@ -51,7 +53,7 @@
 </template>
 
 <script>
-    import {USERS_GET_ALL, USER_DELETE} from "../../graphql/zones";
+    import {PERIPHERAL_LIST_ALL, PERIPHERAL_DELETE} from "../../graphql/zones";
 
     export default {
         name: 'Peripherals',
@@ -59,10 +61,15 @@
             return {
                 items: [],
                 fields: [
-                    {key: 'peripheralname', label: 'Name'},
-                    {key: 'registered'},
-                    {key: 'role'},
-                    {key: 'status'}
+                    {key: 'id', label: 'ID'},
+                    {key: 'name', label: 'Name'},
+                    {key: 'code'},
+                    {key: 'description'},
+                    {
+                        key: 'actions', label: 'Action',
+                        sorter: false,
+                        filter: false
+                    }
                 ],
                 perPage: 5,
                 deleteConfirmShow: false,
@@ -88,7 +95,7 @@
             },
             removePeripheral() {
                 this.$apollo.mutate({
-                    mutation: USER_DELETE, variables: {id: this.selectedItem.id}
+                    mutation: PERIPHERAL_DELETE, variables: {id: this.selectedItem.id}
                 }).then(response => {
                     this.deleteConfirmShow = false
                     this.loadPeripherals();
@@ -99,18 +106,12 @@
             },
             loadPeripherals() {
                 this.$apollo.query({
-                    query: USERS_GET_ALL,
+                    query: PERIPHERAL_LIST_ALL,
                     variables: {},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.items = response.data.peripheralList;
+                    this.items = response.data.devicePeripheralList;
                 });
-            },
-            getBadge(status) {
-                return status === 'Active' ? 'success'
-                    : status === 'Inactive' ? 'secondary'
-                        : status === 'Pending' ? 'warning'
-                            : status === 'Banned' ? 'danger' : 'primary'
             },
             peripheralLink(uid) {
                 return `peripherals/${uid}/profile`

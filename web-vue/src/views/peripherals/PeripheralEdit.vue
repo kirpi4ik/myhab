@@ -67,7 +67,7 @@
 
 
 <script>
-    import {USER_VALUE_UPDATE, USER_GET_BY_ID, ROLES_GET_FOR_USER, ROLES_SAVE} from "../../graphql/zones";
+    import {PERIPHERAL_VALUE_UPDATE, PERIPHERAL_GET_BY_ID_CHILDS, ROLES_GET_FOR_USER, ROLES_SAVE} from "../../graphql/zones";
 
     export default {
         name: 'PeripheralEdit',
@@ -106,7 +106,7 @@
             },
             save() {
                 this.$apollo.mutate({
-                    mutation: USER_VALUE_UPDATE, variables: {id: this.peripheral.id, peripheral: this.peripheralToUpdate}
+                    mutation: PERIPHERAL_VALUE_UPDATE, variables: {id: this.peripheral.id, peripheral: this.peripheralToUpdate}
                 }).then(response => {
                     let roles = {
                         "peripheralUid": this.peripheral.uid,
@@ -146,7 +146,7 @@
                 }.bind(this);
 
                 this.$apollo.query({
-                    query: USER_GET_BY_ID,
+                    query: PERIPHERAL_GET_BY_ID_CHILDS,
                     variables: {uid: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
