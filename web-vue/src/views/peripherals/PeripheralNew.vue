@@ -48,7 +48,7 @@
 
 
 <script>
-    import {USER_CREATE} from "../../graphql/zones";
+    import {PERIPHERAL_CREATE} from "../../graphql/zones";
 
     export default {
         name: 'PeripheralNew',
@@ -75,9 +75,9 @@
             },
             save() {
                 this.$apollo.mutate({
-                    mutation: USER_CREATE, variables: {peripheral: this.peripheralToCreate}
+                    mutation: PERIPHERAL_CREATE, variables: {peripheral: this.peripheralToCreate}
                 }).then(response => {
-                    this.$router.push({path: "/peripherals/" + response.data.peripheralCreate.uid+ "/profile"})
+                    this.$router.push({path: "/peripherals/" + response.data.peripheralCreate.uid+ "/view"})
                 });
             }
         }

@@ -3,6 +3,9 @@ package eu.devexpert.madhouse.domain.device
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.infra.Zone
+import graphql.schema.DataFetcher
+import graphql.schema.DataFetchingEnvironment
+import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 
 class Cable extends BaseEntity {
   String code
@@ -41,6 +44,16 @@ class Cable extends BaseEntity {
     sort code: "asc"
   }
 
-  static graphql = true
+  static graphql = GraphQLMapping.lazy {
+    query('cableByUid', Cable) {
+      argument('uid', String)
+      dataFetcher(new DataFetcher() {
+        @Override
+        Object get(DataFetchingEnvironment environment) {
+          Cable.findByUid(environment.getArgument('uid'))
+        }
+      })
+    }
+  }
 
 }
