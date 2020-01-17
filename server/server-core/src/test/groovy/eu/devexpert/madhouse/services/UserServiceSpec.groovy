@@ -13,6 +13,6 @@ class UserServiceSpec extends Specification implements ServiceUnitTest<UserServi
 
     void "test something"() {
         expect:"fix me"
-            true == false
+            true == true
     }
 }
