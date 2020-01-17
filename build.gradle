@@ -8,13 +8,13 @@ task copyClientResources(dependsOn: ':web-vue:build') { // <1>
     description = 'Copy client resources into server'
 }
 
-task assembleServerAndClient(dependsOn: ['copyClientResources', ':server:assemble']) { // <2>
+task assembleServerAndClient(dependsOn: ['copyClientResources', ':server-core:assemble']) { // <2>
     group = 'build'
     description = 'Build combined server & web-vue JAR/WAR'
 
     doLast {
         copy {
-            from fileTree(dir: "${project(':server').buildDir}/libs/") // <3>
+            from fileTree(dir: "${project(':server-core').buildDir}/libs/") // <3>
             into "$rootDir/build/"
         }
 
@@ -25,6 +25,6 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', ':server:assembl
 copyClientResources.doFirst { // <4>
     copy {
         from "${project(':web-vue').projectDir}/dist"
-        into "${project(':server').buildDir}/resources/main/public"
+        into "${project(':server-core').buildDir}/resources/main/public"
     }
 }
