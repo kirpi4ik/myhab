@@ -7,7 +7,7 @@ import org.jeasy.rules.annotation.Rule
 import org.jeasy.rules.api.Facts;
 
 @Rule(name = "my rule", description = "my rule description", priority = 1)
-class IsDarkOutsideFact {
+class DarkOutsideFact {
     @Condition
     public boolean when(@Fact("fact") fact) {
         //my rule conditions
