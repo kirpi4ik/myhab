@@ -1,1 +1,6 @@
-include 'web-vue', 'server'
+include ":web-vue"
+include ":server-core"
+include ":server-rules"
+
+project(':server-rules').projectDir = file('server/server-libs/server-rules')
+project(':server-core').projectDir = file('server/server-core')
