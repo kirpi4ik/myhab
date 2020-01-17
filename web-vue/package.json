@@ -2,6 +2,7 @@
   "name": "@madhouse/madhouse-vue",
   "description": "MadHouse AI",
   "author": "Dumitru Ciubenco",
+  "main": "background.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build --mode production",
@@ -15,7 +16,6 @@
     "postuninstall": "electron-builder install-app-deps",
     "start": "webpack-dev-server --open"
   },
-  "main": "background.js",
   "dependencies": {
     "@coreui/coreui": "^3.0.0-beta.3",
     "@coreui/coreui-vue-chartjs": "^1.0.0",
@@ -34,11 +34,11 @@
   "devDependencies": {
     "@babel/core": "7.7.4",
     "@babel/plugin-syntax-dynamic-import": "^7.7.4",
-    "@vue/cli-plugin-babel": "^4.1.2",
-    "@vue/cli-plugin-e2e-nightwatch": "^4.1.2",
-    "@vue/cli-plugin-eslint": "^4.1.2",
-    "@vue/cli-plugin-unit-jest": "^4.1.2",
-    "@vue/cli-service": "^4.1.2",
+    "@vue/cli-plugin-babel": "^4.1.0",
+    "@vue/cli-plugin-e2e-nightwatch": "^4.1.0",
+    "@vue/cli-plugin-eslint": "^4.1.0",
+    "@vue/cli-plugin-unit-jest": "^4.1.0",
+    "@vue/cli-service": "^4.1.0",
     "@vue/test-utils": "1.0.0-beta.30",
     "apollo-cache-inmemory": "^1.6.3",
     "apollo-client": "^2.6.4",
