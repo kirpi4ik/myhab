@@ -112,7 +112,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
             maxIndex = 10
         }
         triggeringPolicy(SizeBasedTriggeringPolicy) {
-            maxFileSize = FileSize.valueOf("10MB")
+            maxFileSize = FileSize.valueOf("10 mb")
         }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
@@ -168,7 +168,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
             maxIndex = 10
         }
         triggeringPolicy(SizeBasedTriggeringPolicy) {
-            maxFileSize = FileSize.valueOf("10MB")
+            maxFileSize = FileSize.valueOf("10 mb")
         }
     }
     root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
