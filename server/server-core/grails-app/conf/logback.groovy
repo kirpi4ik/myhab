@@ -1,3 +1,4 @@
+import ch.qos.logback.core.util.FileSize
 import grails.util.BuildSettings
 import grails.util.Environment
 import net.logstash.logback.composite.GlobalCustomFieldsJsonProvider
@@ -32,7 +33,7 @@ appender('STDOUT', ConsoleAppender) {
                 fieldName = 'message'
             }
             globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.0")}"
+                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.1")}"
             }
             threadName(ThreadNameJsonProvider) {
                 fieldName = 'thread'
@@ -61,9 +62,8 @@ appender('STDOUT', ConsoleAppender) {
 
 def targetDir = BuildSettings.TARGET_DIR
 if (Environment.isDevelopmentMode() && targetDir != null) {
-    appender("FULL_STACKTRACE", FileAppender) {
+    appender("FULL_STACKTRACE", RollingFileAppender) {
         file = "/var/log/madhouse.log"
-        append = true
         encoder(LoggingEventCompositeJsonEncoder) {
             providers(LoggingEventJsonProviders) {
                 timestamp(LoggingEventFormattedTimestampJsonProvider) {
@@ -82,7 +82,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     fieldName = 'message'
                 }
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.0")}"
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.1")}"
                 }
                 threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
@@ -106,13 +106,20 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                 }
             }
         }
+        rollingPolicy(FixedWindowRollingPolicy) {
+            fileNamePattern = "/var/log/madhouse-%i.log.zip"
+            minIndex = 1
+            maxIndex = 10
+        }
+        triggeringPolicy(SizeBasedTriggeringPolicy) {
+            maxFileSize = FileSize.valueOf("10MB")
+        }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
     root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
 } else {
-    appender("FULL_STACKTRACE", FileAppender) {
+    appender("FULL_STACKTRACE", RollingFileAppender) {
         file = "/var/log/madhouse.log"
-        append = true
         encoder(LoggingEventCompositeJsonEncoder) {
             providers(LoggingEventJsonProviders) {
                 timestamp(LoggingEventFormattedTimestampJsonProvider) {
@@ -131,14 +138,13 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     fieldName = 'message'
                 }
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.0")}"
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.1")}"
                 }
                 threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
                 }
                 mdc(MdcJsonProvider) {
 //          includeMdcKeyNames = ["reqMethod", "reqUrl", "request", "authUser", "remoteIp", "requestId", "respStatus"]
-
                 }
                 arguments(ArgumentsJsonProvider)
                 stackTrace(StackTraceJsonProvider) {
@@ -155,6 +161,14 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     }
                 }
             }
+        }
+        rollingPolicy(FixedWindowRollingPolicy) {
+            fileNamePattern = "/var/log/madhouse-%i.log.zip"
+            minIndex = 1
+            maxIndex = 10
+        }
+        triggeringPolicy(SizeBasedTriggeringPolicy) {
+            maxFileSize = FileSize.valueOf("10MB")
         }
     }
     root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
