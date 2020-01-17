@@ -1,9 +1,9 @@
-package server.grails
+package eu.devexpert.madhouse.alert
 
-import grails.testing.gorm.DomainUnitTest
+import grails.testing.services.ServiceUnitTest
 import spock.lang.Specification
 
-class FromPluginSpec extends Specification implements DomainUnitTest<FromPlugin> {
+class AlertServiceSpec extends Specification implements ServiceUnitTest<AlertService>{
 
     def setup() {
     }

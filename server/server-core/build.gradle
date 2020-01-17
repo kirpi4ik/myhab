@@ -57,11 +57,6 @@ dependencies {
     compile "org.grails.plugins:hibernate5"
     compile "org.hibernate:hibernate-core:5.4.0.Final"
 
-    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
-    compile group: 'ch.qos.logback', name: 'logback-access', version: '1.2.3'
-    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-    compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.2'
-
     compile "com.graphql-java:graphql-java:13.0"
     compile "org.grails.plugins:gorm-graphql:2.0.1.BUILD-SNAPSHOT"
     compile "org.grails:gorm-graphql:2.0.1.BUILD-SNAPSHOT"
@@ -81,6 +76,16 @@ dependencies {
     compile group: 'org.kohsuke', name: 'groovy-sandbox', version: '1.18'
     compile 'org.jsoup:jsoup:1.11.2'
 
+
+    //ONVIF
+    compile group: 'be.teletask.onvif', name: 'onvif', version: '1.0.2'
+    //opsgenie atlassian
+    compile "com.opsgenie.integration:sdk:2+"
+    //LogBack kibana integration
+    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+    compile group: 'ch.qos.logback', name: 'logback-access', version: '1.2.3'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+    compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.2'
 
     runtime "org.apache.tomcat:tomcat-jdbc"
     runtime "javax.xml.bind:jaxb-api:2.3.0"
