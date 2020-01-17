@@ -1,6 +1,8 @@
 include ":web-vue"
 include ":server-core"
 include ":server-rules"
+include ":server-grails"
 
 project(':server-rules').projectDir = file('server/server-libs/server-rules')
+project(':server-grails').projectDir = file('server/server-libs/server-grails')
 project(':server-core').projectDir = file('server/server-core')
