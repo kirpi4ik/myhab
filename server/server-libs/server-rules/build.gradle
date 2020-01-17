@@ -1,5 +1,22 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven { url "https://repo.grails.org/grails/core" }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+}
 plugins {
-    id 'java'
     id 'groovy'
+    id 'java-library'
     id 'idea'
+}
+
+repositories {
+    mavenLocal()
+    maven { url "https://repo.grails.org/grails/core" }
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:2.5.8'
+    compile group: 'org.jeasy', name: 'easy-rules-core', version: '3.4.0'
 }
