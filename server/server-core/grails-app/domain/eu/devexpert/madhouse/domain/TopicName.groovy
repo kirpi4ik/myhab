@@ -3,7 +3,7 @@ package eu.devexpert.madhouse.domain;
 /**
  *
  */
-public enum TopicName {
+enum TopicName {
     LIGHT,
     PORT_VALUE_CHANGE,
     POWER;

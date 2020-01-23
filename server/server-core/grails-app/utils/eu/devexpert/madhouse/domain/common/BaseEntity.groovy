@@ -15,7 +15,11 @@ abstract class BaseEntity implements Serializable {
     String uid = DomainUtil.NULL_UID
     Date tsCreated = DomainUtil.NULL_DATE
     Date tsUpdated = DomainUtil.NULL_DATE
-    EntityType entityType
+    EntityType entityType = EntityType.get(this)
+
+    EntityType getEntityType() {
+        return entityType
+    }
 
     void beforeInsert() {
         if (this.uid == DomainUtil.NULL_UID) {
