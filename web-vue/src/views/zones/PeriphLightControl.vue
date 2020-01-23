@@ -1,12 +1,27 @@
 <template>
     <div class="card" :class="`card-background text-white`">
-        <div class="card-body pb-2">
+        <div class="card-body pb-0">
+
             <slot></slot>
             <div>
                 <font-awesome-icon icon="lightbulb" size="3x" :class="`zone-icon-${peripheral.state}`"/>
-                <h4 class="mb-1"> {{peripheral.data.name}}</h4>
-            </div>
 
+                <div style="float: left">
+                    <div style="display: inline-block">
+                        <h4 class="mb-1"> {{peripheral.data.name}}</h4>
+                    </div>
+                    <div style="display: inline-block; width: 100%;">
+                        <CDropdown color="transparent p-0" placement="bottom-end">
+                            <template #toggler-content>
+                                <CIcon name="cil-settings"/>
+                            </template>
+                            <CDropdownItem>Porneste 5min</CDropdownItem>
+                            <CDropdownItem>Porneste 15min</CDropdownItem>
+                            <CDropdownItem>Porneste 1h</CDropdownItem>
+                        </CDropdown>
+                    </div>
+                </div>
+            </div>
         </div>
         <slot name="footer" class="card-footer">
             <div class="toggle-btn">
@@ -27,7 +42,7 @@
 <script>
     import {router} from '@/_helpers';
     import {authenticationService} from '@/_services';
-    import { PUSH_EVENT} from "../../graphql/zones";
+    import {PUSH_EVENT} from "../../graphql/zones";
 
     export default {
         name: 'PeriphLightControl',

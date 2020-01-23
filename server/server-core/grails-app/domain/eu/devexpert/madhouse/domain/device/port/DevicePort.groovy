@@ -1,10 +1,11 @@
 package eu.devexpert.madhouse.domain.device.port
 
+import eu.devexpert.madhouse.domain.common.Configurable
 import eu.devexpert.madhouse.domain.device.*
 import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.job.EventSubscription
 
-class DevicePort extends BaseEntity {
+class DevicePort extends BaseEntity implements Configurable<DevicePort> {
   String internalRef
   String name
   String description

@@ -13,7 +13,7 @@ import eu.devexpert.madhouse.domain.job.EventData;
 /**
  *
  */
-public enum EntityType {
+enum EntityType {
     CABLE(Cable.class),
     DEVICE(Device.class),
     PERIPHERAL(DevicePeripheral.class),
@@ -22,6 +22,12 @@ public enum EntityType {
     PATCH_PANEL(PatchPanel.class),
     PORT(DevicePort.class),
     PORT_VALUE(PortValue.class);
+
+    static <T extends BaseEntity> EntityType get(T type) {
+        return values().find {
+            it.typeClass == type.class
+        }
+    }
 
     private final Class<? extends BaseEntity> typeClass;
 
