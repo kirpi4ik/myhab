@@ -1,6 +1,7 @@
 package eu.devexpert.madhouse.domain.infra
 
 import eu.devexpert.madhouse.domain.common.BaseEntity
+import eu.devexpert.madhouse.domain.common.Configurable
 import eu.devexpert.madhouse.domain.device.Cable
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import grails.gorm.DetachedCriteria
@@ -9,10 +10,9 @@ import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.EntityDataFetcher
-import org.grails.gorm.graphql.fetcher.impl.SingleEntityDataFetcher
 
 @Resource(readOnly = true, formats = ['json', 'xml'])
-class Zone extends BaseEntity {
+class Zone extends BaseEntity implements Configurable<Zone> {
     String name
     String description
     Set<String> categories
@@ -20,6 +20,7 @@ class Zone extends BaseEntity {
     Set<Zone> zones
     Set<DevicePeripheral> peripherals
     Set<Cable> cables
+
     static belongsTo = [parent: Zone]
     static hasOne = [parent: Zone]
     static hasMany = [cables: Cable, peripherals: DevicePeripheral, zones: Zone]
@@ -29,12 +30,14 @@ class Zone extends BaseEntity {
         table '`zones`'
         peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id']
         cables joinTable: [name: "zones_cables_join", key: 'zone_id']
+
     }
     static constraints = {
         peripherals cascade: 'save-update'
         cables cascade: 'save-update'
         zones cascade: 'save-update'
     }
+
     static graphql = GraphQLMapping.lazy {
         query('zoneByUid', Zone) {
             argument('uid', String)

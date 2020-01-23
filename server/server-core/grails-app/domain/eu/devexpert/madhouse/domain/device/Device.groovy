@@ -1,13 +1,14 @@
 package eu.devexpert.madhouse.domain.device
 
-
+import eu.devexpert.madhouse.domain.Configuration
+import eu.devexpert.madhouse.domain.common.Configurable
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.common.BaseEntity
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 
-class Device extends BaseEntity {
+class Device extends BaseEntity implements Configurable<Device> {
     String code
     String name
     DeviceModel model
@@ -18,6 +19,7 @@ class Device extends BaseEntity {
     Set<DevicePort> ports
     Set<DeviceAccount> authAccounts
     Rack rack;
+
     static belongsTo = [rack: Rack, type: DeviceType]
     static hasMany = [authAccounts: DeviceAccount, ports: DevicePort]
 
