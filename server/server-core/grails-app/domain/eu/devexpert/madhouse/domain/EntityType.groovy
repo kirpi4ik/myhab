@@ -28,6 +28,11 @@ enum EntityType {
             it.typeClass == type.class
         }
     }
+    static <T extends BaseEntity> EntityType get(Class<T> typeClass) {
+        return values().find {
+            it.typeClass == typeClass
+        }
+    }
 
     private final Class<? extends BaseEntity> typeClass;
 

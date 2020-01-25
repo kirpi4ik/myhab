@@ -3,7 +3,7 @@ package eu.devexpert.madhouse.services
 import eu.devexpert.madhouse.domain.Role
 import eu.devexpert.madhouse.domain.User
 import eu.devexpert.madhouse.domain.UserRole
-import eu.devexpert.madhouse.gql.fetchers.DefaultDataFetcher
+import eu.devexpert.madhouse.graphql.fetchers.DefaultDataFetcher
 import grails.gorm.DetachedCriteria
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher

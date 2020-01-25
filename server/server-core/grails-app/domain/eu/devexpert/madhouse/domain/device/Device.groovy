@@ -1,6 +1,7 @@
 package eu.devexpert.madhouse.domain.device
 
 import eu.devexpert.madhouse.domain.Configuration
+import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.common.Configurable
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.common.BaseEntity
@@ -37,6 +38,14 @@ class Device extends BaseEntity implements Configurable<Device> {
     }
     static embedded = ['networkAddress']
     static graphql = GraphQLMapping.lazy {
+        add('configurations', [Configuration]) {
+            dataFetcher { BaseEntity entity ->
+                Configuration.where {
+                    entityId == entity.id && entityType == EntityType.get(entity)
+                }.order("name", "desc")
+            }
+            input false
+        }
         query('deviceByUid', Device) {
             argument('uid', String)
             dataFetcher(new DataFetcher() {

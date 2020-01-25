@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.graphql
 
 import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLObjectType
