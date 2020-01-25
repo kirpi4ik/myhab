@@ -109,7 +109,7 @@
                 }.bind(this);
                 //query for root zones , where zones has parent zone null
 
-                if (this.$route.query.zoneUid !=null && this.$route.query.zoneUid !== "") {
+                if (this.$route.query.zoneUid != null && this.$route.query.zoneUid !== "") {
                     this.$apollo.query({
                         query: ZONE_GET_BY_UID,
                         variables: {uid: this.$route.query.zoneUid}
@@ -144,7 +144,9 @@
                     query: NAV_BREADCRUMB,
                     variables: {zoneUid: zoneUid}
                 }).then(response => {
-                    this.breadcrumb = response.data.navigation.breadcrumb;
+                    if (response.data.navigation != null) {
+                        this.breadcrumb = response.data.navigation.breadcrumb;
+                    }
                 });
             },
             navZone: function (zoneUid) {
