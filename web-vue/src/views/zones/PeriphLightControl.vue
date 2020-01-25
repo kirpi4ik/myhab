@@ -8,16 +8,31 @@
 
                 <div style="float: left">
                     <div style="display: inline-block">
-                        <h4 class="mb-1"> {{peripheral.data.name}}</h4>
+                        <h4 class="mb-1">
+                            {{peripheral.data.name}} <slot style="color: #b1dae8; font-size: 10pt"
+                                                           v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value/60}}min ]</slot>
+                        </h4>
                     </div>
                     <div style="display: inline-block; width: 100%;">
-                        <CDropdown color="transparent p-0" placement="bottom-end">
+                        <CDropdown color="transparent p-0" placement="bottom-end" :ref="'dropdown-'+peripheral.data.id">
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
-                            <CDropdownItem>Porneste 5min</CDropdownItem>
-                            <CDropdownItem>Porneste 15min</CDropdownItem>
-                            <CDropdownItem>Porneste 1h</CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 600)">Porneste
+                                10min
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 1200)">Porneste
+                                20min
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 3600)">Porneste
+                                1h
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 10800)">Porneste
+                                3h
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', null)">Nelimitat
+
+                            </CDropdownItem>
                         </CDropdown>
                     </div>
                 </div>
@@ -40,16 +55,38 @@
 </template>
 
 <script>
-    import {router} from '@/_helpers';
     import {authenticationService} from '@/_services';
-    import {PUSH_EVENT} from "../../graphql/zones";
+    import {
+        CONFIGURATION_GET_VALUE,
+        CONFIGURATION_DELETE,
+        CONFIGURATION_SET_VALUE,
+        PUSH_EVENT
+    } from "../../graphql/zones";
 
     export default {
         name: 'PeriphLightControl',
         props: {
             peripheral: Object
         },
+        created() {
+            this.loadConfig();
+        },
+        data() {
+            return {
+                peripheralTimeout: null
+            }
+        },
         methods: {
+            loadConfig: function () {
+                debugger
+                this.$apollo.query({
+                    query: CONFIGURATION_GET_VALUE,
+                    variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.on.timeout'},
+                    fetchPolicy: 'network-only'
+                }).then(response => {
+                    this.peripheralTimeout = response.data.configPropertyByKey
+                });
+            },
             periphStateChangeHandler: function (peripheral) {
                 let event = {
                     "p0": "light",
@@ -64,6 +101,27 @@
                 }).then(response => {
 
                 });
+            },
+            saveConfig: function (peripheralId, key, value) {
+                let dropdown = this.$refs['dropdown-' + peripheralId];
+                if (value != null) {
+                    this.$apollo.mutate({
+                        mutation: CONFIGURATION_SET_VALUE,
+                        variables: {key: key, value: value, entityId: peripheralId, entityType: 'PERIPHERAL'}
+                    }).then(response => {
+                        dropdown.hide();
+                        this.loadConfig();
+                    });
+                } else {
+                    this.$apollo.mutate({
+                        mutation: CONFIGURATION_DELETE,
+                        variables: {id: this.peripheralTimeout.id}
+                    }).then(response => {
+                        dropdown.hide();
+                        this.peripheralTimeout = null
+                    });
+                }
+                return true;
             }
         }
     }
