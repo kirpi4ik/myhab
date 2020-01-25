@@ -9,8 +9,8 @@
                 <div style="float: left">
                     <div style="display: inline-block">
                         <h4 class="mb-1">
-                            {{peripheral.data.name}} <slot style="color: #b1dae8; font-size: 10pt"
-                                                           v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value/60}}min ]</slot>
+                            {{peripheral.data.name}} <span style="color: #b1dae8; font-size: 10pt"
+                                                           v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value/60}}min ]</span>
                         </h4>
                     </div>
                     <div style="display: inline-block; width: 100%;">
