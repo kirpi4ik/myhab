@@ -1,4 +1,5 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.graphql
+
 
 import grails.config.Config
 import grails.core.support.GrailsConfigurationAware
@@ -51,8 +52,6 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
     final List<FieldDefinition> mutationDefList = new ArrayList<>();
     final List<SDLDefinition> objectTypeExtensions = new ArrayList<>();
 
-    private static final String TYPE_MUTATION = "Mutation";
-    private static final String TYPE_QUERY = "Query";
 
     GQLSchemaFactory(MappingContext... mappingContext) {
         super(mappingContext)
@@ -60,24 +59,24 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
 
     def loadidl() {
         GORMSchemaRegistry gormSchemaReg = gSchemaReg()
-        def stream = new ClassPathResource("schema.graphqls").inputStream
+        def stream = new ClassPathResource(GQLConstants.SCHEMA_FILE_NAME).inputStream
         def schemasContent = [stream.text]
         TypeDefinitionRegistry loadedFromFileDefRegistry
         schemasContent.each { idlSchemaContent ->
             loadedFromFileDefRegistry = schemaParser.parse((String)idlSchemaContent);
             loadedFromFileDefRegistry.types().forEach { typeName, definition ->
                 //Add only content of the root elements to our own Query and Mutation
-                if (typeName.equalsIgnoreCase(TYPE_QUERY)) {
+                if (typeName.equalsIgnoreCase(GQLConstants.TYPE_QUERY)) {
                     queryDefList.addAll(childrenFieldsOfTypeDefinition((ObjectTypeDefinition) definition));
-                } else if (typeName.equalsIgnoreCase(TYPE_MUTATION)) {
+                } else if (typeName.equalsIgnoreCase(GQLConstants.TYPE_MUTATION)) {
                     mutationDefList.addAll(childrenFieldsOfTypeDefinition((ObjectTypeDefinition) definition));
                 } else {
                     schemaDefinitionRegistry.add(definition);
                 }
             }
         }
-        schemaDefinitionRegistry.add(newObjectTypeDefinition().name(TYPE_QUERY).fieldDefinitions(queryDefList).build());
-        schemaDefinitionRegistry.add(newObjectTypeDefinition().name(TYPE_MUTATION).fieldDefinitions(mutationDefList).build());
+        schemaDefinitionRegistry.add(newObjectTypeDefinition().name(GQLConstants.TYPE_QUERY).fieldDefinitions(queryDefList).build());
+        schemaDefinitionRegistry.add(newObjectTypeDefinition().name(GQLConstants.TYPE_MUTATION).fieldDefinitions(mutationDefList).build());
         objectTypeExtensions.each {
             schemaDefinitionRegistry.add(it)
         }
@@ -110,8 +109,8 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
 
         GraphQLCodeRegistry.Builder codeRegistry = GraphQLCodeRegistry.newCodeRegistry()
 
-        GraphQLObjectType.Builder queryType = newObject().name(TYPE_QUERY)
-        GraphQLObjectType.Builder mutationType = newObject().name(TYPE_MUTATION)
+        GraphQLObjectType.Builder queryType = newObject().name(GQLConstants.TYPE_QUERY)
+        GraphQLObjectType.Builder mutationType = newObject().name(GQLConstants.TYPE_MUTATION)
 
         Set<PersistentEntity> childrenNotMapped = []
 
@@ -139,7 +138,7 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
                 if (getOperation.enabled) {
 
                     DataFetcher getFetcher = dataFetcherManager.getReadingFetcher(entity, GET).orElse(new SingleEntityDataFetcher(entity))
-                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(TYPE_QUERY, namingConvention.getGet(entity)), new InterceptingDataFetcher(entity, serviceManager, queryInterceptorInvoker, GET, getFetcher))
+                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(GQLConstants.TYPE_QUERY, namingConvention.getGet(entity)), new InterceptingDataFetcher(entity, serviceManager, queryInterceptorInvoker, GET, getFetcher))
                     GraphQLFieldDefinition.Builder queryOne = newFieldDefinition()
                             .name(namingConvention.getGet(entity))
                             .type(objectType)
@@ -175,7 +174,7 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
                     if (listFetcher instanceof PaginatingGormDataFetcher) {
                         ((PaginatingGormDataFetcher) listFetcher).responseHandler = paginationResponseHandler
                     }
-                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(TYPE_QUERY, namingConvention.getList(entity)), new InterceptingDataFetcher(entity, serviceManager, queryInterceptorInvoker, LIST, listFetcher))
+                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(GQLConstants.TYPE_QUERY, namingConvention.getList(entity)), new InterceptingDataFetcher(entity, serviceManager, queryInterceptorInvoker, LIST, listFetcher))
                     queryFields.add(queryAll)
 
                     for (Map.Entry<String, GraphQLInputType> argument : listArguments) {
@@ -196,7 +195,7 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
                             .description(countOperation.description)
                             .deprecate(countOperation.deprecationReason)
 
-                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(TYPE_QUERY, namingConvention.getCount(entity)), new InterceptingDataFetcher(entity, serviceManager, queryInterceptorInvoker, COUNT, countFetcher))
+                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(GQLConstants.TYPE_QUERY, namingConvention.getCount(entity)), new InterceptingDataFetcher(entity, serviceManager, queryInterceptorInvoker, COUNT, countFetcher))
                     queryFields.add(queryCount)
                 }
 
@@ -223,7 +222,7 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
                             .argument(newArgument()
                                     .name(entity.decapitalizedName)
                                     .type(createObjectType))
-                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(TYPE_MUTATION, namingConvention.getCreate(entity)), new InterceptingDataFetcher(entity, serviceManager, mutationInterceptorInvoker, CREATE, createFetcher))
+                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(GQLConstants.TYPE_MUTATION, namingConvention.getCreate(entity)), new InterceptingDataFetcher(entity, serviceManager, mutationInterceptorInvoker, CREATE, createFetcher))
 
                     mutationFields.add(create)
                 }
@@ -245,7 +244,7 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
                             .description(updateOperation.description)
                             .deprecate(updateOperation.deprecationReason)
 
-                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(TYPE_MUTATION, namingConvention.getUpdate(entity)), new InterceptingDataFetcher(entity, serviceManager, mutationInterceptorInvoker, UPDATE, updateFetcher))
+                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(GQLConstants.TYPE_MUTATION, namingConvention.getUpdate(entity)), new InterceptingDataFetcher(entity, serviceManager, mutationInterceptorInvoker, UPDATE, updateFetcher))
 
                     postIdentityExecutables.add {
                         update.argument(newArgument()
@@ -270,7 +269,7 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
                             .description(deleteOperation.description)
                             .deprecate(deleteOperation.deprecationReason)
 
-                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(TYPE_MUTATION, namingConvention.getDelete(entity)), new InterceptingDataFetcher(entity, serviceManager, mutationInterceptorInvoker, DELETE, deleteFetcher))
+                    codeRegistry.dataFetcher(FieldCoordinates.coordinates(GQLConstants.TYPE_MUTATION, namingConvention.getDelete(entity)), new InterceptingDataFetcher(entity, serviceManager, mutationInterceptorInvoker, DELETE, deleteFetcher))
 
                     requiresIdentityArguments.add(delete)
                     mutationFields.add(delete)

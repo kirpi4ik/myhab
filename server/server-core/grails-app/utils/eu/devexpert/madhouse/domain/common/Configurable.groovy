@@ -7,8 +7,10 @@ trait Configurable<BaseEntity> {
     Set<Configuration> getConfigurations() {
         return Configuration.withCriteria {
             eq('entityType', getEtityType())
+            eq('entityId', getId())
         }
     }
 
+    abstract Long getId()
     abstract EntityType getEntityType()
 }

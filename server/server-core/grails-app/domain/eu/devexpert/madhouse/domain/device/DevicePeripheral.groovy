@@ -1,6 +1,7 @@
 package eu.devexpert.madhouse.domain.device
 
 import eu.devexpert.madhouse.domain.Configuration
+import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.common.Configurable
 import eu.devexpert.madhouse.domain.device.port.DevicePort
@@ -37,6 +38,14 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
     }
 
     static graphql = GraphQLMapping.lazy {
+        add('configurations', [Configuration]) {
+            dataFetcher { BaseEntity entity ->
+                Configuration.where {
+                    entityId == entity.id && entityType == EntityType.get(entity)
+                }.order("name", "desc")
+            }
+            input false
+        }
         query('devicePeripheralByUid', DevicePeripheral) {
             argument('uid', String)
             dataFetcher(new DataFetcher() {

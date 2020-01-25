@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.graphql
 
 import com.google.common.base.CaseFormat
 import grails.util.Holders
@@ -22,7 +22,7 @@ class WireFactory implements WiringFactory {
         def exec = getFetcherMethod(environment)
         if (exec.aValue != null && exec.bValue != null) {
             return exec.aValue."${exec.bValue.name}"()
-        } else if (!GraphQLTypeUtil.isScalar(environment.fieldType) || (environment.parentType.name == "Query" || environment.parentType.name == "Mutation")) {
+        } else if (!GraphQLTypeUtil.isScalar(environment.fieldType) || (environment.parentType.name == GQLConstants.TYPE_QUERY || environment.parentType.name == GQLConstants.TYPE_MUTATION)) {
             return new DataFetcher() {
                 @Override
                 Object get(DataFetchingEnvironment env) throws Exception {
@@ -36,7 +36,7 @@ class WireFactory implements WiringFactory {
 
     }
 
-    private Pair<Object, Method> getFetcherMethod(FieldWiringEnvironment environment) {
+    private static Pair<Object, Method> getFetcherMethod(FieldWiringEnvironment environment) {
         def context = Holders.grailsApplication.mainContext
         def beanName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, environment.parentType.name)
         if (context.containsBean(beanName)) {

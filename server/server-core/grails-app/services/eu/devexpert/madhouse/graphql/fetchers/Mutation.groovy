@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse.gql.fetchers
+package eu.devexpert.madhouse.graphql.fetchers
 
 
 import eu.devexpert.madhouse.services.UserService

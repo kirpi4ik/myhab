@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse.gql.fetchers
+package eu.devexpert.madhouse.graphql.fetchers
 
 import eu.devexpert.madhouse.domain.infra.Zone
 import grails.gorm.transactions.Transactional
