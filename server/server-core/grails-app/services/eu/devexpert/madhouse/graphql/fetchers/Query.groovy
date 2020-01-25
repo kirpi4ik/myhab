@@ -1,8 +1,6 @@
-package eu.devexpert.madhouse.gql.fetchers
+package eu.devexpert.madhouse.graphql.fetchers
 
 import eu.devexpert.madhouse.domain.User
-import eu.devexpert.madhouse.domain.UserRole
-import eu.devexpert.madhouse.domain.infra.Zone
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment

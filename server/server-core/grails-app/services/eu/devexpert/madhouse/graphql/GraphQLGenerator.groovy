@@ -1,11 +1,10 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.graphql
 
 import com.google.common.collect.ImmutableList
 import graphql.GraphQL
 import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.tracing.TracingInstrumentation
 import graphql.schema.GraphQLSchema
-import groovy.transform.CompileStatic
 
 class GraphQLGenerator {
     GraphQLSchema schema

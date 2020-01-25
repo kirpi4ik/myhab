@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse.gql.fetchers
+package eu.devexpert.madhouse.graphql.fetchers
 
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher

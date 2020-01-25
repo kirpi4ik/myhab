@@ -1,5 +1,7 @@
 package eu.devexpert.madhouse.domain.infra
 
+import eu.devexpert.madhouse.domain.Configuration
+import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.common.Configurable
 import eu.devexpert.madhouse.domain.device.Cable
@@ -39,6 +41,15 @@ class Zone extends BaseEntity implements Configurable<Zone> {
     }
 
     static graphql = GraphQLMapping.lazy {
+        add('configurations', [Configuration]) {
+            dataFetcher { BaseEntity entity ->
+                Configuration.where {
+                    entityId == entity.id && entityType == EntityType.get(entity)
+                }.order("name", "desc")
+            }
+            input true
+        }
+
         query('zoneByUid', Zone) {
             argument('uid', String)
             dataFetcher(new DataFetcher() {

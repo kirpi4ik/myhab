@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.graphql.fetchers
 
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
