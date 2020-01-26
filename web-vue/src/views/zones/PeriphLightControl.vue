@@ -13,13 +13,13 @@
                                                            v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value/60}}min ]</span>
                         </h4>
                     </div>
-                    <div style="display: inline-block; width: 100%;">
+                    <div style="display: inline-block; width: 100%;" v-if="hasRole(['ROLE_ADMIN'])">
                         <CDropdown color="transparent p-0" placement="bottom-end" :ref="'dropdown-'+peripheral.data.id">
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 600)">Porneste
-                                10min
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 300)">Porneste
+                                5min
                             </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 1200)">Porneste
                                 20min
@@ -122,6 +122,12 @@
                     });
                 }
                 return true;
+            },
+            hasRole: function (roles) {
+                const currentUser = authenticationService.currentUserValue;
+                return currentUser.permissions.filter(function (userRole) {
+                    return roles.includes(userRole);
+                }).length > 0;
             }
         }
     }

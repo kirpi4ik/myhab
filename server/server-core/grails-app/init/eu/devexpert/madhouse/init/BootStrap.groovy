@@ -1,16 +1,13 @@
-package madhouse.v2
+package eu.devexpert.madhouse.init
 
-import eu.devexpert.madhouse.alert.Alert
-import eu.devexpert.madhouse.alert.AlertPriority
+import eu.devexpert.madhouse.init.cache.CacheMap
 import eu.devexpert.rules.facts.HeatControlInside
 import org.jeasy.rules.api.Facts
 import org.jeasy.rules.api.Rules
-import org.jeasy.rules.api.RulesEngine
-import org.jeasy.rules.core.InferenceRulesEngine
 
 class BootStrap {
     def alertService
-
+    def hazelcastInstance;
     def schedulerService
     def init = { servletContext ->
 //        schedulerService.startAll()
@@ -31,7 +28,8 @@ class BootStrap {
             rules.register(new HeatControlInside(it));
         }
 //        new InferenceRulesEngine().fire(rules, facts);
-
+//        hazelcastInstance.getMap(CacheMap.EXPIRE).put("key", "11111111111111111111");
+//        println ":::::::::"+hazelcastInstance.getMap(CacheMap.EXPIRE).get("key");
     }
     def destroy = {
 //        schedulerService.shutdown()
