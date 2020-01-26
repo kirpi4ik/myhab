@@ -1,4 +1,4 @@
-package madhouse.v2
+package eu.devexpert.madhouse.controller
 
 import grails.util.Environment
 
