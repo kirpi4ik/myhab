@@ -6,7 +6,7 @@ import eu.devexpert.madhouse.domain.EntityType
 trait Configurable<BaseEntity> {
     Set<Configuration> getConfigurations() {
         return Configuration.withCriteria {
-            eq('entityType', getEtityType())
+            eq('entityType', getEntityType())
             eq('entityId', getId())
         }
     }
