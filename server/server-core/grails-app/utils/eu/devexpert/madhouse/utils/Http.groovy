@@ -12,7 +12,7 @@ import static org.jsoup.Jsoup.connect
  *
  */
 @Slf4j
-class http {
+public class Http {
     def DEVICE_URL_TIMEOUT = 2000
     def port
     def action
@@ -20,21 +20,11 @@ class http {
     def uri
     def value
 
-
-    def static get(closure) {
-        closure.delegate = new http()
-        closure()
-        closure.getDelegate().call()
-    }
-
-    def static url(closure) {
-        closure.delegate = new http()
-        closure()
-        closure.getDelegate().url()
-    }
-
     def url() {
         def url = "[node defined]"
+        if (device == null && port != null) {
+            device = port.device
+        }
         if (device != null && device.model == DeviceModel.MEGAD_2561_RTC) {
             url = "http://${device?.networkAddress?.ip}:${device.networkAddress.port}/${device?.authAccounts?.first()?.password}/${uri != null ? uri : ''}"
             log.debug("READ STAT for [${DeviceModel.MEGAD_2561_RTC}] from : ${url}")
@@ -46,7 +36,7 @@ class http {
         } else if (device != null && device.model == DeviceModel.ESP8266_1) {
             try {
                 url = "http://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}"
-                log.debug("READ STAT for [${DeviceModel.ESP8266_1}] from ${url}")
+                log.debug("READ STAT for [${DeviceModel.ESP8266_1}] from : ${url}")
                 return connect(url)
                         .timeout(DEVICE_URL_TIMEOUT)
                         .ignoreContentType(true)
@@ -62,7 +52,7 @@ class http {
         }
     }
 
-    def call() {
+    def get() {
         if (device?.model == DeviceModel.MEGAD_2561_RTC || port?.device?.model == DeviceModel.MEGAD_2561_RTC) {
             if (port != null && action != null) {
                 def actionValue
@@ -99,15 +89,4 @@ class http {
             log.debug("UNKNOWN DEVICE")
         }
     }
-
-    def methodMissing(String methodName, args) {
-        log.error("missing method : ${methodName}")
-//    return new eu.devexpert.madhouse.dsl.action.PowerOut(args)
-    }
-
-    def propertyMissing(String paramName) {
-        log.error("missing property: ${paramName}")
-//    return new eu.devexpert.madhouse.dsl.action.PowerOut()
-    }
-
 }

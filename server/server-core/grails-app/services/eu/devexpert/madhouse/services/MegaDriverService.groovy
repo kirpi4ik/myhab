@@ -2,11 +2,13 @@ package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.*
-import eu.devexpert.madhouse.utils.http
+import eu.devexpert.madhouse.utils.Http
 import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
 import groovy.util.logging.Slf4j
+
+import java.util.regex.Matcher
 
 @Transactional
 @Slf4j
@@ -15,25 +17,16 @@ class MegaDriverService implements EventPublisher {
 
     @Transactional
     def readConfig(Device deviceController) {
-        def deviceMainPage = http.url {
-            device = deviceController;
-        }
+        def deviceMainPage = new Http(device:  deviceController).url()
 
         def configUrl = deviceMainPage.select("a").find { it.text() == "Config" }.attr("href")
         deviceMainPage.select("a").findAll { it.text().matches("XP[0-9]+") }.each { link ->
-            def portListPage = http.url {
-                device = deviceController;
-                uri = link.attr('href')
-            }
+            def portListPage = new Http(device: deviceController, uri: link.attr('href')).url()
             portListPage.select("a").findAll {
                 it.text().matches("P[0-9]{1,2}.+")
             }.each { portLink ->
-                def portPage = http.url {
-                    device = deviceController;
-                    uri = portLink.attr('href')
-                }
-
-                java.util.regex.Matcher m = (portLink.text() =~ /P[0-9]{1,2}.+\)|P[0-9]{1,2}/)
+                def portPage = new Http(device: deviceController, uri: portLink.attr('href')).url()
+                Matcher m = (portLink.text() =~ /P[0-9]{1,2}.+\)|P[0-9]{1,2}/)
                 m.find()
                 def portName = m.group(0)
                 def portNr = portPage.select("form input").first().attr("value")
@@ -41,12 +34,8 @@ class MegaDriverService implements EventPublisher {
             }
         }
         deviceMainPage.select("a").findAll { it.text().matches("P[0-9]{1,2}.+") }.each { portLink ->
-            def portPage = http.url {
-                device = deviceController;
-                uri = portLink.attr('href')
-            }
-
-            java.util.regex.Matcher m = (portLink.text() =~ /P[0-9]{1,2}.+\)|P[0-9]{1,2}/)
+            def portPage = new Http(device: deviceController, uri: portLink.attr('href')).url()
+            Matcher m = (portLink.text() =~ /P[0-9]{1,2}.+\)|P[0-9]{1,2}/)
             m.find()
             def portName = m.group(0)
             def portNr = portPage.select("form input").first().attr("value")
@@ -62,10 +51,8 @@ class MegaDriverService implements EventPublisher {
         def response = [:]
         Device deviceController = Device.findByUid(deviceUid)
         try {
-            def allStringStatus = http.url {
-                device = deviceController;
-                uri = "?cmd=all"
-            }
+            def allStringStatus = new Http(device: deviceController, uri: "?cmd=all").url()
+
             allStringStatus.text().split(";").eachWithIndex { status, index ->
                 response << ["$index": "$status"]
             }
@@ -78,10 +65,7 @@ class MegaDriverService implements EventPublisher {
     def readPortValue(deviceUid, portNr) {
         try {
             Device deviceController = Device.findByUid(deviceUid)
-            return http.url {
-                device = deviceController;
-                uri = "?pt=${portNr}&cmd=get"
-            }
+            return new Http(device: deviceController, uri: "?pt=${portNr}&cmd=get").url()
         } catch (Exception ex) {
             log.error("Read port value failed deviceUid=[$deviceUid], portNr=[$portNr]", ex.message)
         }
@@ -91,10 +75,7 @@ class MegaDriverService implements EventPublisher {
         DevicePort port
         try {
             Device deviceController = Device.findByUid(deviceUid)
-            def portPage = http.url {
-                device = deviceController;
-                uri = "?pt=${internalRef}"
-            }
+            def portPage = new Http(device: deviceController, uri: "?pt=${internalRef}").url()
 
             PortType portType = PortType.fromValue(portPage.select("form select[name=pty] option").find { option ->
                 option != null && option.hasAttr("selected")
@@ -179,10 +160,7 @@ class MegaDriverService implements EventPublisher {
     @Subscriber('2561.run.action')
     def runAction(event) {
         log.debug("call action")
-        http.url {
-            device = Device.findById(event?.data?.deviceUid);
-            uri = '?cmd=' + event?.data?.actionBody
-        }
+        new Http(device: Device.findById(event?.data?.deviceUid), uri: '?cmd=' + event?.data?.actionBody).url()
 
     }
 
@@ -190,4 +168,5 @@ class MegaDriverService implements EventPublisher {
     def runScenario(event) {
         dslService.execute(event?.data?.scenarioBody)
     }
+
 }
