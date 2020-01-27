@@ -2,7 +2,7 @@ package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.*
-import eu.devexpert.madhouse.utils.Http
+import eu.devexpert.madhouse.utils.DeviceHttpService
 import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
@@ -17,15 +17,15 @@ class MegaDriverService implements EventPublisher {
 
     @Transactional
     def readConfig(Device deviceController) {
-        def deviceMainPage = new Http(device:  deviceController).url()
+        def deviceMainPage = new DeviceHttpService(device:  deviceController).readState()
 
         def configUrl = deviceMainPage.select("a").find { it.text() == "Config" }.attr("href")
         deviceMainPage.select("a").findAll { it.text().matches("XP[0-9]+") }.each { link ->
-            def portListPage = new Http(device: deviceController, uri: link.attr('href')).url()
+            def portListPage = new DeviceHttpService(device: deviceController, uri: link.attr('href')).readState()
             portListPage.select("a").findAll {
                 it.text().matches("P[0-9]{1,2}.+")
             }.each { portLink ->
-                def portPage = new Http(device: deviceController, uri: portLink.attr('href')).url()
+                def portPage = new DeviceHttpService(device: deviceController, uri: portLink.attr('href')).readState()
                 Matcher m = (portLink.text() =~ /P[0-9]{1,2}.+\)|P[0-9]{1,2}/)
                 m.find()
                 def portName = m.group(0)
@@ -34,7 +34,7 @@ class MegaDriverService implements EventPublisher {
             }
         }
         deviceMainPage.select("a").findAll { it.text().matches("P[0-9]{1,2}.+") }.each { portLink ->
-            def portPage = new Http(device: deviceController, uri: portLink.attr('href')).url()
+            def portPage = new DeviceHttpService(device: deviceController, uri: portLink.attr('href')).readState()
             Matcher m = (portLink.text() =~ /P[0-9]{1,2}.+\)|P[0-9]{1,2}/)
             m.find()
             def portName = m.group(0)
@@ -51,7 +51,7 @@ class MegaDriverService implements EventPublisher {
         def response = [:]
         Device deviceController = Device.findByUid(deviceUid)
         try {
-            def allStringStatus = new Http(device: deviceController, uri: "?cmd=all").url()
+            def allStringStatus = new DeviceHttpService(device: deviceController, uri: "?cmd=all").readState()
 
             allStringStatus.text().split(";").eachWithIndex { status, index ->
                 response << ["$index": "$status"]
@@ -65,7 +65,7 @@ class MegaDriverService implements EventPublisher {
     def readPortValue(deviceUid, portNr) {
         try {
             Device deviceController = Device.findByUid(deviceUid)
-            return new Http(device: deviceController, uri: "?pt=${portNr}&cmd=get").url()
+            return new DeviceHttpService(device: deviceController, uri: "?pt=${portNr}&cmd=get").readState()
         } catch (Exception ex) {
             log.error("Read port value failed deviceUid=[$deviceUid], portNr=[$portNr]", ex.message)
         }
@@ -75,7 +75,7 @@ class MegaDriverService implements EventPublisher {
         DevicePort port
         try {
             Device deviceController = Device.findByUid(deviceUid)
-            def portPage = new Http(device: deviceController, uri: "?pt=${internalRef}").url()
+            def portPage = new DeviceHttpService(device: deviceController, uri: "?pt=${internalRef}").readState()
 
             PortType portType = PortType.fromValue(portPage.select("form select[name=pty] option").find { option ->
                 option != null && option.hasAttr("selected")
@@ -160,7 +160,7 @@ class MegaDriverService implements EventPublisher {
     @Subscriber('2561.run.action')
     def runAction(event) {
         log.debug("call action")
-        new Http(device: Device.findById(event?.data?.deviceUid), uri: '?cmd=' + event?.data?.actionBody).url()
+        new DeviceHttpService(device: Device.findById(event?.data?.deviceUid), uri: '?cmd=' + event?.data?.actionBody).readState()
 
     }
 
