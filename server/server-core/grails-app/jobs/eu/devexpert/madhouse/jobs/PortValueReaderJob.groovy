@@ -9,6 +9,7 @@ import eu.devexpert.madhouse.domain.job.EventData
 import eu.devexpert.madhouse.parser.ValueParser
 import eu.devexpert.madhouse.services.EspDeviceService
 import eu.devexpert.madhouse.services.MegaDriverService
+import grails.async.Promises
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
 import org.joda.time.DateTime
@@ -24,7 +25,7 @@ class PortValueReaderJob implements Job, EventPublisher {
     MegaDriverService megaDriverService
     EspDeviceService espDeviceService
     static triggers = {
-        simple name: 'portValueReader', repeatInterval: 5000
+        simple name: 'portValueReader', repeatInterval: 20000
     }
     static group = "Internal"
     static description = "Read port status"
@@ -36,10 +37,19 @@ class PortValueReaderJob implements Job, EventPublisher {
             try {
                 def deviceUid = installedDevice.uid
                 if (installedDevice.model.equals(DeviceModel.MEGAD_2561_RTC)) {
-                    updatePortValues(deviceUid, megaDriverService.readPortValues(deviceUid))
+                    Promises.task {
+                        megaDriverService.readPortValues(deviceUid)
+                    }.onComplete { portValues ->
+                        updatePortValues(deviceUid, portValues)
+                    }
                 } else if (installedDevice.model.equals(DeviceModel.ESP8266_1)) {
-                    updatePortValues(deviceUid, espDeviceService.readPortValues(deviceUid))
+                    Promises.task {
+                        espDeviceService.readPortValues(deviceUid)
+                    }.onComplete { portValues ->
+                        updatePortValues(deviceUid, portValues)
+                    }
                 }
+
             } catch (Exception ex) {
                 log.error("Error reading port value : deviceUid=${installedDevice.uid}", ex)
             }

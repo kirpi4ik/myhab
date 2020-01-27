@@ -29,13 +29,13 @@ abstract class BaseEntity implements Serializable {
             def now = DateTime.now().toDate()
             this.tsCreated = now
         }
-        log.info 'Before inserting ... ' + this.uid
+        log.trace 'Before inserting ... ' + this.uid
     }
 
     void beforeUpdate() {
         def now = DateTime.now().toDate()
         this.tsUpdated = now
-        log.info 'Before updating ... ' + this.uid
+        log.trace 'Before updating ... ' + this.uid
     }
 //  static mapping = {
 //    table '`device_event_logs`'
