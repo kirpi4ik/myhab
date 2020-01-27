@@ -1,7 +1,7 @@
 package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.domain.device.Device
-import eu.devexpert.madhouse.utils.Http
+import eu.devexpert.madhouse.utils.DeviceHttpService
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
@@ -18,7 +18,7 @@ class EspDeviceService {
     Map<String, String> readPortValues(deviceUid) {
         def response = [:]
         Device deviceController = Device.findByUid(deviceUid)
-        def portStatusJson = new Http(device: deviceController, uri: "cmd?action=get&port=ALL").url()
+        def portStatusJson = new DeviceHttpService(device: deviceController, uri: "cmd?action=get&port=ALL").readState()
         def resp = new JsonSlurper().parseText("${portStatusJson?.text()}")
 
         resp?.ports?.each {
@@ -29,6 +29,6 @@ class EspDeviceService {
     }
 
     def setValue(devicePort, newValue) {
-        new Http(device: devicePort.device, port: devicePort, action: "set", value: newValue).get()
+        new DeviceHttpService(device: devicePort.device, port: devicePort, action: "set", value: newValue).writeState()
     }
 }
