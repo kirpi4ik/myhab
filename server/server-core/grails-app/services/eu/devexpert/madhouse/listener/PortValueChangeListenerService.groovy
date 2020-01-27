@@ -42,6 +42,8 @@ class PortValueChangeListenerService {
             if (config != null && newVal == PortAction.ON.name()) {
                 def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
                 hazelcastInstance.getMap(CacheMap.EXPIRE).put(port.id, [expireOn: expireInMs, portUid: peripheral.uid])
+            }else if (newVal == PortAction.OFF.name()){
+                hazelcastInstance.getMap(CacheMap.EXPIRE).remove(port.id)
             }
         }
     }
