@@ -1,7 +1,7 @@
 package eu.devexpert.madhouse.domain.infra
 
-import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.common.BaseEntity
+import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import grails.rest.Resource
 
 @Resource(readOnly = false, formats = ['json', 'xml'])

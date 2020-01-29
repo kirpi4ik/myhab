@@ -33,7 +33,7 @@ appender('STDOUT', ConsoleAppender) {
                 fieldName = 'message'
             }
             globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.1")}"
+                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.2")}"
             }
             threadName(ThreadNameJsonProvider) {
                 fieldName = 'thread'
@@ -82,7 +82,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     fieldName = 'message'
                 }
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.1")}"
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.2")}"
                 }
                 threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
@@ -138,7 +138,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     fieldName = 'message'
                 }
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.1")}"
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.0.2")}"
                 }
                 threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
@@ -175,6 +175,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
 }
 
 logger 'eu.devexpert', DEBUG, ['STDOUT', 'FULL_STACKTRACE']
+logger 'org.jsoup', DEBUG, ['STDOUT']
 logger 'org.springframework.security', ERROR, ['STDOUT']
 logger 'grails.plugin.springsecurity', ERROR, ['STDOUT']
 logger 'grails.plugin.springsecurity.web.filter.DebugFilter', ERROR, ['STDOUT']

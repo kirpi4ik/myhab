@@ -1,6 +1,6 @@
 package eu.devexpert.madhouse.domain.job
 
-import eu.devexpert.madhouse.domain.EntityType
+
 import eu.devexpert.madhouse.domain.common.BaseEntity
 
 class EventData extends BaseEntity {

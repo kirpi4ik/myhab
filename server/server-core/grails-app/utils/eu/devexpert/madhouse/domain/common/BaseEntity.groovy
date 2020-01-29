@@ -1,10 +1,8 @@
 package eu.devexpert.madhouse.domain.common
 
-import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.DomainUtil
+import eu.devexpert.madhouse.domain.EntityType
 import groovy.util.logging.Slf4j
-import org.grails.datastore.mapping.engine.event.PostInsertEvent
-import org.grails.datastore.mapping.engine.event.PostUpdateEvent
 import org.joda.time.DateTime
 
 /**
@@ -15,7 +13,11 @@ abstract class BaseEntity implements Serializable {
     String uid = DomainUtil.NULL_UID
     Date tsCreated = DomainUtil.NULL_DATE
     Date tsUpdated = DomainUtil.NULL_DATE
-    EntityType entityType
+    EntityType entityType = EntityType.get(this)
+
+    EntityType getEntityType() {
+        return entityType
+    }
 
     void beforeInsert() {
         if (this.uid == DomainUtil.NULL_UID) {
@@ -25,13 +27,13 @@ abstract class BaseEntity implements Serializable {
             def now = DateTime.now().toDate()
             this.tsCreated = now
         }
-        log.info 'Before inserting ... ' + this.uid
+        log.trace 'Before inserting ... ' + this.uid
     }
 
     void beforeUpdate() {
         def now = DateTime.now().toDate()
         this.tsUpdated = now
-        log.info 'Before updating ... ' + this.uid
+        log.trace 'Before updating ... ' + this.uid
     }
 //  static mapping = {
 //    table '`device_event_logs`'
