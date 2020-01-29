@@ -2,7 +2,7 @@
 grails:
   profile: vue
   codegen:
-    defaultPackage: madhouse.v2
+    defaultPackage: eu.devexpert.madhouse
   gorm:
     reactor:
       # Whether to translate GORM events into Reactor events
@@ -102,7 +102,7 @@ quartz:
   dataSource:
     development:
       driver: "org.postgresql.Driver"
-      URL: "jdbc:postgresql://localhost:5432/madhouse_12_19"
+      URL: "jdbc:postgresql://localhost:5432/madhouse_02_20"
       user: "madhouse"
       password: "madhouse"
       maxConnections: 5
@@ -128,7 +128,7 @@ environments:
   development:
     dataSource:
       dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse_12_19
+      url: jdbc:postgresql://localhost:5432/madhouse_02_20
       username: "madhouse"
       password: "madhouse"
       driverClassName: "org.postgresql.Driver"

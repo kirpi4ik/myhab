@@ -2,9 +2,9 @@ package eu.devexpert.madhouse.domain.device
 
 import eu.devexpert.madhouse.domain.Configuration
 import eu.devexpert.madhouse.domain.EntityType
+import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.common.Configurable
 import eu.devexpert.madhouse.domain.device.port.DevicePort
-import eu.devexpert.madhouse.domain.common.BaseEntity
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping

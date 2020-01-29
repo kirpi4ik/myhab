@@ -9,7 +9,6 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.DeleteEntityDataFetcher
-import org.grails.gorm.graphql.fetcher.impl.EntityDataFetcher
 
 @Resource(uri = '/user')
 @EqualsAndHashCode(includes = 'username')
