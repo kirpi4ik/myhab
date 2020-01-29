@@ -1,7 +1,7 @@
 package eu.devexpert.madhouse.domain.job
 
-import eu.devexpert.madhouse.domain.device.Scenario
 import eu.devexpert.madhouse.domain.common.BaseEntity
+import eu.devexpert.madhouse.domain.device.Scenario
 
 class Job extends BaseEntity {
   String name

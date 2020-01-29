@@ -1,14 +1,14 @@
-package eu.devexpert.madhouse.domain;
+package eu.devexpert.madhouse.domain
 
-import eu.devexpert.madhouse.domain.device.Cable;
-import eu.devexpert.madhouse.domain.device.Device;
-import eu.devexpert.madhouse.domain.device.DevicePeripheral;
-import eu.devexpert.madhouse.domain.device.PatchPanel;
-import eu.devexpert.madhouse.domain.device.port.DevicePort;
-import eu.devexpert.madhouse.domain.device.port.PortValue;
-import eu.devexpert.madhouse.domain.common.BaseEntity;
-import eu.devexpert.madhouse.domain.infra.Zone;
-import eu.devexpert.madhouse.domain.job.EventData;
+import eu.devexpert.madhouse.domain.common.BaseEntity
+import eu.devexpert.madhouse.domain.device.Cable
+import eu.devexpert.madhouse.domain.device.Device
+import eu.devexpert.madhouse.domain.device.DevicePeripheral
+import eu.devexpert.madhouse.domain.device.PatchPanel
+import eu.devexpert.madhouse.domain.device.port.DevicePort
+import eu.devexpert.madhouse.domain.device.port.PortValue
+import eu.devexpert.madhouse.domain.infra.Zone
+import eu.devexpert.madhouse.domain.job.EventData
 
 /**
  *

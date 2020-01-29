@@ -1,7 +1,7 @@
 package eu.devexpert.madhouse.domain.device
 
-import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.common.BaseEntity
+import eu.devexpert.madhouse.domain.device.port.DevicePort
 
 class Scenario extends BaseEntity {
   String name

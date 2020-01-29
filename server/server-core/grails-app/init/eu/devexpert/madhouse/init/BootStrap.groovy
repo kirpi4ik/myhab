@@ -1,6 +1,6 @@
 package eu.devexpert.madhouse.init
 
-import eu.devexpert.madhouse.init.cache.CacheMap
+
 import eu.devexpert.rules.facts.HeatControlInside
 import org.jeasy.rules.api.Facts
 import org.jeasy.rules.api.Rules
