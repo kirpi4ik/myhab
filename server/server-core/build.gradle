@@ -30,9 +30,9 @@ configurations {
 }
 
 dependencies {
-    developmentOnly("org.springframework.boot:spring-boot-devtools")	    	
-	compile project(':server-rules')
-	compile project(':server-grails')
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    compile project(':server-rules')
+    compile project(':server-grails')
     compile "org.springframework.boot:spring-boot-starter-logging"
     compile "org.springframework.boot:spring-boot-autoconfigure"
     compile "org.grails:grails-core"
@@ -63,6 +63,10 @@ dependencies {
 
     compile 'org.grails.plugins:quartz:2.0.13'
     compile 'org.quartz-scheduler:quartz:2.3.2' // Is not pulled in by default?
+
+    //cache
+    compile group: 'com.hazelcast', name: 'hazelcast', version: '3.12.5'
+    compile group: 'com.hazelcast', name: 'hazelcast-spring', version: '3.12.5'
 
     compileOnly "io.micronaut:micronaut-inject-groovy"
     console "org.grails:grails-console"
