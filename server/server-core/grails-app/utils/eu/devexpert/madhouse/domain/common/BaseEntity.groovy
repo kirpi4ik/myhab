@@ -1,10 +1,8 @@
 package eu.devexpert.madhouse.domain.common
 
-import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.DomainUtil
+import eu.devexpert.madhouse.domain.EntityType
 import groovy.util.logging.Slf4j
-import org.grails.datastore.mapping.engine.event.PostInsertEvent
-import org.grails.datastore.mapping.engine.event.PostUpdateEvent
 import org.joda.time.DateTime
 
 /**

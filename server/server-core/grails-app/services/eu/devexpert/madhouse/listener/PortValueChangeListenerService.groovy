@@ -1,6 +1,6 @@
 package eu.devexpert.madhouse.listener
 
-import com.hazelcast.core.HazelcastInstance
+
 import eu.devexpert.madhouse.ConfigKey
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.device.port.PortAction
@@ -9,7 +9,6 @@ import eu.devexpert.madhouse.init.cache.CacheMap
 import eu.devexpert.madhouse.parser.ValueParser
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
-import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
 import org.springframework.transaction.annotation.Propagation

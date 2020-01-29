@@ -2,10 +2,9 @@ package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.utils.DeviceHttpService
+import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
-
-import grails.gorm.transactions.Transactional
 
 @Transactional
 @Slf4j
