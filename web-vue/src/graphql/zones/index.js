@@ -7,6 +7,7 @@ export const ZONES_GET_ALL = gql`
             name
             description
             peripherals{
+                id
                 uid
                 name
                 description
@@ -40,6 +41,7 @@ export const ZONE_GET_BY_UID = gql`
                 name
                 description
                 peripherals {
+                    id
                     uid
                     name
                     description
@@ -53,6 +55,7 @@ export const ZONE_GET_BY_UID = gql`
                 }
             }
             peripherals {
+                id
                 uid
                 name
                 description
@@ -80,6 +83,7 @@ export const ZONES_GET_ROOT = gql`
                 description
             }
             peripherals {
+                id
                 uid
                 name
                 description
@@ -335,4 +339,36 @@ export const CABLE_GET_BY_ID_CHILDS = gql`
 
         }
     }
+`;
+export const CONFIGURATION_SET_VALUE = gql`
+    mutation ($key:String!, $entityId:Long!, $entityType:EntityType!, $value:String!) {
+        savePropertyValue(key: $key, entityId: $entityId, entityType: $entityType, value: $value) {
+            id
+            version
+            name
+            description
+            value
+            entityType
+            key
+            entityId
+        }
+    }
+`;
+export const CONFIGURATION_GET_VALUE = gql`
+    query configPropertyByKey($key:String!, $entityId:Long!, $entityType:EntityType!){
+        configPropertyByKey(key: $key, entityId: $entityId, entityType: $entityType) {
+            id
+            key
+            value
+        }
+    }
+`;
+export const CONFIGURATION_DELETE = gql`
+    mutation ($id:Long!){
+        configurationDelete(id: $id) {
+            success
+            error
+        }
+    }
+
 `;

@@ -1,8 +1,8 @@
 package eu.devexpert.madhouse.domain.job
 
+import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.device.Scenario
 import eu.devexpert.madhouse.domain.device.port.DevicePort
-import eu.devexpert.madhouse.domain.common.BaseEntity
 
 class EventSubscription extends BaseEntity {
   Set<EventDefinition> events
