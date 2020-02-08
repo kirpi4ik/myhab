@@ -16,7 +16,7 @@ plugins {
 //tag::extVariables[]
 ext {
     projectVersion = "2.0.2"
-    dockerTag = "madhouse/${project.name}:${projectVersion}".toLowerCase() // <1>
+    dockerTag = "madhouse/madhousev2-web:${projectVersion}".toLowerCase() // <1>
     dockerBuildDir = mkdir("${buildDir}/docker")
     dockerContainerName = 'madhousev2'
     dockerBuildGroup = 'Docker'
@@ -99,7 +99,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     from 'openjdk:8u151-jdk-alpine'
 
-    exposePort 8080
+    exposePort 8181
     environmentVariable 'GRAILS_ENV', 'production'
     // Create a config directory and expose as volume.
     // External configuration files in this volume are automatically
@@ -131,70 +131,4 @@ task removeImage(type: DockerRemoveImage) {
     group = dockerBuildGroup
 
     targetImageId { dockerTag }
-}
-
-//------------------------------------------------------------------------------
-// Extra tasks to create, run, stop and remove containers
-// for a development and production environment.
-//------------------------------------------------------------------------------
-['development', 'production'].each { environment ->
-
-    // Transform environment for use in task names.
-    final String taskName = environment.capitalize()
-
-    // Name for container contains the environment name.
-    final String name = "${dockerContainerName}-${environment}"
-
-    task "createContainer$taskName"(type: DockerCreateContainer) {
-        description = "Create Docker container $name with grails.env $environment."
-        group = dockerBuildGroup
-
-        targetImageId { dockerTag }
-        containerName = name
-
-        exposePorts("tcp", [8080])
-        // Expose port 8080 from container to outside as port 8080.
-        hostConfig.portBindings = ['8080:8080']
-        hostConfig.autoRemove = true
-        hostConfig.links = ["madhousev2-db:database"]
-
-        // The image has a volume /app/config for external configuration
-        // files that are automatically picked up by the Grails application.
-        // In this example we use a local directory with configuration files
-        // on our host and bind it to the volume in the container.
-        String projectIsDir = "/host_mnt/${FilenameUtils.separatorsToUnix(projectDir.absolutePath).replaceAll(":", "")}/src/main/deployment/${environment}"
-        println projectIsDir
-        hostConfig.binds = ["${projectIsDir}": '/app/config']
-        tty = false
-
-        // Set environment variable GRAILS_ENV to environment value.
-        // The docker-entrypoint.sh script picks up this environment
-        // variable and turns it into Java system property
-        // -Dgrails.env.
-        withEnvVar("GRAILS_ENV", "$environment")
-
-        // Example of adding extra command line arguments to the
-        // java -jar app.jar that is executed in the container.
-        cmd = ["--app.dockerContainerName=${containerName}"]
-    }
-    task "startContainer$taskName"(type: DockerStartContainer) {
-        description = "Start Docker container $name."
-        group = dockerBuildGroup
-
-        targetContainerId { name }
-    }
-
-    task "stopContainer$taskName"(type: DockerStopContainer) {
-        description = "Stop Docker container $name."
-        group = dockerBuildGroup
-
-        targetContainerId { name }
-    }
-
-    task "removeContainer$taskName"(type: DockerRemoveContainer) {
-        description = "Remove Docker container $name."
-        group = dockerBuildGroup
-
-        targetContainerId { name }
-    }
 }
