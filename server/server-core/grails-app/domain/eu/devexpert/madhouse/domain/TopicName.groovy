@@ -4,8 +4,10 @@ package eu.devexpert.madhouse.domain;
  *
  */
 enum TopicName {
-    LIGHT,
-    PORT_VALUE_CHANGE,
+    EVT_LIGHT,
+    EVT_HEAT,
+    EVT_PORT_VALUE_CHANGED,
+    EVT_LOG,
     POWER;
 
     public String id() {

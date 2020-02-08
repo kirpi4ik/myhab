@@ -2,7 +2,7 @@ package eu.devexpert.madhouse.services.dsl
 
 import eu.devexpert.madhouse.domain.device.port.PortAction
 import eu.devexpert.madhouse.services.dsl.action.DslCommand
-import eu.devexpert.madhouse.services.dsl.action.PowerOut
+import eu.devexpert.madhouse.services.dsl.action.PowerService
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import groovy.util.logging.Slf4j
@@ -12,23 +12,25 @@ import org.springframework.context.ApplicationContext
 @Transactional
 class ScenarioService {
 
+    def powerService
+
     def getIsEvening() {
         return true
     }
 
     def lightsOn(args) {
         args.action = PortAction.ON
-        return new PowerOut(args)
+        powerService.execute(args)
     }
 
     def lightsOff(args) {
         args.action = PortAction.OFF
-        return new PowerOut(args)
+        powerService.execute(args)
     }
 
     def lightsReverse(args) {
         args.action = PortAction.REVERSE
-        return new PowerOut(args)
+        powerService.execute(args)
     }
 
     def pause(args) {

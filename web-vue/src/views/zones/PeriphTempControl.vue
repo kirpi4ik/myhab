@@ -17,31 +17,11 @@
 </template>
 
 <script>
-    import {router} from '@/_helpers';
-    import {authenticationService} from '@/_services';
-    import {PUSH_EVENT} from "../../graphql/zones";
 
     export default {
-        name: 'PeriphLightControl',
+        name: 'PeriphTempControl',
         props: {
             peripheral: Object
-        },
-        methods: {
-            periphStateChangeHandler: function (peripheral) {
-                let event = {
-                    "p0": "light",
-                    "p1": "PERIPHERAL",
-                    "p2": peripheral.data.uid,
-                    "p3": "mweb",
-                    "p4": peripheral.state === true ? "off" : "on",
-                    "p6": authenticationService.currentUserValue.login
-                };
-                this.$apollo.mutate({
-                    mutation: PUSH_EVENT, variables: {input: event}
-                }).then(response => {
-
-                });
-            }
         }
     }
 </script>
