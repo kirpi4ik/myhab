@@ -29,8 +29,8 @@ class StatusOnTimeoutJob implements Job, EventPublisher {
             println "${candidateForExpiration?.key} | ${value?.expireOn} | ${value?.portUid}"
             def now = DateTime.now()
             if (now.isAfter(value?.expireOn)) {
-                publish("light", [
-                        "p0": "light",
+                publish("evt_light", [
+                        "p0": "evt_light",
                         "p1": "PERIPHERAL",
                         "p2": value?.portUid,
                         "p3": "timout",
