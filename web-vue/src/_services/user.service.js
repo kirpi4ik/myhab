@@ -1,4 +1,4 @@
-import { handleResponse, requestOptions } from '@/_helpers';
+import {handleResponse, requestOptions, Utils} from '@/_helpers';
 
 export const userService = {
     getAll,
@@ -6,11 +6,12 @@ export const userService = {
 };
 
 function getAll() {
-    return fetch(`${process.env.VUE_APP_SERVER_URL}/api/users`, requestOptions.get())
+    return fetch(`${Utils.host()}/api/users`, requestOptions.get())
         .then(handleResponse);
 }
 
 function getById(id) {
-    return fetch(`${process.env.VUE_APP_SERVER_URL}/api/users/${id}`, requestOptions.get())
+    return fetch(`${Utils.host()}/api/users/${id}`, requestOptions.get())
         .then(handleResponse);
 }
+
