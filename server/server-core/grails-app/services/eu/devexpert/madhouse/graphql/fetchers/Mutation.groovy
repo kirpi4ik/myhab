@@ -1,6 +1,6 @@
 package eu.devexpert.madhouse.graphql.fetchers
 
-
+import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.services.UserService
 import grails.events.EventPublisher
 import graphql.schema.DataFetcher
@@ -26,7 +26,7 @@ class Mutation implements EventPublisher {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def pushedEvent = environment.getArgument("input")
                 publish("${pushedEvent['p0']}", pushedEvent)
-                publish("log_event", pushedEvent)
+                publish(TopicName.EVT_LOG.id(), pushedEvent)
                 return pushedEvent
             }
         }

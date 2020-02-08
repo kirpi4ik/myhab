@@ -88,7 +88,7 @@
             },
             periphStateChangeHandler: function (peripheral) {
                 let event = {
-                    "p0": "light",
+                    "p0": "evt_light",
                     "p1": "PERIPHERAL",
                     "p2": peripheral.data.uid,
                     "p3": "mweb",

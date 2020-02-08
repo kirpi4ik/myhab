@@ -77,15 +77,14 @@ class PortValueReaderJob implements Job, EventPublisher {
                     if (devicePort.type.syncMs != -1) {
                         if (portLatestValues.size() == 0 || DateTime.now().minus(portLatestValues[0]?.tsCreated?.time).isAfter(devicePort?.type?.syncMs))
                             if (devicePort.value == null || !devicePort.value.equalsIgnoreCase(ValueParser.parser(devicePort).apply(newValue))) {
-                                EventData eventData = new EventData().with {
-                                    p0 = TopicName.PORT_VALUE_CHANGE.id()
+                                publish(TopicName.EVT_PORT_VALUE_CHANGED.id(), new EventData().with {
+                                    p0 = TopicName.EVT_PORT_VALUE_CHANGED.id()
                                     p1 = "PORT"
                                     p2 = "${devicePort.uid}"
                                     p3 = "cron"
                                     p4 = "$newValue"
                                     it
-                                }
-                                publish(eventData.p0, eventData)
+                                })
                             }
                     } else {
                         //skip event
