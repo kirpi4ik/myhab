@@ -132,7 +132,7 @@
 
                         this.zone = zone;
                         this.zones = zones;
-                        debugger
+
                         this.peripherals = peripherals.filter(peripheralFilter);
                     });
                 }

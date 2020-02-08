@@ -96,7 +96,6 @@
                 this.userToUpdate[key] = value
             },
             updateRoleValue(value, key) {
-                debugger
                 this.roles.forEach(function (role, index) {
                     if (role.id == key) {
                         role.checked = value;
@@ -111,7 +110,6 @@
                     let roles = {
                         "userUid": this.user.uid,
                         "userRoles": this.roles.filter(function (role) {
-                            debugger
                             return role.checked
                         }.bind(this)).map(function (role, index) {
                             return {"userId": this.user.id, "roleId": role.id};

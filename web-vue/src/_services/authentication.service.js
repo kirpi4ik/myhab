@@ -1,6 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
 
-import { requestOptions, handleResponse } from '@/_helpers';
+import { requestOptions, handleResponse, Utils } from '@/_helpers';
 
 const currentUserSubject = new BehaviorSubject(JSON.parse(localStorage.getItem('currentUser')));
 
@@ -12,7 +12,7 @@ export const authenticationService = {
 };
 
 function login(username, password) {
-    return fetch(`${process.env.VUE_APP_SERVER_URL}/api/login`, requestOptions.post({ username, password }))
+    return fetch(`${Utils.host()}/api/login`, requestOptions.post({ username, password }))
         .then(handleResponse)
         .then(user => {
             // store user details and jwt token in local storage to keep user logged in between page refreshes
