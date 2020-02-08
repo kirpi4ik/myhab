@@ -15,13 +15,13 @@ import org.springframework.transaction.annotation.Propagation
 
 @Transactional
 @Slf4j
-class PortValueChangeListenerService {
+class TwoStatePortValueChangeListenerService {
     def hazelcastInstance;
 
 
-    @Subscriber("port_value_change")
+    @Subscriber("evt_port_value_changed")
     @Transactional(propagation = Propagation.REQUIRED)
-    def port_value_change(event) {
+    def update_port_value(event) {
         def port = DevicePort.findByUid(event.data.p2)
         def newVal = ValueParser.parser(port).apply(event.data.p4)
 
@@ -34,6 +34,13 @@ class PortValueChangeListenerService {
 
         port.setValue(newVal)
         port.save(failOnError: true, flush: true)
+    }
+
+    @Subscriber("evt_port_value_changed")
+    @Transactional(propagation = Propagation.REQUIRED)
+    def update_expiration_time(event) {
+        def port = DevicePort.findByUid(event.data.p2)
+        def newVal = ValueParser.parser(port).apply(event.data.p4)
 
         def peripheral = port.peripherals[0]
         if (peripheral != null) {
@@ -41,7 +48,7 @@ class PortValueChangeListenerService {
             if (config != null && newVal == PortAction.ON.name()) {
                 def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
                 hazelcastInstance.getMap(CacheMap.EXPIRE).put(port.id, [expireOn: expireInMs, portUid: peripheral.uid])
-            }else if (newVal == PortAction.OFF.name()){
+            } else if (newVal == PortAction.OFF.name()) {
                 hazelcastInstance.getMap(CacheMap.EXPIRE).remove(port.id)
             }
         }

@@ -10,14 +10,14 @@ import grails.gorm.transactions.Transactional
 import groovy.util.logging.Slf4j
 
 @Slf4j
-@Transactional
 class EventService implements EventPublisher {
 
     def scenarioService
     def heatService
 
-    @Subscriber('light')
-    def recieveLightEvent(event) {
+    @Transactional
+    @Subscriber('evt_light')
+    def receiveLightEvent(event) {
         if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findByUid(event.data.p2)
             def args = [:]
@@ -58,7 +58,8 @@ class EventService implements EventPublisher {
         }
     }
 
-    @Subscriber('heat')
+    @Transactional
+    @Subscriber('evt_heat')
     def heat(event) {
         if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findByUid(event.data.p2)
@@ -92,7 +93,8 @@ class EventService implements EventPublisher {
         return portUids
     }
 
-    @Subscriber('log_event')
+    @Transactional
+    @Subscriber('evt_log')
     def logEvent(event) {
         EventData ev = event.data
         ev.save(failOnError: true, flush: true)
