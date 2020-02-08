@@ -78,7 +78,6 @@
         },
         methods: {
             loadConfig: function () {
-                debugger
                 this.$apollo.query({
                     query: CONFIGURATION_GET_VALUE,
                     variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.on.timeout'},

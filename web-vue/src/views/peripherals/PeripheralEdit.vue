@@ -96,7 +96,6 @@
                 this.peripheralToUpdate[key] = value
             },
             updateRoleValue(value, key) {
-                debugger
                 this.roles.forEach(function (role, index) {
                     if (role.id == key) {
                         role.checked = value;
@@ -111,7 +110,6 @@
                     let roles = {
                         "peripheralUid": this.peripheral.uid,
                         "peripheralRoles": this.roles.filter(function (role) {
-                            debugger
                             return role.checked
                         }.bind(this)).map(function (role, index) {
                             return {"peripheralId": this.peripheral.id, "roleId": role.id};

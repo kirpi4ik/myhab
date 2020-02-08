@@ -96,7 +96,6 @@
                 this.cableToUpdate[key] = value
             },
             updateRoleValue(value, key) {
-                debugger
                 this.roles.forEach(function (role, index) {
                     if (role.id == key) {
                         role.checked = value;
@@ -111,7 +110,6 @@
                     let roles = {
                         "cableUid": this.cable.uid,
                         "cableRoles": this.roles.filter(function (role) {
-                            debugger
                             return role.checked
                         }.bind(this)).map(function (role, index) {
                             return {"cableId": this.cable.id, "roleId": role.id};
