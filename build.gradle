@@ -16,12 +16,25 @@ plugins {
 //tag::extVariables[]
 ext {
     projectVersion = "2.0.2"
-    dockerTag = "madhouse/madhousev2-web:${projectVersion}".toLowerCase() // <1>
     dockerBuildDir = mkdir("${buildDir}/docker")
-    dockerContainerName = 'madhousev2'
     dockerBuildGroup = 'Docker'
+    dockerRegistry = 'nexus.devexpert.eu:8888'
+    dockerRepo = 'madhousev2-web'
+    dockerTag = "${dockerRepo}:${projectVersion}".toLowerCase() // <1>
 }
 //end::extVariables[]
+//tag::prepareDocker[]
+docker {
+    url = 'http://localhost:2375'
+//    certPath = new File(System.properties['user.home'], '.boot2docker/certs/boot2docker-vm')
+    registryCredentials {
+        url = 'http://nexus.devexpert.eu:8888/v1/'
+        username = 'docker'
+        password = file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").text
+    }
+}
+//tag::prepareDocker[]
+
 subprojects { project ->
     version projectVersion
     group "eu.devexpert.madhouse"
@@ -53,29 +66,10 @@ copyClientResources.doFirst { // <4>
     }
 }
 //tag::import[]
-import org.apache.commons.io.FilenameUtils
-import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
-import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
-
+import com.bmuschko.gradle.docker.tasks.image.*
 //end::import[]
 
-docker {
-    url = 'http://localhost:2375'
-//    certPath = new File(System.properties['user.home'], '.boot2docker/certs/boot2docker-vm')
 
-    registryCredentials {
-        url = 'https://index.docker.io/v1/'
-        ***REMOVED***
-        password = '***REMOVED***'
-        email = 'dumitru.ciubenco@gmail.com'
-    }
-}
-//tag::prepareDocker[]
 task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
     description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
     group = dockerBuildGroup
@@ -117,7 +111,6 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 //end::createDockerfile[]
 
 //tag::buildImage[]
-
 task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) { // <6>
     description = 'Create Docker image to run the Grails application'
     group = dockerBuildGroup
@@ -125,10 +118,23 @@ task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) { // <6>
     inputDir = file(dockerBuildDir)
     images.add(dockerTag)
 }
+task tagImage(type: DockerTagImage, dependsOn: buildImage) {
+    description "Tag custom docker image."
+    group = dockerBuildGroup
+    targetImageId buildImage.getImageId()
+    repository = "${dockerRegistry}/${dockerRepo}".toString()
+    tag = "${projectVersion}"
+}
+
+task pushImage(type: DockerPushImage, dependsOn: tagImage) {
+    group = dockerBuildGroup
+    description "Push custom docker image."
+
+    images.add("${dockerRegistry}/${dockerTag}".toString())
+}
 //end::buildImage[]
 task removeImage(type: DockerRemoveImage) {
     description = 'Remove Docker image with Grails application.'
     group = dockerBuildGroup
-
     targetImageId { dockerTag }
 }
