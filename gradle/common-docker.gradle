@@ -1,0 +1,84 @@
+
+
+//tag::prepareDocker[]
+docker {
+    url = 'http://localhost:2375'
+//    certPath = new File(System.properties['user.home'], '.boot2docker/certs/boot2docker-vm')
+    registryCredentials {
+        url = 'http://nexus.devexpert.eu:8888/v1/'
+        username = 'docker'
+        password = file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").text
+    }
+}
+//tag::prepareDocker[]
+
+
+
+task prepareDocker(type: Copy, dependsOn: assemble) { // <3>
+    description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
+    group = dockerBuildGroup
+    copy {
+        from 'src/main/docker'
+        into dockerBuildDir
+    }
+    copy {
+        from "${buildDir}/madhouse-${projectVersion}.jar"
+        into dockerBuildDir
+    }
+}
+//end::prepareDocker[]
+
+//tag::createDockerfile[]
+task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
+    description = 'Create a Dockerfile file'
+    group = dockerBuildGroup
+
+    destFile = project.file("${dockerBuildDir}/Dockerfile")
+
+    from 'openjdk:8u151-jdk-alpine'
+
+    exposePort 8181
+    environmentVariable 'GRAILS_ENV', 'production'
+    // Create a config directory and expose as volume.
+    // External configuration files in this volume are automatically
+    // picked up.
+    runCommand 'mkdir -p /app/config'
+    volume '/app/config'
+    workingDir '/app'
+
+    copyFile "${projectName}-${projectVersion}.jar", 'madhouse.jar'
+    copyFile 'app-entrypoint.sh', 'app-entrypoint.sh' // <5>
+    runCommand 'chmod +x app-entrypoint.sh'
+
+    entryPoint '/app/app-entrypoint.sh' // <5>
+}
+//end::createDockerfile[]
+
+//tag::buildImage[]
+task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) { // <6>
+    description = 'Create Docker image to run the Grails application'
+    group = dockerBuildGroup
+
+    inputDir = file(dockerBuildDir)
+    images.add(dockerTag)
+}
+task tagImage(type: DockerTagImage, dependsOn: buildImage) {
+    description "Tag custom docker image."
+    group = dockerBuildGroup
+    targetImageId buildImage.getImageId()
+    repository = "${dockerRegistry}/${dockerRepo}".toString()
+    tag = "${projectVersion}"
+}
+
+task pushImage(type: DockerPushImage, dependsOn: tagImage) {
+    group = dockerBuildGroup
+    description "Push custom docker image."
+
+    images.add("${dockerRegistry}/${dockerTag}".toString())
+}
+//end::buildImage[]
+task removeImage(type: DockerRemoveImage) {
+    description = 'Remove Docker image with Grails application.'
+    group = dockerBuildGroup
+    targetImageId { dockerTag }
+}
