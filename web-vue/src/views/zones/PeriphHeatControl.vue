@@ -3,45 +3,44 @@
         <div class="card-body pb-2">
             <slot></slot>
             <div class="card-body pb-0">
-
                 <slot></slot>
-                <div>
-                    <font-awesome-icon icon="fire-alt" size="3x" :class="`zone-icon-${peripheral.state}`"/>
-                    <div style="float: left">
-                        <div style="display: inline-block">
-                            <h4 class="mb-1">
-                                {{peripheral.data.name}} <span style="color: #b1dae8; font-size: 10pt"
-                                                               v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value/60}}min ]</span>
-                            </h4>
-                        </div>
-                        <div style="display: inline-block; width: 100%;" v-if="hasRole(['ROLE_ADMIN'])">
-                            <CDropdown color="transparent p-0" placement="bottom-end"
-                                       :ref="'dropdown-'+peripheral.data.id">
-                                <template #toggler-content>
-                                    <CIcon name="cil-settings"/>
-                                </template>
-                                <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 3600)">
-                                    Porneste
-                                    1 ora
-                                </CDropdownItem>
-                                <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 7200)">
-                                    Porneste
-                                    2 ore
-                                </CDropdownItem>
-                                <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 10800)">
-                                    Porneste
-                                    3 ore
-                                </CDropdownItem>
-                                <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 18000)">
-                                    Porneste
-                                    5 ore
-                                </CDropdownItem>
-                                <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', null)">
-                                    Nelimitat
-                                </CDropdownItem>
-                            </CDropdown>
-                        </div>
+                <div style="display: inline; width: 100%;">
+                    <div v-if="hasRole(['ROLE_ADMIN'])" style="margin-top: -20px;">
+                        <CDropdown color="transparent p-0" placement="bottom-end"
+                                   :ref="'dropdown-'+peripheral.data.id">
+                            <template #toggler-content>
+                                <CIcon name="cil-settings"/>
+                            </template>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 3600)">
+                                Porneste
+                                1 ora
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 7200)">
+                                Porneste
+                                2 ore
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 10800)">
+                                Porneste
+                                3 ore
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 18000)">
+                                Porneste
+                                5 ore
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', null)">
+                                Nelimitat
+                            </CDropdownItem>
+                        </CDropdown>
                     </div>
+                    <div style="display: inline-block; float: right; margin-top: -20px;">
+                        <font-awesome-icon icon="fire-alt" size="3x" :class="`zone-icon-${peripheral.state}`"/>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="mb-1">
+                        {{peripheral.data.name}} <span style="color: #b1dae8; font-size: 10pt"
+                                                       v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value/60}}min ]</span>
+                    </h4>
                 </div>
             </div>
         </div>
@@ -64,8 +63,8 @@
 <script>
     import {authenticationService} from '@/_services';
     import {
-        CONFIGURATION_GET_VALUE,
         CONFIGURATION_DELETE,
+        CONFIGURATION_GET_VALUE,
         CONFIGURATION_SET_VALUE,
         PUSH_EVENT
     } from "../../graphql/zones";
