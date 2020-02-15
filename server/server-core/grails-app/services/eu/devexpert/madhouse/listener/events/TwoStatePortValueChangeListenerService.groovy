@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse.listener
+package eu.devexpert.madhouse.listener.events
 
 
 import eu.devexpert.madhouse.ConfigKey
