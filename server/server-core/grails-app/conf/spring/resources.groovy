@@ -1,4 +1,4 @@
-import eu.devexpert.madhouse.UserPasswordEncoderListener
+import eu.devexpert.madhouse.listener.domain.UserPasswordEncoderListener
 import eu.devexpert.madhouse.auth.ClaimProvider
 import eu.devexpert.madhouse.graphql.GQLSchemaFactory
 import eu.devexpert.madhouse.graphql.GraphQLGenerator
