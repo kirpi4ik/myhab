@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse
+package eu.devexpert.madhouse.listener.domain
 
 import eu.devexpert.madhouse.domain.User
 import grails.events.annotation.gorm.Listener
