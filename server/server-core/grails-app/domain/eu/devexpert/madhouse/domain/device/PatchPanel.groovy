@@ -6,11 +6,13 @@ class PatchPanel extends BaseEntity {
     Rack rack
     String code
     String description
+    int size
     Set<Cable> cables
     static belongsTo = [Rack]
     static hasMany = [cables: Cable]
 
     static constraints = {
+        size nullable: true
     }
     static mapping = {
         table '`rack_patch_panels`'

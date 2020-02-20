@@ -30,10 +30,8 @@ ext {
     dockerBuildGroup = 'Docker'
     dockerRegistry = 'nexus.devexpert.eu:8888'
     dockerRepo = 'madhousev2-web'
-    dockerTag = "${dockerRepo}:${projectVersion}".toLowerCase() // <1>
+    dockerTag = "${dockerRepo}:${projectVersion}" // <1>
 }
-
-apply from: "${commonBuild}/common-publishing.gradle"
 
 //end::extVariables[]
 //tag::prepareDocker[]
@@ -168,3 +166,4 @@ task removeImage(type: DockerRemoveImage) {
     group = dockerBuildGroup
     targetImageId { dockerTag }
 }
+apply from: "${commonBuild}/common-publishing.gradle"
