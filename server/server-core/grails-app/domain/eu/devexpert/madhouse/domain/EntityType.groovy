@@ -5,6 +5,7 @@ import eu.devexpert.madhouse.domain.device.Cable
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.device.PatchPanel
+import eu.devexpert.madhouse.domain.device.PeripheralCategory
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.device.port.PortValue
 import eu.devexpert.madhouse.domain.infra.Zone
@@ -17,6 +18,7 @@ enum EntityType {
     CABLE(Cable.class),
     DEVICE(Device.class),
     PERIPHERAL(DevicePeripheral.class),
+    PERIPHERAL_CATEGORY(PeripheralCategory.class),
     ZONE(Zone.class),
     EVENT_DATA(EventData.class),
     PATCH_PANEL(PatchPanel.class),
@@ -28,6 +30,7 @@ enum EntityType {
             it.typeClass == type.class
         }
     }
+
     static <T extends BaseEntity> EntityType get(Class<T> typeClass) {
         return values().find {
             it.typeClass == typeClass

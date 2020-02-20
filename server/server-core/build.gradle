@@ -20,6 +20,7 @@ apply plugin: "org.grails.grails-gsp"
 repositories {
     /*mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }*/
+    maven { url "https://oss.jfrog.org/repo/" }
     maven {
         url "http://nexus.devexpert.eu/repository/maven"
         credentials {
@@ -37,6 +38,7 @@ configurations {
 }
 
 dependencies {
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     compile project(':server-rules')
     compile project(':server-grails')
@@ -70,6 +72,8 @@ dependencies {
 
     compile 'org.grails.plugins:quartz:2.0.13'
     compile 'org.quartz-scheduler:quartz:2.3.2' // Is not pulled in by default?
+
+    compile 'org.grails.plugins:external-config:2.0.0'
 
     //cache
     compile group: 'com.hazelcast', name: 'hazelcast', version: '3.12.5'

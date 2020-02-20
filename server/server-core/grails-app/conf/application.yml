@@ -8,6 +8,9 @@ grails:
       # Whether to translate GORM events into Reactor events
       # Disabled by default for performance reasons
       events: false
+  config:
+    locations:
+      - classpath:madhouse.yml
 server:
   port: 8181
 info:
@@ -128,7 +131,7 @@ environments:
   development:
     dataSource:
       dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse_02_20
+      url: jdbc:postgresql://localhost:5432/madhouse_15_02
       username: "madhouse"
       password: "madhouse"
       driverClassName: "org.postgresql.Driver"
