@@ -40,9 +40,8 @@ if (!isGrailsPlugin) {
         project(pomInfo)
     }
 }
-
+tasks.named("publish").get().dependsOn assembleServerAndClient
 publishing {
-
     repositories {
         maven {
             credentials {
