@@ -1,0 +1,13 @@
+heat:
+  temp:
+    allDay: 21
+environments:
+  production:
+    peripheral:
+      categories:
+        HEAT
+  development:
+    peripheral:
+      categories: xxx
+
+

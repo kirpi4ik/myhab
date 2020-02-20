@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
 import org.springframework.context.annotation.ComponentScan
 
 @ComponentScan(basePackages = "eu.devexpert.madhouse.init.cache")
+@ComponentScan(basePackages = "eu.devexpert.madhouse.init.configuration")
 @ComponentScan(basePackages = "eu.devexpert.madhouse.graphql.fetchers")
 @CompileStatic
 class Application extends GrailsAutoConfiguration {

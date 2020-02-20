@@ -1,6 +1,5 @@
 package eu.devexpert.madhouse.init
 
-
 import eu.devexpert.rules.facts.HeatControlInside
 import org.jeasy.rules.api.Facts
 import org.jeasy.rules.api.Rules
@@ -9,11 +8,15 @@ class BootStrap {
     def alertService
     def hazelcastInstance;
     def schedulerService
+    def configPeripherals
+    def grailsApplication
+
     def init = { servletContext ->
 //        schedulerService.startAll()
 //        def var = new Alert(AlertPriority.P1, "helo", "description")
 //        alertService.sendAlert(var)
 
+        println configPeripherals.categories
         List<String> list = new ArrayList<>()
         list << "xxx"
         list << "yyy"

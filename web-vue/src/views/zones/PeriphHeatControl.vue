@@ -11,24 +11,20 @@
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 3600)">
-                                Porneste
-                                1 ora
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 21)">
+                                21 &#8451;
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 7200)">
-                                Porneste
-                                2 ore
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 22)">
+                                22 &#8451;
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 10800)">
-                                Porneste
-                                3 ore
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 23)">
+                                23 &#8451;
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 18000)">
-                                Porneste
-                                5 ore
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 24)">
+                                24 &#8451;
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', null)">
-                                Nelimitat
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', null)">
+                                Specifica temp.
                             </CDropdownItem>
                         </CDropdown>
                     </div>
@@ -39,7 +35,7 @@
                 <div>
                     <h4 class="mb-1">
                         {{peripheral.data.name}} <span style="color: #b1dae8; font-size: 10pt"
-                                                       v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value/60}}min ]</span>
+                                                       v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value}}&#8451; ]</span>
                     </h4>
                 </div>
             </div>
@@ -86,7 +82,7 @@
             loadConfig: function () {
                 this.$apollo.query({
                     query: CONFIGURATION_GET_VALUE,
-                    variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.on.timeout'},
+                    variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.temp.allDay.value'},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.peripheralTimeout = response.data.configPropertyByKey
@@ -115,7 +111,7 @@
             },
             periphStateChangeHandler: function (peripheral) {
                 let event = {
-                    "p0": "heat",
+                    "p0": "evt_heat",
                     "p1": "PERIPHERAL",
                     "p2": peripheral.data.uid,
                     "p3": "mweb",
