@@ -244,10 +244,28 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
     query findDeviceByUid($uid:String!){
         deviceByUid(uid: $uid) {
             id
+            code
+            model
             uid
             name
             description
-            code
+            networkAddress{
+                ip
+                port
+            }
+            rack{
+                id
+                name
+                description
+            }
+            ports{
+                id
+                internalRef
+                name
+                description
+                type
+                state
+            }
 
         }
     }
