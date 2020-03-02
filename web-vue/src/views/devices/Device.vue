@@ -1,6 +1,6 @@
 <template>
     <CRow>
-        <CCol col="12" lg="6">
+        <CCol col="6" lg="12">
             <CCard>
                 <CCardHeader>
                     <strong>Device details : <span class="field-value">{{ device.uid }}</span> </strong>
@@ -19,21 +19,44 @@
                                     small
                                     fixed
                                     :items="deviceDetails"
-                                    :fields="$options.fields"
                             />
                         </CCol>
                     </CRow>
-                    <CRow v-for="(role, index) in roles" :key="`role-${index}`">
+                    <CRow>
                         <CCol sm="12">
-                            <CInputCheckbox
-                                    :key="role.authority"
-                                    :label="role.authority"
-                                    :value="role.checked"
-                                    :checked="role.checked"
-                                    :inline="true"
-                                    :ref="role.authority"
-                                    disabled="true"
-                            />
+                            <strong> Ports :</strong>
+                            <div style="width: 100%;">
+                                <CDataTable
+                                        hover
+                                        bordered
+                                        striped
+                                        :items="ports"
+                                        :fields="portsTemplate"
+                                        :items-per-page="6"
+                                        :pagination="$options.paginationProps"
+                                        index-column
+                                        table-filter
+                                        sorter
+                                        clickable-rows
+                                        pagination
+                                >
+                                    <template #name="data">
+                                        <td>
+                                            <strong>{{data.item.name}}</strong>
+                                        </td>
+                                    </template>
+                                    <template #actions="data">
+                                        <td>
+                                            <CButton color="success" @click="viewDeviceDetails(data.item.uid)">View
+                                            </CButton>
+                                            |
+                                            <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto">
+                                                Remove
+                                            </CButton>
+                                        </td>
+                                    </template>
+                                </CDataTable>
+                            </div>
                         </CCol>
                     </CRow>
                 </CCardBody>
@@ -58,13 +81,32 @@
         data: () => {
             return {
                 deviceDetails: [],
-                roles: [],
-                readonly: ["id", "__typename", "uid"],
+                portsTemplate: [
+                    {key: 'id', label: 'ID'},
+                    {key: 'name', label: 'Name'},
+                    {key: 'internalRef', label: 'Int. Code'},
+                    {key: 'type', label: 'Type'},
+                    {key: 'state', label: 'State'},
+                    {
+                        key: 'actions', label: 'Action',
+                        sorter: false,
+                        filter: false
+                    }
+
+                ],
+                ports: [],
+                readonly: ["id", "__typename", "uid", "ports", "rack", "networkAddress"],
                 device: {}
             }
         },
         mounted() {
             this.loadDevice();
+        },
+        paginationProps: {
+            align: 'center',
+            doubleArrows: false,
+            previousButtonHtml: 'prev',
+            nextButtonHtml: 'next'
         },
         watch: {
             '$root.componentKey': 'loadDevice'
@@ -89,12 +131,7 @@
                     }).filter(removeReadonly);
                     this.device = device;
 
-                    this.roles = response.data.roleList.map(function (role, index) {
-                        let found = response.data.deviceRolesForDevice.filter(function (hasRole) {
-                            return role.id == hasRole.roleId
-                        });
-                        return {id: role.id, authority: role.authority, checked: found.length > 0};
-                    });
+                    this.ports = response.data.deviceByUid.ports
                 });
                 this.loading = false
             },

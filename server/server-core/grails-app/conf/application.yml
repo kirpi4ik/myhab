@@ -12,7 +12,7 @@ grails:
     locations:
       - classpath:madhouse.yml
 server:
-  port: 8181
+  port: 80
 info:
   app:
     name: "@info.app.name@"
@@ -105,7 +105,7 @@ quartz:
   dataSource:
     development:
       driver: "org.postgresql.Driver"
-      URL: "jdbc:postgresql://localhost:5432/madhouse_02_20"
+      URL: "jdbc:postgresql://localhost:5432/madhouse_02_25"
       user: "madhouse"
       password: "madhouse"
       maxConnections: 5
@@ -131,7 +131,7 @@ environments:
   development:
     dataSource:
       dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse_15_02
+      url: jdbc:postgresql://localhost:5432/madhouse_02_25
       username: "madhouse"
       password: "madhouse"
       driverClassName: "org.postgresql.Driver"

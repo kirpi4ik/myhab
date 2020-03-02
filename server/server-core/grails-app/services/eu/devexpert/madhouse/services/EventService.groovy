@@ -63,7 +63,30 @@ class EventService implements EventPublisher {
     def heat(event) {
         if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findByUid(event.data.p2)
-            if (peripheral.category.uid == "7rer7ewh-f77a-451f-835e-ee21383503e5") {
+            if (peripheral.category.name == "HEAT") {
+                def args = [:]
+                args.portUids = []
+                peripheral.getConnectedTo().each { port ->
+                    args.portUids << port.uid
+                }
+                switch (event.data.p4) {
+                    case "on":
+                        heatService.heatOn(peripheral)
+                        break
+                    case "off":
+                        heatService.heatOff(peripheral)
+                        break
+                }
+            }
+        }
+    }
+
+    @Transactional
+    @Subscriber('evt_presence')
+    def presence(event) {
+        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
+            def peripheral = DevicePeripheral.findByUid(event.data.p2)
+            if (peripheral.category.name  == "PRESENCE") {
                 def args = [:]
                 args.portUids = []
                 peripheral.getConnectedTo().each { port ->
