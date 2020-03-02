@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import Vuex from 'vuex'
 import Vuelidate from 'vuelidate';
 
 import App from './App'
@@ -22,8 +23,23 @@ Vue.config.performance = true;
 Vue.use(CoreuiVue);
 Vue.use(Vuelidate);
 Vue.use(ToggleButton);
+Vue.use(Vuex);
 
+const store = new Vuex.Store({
+        state: {
+            config: {
+                grafanaUrl: "http://localhost:3000"
+            }
+        },
+        mutations: {
+            init(state) {
+
+            }
+        }
+    }
+);
 new Vue({
+    store,
     el: '#app',
     router,
     icons,

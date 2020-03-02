@@ -1,18 +1,13 @@
 package eu.devexpert.madhouse.jobs
 
-import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.DeviceModel
-import eu.devexpert.madhouse.domain.device.port.DevicePort
-import eu.devexpert.madhouse.domain.device.port.PortValue
-import eu.devexpert.madhouse.domain.job.EventData
-import eu.devexpert.madhouse.parser.ValueParser
 import eu.devexpert.madhouse.services.EspDeviceService
 import eu.devexpert.madhouse.services.MegaDriverService
+import eu.devexpert.madhouse.services.PortValueService
 import grails.async.Promises
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
-import org.joda.time.DateTime
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
@@ -24,6 +19,8 @@ import org.quartz.JobExecutionException
 class PortValueReaderJob implements Job, EventPublisher {
     MegaDriverService megaDriverService
     EspDeviceService espDeviceService
+    PortValueService portValueService
+
     static triggers = {
         simple name: 'portValueReader', repeatInterval: 20000
     }
@@ -40,13 +37,13 @@ class PortValueReaderJob implements Job, EventPublisher {
                     Promises.task {
                         megaDriverService.readPortValues(deviceUid)
                     }.onComplete { portValues ->
-                        updatePortValues(deviceUid, portValues)
+                        portValueService.updatePortValues(deviceUid, portValues)
                     }
                 } else if (installedDevice.model.equals(DeviceModel.ESP8266_1)) {
                     Promises.task {
                         espDeviceService.readPortValues(deviceUid)
                     }.onComplete { portValues ->
-                        updatePortValues(deviceUid, portValues)
+                        portValueService.updatePortValues(deviceUid, portValues)
                     }
                 }
 
@@ -56,43 +53,5 @@ class PortValueReaderJob implements Job, EventPublisher {
         }
     }
 
-    def updatePortValues(deviceUid, portValues) {
-        portValues.each { portRef, newValue ->
-            try {
-                def devicePorts = DevicePort.withCriteria {
-                    eq('internalRef', portRef)
-                    device {
-                        eq('uid', deviceUid)
-                    }
-                    maxResults(1)
-                }
-                if (devicePorts.size() > 0) {
-                    //Search latest value if any
-                    def devicePort = devicePorts[0]
-                    def portLatestValues = PortValue.withCriteria {
-                        eq('portUid', devicePort.uid)
-                        order("tsCreated", "desc")
-                        maxResults(1)
-                    }
-                    if (devicePort.type.syncMs != -1) {
-                        if (portLatestValues.size() == 0 || DateTime.now().minus(portLatestValues[0]?.tsCreated?.time).isAfter(devicePort?.type?.syncMs))
-                            if (devicePort.value == null || !devicePort.value.equalsIgnoreCase(ValueParser.parser(devicePort).apply(newValue))) {
-                                publish(TopicName.EVT_PORT_VALUE_CHANGED.id(), new EventData().with {
-                                    p0 = TopicName.EVT_PORT_VALUE_CHANGED.id()
-                                    p1 = "PORT"
-                                    p2 = "${devicePort.uid}"
-                                    p3 = "cron"
-                                    p4 = "$newValue"
-                                    it
-                                })
-                            }
-                    } else {
-                        //skip event
-                    }
-                }
-            } catch (Exception ex) {
-                log.error("Error reading port value : portRef=${portRef}, newValue=${newValue}", ex)
-            }
-        }
-    }
+
 }

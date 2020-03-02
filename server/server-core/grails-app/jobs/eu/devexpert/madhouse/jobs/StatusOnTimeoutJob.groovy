@@ -22,7 +22,7 @@ class StatusOnTimeoutJob implements Job, EventPublisher {
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-        println "CHECK CACHE : ${hazelcastInstance.getMap(CacheMap.EXPIRE)}"
+        log.debug("CHECK CACHE : ${hazelcastInstance.getMap(CacheMap.EXPIRE)}")
         hazelcastInstance.getMap(CacheMap.EXPIRE).entrySet().each { candidateForExpiration ->
             println "CACHE: ${candidateForExpiration.key} | ${candidateForExpiration.value}"
             def value = candidateForExpiration?.value
