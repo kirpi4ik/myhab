@@ -12,7 +12,7 @@ grails:
     locations:
       - classpath:madhouse.yml
 server:
-  port: 80
+  port: 8181
 info:
   app:
     name: "@info.app.name@"
