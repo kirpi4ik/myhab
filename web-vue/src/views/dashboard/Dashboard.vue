@@ -1,6 +1,7 @@
 <template>
     <div>
         <ZoneActionListControl/>
+        <TempChartControl/>
     </div>
 </template>
 
