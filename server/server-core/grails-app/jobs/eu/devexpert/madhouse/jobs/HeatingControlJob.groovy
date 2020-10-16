@@ -21,7 +21,7 @@ class HeatingControlJob implements Job, EventPublisher {
         simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(20)
     }
     def heatService
-    def tempAllDay = 20
+    def tempAllDay = 21
 
     static group = "Internal"
     static description = "Heat control"
@@ -46,10 +46,10 @@ class HeatingControlJob implements Job, EventPublisher {
                 }.each { termostat ->
                     termostat.connectedTo.findAll { termostatPort -> termostatPort.value?.isNumber() }.each { termostatPort ->
                         if (Double.valueOf(termostatPort.value) <= tempValue) {
-                            println("[${termostatPort.value} < ${tempValue}] | HEAT ON: ${leafZone.name}")
+                            println("[${termostatPort.value} < ${tempValue}] | HEAT STARTING : ${leafZone.name}")
                             heatService.heatOn(peripheral)
                         } else {
-                            println("[${termostatPort.value} > ${tempValue}] | HEAT OFF: ${leafZone.name}")
+                            log.debug("[${termostatPort.value} > ${tempValue}] | HEAT CLOSING: ${leafZone.name}")
                             heatService.heatOff(peripheral)
                         }
                     }
