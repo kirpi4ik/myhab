@@ -11,9 +11,6 @@
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 21)">
-                                21 &#8451;
-                            </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 22)">
                                 22 &#8451;
                             </CDropdownItem>
@@ -22,6 +19,12 @@
                             </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 24)">
                                 24 &#8451;
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 25)">
+                                25 &#8451;
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 26)">
+                                26 &#8451;
                             </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', null)">
                                 Specifica temp.
