@@ -3,6 +3,7 @@ import eu.devexpert.madhouse.auth.ClaimProvider
 import eu.devexpert.madhouse.graphql.GQLSchemaFactory
 import eu.devexpert.madhouse.graphql.GraphQLGenerator
 import eu.devexpert.madhouse.graphql.fetchers.Mutation
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 beans = {
@@ -30,4 +31,5 @@ beans = {
     graphQL(graphQLGenrator: "generate")
     customClaimProvider(ClaimProvider)
 
+    threadMetrics(JvmThreadMetrics)
 }
