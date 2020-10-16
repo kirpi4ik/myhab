@@ -35,17 +35,33 @@ spring:
         - "**/*.gson"
         - "logback.groovy"
         - "*.properties"
+  resources:
+    cache:
+      period: 3s
 management:
   endpoints:
     enabled-by-default: true
     web:
       base-path: "/actuator"
       path-mapping.health: healthcheck
+      exposure:
+        include: prometheus ,info, health
+
   endpoint:
     info:
       enabled: true
+    prometheus:
+      enabled: true
     health:
       show-details: when_authorized
+    metrics:
+      enabled: true
+    httptrace:
+      enabled: true
+
+
+
+
 
 ---
 grails:
