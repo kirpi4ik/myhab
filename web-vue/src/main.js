@@ -28,7 +28,7 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
         state: {
             config: {
-                grafanaUrl: "http://localhost:3000"
+                grafanaUrl: "https://grafana.madhouse.app"
             }
         },
         mutations: {
