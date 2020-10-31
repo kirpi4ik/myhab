@@ -52,7 +52,7 @@
                                @change="periphStateChangeHandler(peripheral)"
                                :font-size="14"
                                :width="250"
-                               :height="40"/>
+                               :height="40" :disabled="peripheral.deviceState != 'ONLINE'"/>
             </div>
         </slot>
     </div>
