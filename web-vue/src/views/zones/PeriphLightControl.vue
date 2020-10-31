@@ -5,8 +5,12 @@
             <slot></slot>
             <div>
                 <font-awesome-icon icon="lightbulb" size="3x" :class="`zone-icon-${peripheral.state}`"/>
-
+                <CBadge v-if="peripheral.deviceState != 'ONLINE'">
+                    <font-awesome-icon :icon="['fas', 'exclamation-triangle']" size="3x"/>
+                    OFFLINE
+                </CBadge>
                 <div style="float: left">
+
                     <div style="display: inline-block">
                         <h4 class="mb-1">
                             {{peripheral.data.name}} <span style="color: #b1dae8; font-size: 10pt"
