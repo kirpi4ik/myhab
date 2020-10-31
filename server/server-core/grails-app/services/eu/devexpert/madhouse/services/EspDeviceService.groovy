@@ -1,6 +1,7 @@
 package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.domain.device.Device
+import eu.devexpert.madhouse.exceptions.UnavailableDeviceException
 import eu.devexpert.madhouse.utils.DeviceHttpService
 import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
@@ -14,7 +15,7 @@ class EspDeviceService {
 
     }
 
-    Map<String, String> readPortValues(deviceUid) {
+    Map<String, String> readPortValues(deviceUid) throws UnavailableDeviceException{
         def response = [:]
         Device deviceController = Device.findByUid(deviceUid)
         def portStatusJson = new DeviceHttpService(device: deviceController, uri: "cmd?action=get&port=ALL").readState()

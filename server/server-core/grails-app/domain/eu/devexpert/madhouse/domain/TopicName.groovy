@@ -9,6 +9,7 @@ enum TopicName {
     EVT_PRESENCE,
     EVT_PORT_VALUE_CHANGED,
     EVT_LOG,
+    EVT_DEVICE_STATUS,
     POWER;
 
     String id() {
