@@ -14,6 +14,7 @@ class Device extends BaseEntity implements Configurable<Device> {
     String name
     DeviceModel model
     DeviceType type
+    DeviceStatus status
     String description
     String offlineScenario
     NetworkAddress networkAddress
@@ -35,6 +36,7 @@ class Device extends BaseEntity implements Configurable<Device> {
         offlineScenario nullable: true
         rack nullable: true
         type nullable: true
+        status nullable: true
     }
     static embedded = ['networkAddress']
     static graphql = GraphQLMapping.lazy {
