@@ -1,7 +1,9 @@
 package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.domain.EntityType
+import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
+import eu.devexpert.madhouse.domain.device.DeviceStatus
 import eu.devexpert.madhouse.domain.infra.Zone
 import eu.devexpert.madhouse.domain.job.EventData
 import grails.events.EventPublisher
@@ -86,7 +88,7 @@ class EventService implements EventPublisher {
     def presence(event) {
         if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findByUid(event.data.p2)
-            if (peripheral.category.name  == "PRESENCE") {
+            if (peripheral.category.name == "PRESENCE") {
                 def args = [:]
                 args.portUids = []
                 peripheral.getConnectedTo().each { port ->
@@ -122,5 +124,17 @@ class EventService implements EventPublisher {
         EventData ev = event.data
         ev.save(failOnError: true, flush: true)
         log.debug(event.toString())
+    }
+
+    @Transactional
+    @Subscriber('evt_device_status')
+    def deviceStatus(event) {
+        if (EntityType.DEVICE.isEqual(event.data.p1)) {
+            def device = Device.findByUid(event.data.p2)
+            if (device.status != event.data.p4) {
+                device.status = event.data.p4
+                device.save(failOnError: true, flush: true)
+            }
+        }
     }
 }

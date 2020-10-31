@@ -1,6 +1,13 @@
 package eu.devexpert.madhouse.jobs
 
 import com.hazelcast.core.HazelcastInstance
+import eu.devexpert.madhouse.ConfigKey
+import eu.devexpert.madhouse.domain.EntityType
+import eu.devexpert.madhouse.domain.TopicName
+import eu.devexpert.madhouse.domain.device.DevicePeripheral
+import eu.devexpert.madhouse.domain.device.port.DevicePort
+import eu.devexpert.madhouse.domain.device.port.PortAction
+import eu.devexpert.madhouse.domain.device.port.PortValue
 import eu.devexpert.madhouse.init.cache.CacheMap
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
@@ -10,7 +17,7 @@ import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
 
 /**
- *
+ * SwitchOFF peripheral after some timeout, also check if there is some peripheral in status ON but without cached expiration
  */
 @Transactional
 class StatusOnTimeoutJob implements Job, EventPublisher {
@@ -22,6 +29,35 @@ class StatusOnTimeoutJob implements Job, EventPublisher {
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        checkCacheAndSwitchOffAfterTimeout(context)
+        checkOnPeripheralAndSetTimeoutValueIfNeeded(context)
+
+    }
+
+    void checkOnPeripheralAndSetTimeoutValueIfNeeded(JobExecutionContext jobExecutionContext) {
+        PortValue.findByValue("ON").each { portValue ->
+            boolean cached = false
+            hazelcastInstance.getMap(CacheMap.EXPIRE).entrySet().each { candidateForExpiration ->
+                if (candidateForExpiration.value == portValue) {
+                    cached = true
+                    return
+                }
+            }
+            if (!cached) {
+                def port = DevicePort.findByUid(portValue.portUid)
+                def peripheral = port.peripherals[0]
+                if (peripheral != null) {
+                    def config = peripheral.configurations.find { it.key == ConfigKey.STATE_ON_TIMEOUT }
+                    if (config != null ) {
+                        def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
+                        hazelcastInstance.getMap(CacheMap.EXPIRE).put(port.id, [expireOn: expireInMs, portUid: peripheral.uid])
+                    }
+                }
+            }
+        }
+    }
+
+    def checkCacheAndSwitchOffAfterTimeout(JobExecutionContext context) {
         log.debug("CHECK CACHE : ${hazelcastInstance.getMap(CacheMap.EXPIRE)}")
         hazelcastInstance.getMap(CacheMap.EXPIRE).entrySet().each { candidateForExpiration ->
             println "CACHE: ${candidateForExpiration.key} | ${candidateForExpiration.value}"
@@ -29,9 +65,9 @@ class StatusOnTimeoutJob implements Job, EventPublisher {
             println "${candidateForExpiration?.key} | ${value?.expireOn} | ${value?.portUid}"
             def now = DateTime.now()
             if (now.isAfter(value?.expireOn)) {
-                publish("evt_light", [
-                        "p0": "evt_light",
-                        "p1": "PERIPHERAL",
+                publish(TopicName.EVT_LIGHT.id(), [
+                        "p0": TopicName.EVT_LIGHT.id(),
+                        "p1": EntityType.PERIPHERAL,
                         "p2": value?.portUid,
                         "p3": "timout",
                         "p4": "off",
