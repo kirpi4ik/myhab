@@ -82,12 +82,14 @@
                     let state = false;
                     let portId = null;
                     let portUid = null;
+                    let deviceState = null;
                     if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
                         let port = peripheral.connectedTo[0];
                         portValue = port.value;
                         state = portValue === 'OFF'
                         portId = port.id;
                         portUid = port.uid;
+                        deviceState= port.device.status
                     }
                     if (peripheralUids.indexOf(peripheral.uid) === -1) {
                         peripherals.push({
@@ -95,7 +97,8 @@
                             portValue: portValue,
                             state: state,
                             portId: portId,
-                            portUid: portUid
+                            portUid: portUid,
+                            deviceState: deviceState
                         });
                         peripheralUids.push(peripheral.uid)
                     }
@@ -136,7 +139,7 @@
                         this.peripherals = peripherals.filter(peripheralFilter);
                     });
                 }
-                let zoneUid = null
+                let zoneUid = null;
                 if (this.$route.query.zoneUid !== "") {
                     zoneUid = this.$route.query.zoneUid
                 }
