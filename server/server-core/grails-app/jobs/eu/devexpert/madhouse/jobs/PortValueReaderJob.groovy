@@ -39,7 +39,19 @@ class PortValueReaderJob implements Job, EventPublisher {
                 def deviceUid = installedDevice.uid
                 if (installedDevice.model.equals(DeviceModel.MEGAD_2561_RTC)) {
                     Promises.task {
-                        megaDriverService.readPortValues(deviceUid)
+                        try {
+                            megaDriverService.readPortValues(deviceUid)
+                        } catch (UnavailableDeviceException ex) {
+                            publish(TopicName.EVT_DEVICE_STATUS.id(), [
+                                    "p0": TopicName.EVT_DEVICE_STATUS.id(),
+                                    "p1": EntityType.DEVICE.name(),
+                                    "p2": installedDevice?.uid,
+                                    "p3": "read_device_controller_status",
+                                    "p4": DeviceStatus.OFFLINE,
+                                    "p6": "system"
+                            ])
+                            throw new UnavailableDeviceException()
+                        }
                     }.onComplete { portValues ->
                         portValueService.updatePortValues(deviceUid, portValues)
                         publish(TopicName.EVT_DEVICE_STATUS.id(), [
