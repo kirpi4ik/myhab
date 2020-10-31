@@ -2,6 +2,7 @@ package eu.devexpert.madhouse.utils
 
 import eu.devexpert.madhouse.domain.device.DeviceModel
 import eu.devexpert.madhouse.domain.device.port.PortAction
+import eu.devexpert.madhouse.exceptions.UnavailableDeviceException
 import groovy.util.logging.Slf4j
 import org.jsoup.HttpStatusException
 
@@ -21,7 +22,7 @@ public class DeviceHttpService {
     def uri
     def value
 
-    def readState() {
+    def readState() throws UnavailableDeviceException{
         def url = "[node defined]"
         if (device == null && port != null) {
             device = port.device
@@ -32,7 +33,7 @@ public class DeviceHttpService {
             try {
                 return connect(url).get()
             } catch (Exception ce) {
-                log.error("Http failed for ${url}: ${ce.message}")
+                throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
             }
         } else if (device != null && device.model == DeviceModel.ESP8266_1) {
             try {
@@ -46,7 +47,7 @@ public class DeviceHttpService {
                         .header("Accept", "application/json")
                         .get()
             } catch (Exception ce) {
-                log.error("Http failed for ${url}: ${ce.message}")
+                throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
             }
         } else {
             log.error("Wrong device definition ${device}")
@@ -67,7 +68,7 @@ public class DeviceHttpService {
                     url = "$PROTOCOL://${port.device.networkAddress.ip}:${port.device.networkAddress.port}/${port.device.authAccounts.first().password}/?cmd=${port.internalRef}:${actionValue}"
                     return connect(url).timeout(DEVICE_URL_TIMEOUT).get()
                 } catch (ConnectException | HttpStatusException ce) {
-                    log.error("Http failed for ${url}: ${ce.message}")
+                    throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
                 }
             }
         } else if (device?.model == DeviceModel.ESP8266_1 || port?.device?.model == DeviceModel.ESP8266_1) {
@@ -82,7 +83,7 @@ public class DeviceHttpService {
                             .header("Accept", "application/json")
                             .get()
                 } catch (ConnectException | HttpStatusException ce) {
-                    log.error("Http failed for ${url}: ${ce.message}")
+                    throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
 
                 }
             }
