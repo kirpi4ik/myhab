@@ -5,9 +5,15 @@
             <div class="card-body pb-0">
                 <slot></slot>
                 <div style="display: inline; width: 100%;">
+                    <div>
+                        <CBadge v-if="peripheral.deviceState != 'ONLINE'">
+                            <font-awesome-icon :icon="['fas', 'exclamation-triangle']" size="3x"/>
+                            OFFLINE
+                        </CBadge>
+                    </div>
                     <div v-if="hasRole(['ROLE_ADMIN'])" style="margin-top: -20px;">
                         <CDropdown color="transparent p-0" placement="bottom-end"
-                                   :ref="'dropdown-'+peripheral.data.id">
+                                   :ref="'dropdown-'+peripheral.data.id" :disabled="peripheral.deviceState != 'ONLINE'">
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
@@ -53,7 +59,7 @@
                                @change="periphStateChangeHandler(peripheral)"
                                :font-size="14"
                                :width="250"
-                               :height="40"/>
+                               :height="40" :disabled="peripheral.deviceState != 'ONLINE'"/>
             </div>
         </slot>
     </div>
@@ -85,7 +91,11 @@
             loadConfig: function () {
                 this.$apollo.query({
                     query: CONFIGURATION_GET_VALUE,
-                    variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.temp.allDay.value'},
+                    variables: {
+                        entityId: this.peripheral.data.id,
+                        entityType: 'PERIPHERAL',
+                        key: 'key.temp.allDay.value'
+                    },
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.peripheralTimeout = response.data.configPropertyByKey

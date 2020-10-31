@@ -51,6 +51,9 @@ export const ZONE_GET_BY_UID = gql`
                     connectedTo{
                         uid
                         value
+                        device{
+                            status
+                        }
                     }
                 }
             }
@@ -65,6 +68,9 @@ export const ZONE_GET_BY_UID = gql`
                 connectedTo{
                     uid
                     value
+                    device{
+                        status
+                    }
                 }
             }
         }
