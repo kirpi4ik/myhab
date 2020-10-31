@@ -2,6 +2,7 @@ package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.*
+import eu.devexpert.madhouse.exceptions.UnavailableDeviceException
 import eu.devexpert.madhouse.utils.DeviceHttpService
 import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
@@ -17,7 +18,7 @@ class MegaDriverService implements EventPublisher {
 
     @Transactional
     def readConfig(Device deviceController) {
-        def deviceMainPage = new DeviceHttpService(device:  deviceController).readState()
+        def deviceMainPage = new DeviceHttpService(device: deviceController).readState()
 
         def configUrl = deviceMainPage.select("a").find { it.text() == "Config" }.attr("href")
         deviceMainPage.select("a").findAll { it.text().matches("XP[0-9]+") }.each { link ->
@@ -47,7 +48,7 @@ class MegaDriverService implements EventPublisher {
 
     }
 
-    Map<String, String> readPortValues(deviceUid) {
+    Map<String, String> readPortValues(deviceUid) throws UnavailableDeviceException {
         def response = [:]
         Device deviceController = Device.findByUid(deviceUid)
         try {
@@ -57,7 +58,7 @@ class MegaDriverService implements EventPublisher {
                 response << ["$index": "$status"]
             }
         } catch (Exception ex) {
-            log.error("Read port value failed for device[$deviceUid]: [${ex.message}]")
+            throw new UnavailableDeviceException("Read port value failed for device[$deviceUid]: [${ex.message}]")
         }
         return response
     }
