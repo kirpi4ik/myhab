@@ -142,7 +142,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
     volume '/app/config'
     workingDir '/app'
 
-    copyFile "${dockerBuildDir}/${projectName}-${projectVersion}.jar", 'madhouse.jar'
+    copyFile "/${dockerBuildDir}/${projectName}-${projectVersion}.jar", 'madhouse.jar'
     copyFile 'app-entrypoint.sh', 'app-entrypoint.sh' // <5>
     runCommand 'chmod +x app-entrypoint.sh'
 
