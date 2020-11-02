@@ -91,8 +91,8 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', ':server-core:as
             from fileTree(dir: "${project(':server-core').buildDir}/libs/") // <3>
             into "$rootDir/build/"
 
-            rename '(.+)', "${projectName}-${projectVersion}.jar"
-        }
+        rename '(.+)', "${projectName}-${projectVersion}.jar"
+    }
 
         logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue projects."
     }
@@ -142,7 +142,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
     volume '/app/config'
     workingDir '/app'
 
-    copyFile "${projectName}-${projectVersion}.jar", 'madhouse.jar'
+    copyFile "${dockerBuildDir}/${projectName}-${projectVersion}.jar", 'madhouse.jar'
     copyFile 'app-entrypoint.sh', 'app-entrypoint.sh' // <5>
     runCommand 'chmod +x app-entrypoint.sh'
 
