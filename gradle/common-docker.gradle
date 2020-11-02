@@ -7,7 +7,11 @@ docker {
     registryCredentials {
         url = 'http://nexus.devexpert.eu:8888/v1/'
         username = 'docker'
-        password = file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").text
+        if (file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").exists()) {
+            password = file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").text
+        } else {
+            password = "${System.env.NEXUS_DEVEXPERT_EU_PASSWORD}"
+        }
     }
 }
 //tag::prepareDocker[]
