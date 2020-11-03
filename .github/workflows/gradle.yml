@@ -61,6 +61,6 @@ jobs:
           file: build/docker/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: kirpi4ik/madhouse:${{ steps.get_version.outputs.version }}
+          tags: kirpi4ik/madhouse:${{ steps.get_version.outputs.version-without-v }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
