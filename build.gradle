@@ -30,7 +30,7 @@ ext {
     isGrailsPlugin = name.startsWith('grails-plugin')
     isBuildSnapshot = projectVersion.toString().endsWith("-SNAPSHOT")
     commonBuild = new File(project.rootDir, "gradle").absolutePath
-    dockerBuildDir = mkdir("docker")
+    dockerBuildDir = mkdir("${buildDir}/docker")
     dockerBuildGroup = 'Docker'
     dockerRegistry = 'nexus.devexpert.eu:8888'
     dockerRepo = 'madhousev2-web'
