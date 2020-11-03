@@ -40,4 +40,10 @@ jobs:
       - name: Build with Gradle
         env:
           NEXUS_DEVEXPERT_EU_PASSWORD: ${{ secrets.NEXUS_DEVEXPERT_EU_PASSWORD }}
-        run: ./gradlew assembleServerAndClient pushImage
+        run: ./gradlew assembleServerAndClient createDockerfile
+      - name: Run Buildx
+        run: |
+          docker buildx build --platform linux/amd64 \
+          --output "type=image,push=false"  \
+          /home/runner/work/madhouse/madhouse/build/docker \
+          -f /home/runner/work/madhouse/madhouse/build/docker/Dockerfile
