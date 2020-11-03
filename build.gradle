@@ -113,16 +113,13 @@ import com.bmuschko.gradle.docker.tasks.image.*
 task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
     description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
     group = dockerBuildGroup
-    copy {
+    into dockerBuildDir
+    into(".") {
         from 'src/main/docker'
-        into dockerBuildDir
-    }
-    copy {
         from "${buildDir}/${projectName}-${projectVersion}.jar"
-        into dockerBuildDir
-        logger.quiet("!!COPIED!!")
-        eachFile { logger.quiet("## ${it.file.absolutePath}") }
     }
+
+    eachFile { logger.quiet("## ${it.file.absolutePath}") }
 }
 //end::prepareDocker[]
 
