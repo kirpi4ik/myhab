@@ -37,6 +37,9 @@ jobs:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
+      - name: Get version
+        id: get_version
+        run: echo ::set-env name=RELEASE_VERSION::$(cat src/main/docker/version.txt)
       - name: Build with Gradle
         env:
           NEXUS_DEVEXPERT_EU_PASSWORD: ${{ secrets.NEXUS_DEVEXPERT_EU_PASSWORD }}
@@ -53,6 +56,6 @@ jobs:
           file: build/docker/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: kirpi4ik/madhouse:$(cat src/main/docker/version.txt)
+          tags: kirpi4ik/madhouse:${{env.RELEASE_VERSION}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
