@@ -1,7 +1,7 @@
 <template>
     <CFooter>
         <div>
-            <a href="https://madhouse.app" target="_self">MadHouse</a>
+            <a href="https://madhouse.app" target="_self">MadHouse v{{version}}</a>
             <span class="ml-1">&copy; 2020 DevExpert.</span>
         </div>
         <div class="ml-auto">
@@ -13,6 +13,11 @@
 
 <script>
     export default {
-        name: 'TheFooter'
+        name: 'TheFooter',
+        data() {
+            return {
+                version: process.env.VUE_APP_CONF_VERSION
+            };
+        },
     }
 </script>
