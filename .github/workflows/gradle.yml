@@ -41,6 +41,11 @@ jobs:
         env:
           NEXUS_DEVEXPERT_EU_PASSWORD: ${{ secrets.NEXUS_DEVEXPERT_EU_PASSWORD }}
         run: ./gradlew assembleServerAndClient createDockerfile
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: build/docker
       - name: Get the version
         id: vars
         run: echo ::set-output name=tag::$(echo ${GITHUB_REF:10})
