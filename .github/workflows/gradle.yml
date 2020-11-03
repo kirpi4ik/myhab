@@ -40,7 +40,7 @@ jobs:
       - name: Build with Gradle
         env:
           NEXUS_DEVEXPERT_EU_PASSWORD: ${{ secrets.NEXUS_DEVEXPERT_EU_PASSWORD }}
-        run: ./gradlew createDockerfile
+        run: ./gradlew pushImage
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
