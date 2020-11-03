@@ -10,8 +10,7 @@
         name: 'App',
         data() {
             return {
-                currentUser: null,
-                title: process.env.VUE_APP_TITLE
+                currentUser: null
             };
         },
         computed: {
@@ -21,6 +20,14 @@
         },
         created() {
             authenticationService.currentUser.subscribe(x => this.currentUser = x);
+        },
+        watch: {
+            $route: {
+                immediate: true,
+                handler(to, from) {
+                    document.title = to.meta.title || process.env.VUE_APP_CONF_TITLE + process.env.VUE_APP_CONF_VERSION;
+                }
+            },
         }
     };
 </script>
