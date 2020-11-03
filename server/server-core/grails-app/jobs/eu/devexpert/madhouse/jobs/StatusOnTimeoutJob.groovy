@@ -30,7 +30,7 @@ class StatusOnTimeoutJob implements Job, EventPublisher {
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
         checkCacheAndSwitchOffAfterTimeout(context)
-        checkOnPeripheralAndSetTimeoutValueIfNeeded(context)
+//        checkOnPeripheralAndSetTimeoutValueIfNeeded(context)
 
     }
 
