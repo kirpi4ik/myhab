@@ -61,4 +61,4 @@ jobs:
           file: build/docker/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: madhouse/madhousev2-web:latest
+          tags: kirpi4ik/madhouse:latest
