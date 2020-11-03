@@ -39,7 +39,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
       - name: Get version
         id: get_version
-        run: echo ::set-output name=version::$(cat src/main/docker/version.txt)
+        run: echo ::set-output name=version::echo $(cat src/main/docker/version.txt)-${GITHUB_SHA:6}
       - name: Build with Gradle
         env:
           NEXUS_DEVEXPERT_EU_PASSWORD: ${{ secrets.NEXUS_DEVEXPERT_EU_PASSWORD }}
@@ -56,6 +56,6 @@ jobs:
           file: build/docker/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: kirpi4ik/madhouse:${{steps.get_version.outputs.version}}-${GITHUB_SHA:6}
+          tags: kirpi4ik/madhouse:${{steps.get_version.outputs.version}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
