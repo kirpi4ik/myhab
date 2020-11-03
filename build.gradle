@@ -89,7 +89,7 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', ':server-core:as
     doLast {
         copy {
             from fileTree(dir: "${project(':server-core').buildDir}/libs/") // <3>
-            into "$rootDir/build/"
+            into "${buildDir}"
 
         rename '(.+)', "${projectName}-${projectVersion}.jar"
     }
