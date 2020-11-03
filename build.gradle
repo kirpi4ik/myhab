@@ -92,8 +92,6 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', ':server-core:as
             into "${buildDir}"
 
             rename '(.+)', "${projectName}-${projectVersion}.jar"
-            logger.quiet("!!COPIED!!")
-            eachFile { logger.quiet("## ${it.name}") }
         }
 
         logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue projects."
@@ -122,6 +120,8 @@ task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
     copy {
         from "${buildDir}/${projectName}-${projectVersion}.jar"
         into dockerBuildDir
+        logger.quiet("!!COPIED!!")
+        eachFile { logger.quiet("## ${it.file.absolutePath}") }
     }
 }
 //end::prepareDocker[]
