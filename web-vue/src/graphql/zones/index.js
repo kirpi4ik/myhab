@@ -49,6 +49,7 @@ export const ZONE_GET_BY_UID = gql`
                         uid
                     }
                     connectedTo{
+                        id
                         uid
                         value
                         device{
@@ -66,6 +67,7 @@ export const ZONE_GET_BY_UID = gql`
                     uid
                 }
                 connectedTo{
+                    id
                     uid
                     value
                     device{
@@ -384,6 +386,13 @@ export const CONFIGURATION_GET_VALUE = gql`
             id
             key
             value
+        }
+    }
+`;
+export const CACHE_GET_VALUE = gql`
+    query getCache($cacheName: String!, $cacheKey: String!){
+        cache(cacheName: $cacheName, cacheKey: $cacheKey) {
+            cachedValue
         }
     }
 `;
