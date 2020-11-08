@@ -13,8 +13,13 @@
 
                     <div style="display: inline-block">
                         <h4 class="mb-1">
-                            {{peripheral.data.name}} <span style="color: #b1dae8; font-size: 10pt"
-                                                           v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value/60}}min ]</span>
+                            {{peripheral.data.name}}
+                        </h4>
+                        <h4 class="mb-1">
+                            <span style="color: #b1dae8; font-size: 10pt; color: rgba(177, 218, 232, 0.8); "
+                                  v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ timer: {{$moment.utc($moment.duration(peripheralTimeout.value,'s').asMilliseconds()).format("HH:mm")}}    <span
+                                    style="color: #b1dae8; font-size: 10pt; color: rgba(177, 218, 232, 0.5);"
+                                    v-if="peripheralTimeoutOn != 'null'"> | off at: {{$moment(new Date(Number(peripheralTimeoutOn))).format('HH:mm')}}</span> ]</span>
                         </h4>
                     </div>
                     <div style="display: inline-block; width: 100%;" v-if="hasRole(['ROLE_ADMIN'])">
@@ -64,6 +69,7 @@
         CONFIGURATION_GET_VALUE,
         CONFIGURATION_DELETE,
         CONFIGURATION_SET_VALUE,
+        CACHE_GET_VALUE,
         PUSH_EVENT
     } from "../../graphql/zones";
 
@@ -77,7 +83,9 @@
         },
         data() {
             return {
-                peripheralTimeout: null
+                peripheralTimeout: null,
+                peripheralTimeoutOn: null
+
             }
         },
         methods: {
@@ -88,6 +96,13 @@
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.peripheralTimeout = response.data.configPropertyByKey
+                });
+                this.$apollo.query({
+                    query: CACHE_GET_VALUE,
+                    variables: {cacheName: 'expiring', cacheKey: this.peripheral.portId},
+                    fetchPolicy: 'network-only'
+                }).then(response => {
+                    this.peripheralTimeoutOn = response.data.cache.cachedValue
                 });
             },
             periphStateChangeHandler: function (peripheral) {

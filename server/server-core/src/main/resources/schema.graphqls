@@ -1,6 +1,13 @@
 type Query{
     navigation : Navigation
     userRolesForUser(userUid: String!): [UserRole]
+    cache(cacheName: String!, cacheKey: String!): CacheResult
+}
+
+type CacheResult {
+    cacheName: String!
+    cacheKey: String!
+    cachedValue: String
 }
 
 type UserRole {
