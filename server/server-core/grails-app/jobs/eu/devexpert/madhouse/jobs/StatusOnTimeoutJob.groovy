@@ -32,12 +32,12 @@ class StatusOnTimeoutJob implements Job, EventPublisher {
     }
 
     void checkOnPeripheralAndSetTimeoutValueIfNeeded(JobExecutionContext jobExecutionContext) {
-        DevicePort.findByValue("ON").each { port ->
+        DevicePort.findAllByValue("ON").each { port ->
             boolean cached = false
             hazelcastInstance.getMap(CacheMap.EXPIRE).entrySet().each { candidateForExpiration ->
-                if (candidateForExpiration.value == port.uid) {
+                if (candidateForExpiration.key.equals(String.valueOf(port.id))) {
                     cached = true
-                    return
+                    return true
                 }
             }
             if (!cached) {
