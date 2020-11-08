@@ -63,7 +63,7 @@ class StatusOnTimeoutJob implements Job, EventPublisher {
             if (now.isAfter(value?.expireOn)) {
                 publish(TopicName.EVT_LIGHT.id(), [
                         "p0": TopicName.EVT_LIGHT.id(),
-                        "p1": EntityType.PERIPHERAL,
+                        "p1": EntityType.PERIPHERAL.name(),
                         "p2": value?.portUid,
                         "p3": "timout",
                         "p4": "off",
