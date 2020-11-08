@@ -2,6 +2,9 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import Vuelidate from 'vuelidate';
 
+import moment from 'moment';
+import VueMoment from 'vue-moment';
+
 import App from './App'
 import {router} from './_helpers';
 
@@ -24,6 +27,7 @@ Vue.use(CoreuiVue);
 Vue.use(Vuelidate);
 Vue.use(ToggleButton);
 Vue.use(Vuex);
+Vue.use(VueMoment, { moment });
 
 const store = new Vuex.Store({
         state: {
