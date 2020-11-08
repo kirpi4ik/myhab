@@ -41,11 +41,6 @@ jobs:
         env:
           NEXUS_DEVEXPERT_EU_PASSWORD: ${{ secrets.NEXUS_DEVEXPERT_EU_PASSWORD }}
         run: ./gradlew createDockerfile
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: my-artifact
-          path: build/docker
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
