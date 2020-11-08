@@ -1,5 +1,6 @@
 package eu.devexpert.madhouse.services.dsl.action
 
+import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.job.EventData
@@ -33,7 +34,7 @@ class PowerService implements EventPublisher {
                 new DeviceHttpService(port: p, action: params.action).writeState()
                 publish(TopicName.EVT_PORT_VALUE_CHANGED.id(), new EventData().with {
                     p0 = TopicName.EVT_PORT_VALUE_CHANGED.id()
-                    p1 = "PORT"
+                    p1 = EntityType.PORT.name()
                     p2 = "${p.uid}"
                     p3 = "cron"
                     p4 = "${params.action}"

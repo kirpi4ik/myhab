@@ -27,8 +27,8 @@
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 300)">Porneste
-                                5min
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 60)">Porneste
+                                1min
                             </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 1200)">Porneste
                                 20min
