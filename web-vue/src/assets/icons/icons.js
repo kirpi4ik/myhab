@@ -32,8 +32,10 @@ import {
   cifPl
 } from '@coreui/icons'
 import {
+  cilClock,
   cilArrowRight,
   cilBan,
+  cilPlus,
   cilBasket,
   cilBell,
   cilCalculator,
@@ -84,6 +86,8 @@ export const iconsSet = Object.assign(
   {
     cilArrowRight,
     cilBan,
+    cilClock,
+    cilPlus,
     cilBasket,
     cilBell,
     cilCalculator,
