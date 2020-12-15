@@ -18,6 +18,11 @@ import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import ToggleButton from 'vue-js-toggle-button'
 import apolloProvider from './graphql';
 
+import { Datetime } from 'vue-datetime'
+// You need a specific loader for CSS files
+import 'vue-datetime/dist/vue-datetime.css'
+Vue.use(Datetime);
+Vue.component('datetime', Datetime);
 
 library.add(fas, fab);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
