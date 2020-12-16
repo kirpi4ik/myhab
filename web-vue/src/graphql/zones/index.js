@@ -380,9 +380,39 @@ export const CONFIGURATION_SET_VALUE = gql`
         }
     }
 `;
+export const CONFIGURATION_ADDLIST_CONFIG_VALUE = gql`
+    mutation ($key:String!, $entityId:Long!, $entityType:EntityType!, $value:String!) {
+        addListItemProperty(key: $key, entityId: $entityId, entityType: $entityType, value: $value) {
+            id
+            version
+            name
+            description
+            value
+            entityType
+            key
+            entityId
+        }
+    }
+`;
+export const CONFIGURATION_REMOVE_CONFIG = gql`
+    mutation ($id:Long!) {
+        removeConfig(id: $id) {
+            success
+        }
+    }
+`;
 export const CONFIGURATION_GET_VALUE = gql`
     query configPropertyByKey($key:String!, $entityId:Long!, $entityType:EntityType!){
         configPropertyByKey(key: $key, entityId: $entityId, entityType: $entityType) {
+            id
+            key
+            value
+        }
+    }
+`;
+export const CONFIGURATION_GET_LIST_VALUE = gql`
+    query configListByKey($key:String!, $entityId:Long!, $entityType:EntityType!){
+        configListByKey(key: $key, entityId: $entityId, entityType: $entityType) {
             id
             key
             value
