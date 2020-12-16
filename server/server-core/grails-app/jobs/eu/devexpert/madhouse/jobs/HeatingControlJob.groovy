@@ -1,10 +1,13 @@
 package eu.devexpert.madhouse.jobs
 
+import eu.devexpert.madhouse.domain.Configuration
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.infra.Zone
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
+import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
+import org.joda.time.DateTime
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
@@ -18,7 +21,7 @@ import java.util.concurrent.TimeUnit
 @Transactional
 class HeatingControlJob implements Job, EventPublisher {
     static triggers = {
-        simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(20)
+        simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(10)
     }
     def heatService
     def tempAllDay = 21
@@ -33,7 +36,24 @@ class HeatingControlJob implements Job, EventPublisher {
         }.findAll()
 
         peripheralsWithHeatCircuit.each { peripheral ->
-            def tempValue = Double.valueOf(peripheral.configurations.find { config -> config.key = "key.temp.allDay.value" }?.value ?: tempAllDay)
+            def now = DateTime.now()
+            def allDayTempValue = Double.valueOf(peripheral.configurations.find { config -> config.key == "key.temp.allDay.value" }?.value ?: tempAllDay)
+            def setTemp = allDayTempValue
+            Set<Configuration> tempScheduler = peripheral.configurations.findAll { config -> config.key == "key.temp.schedule.list.value" }.sort{it.value}
+
+            for (Configuration config : tempScheduler) {
+                def confValue = new JsonSlurper().parseText(config.value)
+                def splitTime = confValue.time.split(":")
+                def hour = Integer.parseInt(splitTime[0])
+                def minutes = Integer.parseInt(splitTime[1])
+
+                def scheduleTime = now.withHourOfDay(hour).withMinuteOfHour(minutes)
+                if (scheduleTime.beforeNow) {
+                    setTemp = confValue.temp
+                }
+            }
+
+
             Set<Zone> leafZones = peripheral.zones.findAll { zone -> zone.zones.empty }
             leafZones.each { leafZone ->
                 DevicePeripheral.createCriteria().list {
@@ -45,11 +65,11 @@ class HeatingControlJob implements Job, EventPublisher {
                     }
                 }.each { termostat ->
                     termostat.connectedTo.findAll { termostatPort -> termostatPort.value?.isNumber() }.each { termostatPort ->
-                        if (Double.valueOf(termostatPort.value) <= tempValue) {
-                            println("[${termostatPort.value} < ${tempValue}] | HEAT STARTING : ${leafZone.name}")
+                        if (Double.valueOf(termostatPort.value) <= setTemp) {
+                            println("[${termostatPort.value} < ${setTemp}] | HEAT STARTING : ${leafZone.name}")
                             heatService.heatOn(peripheral)
                         } else {
-                            log.debug("[${termostatPort.value} > ${tempValue}] | HEAT CLOSING: ${leafZone.name}")
+                            log.debug("[${termostatPort.value} > ${setTemp}] | HEAT CLOSING: ${leafZone.name}")
                             heatService.heatOff(peripheral)
                         }
                     }
