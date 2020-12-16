@@ -48,7 +48,7 @@ class Configuration {
                 protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
                     Configuration.where {
                         entityId == environment.getArgument('entityId') && entityType == environment.getArgument('entityType') && key == environment.getArgument('key')
-                    }.order("name", "desc")
+                    }.order("value", "asc")
                 }
             })
         }
@@ -66,7 +66,23 @@ class Configuration {
                 }
             })
         }
-        mutation('configDeleteByKey', "ConfigurationDeleteResult") {
+        mutation('removeConfig', "ConfigurationDeleteByIdResult") {
+            argument('id', Long)
+            returns {
+                field('error', String)
+                field('success', Boolean)
+            }
+            dataFetcher(new DeleteEntityDataFetcher(Configuration.gormPersistentEntity) {
+                @Override
+                Object get(DataFetchingEnvironment environment) throws Exception {
+                    withTransaction(false) {
+                        Configuration.findById(Long.valueOf(environment.getArgument('id'))).delete()
+                    }
+                    return [success: true, error: null]
+                }
+            })
+        }
+        mutation('configDeleteByKey', "ConfigurationDeleteByKeyResult") {
             argument('key', String)
             argument('entityId', Long)
             argument('entityType', EntityType)
@@ -109,6 +125,27 @@ class Configuration {
 
                         existingConfig.save(flush: true, failOnError: true)
 
+                        return existingConfig
+                    }
+                }
+            })
+        }
+        mutation('addListItemProperty', Configuration) {
+            argument('key', String)
+            argument('entityId', Long)
+            argument('entityType', EntityType)
+            argument('value', String)
+            returns Configuration
+            dataFetcher(new CreateEntityDataFetcher(Configuration.gormPersistentEntity) {
+                @Override
+                Object get(DataFetchingEnvironment environment) throws Exception {
+                    withTransaction(false) {
+                        Configuration existingConfig = new Configuration()
+                        existingConfig.setKey(environment.getArgument('key') as String)
+                        existingConfig.setEntityId(environment.getArgument('entityId') as Long)
+                        existingConfig.setEntityType(environment.getArgument('entityType') as EntityType)
+                        existingConfig.setValue(environment.getArgument('value') as String)
+                        existingConfig.save(flush: true, failOnError: true)
                         return existingConfig
                     }
                 }

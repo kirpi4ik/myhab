@@ -12,8 +12,7 @@
                         </CBadge>
                     </div>
                     <div v-if="hasRole(['ROLE_ADMIN'])" style="margin-top: -20px;">
-                        <CDropdown color="transparent p-0" placement="bottom-end"
-                                   :ref="'dropdown-'+peripheral.data.id" :disabled="peripheral.deviceState != 'ONLINE'">
+                        <CDropdown color="transparent p-0" placement="bottom-end" :ref="'dropdown-'+peripheral.data.id" :disabled="peripheral.deviceState != 'ONLINE'">
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
@@ -36,20 +35,17 @@
                                 Specifica temp.
                             </CDropdownItem>
                         </CDropdown>
-                        <CButton type="submit" size="sm"
-                                 @click="warningModal = true"
-                                 color="success">
+                        <CButton type="submit" size="sm" @click="warningModal = true" color="success">
                             <CIcon name="cil-clock"/>
                         </CButton>
-                        <CModal
-                                title="Termostat programabil"
+                        <CModal title="Termostat programabil"
                                 color="success"
                                 :show.sync="warningModal"
-                                size="lg" >
+                                size="lg">
                             <form class="form-inline" action="" method="post">
                                 <div class="form-group" style="display: inline; width: 100%">
-                                    <datetime type="time" v-model="time" size="4"
-                                              style="display: inline-block; vertical-align: top"></datetime>
+                                    <datetime type="time" v-model="time" size="4" style="display: inline-block; vertical-align: top" :phrases="{ok: 'Ok', cancel: 'Renunta'}"
+                                              :minute-step="10"></datetime>
                                     <round-slider v-model="temp"
                                                   :name="peripheral.data.id"
                                                   min="15"
@@ -63,21 +59,21 @@
                                                   pathColor="#e99c9c"
                                                   rangeColor="#39f"
                                                   style="margin-left: 1em; display: inline-block; vertical-align: top"/>
-                                    <CButton size="sm" color="success"
-                                             style="margin-left: 2em;display: inline-block; float: right">
+                                    <CButton size="sm" color="success" style="margin-left: 2em;display: inline-block; float: right"
+                                             @click="addListItemConfig(peripheral.data.id, 'key.temp.schedule.list.value', time,temp)">
                                         <CIcon name="cil-plus"/>
                                         Adauga
                                     </CButton>
                                 </div>
                             </form>
-                            <CDataTable :items="editableTimeSchedule" :fields="fields">
-                                <template #actions="data">
+                            <CDataTable :items="scheduleItems" :fields="fields">
+                                <template #actions="item">
                                     <td class="py-2">
                                         <CButton
                                                 color="danger"
                                                 variant="outline"
                                                 square
-                                                size="sm">
+                                                size="sm" @click="deleteConfig(item.item.id)">
                                             <CIcon name="cil-x-circle"/>
                                         </CButton>
                                     </td>
@@ -95,8 +91,7 @@
                 </div>
                 <div>
                     <h4 class="mb-1">
-                        {{peripheral.data.name}} <span style="color: #b1dae8; font-size: 10pt"
-                                                       v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value}}&#8451; ]</span>
+                        {{peripheral.data.name}} <span style="color: #b1dae8; font-size: 10pt" v-if="peripheralTimeout != null && peripheralTimeout.value != null">[ {{peripheralTimeout.value}}&#8451; ]</span>
                     </h4>
                 </div>
             </div>
@@ -122,8 +117,11 @@
     import {authenticationService} from '@/_services';
     import {
         CONFIGURATION_DELETE,
+        CONFIGURATION_REMOVE_CONFIG,
+        CONFIGURATION_GET_LIST_VALUE,
         CONFIGURATION_GET_VALUE,
         CONFIGURATION_SET_VALUE,
+        CONFIGURATION_ADDLIST_CONFIG_VALUE,
         PUSH_EVENT
     } from "../../graphql/zones";
 
@@ -139,7 +137,7 @@
             return {
                 peripheralTimeout: null,
                 warningModal: false,
-                editableTimeSchedule: [],
+                scheduleItems: [],
                 temp: 10,
                 time: null,
                 fields: [
@@ -155,7 +153,6 @@
         },
         created() {
             this.loadConfig();
-            this.editableTimeSchedule.push({time: '11:22', temp: 22})
         },
         methods: {
             loadConfig: function () {
@@ -169,6 +166,22 @@
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.peripheralTimeout = response.data.configPropertyByKey
+                });
+                this.$apollo.query({
+                    query: CONFIGURATION_GET_LIST_VALUE,
+                    variables: {
+                        entityId: this.peripheral.data.id,
+                        entityType: 'PERIPHERAL',
+                        key: 'key.temp.schedule.list.value'
+                    },
+                    fetchPolicy: 'network-only'
+                }).then(response => {
+                    this.scheduleItems = [];
+                    let scheduleItems = this.scheduleItems;
+                    response.data.configListByKey.forEach(function (config, index) {
+                        let configValue = JSON.parse(config.value);
+                        scheduleItems.push({id: config.id, time: configValue.time, temp: configValue.temp});
+                    });
                 });
             },
             saveConfig: function (peripheralId, key, value) {
@@ -192,6 +205,39 @@
                 }
                 return true;
             },
+            addListItemConfig: function (peripheralId, key, time, temp) {
+                debugger
+                let date = new Date(time);
+                let jsonValue = JSON.stringify({time: date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes(), temp: temp});
+                let dropdown = this.$refs['dropdown-' + peripheralId];
+                if (jsonValue != null) {
+                    this.$apollo.mutate({
+                        mutation: CONFIGURATION_ADDLIST_CONFIG_VALUE,
+                        variables: {key: key, value: jsonValue, entityId: peripheralId, entityType: 'PERIPHERAL'}
+                    }).then(response => {
+                        dropdown.hide();
+                        this.loadConfig();
+                    });
+                } else {
+                    this.$apollo.mutate({
+                        mutation: CONFIGURATION_DELETE,
+                        variables: {id: this.peripheralTimeout.id}
+                    }).then(response => {
+                        dropdown.hide();
+                        this.peripheralTimeout = null
+                    });
+                }
+                return true;
+            },
+            deleteConfig: function (id) {
+                this.$apollo.mutate({
+                    mutation: CONFIGURATION_REMOVE_CONFIG,
+                    variables: {id: id}
+                }).then(response => {
+                    this.loadConfig();
+                });
+                return true;
+            },
             periphStateChangeHandler: function (peripheral) {
                 let event = {
                     "p0": "evt_heat",
@@ -212,7 +258,10 @@
                 return currentUser.permissions.filter(function (userRole) {
                     return roles.includes(userRole);
                 }).length > 0;
-            }
+            },
+            addNewSchedule() {
+                saveConfig(peripheral.data.id, 'key.temp.allDay.value', 24)
+            },
         }
     }
 </script>
