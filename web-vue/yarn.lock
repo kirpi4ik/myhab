@@ -901,10 +901,15 @@
     chart.js "^2.9.3"
     vue "^2.6.10"
 
-"@coreui/coreui@^3.0.0-beta.1", "@coreui/coreui@^3.3.0":
+"@coreui/coreui@^3.0.0-beta.1":
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/@coreui/coreui/-/coreui-3.3.0.tgz#09e6176025cf2c430130218f915a2e448d21c5c6"
   integrity sha512-eaLk+u64v1LzgrROrma26fBJK4wU6sW+Nj0DAJNj+7EsSFA2ge5dW2Fmo5knxBipnYZTUnhG/pDA2w1o/BLaaA==
+
+"@coreui/coreui@^3.4.0":
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/@coreui/coreui/-/coreui-3.4.0.tgz#3e3627a1f48a00f6289204a23f71eaa6ea94e370"
+  integrity sha512-WqzockdWVkXUNmNwlqdu+AxM+9JoiWGe4rKaySu/dZme1NvVOn2ukjJlpTkssal8UKcSHyitzNixtkMCmUxE1A==
 
 "@coreui/icons-vue@^1.3.5":
   version "1.3.5"
@@ -918,10 +923,10 @@
   resolved "https://registry.yarnpkg.com/@coreui/icons/-/icons-1.0.1.tgz#8af0fe6450904ee1dbb0abf36bf107f35cfecf5e"
   integrity sha512-DAlvdHRC+HHecdy52vskbNzNKEpu6wHDvSlsHGrwOqNxQl1YLhGEtqAW4sKpyVE3GgysNCywUWZGFlLp8I3LgA==
 
-"@coreui/icons@^2.0.0-beta.5":
-  version "2.0.0-beta.5"
-  resolved "https://registry.yarnpkg.com/@coreui/icons/-/icons-2.0.0-beta.5.tgz#bf2b3e06eb0d5abe1f28eee312e4af4210b4bf5b"
-  integrity sha512-R/uXCSagtjFD2E5DUvf5R2HtG4uWP6lnx4CKwSZmSXxVzxCFE1cMuBK97OrDq+f1n4ogE3wszScg395d0CzfTw==
+"@coreui/icons@^2.0.0-rc.0":
+  version "2.0.0-rc.0"
+  resolved "https://registry.yarnpkg.com/@coreui/icons/-/icons-2.0.0-rc.0.tgz#b61a503f2a98ea37054be4ab5157ac1aab77d128"
+  integrity sha512-Bg+uQKzEhERRZk1qo8tcR3bjJQDzv6+uDjt5IpjFwqnnnHE4gZE6adZ7jyMYQjgIlelEaS8ZOlE1M7aKHDWZSA==
 
 "@coreui/utils@^1.3.1":
   version "1.3.1"
@@ -937,15 +942,15 @@
     chart.js "^2.9.3"
     vue "^2.6.12"
 
-"@coreui/vue@^3.1.4":
-  version "3.1.4"
-  resolved "https://registry.yarnpkg.com/@coreui/vue/-/vue-3.1.4.tgz#e32ad7f80f2c130c2fe6a566431f37b982022885"
-  integrity sha512-mPQ582rVR6AOQ/McqJM7YF+etfGZrrHrr6gGtbkzdmSBqdFYr1OVyiOsCZj2Jo5g5jBPYn3os67AbdAzXRjyjA==
+"@coreui/vue@^3.1.6":
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/@coreui/vue/-/vue-3.1.6.tgz#f9f20857a68e803f119eedd87ccff7e7c110aace"
+  integrity sha512-mI3zrPhMYBbnHtw0+92XBR61Lg8xjEEVcTcWaLMQSmX2eajPf5IEhXc8aKeCBd2FCZfB2LO5aDtwD7eGCHJ5tg==
   dependencies:
-    "@coreui/icons" "^2.0.0-beta.5"
+    "@coreui/icons" "^2.0.0-rc.0"
     "@coreui/icons-vue" "^1.3.5"
     "@coreui/utils" "^1.3.1"
-    "@popperjs/core" "~2.5.3"
+    "@popperjs/core" "~2.5.4"
     lodash.clonedeep "~4.5.0"
     perfect-scrollbar "~1.5.0"
     tooltip.js "~1.3.3"
@@ -1301,7 +1306,7 @@
   dependencies:
     mkdirp "^1.0.4"
 
-"@popperjs/core@~2.5.3":
+"@popperjs/core@~2.5.4":
   version "2.5.4"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.5.4.tgz#de25b5da9f727985a3757fd59b5d028aba75841a"
   integrity sha512-ZpKr+WTb8zsajqgDkvCEWgp6d5eJT6Q63Ng2neTbzBO76Lbe91vX/iVIW9dikq+Fs3yEo+ls4cxeXABD2LtcbQ==
