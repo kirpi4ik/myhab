@@ -7,6 +7,7 @@ class UrlMappings {
     static mappings = {
         get '/api/public/event'(controller: "event", action: "triggerWithGet")
         get '/e'(controller: "event", action: "shortUrlEvent")
+        "/login/auth"(controller:'login', action:'auth')
 
 
 //        delete "/$controller/$id(.$format)?"(action: "delete")
