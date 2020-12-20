@@ -10,6 +10,7 @@ class BootStrap {
     def schedulerService
     def configPeripherals
     def grailsApplication
+    def initService
 
     def init = { servletContext ->
 //        schedulerService.startAll()
@@ -33,6 +34,9 @@ class BootStrap {
 //        new InferenceRulesEngine().fire(rules, facts);
 //        hazelcastInstance.getMap(CacheMap.EXPIRE).put("key", "11111111111111111111");
 //        println ":::::::::"+hazelcastInstance.getMap(CacheMap.EXPIRE).get("key");
+
+        initService.initClient()
+
     }
     def destroy = {
 //        schedulerService.shutdown()
