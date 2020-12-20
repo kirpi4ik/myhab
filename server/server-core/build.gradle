@@ -65,7 +65,8 @@ dependencies {
     compile "org.grails:grails-logging"
     compile "org.grails.plugins:cache"
     compile "org.grails.plugins:async"
-    compile "org.grails.plugins:spring-security-rest:3.0.0.RC1"
+    compile "org.grails.plugins:spring-security-rest:3.0.1"
+    compile 'org.grails.plugins:spring-security-oauth2-provider:4.0.0-RC1'
     compile "org.grails.plugins:views-json"
     compile "org.grails.plugins:views-json-templates"
     compile "org.grails.plugins:events"
