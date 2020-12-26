@@ -60,4 +60,8 @@ class Client {
         clientSecret = clientSecret ?: NO_CLIENT_SECRET
         clientSecret = springSecurityService?.passwordEncoder ? springSecurityService.encodePassword(clientSecret) : clientSecret
     }
+    static mapping = {
+        version true
+        autowire true
+    }
 }
