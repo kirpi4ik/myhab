@@ -35,7 +35,7 @@ class BootStrap {
 //        hazelcastInstance.getMap(CacheMap.EXPIRE).put("key", "11111111111111111111");
 //        println ":::::::::"+hazelcastInstance.getMap(CacheMap.EXPIRE).get("key");
 
-        initService.initClient()
+//        initService.initClient()
 
     }
     def destroy = {
