@@ -34,9 +34,11 @@ export const NAV_BREADCRUMB = gql`
 export const ZONE_GET_BY_UID = gql`
     query zoneByUid($uid: String!) {
         zoneByUid(uid: $uid) {
+            id
             uid
             name
             zones {
+                id
                 uid
                 name
                 description
