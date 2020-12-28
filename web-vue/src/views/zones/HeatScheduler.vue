@@ -60,11 +60,8 @@
     import RoundSlider from "vue-round-slider";
     import {
         CONFIGURATION_ADDLIST_CONFIG_VALUE,
-        CONFIGURATION_DELETE,
         CONFIGURATION_REMOVE_CONFIG,
         CONFIGURATION_GET_LIST_VALUE,
-        CONFIGURATION_GET_VALUE,
-        CONFIGURATION_SET_VALUE,
     } from "../../graphql/zones";
 
     export default {
