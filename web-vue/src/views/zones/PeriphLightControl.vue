@@ -30,11 +30,20 @@
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 60)">Porneste
                                 1min
                             </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 300)">Porneste
+                                5min
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 600)">Porneste
+                                10min
+                            </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 1200)">Porneste
                                 20min
                             </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 3600)">Porneste
                                 1h
+                            </CDropdownItem>
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 7200)">Porneste
+                                2h
                             </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 10800)">Porneste
                                 3h
