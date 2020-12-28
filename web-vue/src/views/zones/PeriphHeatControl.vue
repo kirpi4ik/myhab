@@ -35,55 +35,6 @@
                                 Specifica temp.
                             </CDropdownItem>
                         </CDropdown>
-                        <CButton type="submit" size="sm" @click="warningModal = true" color="success">
-                            <CIcon name="cil-clock"/>
-                        </CButton>
-                        <CModal title="Termostat programabil"
-                                color="success"
-                                :show.sync="warningModal"
-                                size="lg">
-                            <form class="form-inline" action="" method="post">
-                                <div class="form-group" style="display: inline; width: 100%">
-                                    <datetime type="time" v-model="time" size="4" style="display: inline-block; vertical-align: top" :phrases="{ok: 'Ok', cancel: 'Renunta'}"
-                                              :minute-step="10"></datetime>
-                                    <round-slider v-model="temp"
-                                                  :name="peripheral.data.id"
-                                                  min="15"
-                                                  max="30"
-                                                  start-angle="10"
-                                                  end-angle="+160"
-                                                  line-cap="round"
-                                                  radius="60"
-                                                  animation="true"
-                                                  mouseScrollAction="true"
-                                                  pathColor="#e99c9c"
-                                                  rangeColor="#39f"
-                                                  style="margin-left: 1em; display: inline-block; vertical-align: top"/>
-                                    <CButton size="sm" color="success" style="margin-left: 2em;display: inline-block; float: right"
-                                             @click="addListItemConfig(peripheral.data.id, 'key.temp.schedule.list.value', time,temp)">
-                                        <CIcon name="cil-plus"/>
-                                        Adauga
-                                    </CButton>
-                                </div>
-                            </form>
-                            <CDataTable :items="scheduleItems" :fields="fields">
-                                <template #actions="item">
-                                    <td class="py-2">
-                                        <CButton
-                                                color="danger"
-                                                variant="outline"
-                                                square
-                                                size="sm" @click="deleteConfig(item.item.id)">
-                                            <CIcon name="cil-x-circle"/>
-                                        </CButton>
-                                    </td>
-                                </template>
-                            </CDataTable>
-                            <template #footer>
-                                <CButton @click="warningModal = false" color="danger">Renunta</CButton>
-                                <CButton @click="warningModal = false" color="success">Salveaza</CButton>
-                            </template>
-                        </CModal>
                     </div>
                     <div style="display: inline-block; float: right; margin-top: -20px;">
                         <font-awesome-icon icon="fire-alt" size="3x" :class="`zone-icon-${peripheral.state}`"/>
@@ -113,7 +64,6 @@
 </template>
 
 <script>
-    import RoundSlider from "vue-round-slider";
     import {authenticationService} from '@/_services';
     import {
         CONFIGURATION_DELETE,
@@ -121,34 +71,18 @@
         CONFIGURATION_GET_LIST_VALUE,
         CONFIGURATION_GET_VALUE,
         CONFIGURATION_SET_VALUE,
-        CONFIGURATION_ADDLIST_CONFIG_VALUE,
         PUSH_EVENT
     } from "../../graphql/zones";
 
     export default {
         name: 'PeriphHeatControl',
-        components: {
-            RoundSlider
-        },
         props: {
             peripheral: Object
         },
         data() {
             return {
                 peripheralTimeout: null,
-                warningModal: false,
-                scheduleItems: [],
-                temp: 10,
-                time: null,
-                fields: [
-                    {key: 'time', label: 'Ora'},
-                    {key: 'temp', label: '℃'},
-                    {
-                        key: 'actions', label: 'Sterge',
-                        sorter: false,
-                        filter: false
-                    }
-                ]
+
             }
         },
         created() {
@@ -166,22 +100,6 @@
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.peripheralTimeout = response.data.configPropertyByKey
-                });
-                this.$apollo.query({
-                    query: CONFIGURATION_GET_LIST_VALUE,
-                    variables: {
-                        entityId: this.peripheral.data.id,
-                        entityType: 'PERIPHERAL',
-                        key: 'key.temp.schedule.list.value'
-                    },
-                    fetchPolicy: 'network-only'
-                }).then(response => {
-                    this.scheduleItems = [];
-                    let scheduleItems = this.scheduleItems;
-                    response.data.configListByKey.forEach(function (config, index) {
-                        let configValue = JSON.parse(config.value);
-                        scheduleItems.push({id: config.id, time: configValue.time, temp: configValue.temp});
-                    });
                 });
             },
             saveConfig: function (peripheralId, key, value) {
@@ -205,39 +123,7 @@
                 }
                 return true;
             },
-            addListItemConfig: function (peripheralId, key, time, temp) {
-                debugger
-                let date = new Date(time);
-                let jsonValue = JSON.stringify({time: date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes(), temp: temp});
-                let dropdown = this.$refs['dropdown-' + peripheralId];
-                if (jsonValue != null) {
-                    this.$apollo.mutate({
-                        mutation: CONFIGURATION_ADDLIST_CONFIG_VALUE,
-                        variables: {key: key, value: jsonValue, entityId: peripheralId, entityType: 'PERIPHERAL'}
-                    }).then(response => {
-                        dropdown.hide();
-                        this.loadConfig();
-                    });
-                } else {
-                    this.$apollo.mutate({
-                        mutation: CONFIGURATION_DELETE,
-                        variables: {id: this.peripheralTimeout.id}
-                    }).then(response => {
-                        dropdown.hide();
-                        this.peripheralTimeout = null
-                    });
-                }
-                return true;
-            },
-            deleteConfig: function (id) {
-                this.$apollo.mutate({
-                    mutation: CONFIGURATION_REMOVE_CONFIG,
-                    variables: {id: id}
-                }).then(response => {
-                    this.loadConfig();
-                });
-                return true;
-            },
+
             periphStateChangeHandler: function (peripheral) {
                 let event = {
                     "p0": "evt_heat",

@@ -12,11 +12,12 @@
         </CRow>
         <CRow>
             <CCol md="3" sm="6" v-for="zone in zones" v-bind:key="zone.uid">
-                <div class="card" :class="`zone-card-background text-white`"
-                     v-on:click="navZone(zone.uid)">
+                <div class="card" :class="`zone-card-background text-white`">
                     <div class="card-body">
+                        <HeatScheduler :zone="zone" :name="zone.name" v-if="categoryUid === peripheralHeatUid"/>
                         <div>
-                            <h2 class="mb-0">{{zone.name}}</h2>
+                            <h2 class="mb-0" v-on:click="navZone(zone.uid)">{{zone.name}}</h2>
+
                         </div>
                     </div>
                     <slot name="footer" class="card-footer">
@@ -25,33 +26,36 @@
                         </div>
                     </slot>
                 </div>
+
             </CCol>
         </CRow>
         <CRow>
             <CCol md="3" sm="6" v-for="peripheral in peripherals" v-bind:key="peripheral.uid">
-                <PeriphLightControl :peripheral="peripheral"
-                                    v-if="categoryUid === peripheralLightUid"></PeriphLightControl>
-                <PeriphTempControl :peripheral="peripheral"
-                                   v-if="categoryUid === peripheralTempUid"></PeriphTempControl>
-                <PeriphHeatControl :peripheral="peripheral"
-                                   v-if="categoryUid === peripheralHeatUid"></PeriphHeatControl>
+                <PeriphLightControl :peripheral="peripheral" v-if="categoryUid === peripheralLightUid"></PeriphLightControl>
+                <PeriphTempControl :peripheral="peripheral" v-if="categoryUid === peripheralTempUid"></PeriphTempControl>
+                <PeriphHeatControl :peripheral="peripheral" v-if="categoryUid === peripheralHeatUid"></PeriphHeatControl>
             </CCol>
         </CRow>
+
     </div>
+
 </template>
 <script>
     import {router} from '@/_helpers';
-    import {ZONE_GET_BY_UID, ZONES_GET_ROOT, NAV_BREADCRUMB} from "../../graphql/zones";
+
+    import {NAV_BREADCRUMB, ZONE_GET_BY_UID, ZONES_GET_ROOT,} from "../../graphql/zones";
     import PeriphLightControl from './PeriphLightControl'
     import PeriphHeatControl from './PeriphHeatControl'
     import PeriphTempControl from './PeriphTempControl'
+    import HeatScheduler from './HeatScheduler'
 
     export default {
         name: 'ZoneCombinedView',
         components: {
             PeriphLightControl,
             PeriphTempControl,
-            PeriphHeatControl
+            PeriphHeatControl,
+            HeatScheduler
         },
         data() {
             return {
@@ -89,7 +93,7 @@
                         state = portValue === 'OFF'
                         portId = port.id;
                         portUid = port.uid;
-                        deviceState= port.device.status
+                        deviceState = port.device.status
                     }
                     if (peripheralUids.indexOf(peripheral.uid) === -1) {
                         peripherals.push({
@@ -112,6 +116,7 @@
                 }.bind(this);
                 //query for root zones , where zones has parent zone null
 
+
                 if (this.$route.query.zoneUid != null && this.$route.query.zoneUid !== "") {
                     this.$apollo.query({
                         query: ZONE_GET_BY_UID,
@@ -132,10 +137,8 @@
                     }).then(response => {
                         zones = response.data.zonesRoot;
                         zones.forEach(zoneInitCallback);
-
                         this.zone = zone;
                         this.zones = zones;
-
                         this.peripherals = peripherals.filter(peripheralFilter);
                     });
                 }
@@ -158,6 +161,7 @@
             navRoot: function () {
                 router.push({path: 'zones', query: {zoneUid: "", categoryUid: this.$route.query.categoryUid}})
             },
+
 
         }
     }
