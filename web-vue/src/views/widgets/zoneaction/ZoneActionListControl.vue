@@ -18,21 +18,6 @@
             </CCol>
             <CCol md="3" sm="6">
                 <ZoneActionControl
-                        header="Temperatura"
-                        color="temp"
-                        left-header="Interior"
-                        left-footer="Temperatura"
-                        right-header="Exterior"
-                        right-footer="Temperatura"
-                        icon="thermometer-half"
-                        :zoneUidLeft="zoneIntUid"
-                        :zoneUidRight="zoneExtUid"
-                        :categoryUid="peripheralTempUid"
-                >
-                </ZoneActionControl>
-            </CCol>
-            <CCol md="3" sm="6">
-                <ZoneActionControl
                         header="Incalzire"
                         color="heat"
                         left-header="Etaj"
@@ -43,6 +28,21 @@
                         :zoneUidLeft="zoneEtajUid"
                         :zoneUidRight="zoneParterUid"
                         :categoryUid="peripheralHeatUid"
+                >
+                </ZoneActionControl>
+            </CCol>
+            <CCol md="3" sm="6">
+                <ZoneActionControl
+                        header="Temperatura"
+                        color="temp"
+                        left-header="Interior"
+                        left-footer="Temperatura"
+                        right-header="Exterior"
+                        right-footer="Temperatura"
+                        icon="thermometer-half"
+                        :zoneUidLeft="zoneIntUid"
+                        :zoneUidRight="zoneExtUid"
+                        :categoryUid="peripheralTempUid"
                 >
                 </ZoneActionControl>
             </CCol>

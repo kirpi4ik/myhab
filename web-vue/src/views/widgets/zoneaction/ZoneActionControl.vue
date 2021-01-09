@@ -11,7 +11,7 @@
         </div>
         <slot name="body" class="card-footer">
             <div class="card-body row text-center">
-                <div class="col" v-on:click="lightNav(zoneUidLeft, categoryUid)">
+                <div class="col" v-on:click="lightNav(zoneUidLeft, categoryUid)" style="cursor: pointer">
                     <div v-if="leftHeader" class="text-value-lg">
                         {{leftHeader}}
                     </div>
@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="c-vr"></div>
-                <div class="col" v-on:click="lightNav(zoneUidRight, categoryUid)">
+                <div class="col" v-on:click="lightNav(zoneUidRight, categoryUid)" style="cursor: pointer">
                     <div v-if="rightHeader" class="text-value-lg">
                         {{rightHeader}}
                     </div>

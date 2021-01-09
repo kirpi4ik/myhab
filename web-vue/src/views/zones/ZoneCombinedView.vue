@@ -18,12 +18,12 @@
                             <HeatScheduler :zone="zone" :name="zone.name" v-if="categoryUid === peripheralHeatUid"/>
                             <TempDisplay :zone="zone" :name="zone.name" v-if="categoryUid === peripheralHeatUid"/>
                         </div>
-                        <div>
-                            <h2 class="mb-0" v-on:click="navZone(zone.uid)">{{zone.name}}</h2>
+                        <div v-on:click="navZone(zone.uid)" style="cursor:pointer; height: 100%">
+                            <h2 class="mb-0" >{{zone.name}}</h2>
                         </div>
                     </div>
-                    <slot name="footer" class="card-footer">
-                        <div class="zone-card-footer">
+                    <slot name="footer" class="card-footer" >
+                        <div class="zone-card-footer" v-on:click="navZone(zone.uid)" style="cursor:pointer">
                             <slot></slot>
                         </div>
                     </slot>
