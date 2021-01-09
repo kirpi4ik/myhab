@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="display: inline-block">
         <CButton type="submit" size="sm" @click="openScheduler(zone)" color="success">
             <CIcon name="cil-clock"/>
         </CButton>
