@@ -41,7 +41,7 @@ class EventData extends BaseEntity {
                 Object get(DataFetchingEnvironment environment) {
                     EventData.createCriteria().list(max: environment.getArgument('count'), offset: environment.getArgument('offset')) {
                         eq("p2", environment.getArgument('p2'))
-                        order("tsCreated", "asc")
+                        order("tsCreated", "desc")
                     }
                 }
             })
