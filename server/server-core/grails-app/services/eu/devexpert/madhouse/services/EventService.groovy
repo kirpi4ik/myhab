@@ -59,7 +59,7 @@ class EventService implements EventPublisher {
                     break
             }
         }
-        publish(TopicName.EVT_LOG.id(), event)
+        publish(TopicName.EVT_LOG.id(), event.data)
     }
 
     @Transactional
@@ -68,22 +68,26 @@ class EventService implements EventPublisher {
         if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findByUid(event.data.p2)
             if (peripheral.category.name == "HEAT") {
-                def args = [:]
-                args.portUids = []
+                def ports = []
                 peripheral.getConnectedTo().each { port ->
-                    args.portUids << port.uid
+                    if (!port.value.equalsIgnoreCase(event.data.p4)) {
+                        ports << port
+                    }
                 }
-                switch (event.data.p4) {
-                    case "on":
-                        heatService.heatOn(peripheral)
-                        break
-                    case "off":
-                        heatService.heatOff(peripheral)
-                        break
+                if (ports.size() > 0) {
+                    switch (event.data.p4.toLowerCase()) {
+                        case "on":
+                            heatService.heatOn(peripheral)
+                            break
+                        case "off":
+                            heatService.heatOff(peripheral)
+                            break
+                    }
+                    publish(TopicName.EVT_LOG.id(), event.data)
                 }
             }
         }
-        publish(TopicName.EVT_LOG.id(), event)
+
     }
 
     @Transactional
@@ -107,7 +111,7 @@ class EventService implements EventPublisher {
                 }
             }
         }
-        publish(TopicName.EVT_LOG.id(), event)
+        publish(TopicName.EVT_LOG.id(), event.data)
     }
 
     def fromZone(portUids, zone) {
