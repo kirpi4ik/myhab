@@ -26,7 +26,7 @@
             </div>
         </div>
         <slot name="footer" class="card-footer">
-            <div class="toggle-btn">
+            <div class="toggle-btn" style="cursor: pointer">
                 <toggle-button v-model="peripheral.state" :sync="true"
                                :labels="{checked: 'Porneste', unchecked: 'Opreste'}"
                                :switch-color="{checked: 'linear-gradient( #8DFF73, green)', unchecked: 'linear-gradient(#BF0000, #FFBE62)'}"
@@ -132,6 +132,9 @@
     }
 </script>
 <style scoped>
+    .v-switch-core:hover {
+        background-color: #8a3333 !important;
+    }
     .zone-card-background {
         background-image: linear-gradient(#4f6167, #8e949f);
     }
