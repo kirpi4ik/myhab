@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 @Transactional
 class HeatingControlJob implements Job, EventPublisher {
     static triggers = {
-        simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(3)
+        simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(2)
     }
     public static final String PERIPHERAL_HEAT_CTRL_CATEGORY = "HEAT"
     public static final String PERIPHERAL_TEMPERATURE_SENSOR_CATEGORY = 'TEMP'
