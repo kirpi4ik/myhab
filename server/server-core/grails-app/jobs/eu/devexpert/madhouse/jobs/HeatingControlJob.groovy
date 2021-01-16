@@ -4,6 +4,7 @@ import eu.devexpert.madhouse.domain.Configuration
 import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.infra.Zone
+import eu.devexpert.madhouse.domain.job.EventData
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
@@ -58,14 +59,15 @@ class HeatingControlJob implements Job, EventPublisher {
             }
         }
         actions.each { actuatorUid, action ->
-            publish(TopicName.EVT_HEAT.id(), [
-                    "p0": TopicName.EVT_HEAT.id(),
-                    "p1": "PERIPHERAL",
-                    "p2": actuatorUid,
-                    "p3": "thermostat",
-                    "p4": action,
-                    "p6": "system"
-            ])
+            publish(TopicName.EVT_HEAT.id(), new EventData().with {
+                p0 = TopicName.EVT_HEAT.id()
+                p1 = "PERIPHERAL"
+                p2 = actuatorUid
+                p3 = "thermostat"
+                p4 = action
+                p6 = "system"
+                it
+            })
         }
     }
 
