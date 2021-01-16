@@ -15,7 +15,8 @@ import static org.jsoup.Jsoup.connect
 @Slf4j
 public class DeviceHttpService {
     public static final String PROTOCOL = "http"
-    def DEVICE_URL_TIMEOUT = 2000
+    def DEVICE_URL_TIMEOUT = 4000
+    def DEVICE_URL_TIMEOUT_ESP = 5000
     def port
     def action
     def device
@@ -31,7 +32,7 @@ public class DeviceHttpService {
             url = "$PROTOCOL://${device?.networkAddress?.ip}:${device.networkAddress.port}/${device?.authAccounts?.first()?.password}/${uri != null ? uri : ''}"
             log.debug("READ STAT for [${DeviceModel.MEGAD_2561_RTC}] from : ${url}")
             try {
-                return connect(url).get()
+                return connect(url).timeout(DEVICE_URL_TIMEOUT).get()
             } catch (Exception ce) {
                 throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
             }
@@ -39,8 +40,9 @@ public class DeviceHttpService {
             try {
                 url = "$PROTOCOL://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}"
                 log.debug("READ STAT for [${DeviceModel.ESP8266_1}] from : ${url}")
+
                 return connect(url)
-                        .timeout(DEVICE_URL_TIMEOUT)
+                        .timeout(DEVICE_URL_TIMEOUT_ESP)
                         .ignoreContentType(true)
                         .header("Authorization", "Basic " + new String(encodeBase64("${device.authAccounts?.first()?.username}:${device.authAccounts?.first()?.password}".bytes)))
                         .header("Content-Type", "application/json")

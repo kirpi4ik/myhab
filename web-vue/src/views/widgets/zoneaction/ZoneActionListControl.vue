@@ -3,7 +3,7 @@
         <template>
             <CCol md="3" sm="6">
                 <ZoneActionControl
-                        header="Lumina"
+                        header="Iluminat"
                         color="light"
                         left-header="Interior"
                         left-footer="Iluminat"
@@ -18,7 +18,7 @@
             </CCol>
             <CCol md="3" sm="6">
                 <ZoneActionControl
-                        header="Incalzire"
+                        header="Climatizare"
                         color="heat"
                         left-header="Etaj"
                         left-footer="Incalzire"
