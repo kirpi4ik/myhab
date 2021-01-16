@@ -1,6 +1,7 @@
 package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.domain.EntityType
+import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.device.DeviceStatus
@@ -58,6 +59,7 @@ class EventService implements EventPublisher {
                     break
             }
         }
+        publish(TopicName.EVT_LOG.id(), event)
     }
 
     @Transactional
@@ -81,6 +83,7 @@ class EventService implements EventPublisher {
                 }
             }
         }
+        publish(TopicName.EVT_LOG.id(), event)
     }
 
     @Transactional
@@ -104,6 +107,7 @@ class EventService implements EventPublisher {
                 }
             }
         }
+        publish(TopicName.EVT_LOG.id(), event)
     }
 
     def fromZone(portUids, zone) {
@@ -119,14 +123,6 @@ class EventService implements EventPublisher {
     }
 
     @Transactional
-    @Subscriber('evt_log')
-    def logEvent(event) {
-        EventData ev = event.data
-        ev.save(failOnError: true, flush: true)
-        log.debug(event.toString())
-    }
-
-    @Transactional
     @Subscriber('evt_device_status')
     def deviceStatus(event) {
         if (EntityType.DEVICE.isEqual(event.data.p1)) {
@@ -137,4 +133,13 @@ class EventService implements EventPublisher {
             }
         }
     }
+
+    @Transactional
+    @Subscriber('evt_log')
+    def logEvent(event) {
+        EventData ev = event.data
+        ev.save(failOnError: true, flush: true)
+        log.debug(event.toString())
+    }
+
 }
