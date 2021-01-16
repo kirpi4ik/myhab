@@ -7,6 +7,7 @@ import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.device.DeviceStatus
 import eu.devexpert.madhouse.domain.infra.Zone
 import eu.devexpert.madhouse.domain.job.EventData
+import eu.devexpert.madhouse.jobs.PortValueReaderJob
 import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
@@ -60,6 +61,7 @@ class EventService implements EventPublisher {
             }
         }
         publish(TopicName.EVT_LOG.id(), event.data)
+//        PortValueReaderJob.triggerNow();
     }
 
     @Transactional
@@ -84,6 +86,7 @@ class EventService implements EventPublisher {
                             break
                     }
                     publish(TopicName.EVT_LOG.id(), event.data)
+//                    PortValueReaderJob.triggerNow();
                 }
             }
         }
