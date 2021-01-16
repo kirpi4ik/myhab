@@ -132,6 +132,22 @@ export const PUSH_EVENT = gql`
         }
     }
 `;
+export const PERIPHERAl_EVENT_LOGS = gql`
+    query eventsByP2($p2:String!, $count: Int!, $offset:Int!){
+        eventsByP2(p2:$p2, count: $count, offset:$offset) {
+            id
+            uid
+            tsCreated            
+            entityType
+            p4
+            p6
+            p2
+            p3
+            p1
+            p0
+        }
+    }
+`;
 export const USERS_GET_ALL = gql`
     {
         userList{

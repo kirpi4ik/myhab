@@ -19,10 +19,10 @@
                             <TempDisplay :zone="zone" :name="zone.name" v-if="categoryUid === peripheralHeatUid"/>
                         </div>
                         <div v-on:click="navZone(zone.uid)" style="cursor:pointer; height: 100%">
-                            <h2 class="mb-0" >{{zone.name}}</h2>
+                            <h2 class="mb-0">{{zone.name}}</h2>
                         </div>
                     </div>
-                    <slot name="footer" class="card-footer" >
+                    <slot name="footer" class="card-footer">
                         <div class="zone-card-footer" v-on:click="navZone(zone.uid)" style="cursor:pointer">
                             <slot></slot>
                         </div>
@@ -171,7 +171,10 @@
 </script>
 <style scoped>
     .zone-card-background {
-        background-image: linear-gradient(#4f6167, #8e949f);
+        display: block;
+        position: relative;
+        background-image: url("../../assets/images/layer-1.png"), linear-gradient(#546e82, #7c919f);
+        background-size: 300px;
     }
 
     .card-background {
