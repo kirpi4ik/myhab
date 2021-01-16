@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 @Transactional
 class HeatingControlJob implements Job, EventPublisher {
     static triggers = {
-        simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(3)
+        simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(1)
     }
     public static final String PERIPHERAL_HEAT_CTRL_CATEGORY = "HEAT"
     public static final String PERIPHERAL_TEMPERATURE_SENSOR_CATEGORY = 'TEMP'
@@ -42,10 +42,14 @@ class HeatingControlJob implements Job, EventPublisher {
         zonesWithScheduledTemp.each { zone ->
             def desiredTempForActuator = getDesiredTemperature(zone)
             def currentTemperatures = getCurrentTempSInZone(zone)
-            if (desiredTempForActuator != null && currentTemperatures.size() > 0) {
-                //there is at least one thermo sensor
-                def currentTemp = currentTemperatures[0]
-
+            def currentTemp
+            if (desiredTempForActuator != null) {
+                if (currentTemperatures.size() > 0) {
+                    //there is at least one thermo sensor
+                    currentTemp = currentTemperatures[0]
+                } else {
+                    currentTemp = 0
+                }
                 Set<DevicePeripheral> actuatorHeatCtrlSet = DevicePeripheral.findAll("select dp from  DevicePeripheral dp where ?0 in elements(zones) and dp.category.name = ?1", [zone], PERIPHERAL_HEAT_CTRL_CATEGORY)
                 actuatorHeatCtrlSet.each { actuator ->
                     if (currentTemp <= desiredTempForActuator) {
@@ -56,6 +60,7 @@ class HeatingControlJob implements Job, EventPublisher {
 
                     }
                 }
+
             }
         }
         actions.each { actuatorUid, action ->
