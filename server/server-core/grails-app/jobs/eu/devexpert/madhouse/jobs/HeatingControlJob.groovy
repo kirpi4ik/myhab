@@ -1,6 +1,7 @@
 package eu.devexpert.madhouse.jobs
 
 import eu.devexpert.madhouse.domain.Configuration
+import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.infra.Zone
 import grails.events.EventPublisher
@@ -47,26 +48,24 @@ class HeatingControlJob implements Job, EventPublisher {
                 Set<DevicePeripheral> actuatorHeatCtrlSet = DevicePeripheral.findAll("select dp from  DevicePeripheral dp where ?0 in elements(zones) and dp.category.name = ?1", [zone], PERIPHERAL_HEAT_CTRL_CATEGORY)
                 actuatorHeatCtrlSet.each { actuator ->
                     if (currentTemp <= desiredTempForActuator) {
-                        actions << ["${actuator.id}": "ON"]
+                        actions << ["${actuator.uid}": "ON"]
 
                     } else {
-                        actions << ["${actuator.id}": "OFF"]
+                        actions << ["${actuator.uid}": "OFF"]
 
                     }
                 }
-
             }
         }
-        actions.each { actuatorId, action ->
-            def actuator = DevicePeripheral.findById(Long.valueOf(actuatorId))
-            if (action == "ON") {
-                log.debug("HEAT STARTING : ${actuator.name}")
-                heatService.heatOn(actuator)
-            } else if (action == "OFF") {
-                log.debug("HEAT CLOSING: ${actuator.name}")
-                heatService.heatOff(actuator)
-            }
-
+        actions.each { actuatorUid, action ->
+            publish(TopicName.EVT_HEAT.id(), [
+                    "p0": TopicName.EVT_HEAT.id(),
+                    "p1": "PERIPHERAL",
+                    "p2": actuatorUid,
+                    "p3": "thermostat",
+                    "p4": action,
+                    "p6": "system"
+            ])
         }
     }
 
