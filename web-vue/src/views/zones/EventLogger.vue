@@ -1,7 +1,7 @@
 <template>
     <div style="display: inline-block">
-        <CButton type="submit" size="sm" @click="openLog()" color="success">
-            <CIcon name="cil-list"/>
+        <CButton type="submit" size="sm" @click="openLog()" color="info" style="cursor: pointer">
+            <CIcon name="cil-list" style="cursor: pointer"/>
         </CButton>
         <CModal title="Evenimente"
                 color="success"
@@ -33,7 +33,7 @@
                 events: [],
                 tbl: {
                     fields: [
-                        {key: 'tsCreated', label: 'Data'},
+                        {key: 'strDate', label: 'Data'},
                         {key: 'p4', label: 'Valoare'},
                         {key: 'p3', label: 'Sursa'},
                         {key: 'p6', label: 'Context'},
@@ -55,7 +55,7 @@
                     response.data.eventsByP2.forEach(function (event, index) {
                         let date = new Date(event.tsCreated);
                         let strDate = (date.getMonth() < 10 ? '0' : '') + date.getMonth() + '/' + (date.getDate() < 10 ? '0' : '') + date.getDate() + ' ' + (date.getHours() < 10 ? '0' : '') + date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
-                        event.tsCreated = strDate
+                        event.strDate = strDate
                     });
                     this.events = response.data.eventsByP2
                 });

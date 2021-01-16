@@ -26,7 +26,6 @@ class Mutation implements EventPublisher {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def pushedEvent = environment.getArgument("input")
                 publish("${pushedEvent['p0']}", pushedEvent)
-                publish(TopicName.EVT_LOG.id(), pushedEvent)
                 return pushedEvent
             }
         }
