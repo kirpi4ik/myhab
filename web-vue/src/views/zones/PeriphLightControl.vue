@@ -23,6 +23,7 @@
                         </h4>
                     </div>
                     <div style="display: inline-block; width: 100%;" v-if="hasRole(['ROLE_ADMIN'])">
+                        <EventLogger :peripheral="peripheral" :name="peripheral.data.id"></EventLogger>
                         <CDropdown color="transparent p-0" placement="bottom-end" :ref="'dropdown-'+peripheral.data.id">
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
@@ -74,6 +75,7 @@
 
 <script>
     import {authenticationService} from '@/_services';
+    import EventLogger from './EventLogger'
     import {
         CONFIGURATION_GET_VALUE,
         CONFIGURATION_DELETE,
@@ -86,6 +88,9 @@
         name: 'PeriphLightControl',
         props: {
             peripheral: Object
+        },
+        components: {
+            EventLogger
         },
         created() {
             this.loadConfig();

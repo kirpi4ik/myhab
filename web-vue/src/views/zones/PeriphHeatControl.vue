@@ -12,29 +12,7 @@
                         </CBadge>
                     </div>
                     <div v-if="hasRole(['ROLE_ADMIN'])" style="margin-top: -20px;">
-                        <CDropdown color="transparent p-0" placement="bottom-end" :ref="'dropdown-'+peripheral.data.id" :disabled="peripheral.deviceState != 'ONLINE'">
-                            <template #toggler-content>
-                                <CIcon name="cil-settings"/>
-                            </template>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 22)">
-                                22 &#8451;
-                            </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 23)">
-                                23 &#8451;
-                            </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 24)">
-                                24 &#8451;
-                            </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 25)">
-                                25 &#8451;
-                            </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', 26)">
-                                26 &#8451;
-                            </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.temp.allDay.value', null)">
-                                Specifica temp.
-                            </CDropdownItem>
-                        </CDropdown>
+                        <EventLogger :peripheral="peripheral" :name="peripheral.data.id"></EventLogger>
                     </div>
                     <div style="display: inline-block; float: right; margin-top: -20px;">
                         <font-awesome-icon icon="fire-alt" size="3x" :class="`zone-icon-${peripheral.state}`"/>
@@ -65,10 +43,9 @@
 
 <script>
     import {authenticationService} from '@/_services';
+    import EventLogger from './EventLogger'
     import {
         CONFIGURATION_DELETE,
-        CONFIGURATION_REMOVE_CONFIG,
-        CONFIGURATION_GET_LIST_VALUE,
         CONFIGURATION_GET_VALUE,
         CONFIGURATION_SET_VALUE,
         PUSH_EVENT
@@ -76,6 +53,9 @@
 
     export default {
         name: 'PeriphHeatControl',
+        components: {
+            EventLogger
+        },
         props: {
             peripheral: Object
         },

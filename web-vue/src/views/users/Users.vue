@@ -90,7 +90,7 @@
                 this.$apollo.mutate({
                     mutation: USER_DELETE, variables: {id: this.selectedItem.id}
                 }).then(response => {
-                    this.deleteConfirmShow = false
+                    this.deleteConfirmShow = false;
                     this.loadUsers();
                 });
             },
@@ -103,6 +103,7 @@
                     variables: {},
                     fetchPolicy: 'network-only'
                 }).then(response => {
+                    debugger
                     this.items = response.data.userList;
                 });
             },
