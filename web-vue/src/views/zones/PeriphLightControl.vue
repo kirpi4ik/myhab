@@ -52,7 +52,29 @@
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', null)">Nelimitat
 
                             </CDropdownItem>
+                            <CDropdownItem v-on:click="openPicker()" v-if="hasRGBSupport">Culoare</CDropdownItem>
                         </CDropdown>
+                        <CModal :title="'Setari culoare - '+peripheral.data.name"
+                                color="success"
+                                :show.sync="showRGB" v-if="hasRGBSupport">
+                            <div style="display: inline">
+                                <div style="display: inline-block">
+                                    <sketch-picker v-model="colors" :name="peripheral.data.uid" @input="updateValue" :disableAlpha="true"/>
+                                </div>
+                                <div style="display: inline-block; margin: 10px; vertical-align: top; color: #0b2e13" >
+                                    <CInputCheckbox
+                                            label="Random"
+                                            :value.sync="rgbRandom"
+                                            :checked.sync="rgbRandom"
+                                            :inline="true"
+                                            @update:checked="saveConfig(peripheral.data.id, 'key.light.rgbRandom', rgbRandom)"
+                                    />
+                                </div>
+                            </div>
+                            <template #footer>
+                                <CButton @click="showRGB = false" color="danger">Inchide</CButton>
+                            </template>
+                        </CModal>
                     </div>
                 </div>
             </div>
@@ -76,11 +98,15 @@
 <script>
     import {authenticationService} from '@/_services';
     import EventLogger from './EventLogger'
+    import {Sketch} from 'vue-color'
+
+
     import {
         CONFIGURATION_GET_VALUE,
         CONFIGURATION_DELETE,
         CONFIGURATION_SET_VALUE,
         CACHE_GET_VALUE,
+        SET_COLOR,
         PUSH_EVENT
     } from "../../graphql/zones";
 
@@ -90,7 +116,8 @@
             peripheral: Object
         },
         components: {
-            EventLogger
+            EventLogger,
+            'sketch-picker': Sketch
         },
         created() {
             this.loadConfig();
@@ -98,18 +125,47 @@
         data() {
             return {
                 peripheralTimeout: null,
-                peripheralTimeoutOn: null
-
+                peripheralTimeoutOn: null,
+                hasRGBSupport: false,
+                rgbRandom: false,
+                showRGB: false,
+                colors: {
+                    hex: '#194d33',
+                    hex8: '#194D33A8',
+                    hsl: {h: 150, s: 0.5, l: 0.2, a: 1},
+                    hsv: {h: 150, s: 0.66, v: 0.30, a: 1},
+                    rgba: {r: 25, g: 77, b: 51, a: 1},
+                    a: 1
+                }
             }
         },
         methods: {
             loadConfig: function () {
+                this.peripheral.show = false;
                 this.$apollo.query({
                     query: CONFIGURATION_GET_VALUE,
                     variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.on.timeout'},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.peripheralTimeout = response.data.configPropertyByKey
+                });
+                this.$apollo.query({
+                    query: CONFIGURATION_GET_VALUE,
+                    variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.light.hasRGBSupport'},
+                    fetchPolicy: 'network-only'
+                }).then(response => {
+                    if (response.data.configPropertyByKey != null) {
+                        this.hasRGBSupport = (response.data.configPropertyByKey.value == 'true')
+                        this.$apollo.query({
+                            query: CONFIGURATION_GET_VALUE,
+                            variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.light.rgbRandom'},
+                            fetchPolicy: 'network-only'
+                        }).then(response => {
+                            if (response.data.configPropertyByKey != null) {
+                                this.rgbRandom = (response.data.configPropertyByKey.value == 'true')
+                            }
+                        });
+                    }
                 });
                 this.$apollo.query({
                     query: CACHE_GET_VALUE,
@@ -160,6 +216,28 @@
                 return currentUser.permissions.filter(function (userRole) {
                     return roles.includes(userRole);
                 }).length > 0;
+            },
+            openPicker: function () {
+                this.showRGB = true;
+            },
+            updateValue: function () {
+                let color = {
+                    rgb: this.colors.rgba,
+                    hex: this.colors.hex
+                }
+                let event = {
+                    "p0": "evt_light_set_color",
+                    "p1": "PERIPHERAL",
+                    "p2": this.peripheral.data.uid,
+                    "p3": "mweb",
+                    "p4": JSON.stringify(color),
+                    "p6": authenticationService.currentUserValue.login
+                };
+                this.$apollo.mutate({
+                    mutation: PUSH_EVENT, variables: {input: event}
+                }).then(response => {
+
+                });
             }
         }
     }
