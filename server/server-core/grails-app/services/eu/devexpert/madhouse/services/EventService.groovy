@@ -5,12 +5,15 @@ import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.device.DeviceStatus
+import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.infra.Zone
 import eu.devexpert.madhouse.domain.job.EventData
 import eu.devexpert.madhouse.jobs.PortValueReaderJob
+import eu.devexpert.madhouse.utils.DeviceHttpService
 import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
+import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
 @Slf4j
@@ -62,6 +65,31 @@ class EventService implements EventPublisher {
         }
         publish(TopicName.EVT_LOG.id(), event.data)
 //        PortValueReaderJob.triggerNow();
+    }
+
+    @Transactional
+    @Subscriber('evt_light_set_color')
+    def receiveColorEvent(event) {
+        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
+            def peripheral = DevicePeripheral.findByUid(event.data.p2)
+            def args = [:]
+            args.portUids = []
+            peripheral.getConnectedTo().each { port ->
+                args.portUids << port.uid
+            }
+            try {
+                def color = new JsonSlurper().parseText(event.data.p4)
+                def b = DevicePort.findById(22632)
+                def r = DevicePort.findById(22633)
+                def g = DevicePort.findById(22634)
+                new DeviceHttpService(port: r, action: color.rgb.r).writeState()
+                new DeviceHttpService(port: g, action: color.rgb.g).writeState()
+                new DeviceHttpService(port: b, action: color.rgb.b).writeState()
+
+            } catch (Exception ex) {
+                ex.printStackTrace()
+            }
+        }
     }
 
     @Transactional
