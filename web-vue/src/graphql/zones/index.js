@@ -451,5 +451,13 @@ export const CONFIGURATION_DELETE = gql`
             error
         }
     }
+`;
+export const SET_COLOR = gql`
+    mutation ($color: Color!){
+        setColor(color: $color) {
+            success
+            error
+        }
+    }
 
 `;
