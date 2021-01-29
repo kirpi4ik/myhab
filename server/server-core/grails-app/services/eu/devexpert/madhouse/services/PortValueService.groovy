@@ -1,5 +1,6 @@
 package eu.devexpert.madhouse.services
 
+import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.device.port.PortValue
@@ -50,7 +51,7 @@ class PortValueService implements EventPublisher {
                 if (devicePort.value == null || !devicePort.value.equalsIgnoreCase(ValueParser.parser(devicePort).apply(newValue))) {
                     publish(TopicName.EVT_PORT_VALUE_CHANGED.id(), new EventData().with {
                         p0 = TopicName.EVT_PORT_VALUE_CHANGED.id()
-                        p1 = "PORT"
+                        p1 = EntityType.PORT.name()
                         p2 = "${devicePort.uid}"
                         p3 = "cron"
                         p4 = "$newValue"

@@ -1,5 +1,6 @@
 package eu.devexpert.madhouse.controller
 
+import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.DevicePort
@@ -29,7 +30,7 @@ class EventController implements EventPublisher {
         }
         EventData eObj = new EventData().with {
             p0 = TopicName.byOrder(input[2] as Integer).id()
-            p1 = "PORT"
+            p1 = EntityType.PORT.name()
             p2 = "${devicePort.uid}"
             p3 = "sensor-${input[0]}-${input[1]}"
             p4 = "ON"

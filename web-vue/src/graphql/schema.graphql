@@ -5,6 +5,11 @@ schema {
     mutation: Mutation
 }
 
+type BradCrumbLink {
+    name: String
+    zoneUid: String
+}
+
 type Cable {
     category: PeripheralCategory
     code: String
@@ -29,6 +34,35 @@ type Cable {
     zones: [Zone]
 }
 
+type CacheResult {
+    cacheKey: String!
+    cacheName: String!
+    cachedValue: String
+}
+
+type Configuration {
+    description: String
+    entityId: Long
+    entityType: EntityType
+    "A list of validation errors on the entity"
+    errors: [Error]
+    id: Long
+    key: String
+    name: String
+    value: String
+    version: Long
+}
+
+type ConfigurationDeleteByIdResult {
+    error: String
+    success: Boolean
+}
+
+type ConfigurationDeleteByKeyResult {
+    error: String
+    success: Boolean
+}
+
 type CronTrigger {
     entityType: EntityType
     "A list of validation errors on the entity"
@@ -42,6 +76,11 @@ type CronTrigger {
     version: Long
 }
 
+type DeleteResponseCustom {
+    error: String
+    success: Boolean
+}
+
 "Whether or not the operation was successful"
 type DeleteResult {
     error: String
@@ -51,6 +90,7 @@ type DeleteResult {
 type Device {
     authAccounts: [DeviceAccount]
     code: String
+    configurations: [Configuration]
     description: String
     entityType: EntityType
     "A list of validation errors on the entity"
@@ -62,6 +102,7 @@ type Device {
     offlineScenario: String
     ports: [DevicePort]
     rack: Rack
+    status: DeviceStatus
     tsCreated: Date
     tsUpdated: Date
     type: DeviceType
@@ -101,6 +142,7 @@ type DevicePeripheral {
     category: PeripheralCategory
     code: String
     codeOld: String
+    configurations: [Configuration]
     connectedTo: [DevicePort]
     description: String
     entityType: EntityType
@@ -120,6 +162,7 @@ type DevicePeripheral {
 type DevicePort {
     action: String
     cables: [Cable]
+    configurations: [Configuration]
     description: String
     device: Device
     entityType: EntityType
@@ -156,22 +199,6 @@ type DeviceType {
     tsCreated: Date
     tsUpdated: Date
     uid: String
-    version: Long
-}
-
-type EntityConfiguration {
-    cfEntityType: String
-    cfEntityUid: String
-    cfKey: String
-    description: String
-    entityType: EntityType
-    "A list of validation errors on the entity"
-    errors: [Error]
-    id: Long
-    tsCreated: Date
-    tsUpdated: Date
-    uid: String
-    value: String
     version: Long
 }
 
@@ -304,9 +331,14 @@ type Layer {
 }
 
 type Mutation {
+    addListItemProperty(entityId: Long!, entityType: EntityType!, key: String!, value: String!): Configuration
     cableCreate(cable: CableCreate): Cable
     cableDelete(id: Long!): DeleteResult
     cableUpdate(cable: CableUpdate, id: Long!): Cable
+    configDeleteByKey(entityId: Long!, entityType: EntityType!, key: String!): ConfigurationDeleteByKeyResult
+    configurationCreate(configuration: ConfigurationCreate): Configuration
+    configurationDelete(id: Long!): DeleteResult
+    configurationUpdate(configuration: ConfigurationUpdate, id: Long!): Configuration
     deviceAccountCreate(deviceAccount: DeviceAccountCreate): DeviceAccount
     deviceAccountDelete(id: Long!): DeleteResult
     deviceAccountUpdate(deviceAccount: DeviceAccountUpdate, id: Long!): DeviceAccount
@@ -325,9 +357,9 @@ type Mutation {
     deviceTypeDelete(id: Long!): DeleteResult
     deviceTypeUpdate(deviceType: DeviceTypeUpdate, id: Long!): DeviceType
     deviceUpdate(device: DeviceUpdate, id: Long!): Device
-    entityConfigurationCreate(entityConfiguration: EntityConfigurationCreate): EntityConfiguration
-    entityConfigurationDelete(id: Long!): DeleteResult
-    entityConfigurationUpdate(entityConfiguration: EntityConfigurationUpdate, id: Long!): EntityConfiguration
+    eventDataCreate(eventData: EventDataCreate): EventData
+    eventDataDelete(id: Long!): DeleteResult
+    eventDataUpdate(eventData: EventDataUpdate, id: Long!): EventData
     eventLogCreate(eventLog: EventLogCreate): EventLog
     eventLogDelete(id: Long!): DeleteResult
     eventLogUpdate(eventLog: EventLogUpdate, id: Long!): EventLog
@@ -347,18 +379,31 @@ type Mutation {
     rackCreate(rack: RackCreate): Rack
     rackDelete(id: Long!): DeleteResult
     rackUpdate(id: Long!, rack: RackUpdate): Rack
+    removeConfig(id: Long!): ConfigurationDeleteByIdResult
     roleCreate(role: RoleCreate): Role
     roleDelete(id: Long!): DeleteResult
     roleUpdate(id: Long!, role: RoleUpdate): Role
+    savePropertyValue(entityId: Long!, entityType: EntityType!, key: String!, value: String!): Configuration
     scenarioCreate(scenario: ScenarioCreate): Scenario
     scenarioDelete(id: Long!): DeleteResult
     scenarioUpdate(id: Long!, scenario: ScenarioUpdate): Scenario
     userCreate(user: UserCreate): User
     userDelete(id: Long!): DeleteResult
+    userDeleteCascade(id: Long!): DeleteResponseCustom
+    userRolesSave(input: SaveUserRoles): MutationResponse
     userUpdate(id: Long!, user: UserUpdate): User
     zoneCreate(zone: ZoneCreate): Zone
     zoneDelete(id: Long!): DeleteResult
     zoneUpdate(id: Long!, zone: ZoneUpdate): Zone
+}
+
+type MutationResponse {
+    error: String
+    success: Boolean
+}
+
+type Navigation {
+    breadcrumb(zoneUid: String): [BradCrumbLink]
 }
 
 type NetworkAddressEmbedded {
@@ -376,6 +421,7 @@ type PatchPanel {
     errors: [Error]
     id: Long
     rack: Rack
+    size: Int
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -390,6 +436,7 @@ type PeripheralCategory {
     id: Long
     name: String
     peripherals: [DevicePeripheral]
+    title: String
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -411,61 +458,76 @@ type PortValue {
 
 type Query {
     cable(id: Long!): Cable
+    cableByUid(uid: String!): Cable
     cableCount: Int
-    cableList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Cable]
+    cableList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Cable]
+    cache(cacheKey: String!, cacheName: String!): CacheResult
+    configKeysByEntity(entityType: EntityType!): [String]
+    configListByKey(entityId: Long!, entityType: EntityType!, key: String!): [Configuration]
+    configPropertyByKey(entityId: Long!, entityType: EntityType!, key: String!): Configuration
+    configuration(id: Long!): Configuration
+    configurationCount: Int
+    configurationList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Configuration]
     device(id: Long!): Device
     deviceAccount(id: Long!): DeviceAccount
     deviceAccountCount: Int
-    deviceAccountList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DeviceAccount]
+    deviceAccountList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceAccount]
+    deviceByUid(uid: String!): Device
     deviceCategory(id: Long!): DeviceCategory
     deviceCategoryCount: Int
-    deviceCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DeviceCategory]
+    deviceCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceCategory]
     deviceCount: Int
-    deviceList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Device]
+    deviceList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Device]
     devicePeripheral(id: Long!): DevicePeripheral
+    devicePeripheralByUid(uid: String!): DevicePeripheral
     devicePeripheralCount: Int
-    devicePeripheralList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DevicePeripheral]
+    devicePeripheralList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DevicePeripheral]
     devicePort(id: Long!): DevicePort
     devicePortCount: Int
-    devicePortList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DevicePort]
+    devicePortList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DevicePort]
     deviceType(id: Long!): DeviceType
     deviceTypeCount: Int
-    deviceTypeList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [DeviceType]
-    entityConfiguration(id: Long!): EntityConfiguration
-    entityConfigurationCount: Int
-    entityConfigurationList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [EntityConfiguration]
+    deviceTypeList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceType]
+    eventData(id: Long!): EventData
+    eventDataCount: Int
+    eventDataList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [EventData]
     eventLog(id: Long!): EventLog
     eventLogCount: Int
-    eventLogList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [EventLog]
+    eventLogList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [EventLog]
+    eventsByP2(count: Int!, offset: Int!, p2: String!): [EventData]
     layer(id: Long!): Layer
     layerCount: Int
-    layerList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Layer]
+    layerList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Layer]
+    navigation: Navigation
     patchPanel(id: Long!): PatchPanel
     patchPanelCount: Int
-    patchPanelList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [PatchPanel]
+    patchPanelList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PatchPanel]
     peripheralCategory(id: Long!): PeripheralCategory
     peripheralCategoryCount: Int
-    peripheralCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [PeripheralCategory]
+    peripheralCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PeripheralCategory]
     portValue(id: Long!): PortValue
     portValueCount: Int
-    portValueList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [PortValue]
+    portValueList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PortValue]
     rack(id: Long!): Rack
     rackCount: Int
-    rackList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Rack]
+    rackList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Rack]
     role(id: Long!): Role
     roleCount: Int
-    roleList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Role]
+    roleList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Role]
     scenario(id: Long!): Scenario
     scenarioCount: Int
-    scenarioList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Scenario]
+    scenarioList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Scenario]
     user(id: Long!): User
+    userByUid(uid: String!): User
     userCount: Int
-    userList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [User]
+    userList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [User]
+    userRolesForUser(userUid: String!): [UserRole]
     zone(id: Long!): Zone
     zoneByUid(uid: String!): Zone
     zoneCount: Int
-    zoneList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String, uid: String): [Zone]
-    zonesByParentUid(uid: String!): ZonePagedResult
+    zoneList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Zone]
+    zonesByParentUid(uid: String!): [Zone]
+    zonesRoot: [Zone]
 }
 
 type Rack {
@@ -511,22 +573,31 @@ type User {
     accountLocked: Boolean
     email: String
     enabled: Boolean
+    entityType: EntityType
     "A list of validation errors on the entity"
     errors: [Error]
     favJobs: [Job]
     firstName: String
     id: Long
     lastName: String
-    "some name"
-    name: String @deprecated(reason : "To be removed August 1st, 2020")
+    name: String
     password: String
     passwordExpired: Boolean
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     username: String
+}
+
+type UserRole {
+    roleId: ID!
+    userId: ID!
 }
 
 type Zone {
     cables: [Cable]
     categories: [String]
+    configurations: [Configuration]
     description: String
     entityType: EntityType
     "A list of validation errors on the entity"
@@ -542,14 +613,14 @@ type Zone {
     zones: [Zone]
 }
 
-type ZonePagedResult {
-    results: [Zone]
-    totalCount: Long
-}
-
 enum DeviceModel {
     ESP8266_1
     MEGAD_2561_RTC
+}
+
+enum DeviceStatus {
+    OFFLINE
+    ONLINE
 }
 
 enum EntityType {
@@ -558,6 +629,7 @@ enum EntityType {
     EVENT_DATA
     PATCH_PANEL
     PERIPHERAL
+    PERIPHERAL_CATEGORY
     PORT
     PORT_VALUE
     ZONE
@@ -600,9 +672,9 @@ input CableCreate {
     patchPanelPort: String
     peripherals: [DevicePeripheralCreateNested!]
     rack: RackCreateNested
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     zones: [ZoneCreateNested!]
 }
 
@@ -661,6 +733,45 @@ input CableUpdateNested {
     uid: String
 }
 
+input ConfigurationCreate {
+    description: String
+    entityId: Long!
+    entityType: EntityType!
+    key: String!
+    name: String
+    value: String!
+}
+
+input ConfigurationCreateNested {
+    description: String
+    entityId: Long
+    entityType: EntityType
+    id: Long
+    key: String
+    name: String
+    value: String
+}
+
+input ConfigurationUpdate {
+    description: String
+    entityId: Long
+    entityType: EntityType
+    key: String
+    name: String
+    value: String
+    version: Long
+}
+
+input ConfigurationUpdateNested {
+    description: String
+    entityId: Long
+    entityType: EntityType
+    id: Long
+    key: String
+    name: String
+    value: String
+}
+
 input CronTriggerCreateNested {
     entityType: EntityType
     expression: String
@@ -684,9 +795,9 @@ input DeviceAccountCreate {
     entityType: EntityType
     isDefault: Boolean
     password: String
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     username: String
 }
 
@@ -728,9 +839,9 @@ input DeviceCategoryCreate {
     description: String!
     entityType: EntityType
     name: String!
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
 }
 
 input DeviceCategoryUpdate {
@@ -754,10 +865,11 @@ input DeviceCreate {
     offlineScenario: String
     ports: [DevicePortCreateNested!]
     rack: RackCreateNested
-    tsCreated: Date!
-    tsUpdated: Date!
+    status: DeviceStatus
+    tsCreated: Date
+    tsUpdated: Date
     type: DeviceTypeCreateNested
-    uid: String!
+    uid: String
 }
 
 input DeviceCreateNested {
@@ -771,6 +883,7 @@ input DeviceCreateNested {
     networkAddress: NetworkAddressCreateEmbedded
     offlineScenario: String
     ports: [DevicePortCreateNested]
+    status: DeviceStatus
     tsCreated: Date
     tsUpdated: Date
     type: DeviceTypeCreateNested
@@ -787,9 +900,9 @@ input DevicePeripheralCreate {
     maxAmp: Float!
     model: String
     name: String
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     zones: [ZoneCreateNested!]
 }
 
@@ -857,10 +970,10 @@ input DevicePortCreate {
     scenarios: [ScenarioCreateNested!]
     state: PortState
     subscriptions: [EventSubscriptionCreateNested!]
-    tsCreated: Date!
-    tsUpdated: Date!
+    tsCreated: Date
+    tsUpdated: Date
     type: PortType
-    uid: String!
+    uid: String
     value: String
 }
 
@@ -946,9 +1059,9 @@ input DevicePortUpdateNested {
 input DeviceTypeCreate {
     entityType: EntityType
     name: String!
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
 }
 
 input DeviceTypeCreateNested {
@@ -989,6 +1102,7 @@ input DeviceUpdate {
     offlineScenario: String
     ports: [DevicePortUpdateNested]
     rack: RackUpdateNested
+    status: DeviceStatus
     tsCreated: Date
     tsUpdated: Date
     type: DeviceTypeUpdateNested
@@ -1007,35 +1121,11 @@ input DeviceUpdateNested {
     networkAddress: NetworkAddressUpdateEmbedded
     offlineScenario: String
     ports: [DevicePortUpdateNested]
+    status: DeviceStatus
     tsCreated: Date
     tsUpdated: Date
     type: DeviceTypeUpdateNested
     uid: String
-}
-
-input EntityConfigurationCreate {
-    cfEntityType: String!
-    cfEntityUid: String!
-    cfKey: String!
-    description: String!
-    entityType: EntityType
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
-    value: String!
-}
-
-input EntityConfigurationUpdate {
-    cfEntityType: String
-    cfEntityUid: String
-    cfKey: String
-    description: String
-    entityType: EntityType
-    tsCreated: Date
-    tsUpdated: Date
-    uid: String
-    value: String
-    version: Long
 }
 
 input EventDatInput {
@@ -1048,10 +1138,40 @@ input EventDatInput {
     p6: String
 }
 
+input EventDataCreate {
+    category: String
+    entityType: EntityType
+    p0: String!
+    p1: String!
+    p2: String!
+    p3: String!
+    p4: String
+    p5: String
+    p6: String
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+}
+
 input EventDataCreateNested {
     category: String
     entityType: EntityType
     id: Long
+    p0: String
+    p1: String
+    p2: String
+    p3: String
+    p4: String
+    p5: String
+    p6: String
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+}
+
+input EventDataUpdate {
+    category: String
+    entityType: EntityType
     p0: String
     p1: String
     p2: String
@@ -1106,9 +1226,9 @@ input EventLogCreate {
     entityType: EntityType
     payload: String!
     peripheral: DevicePeripheralCreateNested!
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
 }
 
 input EventLogUpdate {
@@ -1203,9 +1323,9 @@ input LayerCreate {
     entityType: EntityType
     name: String!
     peripherals: [DevicePeripheralCreateNested!]
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
 }
 
 input LayerUpdate {
@@ -1237,9 +1357,10 @@ input PatchPanelCreate {
     description: String!
     entityType: EntityType
     rack: RackCreateNested!
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    size: Int
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
 }
 
 input PatchPanelCreateNested {
@@ -1249,6 +1370,7 @@ input PatchPanelCreateNested {
     entityType: EntityType
     id: Long
     rack: RackCreateNested
+    size: Int
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1260,6 +1382,7 @@ input PatchPanelUpdate {
     description: String
     entityType: EntityType
     rack: RackUpdateNested
+    size: Int
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1273,6 +1396,7 @@ input PatchPanelUpdateNested {
     entityType: EntityType
     id: Long
     rack: RackUpdateNested
+    size: Int
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1283,9 +1407,10 @@ input PeripheralCategoryCreate {
     entityType: EntityType
     name: String!
     peripherals: [DevicePeripheralCreateNested!]
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    title: String
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
 }
 
 input PeripheralCategoryCreateNested {
@@ -1294,6 +1419,7 @@ input PeripheralCategoryCreateNested {
     id: Long
     name: String
     peripherals: [DevicePeripheralCreateNested]
+    title: String
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1304,6 +1430,7 @@ input PeripheralCategoryUpdate {
     entityType: EntityType
     name: String
     peripherals: [DevicePeripheralUpdateNested]
+    title: String
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1316,6 +1443,7 @@ input PeripheralCategoryUpdateNested {
     id: Long
     name: String
     peripherals: [DevicePeripheralUpdateNested]
+    title: String
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1325,9 +1453,9 @@ input PortValueCreate {
     entityType: EntityType
     event: EventDataCreateNested
     portUid: String!
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     value: String!
 }
 
@@ -1347,9 +1475,9 @@ input RackCreate {
     devices: [DeviceCreateNested!]
     entityType: EntityType
     name: String
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     zone: ZoneCreateNested
 }
 
@@ -1401,14 +1529,19 @@ input RoleUpdate {
     version: Long
 }
 
+input SaveUserRoles {
+    userRoles: [UserRoleRef]
+    userUid: String!
+}
+
 input ScenarioCreate {
     body: String!
     entityType: EntityType
     name: String
     ports: [DevicePortCreateNested!]
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
 }
 
 input ScenarioCreateNested {
@@ -1447,12 +1580,21 @@ input UserCreate {
     accountLocked: Boolean!
     email: String
     enabled: Boolean!
+    entityType: EntityType
     favJobs: [JobCreateNested!]
     firstName: String
     lastName: String
     password: String!
     passwordExpired: Boolean!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     username: String!
+}
+
+input UserRoleRef {
+    roleId: ID!
+    userId: ID!
 }
 
 input UserUpdate {
@@ -1460,31 +1602,37 @@ input UserUpdate {
     accountLocked: Boolean
     email: String
     enabled: Boolean
+    entityType: EntityType
     favJobs: [JobUpdateNested]
     firstName: String
     lastName: String
     password: String
     passwordExpired: Boolean
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     username: String
 }
 
 input ZoneCreate {
     cables: [CableCreateNested!]
     categories: [String!]
+    configurations: [ConfigurationCreate]
     description: String!
     entityType: EntityType
     name: String!
     parent: ZoneCreateNested!
     peripherals: [DevicePeripheralCreateNested!]
-    tsCreated: Date!
-    tsUpdated: Date!
-    uid: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     zones: [ZoneCreateNested!]
 }
 
 input ZoneCreateNested {
     cables: [CableCreateNested]
     categories: [String]
+    configurations: [ConfigurationCreateNested]
     description: String
     entityType: EntityType
     id: Long
@@ -1499,6 +1647,7 @@ input ZoneCreateNested {
 input ZoneUpdate {
     cables: [CableUpdateNested]
     categories: [String]
+    configurations: [ConfigurationUpdate]
     description: String
     entityType: EntityType
     name: String
@@ -1514,6 +1663,7 @@ input ZoneUpdate {
 input ZoneUpdateNested {
     cables: [CableUpdateNested]
     categories: [String]
+    configurations: [ConfigurationUpdateNested]
     description: String
     entityType: EntityType
     id: Long

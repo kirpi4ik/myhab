@@ -1,13 +1,9 @@
 <template>
     <div style="display: inline">
-        <div v-for="port in tempDisplay.portIds" style="display: inline-block" class="temp_display"> {{port.value}} &#176;C</div>
+        <div v-for="port in tempDisplay.portIds" style="display: inline-block" class="temp_display" v-bind:key="port"> {{port.value}} &#176;C</div>
     </div>
 </template>
 <script>
-    import {
-        CONFIGURATION_GET_LIST_VALUE,
-    } from "../../graphql/zones";
-
     export default {
         name: 'TempDisplay',
         props: {
