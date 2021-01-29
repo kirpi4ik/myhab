@@ -137,7 +137,7 @@ export const PERIPHERAl_EVENT_LOGS = gql`
         eventsByP2(p2:$p2, count: $count, offset:$offset) {
             id
             uid
-            tsCreated            
+            tsCreated
             entityType
             p4
             p6
@@ -304,10 +304,9 @@ export const PERIPHERAL_CREATE = gql`
     }
 `;
 export const PERIPHERAL_VALUE_UPDATE = gql`
-    mutation ($id:Long!, $devicePeripheralUpdate:DevicePeripheralUpdate) {
-        devicePeripheralUpdate(id:$id, devicePeripheral: $devicePeripheralUpdate){
-            id,
-            uid
+    mutation ($id:Long!, $devicePeripheralUpdate:DevicePeripheralUpdate!) {
+        updatePeripheral(id:$id, peripheral: $devicePeripheralUpdate){
+            success
         }
     }
 `;
@@ -329,6 +328,29 @@ export const PERIPHERAL_LIST_ALL = gql`
         }
     }
 `;
+export const PERIPHERAL_META_GET = gql`
+    {
+        peripheralCategoryList{
+            id
+            uid
+            title
+            name
+        }
+        zoneList{
+            id
+            uid
+            name
+            description
+        }
+        devicePortList{
+            id
+            uid
+            internalRef
+            name
+            description
+        }
+    }
+`;
 export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
     query devicePeripheralByUid($uid:String!){
         devicePeripheralByUid(uid: $uid) {
@@ -337,7 +359,47 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
             name
             description
             code
-
+            codeOld
+            model
+            maxAmp
+            category{
+                id
+                uid
+                title
+                name
+            }
+            connectedTo{
+                id
+                uid
+                internalRef
+                name
+                description
+            }
+            zones{
+                id
+                uid
+                name
+                description
+            }
+        }
+        peripheralCategoryList{
+            id
+            uid
+            title
+            name
+        }
+        zoneList{
+            id
+            uid
+            name
+            description
+        }
+        devicePortList{
+            id
+            uid
+            internalRef
+            name
+            description
         }
     }
 `;

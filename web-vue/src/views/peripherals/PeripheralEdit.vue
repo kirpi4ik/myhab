@@ -5,11 +5,11 @@
                 <CCard>
                     <CForm>
                         <CCardHeader>
-                            <strong>Edit peripheral </strong> <small>{{peripheral.name}}</small>
+                            <strong>{{ $t("peripheral.edit.nav_title") }} </strong> <small>{{peripheral.name}}</small>
                             <div class="card-header-actions">
                                 <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener"
                                    @click="$router.go(-1)">
-                                    <small class="text-muted">Cancel</small>
+                                    <small class="text-muted">{{ $t("actions.cancel") }}</small>
                                 </a>
                             </div>
                         </CCardHeader>
@@ -19,7 +19,7 @@
                                     <CInputCheckbox
                                             v-if="peripheralDetail.key.endsWith('ed')"
                                             :key="peripheralDetail.key"
-                                            :label="peripheralDetail.key"
+                                            :label="peripheralDetail.key.charAt(0).toUpperCase()+peripheralDetail.key.slice(1)"
                                             :value="peripheralDetail.value"
                                             :checked="peripheralDetail.value"
                                             @update:checked="check($event, peripheralDetail.key)"
@@ -27,35 +27,61 @@
                                             :ref="peripheralDetail.key"
                                     />
                                     <CInput v-if="!peripheralDetail.key.endsWith('ed')"
-                                            :label="peripheralDetail.key"
+                                            :label="peripheralDetail.key.charAt(0).toUpperCase()+peripheralDetail.key.slice(1)"
                                             :placeholder="peripheralDetail.key"
                                             :value="peripheralDetail.value"
                                             @input="updateFieldValue($event, peripheralDetail.key)"
                                             :ref="peripheralDetail.key"/>
                                 </CCol>
                             </CRow>
-                            <CRow v-for="(role, index) in roles" :key="`role-${index}`">
-                                <CCol sm="12">
-                                    <CInputCheckbox
-                                            :key="role.authority"
-                                            :label="role.authority"
-                                            :value="role.checked"
-                                            :checked="role.checked"
-                                            :inline="true"
-                                            @update:checked="updateRoleValue($event, role.id)"
-                                            :ref="role.authority"
-                                    />
-                                </CCol>
+                            <CRow>
+                                {{ $t("peripheral.fields.category") }}
+                                <multiselect
+                                        v-model="categories.selected"
+                                        :options="categories.options"
+                                        track-by="name"
+                                        label="name">
+                                </multiselect>
+                            </CRow>
+                            <CRow style="margin-top: 3px">
+                                {{ $t("peripheral.fields.connectedTo") }}
+                                <multiselect
+                                        v-model="connectedTo.selected"
+                                        :options="connectedTo.options"
+                                        track-by="name"
+                                        label="name"
+                                        multiple>
+                                    <template slot="option" slot-scope="props">
+                                        <div>
+                                            <span>{{ props.option.name }} - [{{props.option.internalRef}}] - {{ props.option.description }}</span>
+                                        </div>
+                                    </template>
+                                </multiselect>
+                            </CRow>
+                            <CRow style="margin-top: 3px">
+                                {{ $t("peripheral.fields.zones") }}
+                                <multiselect
+                                        v-model="zones.selected"
+                                        :options="zones.options"
+                                        track-by="name"
+                                        label="name"
+                                        multiple>
+                                    <template slot="option" slot-scope="props">
+                                        <div>
+                                            <span>{{ props.option.name }} - {{ props.option.description }}</span>
+                                        </div>
+                                    </template>
+                                </multiselect>
                             </CRow>
                         </CCardBody>
                         <CCardFooter>
                             <CButton type="submit" size="sm" color="primary" @click="save">
                                 <CIcon name="cil-check-circle"/>
-                                Save
+                                {{ $t("actions.save") }}
                             </CButton>
                             <CButton type="reset" size="sm" color="danger" @click="$router.go(-1)">
                                 <CIcon name="cil-ban"/>
-                                Cancel
+                                {{ $t("actions.cancel") }}
                             </CButton>
                         </CCardFooter>
                     </CForm>
@@ -67,10 +93,14 @@
 
 
 <script>
-    import {PERIPHERAL_VALUE_UPDATE, PERIPHERAL_GET_BY_ID_CHILDS, ROLES_GET_FOR_USER, ROLES_SAVE} from "../../graphql/zones";
+    import {PERIPHERAL_GET_BY_ID_CHILDS, PERIPHERAL_VALUE_UPDATE} from "../../graphql/zones";
+    import Multiselect from 'vue-multiselect'
 
     export default {
         name: 'PeripheralEdit',
+        components: {
+            'multiselect': Multiselect
+        },
         fields: [
             {key: 'key', _style: 'width:150px'},
             {key: 'value', _style: 'width:150px;'}
@@ -81,7 +111,19 @@
                 peripheral: [],
                 roles: [],
                 peripheralToUpdate: {},
-                readonly: ["id", "__typename", "uid", "name"]
+                readonly: ["id", "__typename", "uid", "category", "connectedTo", "zones"],
+                zones: {
+                    selected: null,
+                    options: []
+                },
+                categories: {
+                    selected: null,
+                    options: []
+                },
+                connectedTo: {
+                    selected: null,
+                    options: []
+                }
             }
         },
         created() {
@@ -95,67 +137,69 @@
             updateFieldValue(value, key) {
                 this.peripheralToUpdate[key] = value
             },
-            updateRoleValue(value, key) {
-                this.roles.forEach(function (role, index) {
-                    if (role.id == key) {
-                        role.checked = value;
-                    }
-                });
-
-            },
             save() {
+                this.peripheralToUpdate.category = this.categories.selected;
+                this.peripheralToUpdate.zones = this.zones.selected;
+                this.peripheralToUpdate.connectedTo = this.connectedTo.selected;
                 this.$apollo.mutate({
-                    mutation: PERIPHERAL_VALUE_UPDATE, variables: {id: this.peripheral.id, peripheral: this.peripheralToUpdate}
+                    mutation: PERIPHERAL_VALUE_UPDATE, variables: {id: this.peripheral.id, devicePeripheralUpdate: this.peripheralToUpdate}
                 }).then(response => {
-                    let roles = {
-                        "peripheralUid": this.peripheral.uid,
-                        "peripheralRoles": this.roles.filter(function (role) {
-                            return role.checked
-                        }.bind(this)).map(function (role, index) {
-                            return {"peripheralId": this.peripheral.id, "roleId": role.id};
-                        }.bind(this))
-                    };
-                    this.$apollo.mutate({
-                        mutation: ROLES_SAVE, variables: {input: roles}
-                    }).then(response => {
-                        this.$router.push({path: "/peripherals/" + this.$route.params.id + "/profile"})
-                    });
+                    this.$router.push({path: "/peripherals/" + this.$route.params.id + "/view"})
                 });
             },
+
             loadPeripheralByUidFromGet() {
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)
                 }.bind(this);
 
+                function cleanTypes() {
 
-                let loadRoles = function () {
-                    this.$apollo.query({
-                        query: ROLES_GET_FOR_USER,
-                        variables: {uid: this.peripheral.uid},
-                        fetchPolicy: 'network-only'
-                    }).then(response => {
-                        this.roles = response.data.roleList.map(function (role, index) {
-                            let found = response.data.peripheralRolesForPeripheral.filter(function (hasRole) {
-                                return role.id == hasRole.roleId
-                            });
-                            return {id: role.id, authority: role.authority, checked: found.length > 0};
-                        });
-                    });
-                }.bind(this);
+                }
 
                 this.$apollo.query({
                     query: PERIPHERAL_GET_BY_ID_CHILDS,
                     variables: {uid: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.peripheral = response.data.peripheralByUid;
-                    const peripheralDetailsToMap = this.peripheral ? Object.entries(this.peripheral) : [['id', 'Not found']]
-                    this.peripheralDetails = peripheralDetailsToMap.map(([key, value]) => {
+                    this.peripheral = response.data.devicePeripheralByUid;
+                    const peripheralDetailToMap = this.peripheral ? Object.entries(this.peripheral) : [['id', 'Not found']];
+                    this.peripheralDetails = peripheralDetailToMap.map(([key, value]) => {
                         return {key, value}
-                    }).filter(removeReadonly)
-                    loadRoles()
+                    }).filter(removeReadonly);
+                    let peripheral = {
+                        "id": this.peripheral.id
+                    };
+                    let cleanup = function (item, index) {
+                        delete item["__typename"]
+                    };
+                    let setParent = function (item, index) {
+                        item["peripherals"] = [peripheral]
+                    };
+
+                    cleanup(response.data.devicePeripheralByUid.category);
+
+                    response.data.devicePeripheralByUid.zones.forEach(cleanup);
+                    // response.data.devicePeripheralByUid.zones.forEach(setParent);
+                    response.data.devicePeripheralByUid.connectedTo.forEach(cleanup);
+                    // response.data.devicePeripheralByUid.connectedTo.forEach(setParent);
+                    response.data.peripheralCategoryList.forEach(setParent);
+                    response.data.peripheralCategoryList.forEach(cleanup);
+                    response.data.zoneList.forEach(cleanup);
+                    response.data.zoneList.forEach(setParent);
+                    response.data.devicePortList.forEach(cleanup);
+                    // response.data.devicePortList.forEach(setParent);
+
+                    this.categories.options = response.data.peripheralCategoryList;
+                    this.categories.selected = response.data.devicePeripheralByUid.category;
+                    this.zones.options = response.data.zoneList;
+                    this.zones.selected = response.data.devicePeripheralByUid.zones;
+                    this.connectedTo.options = response.data.devicePortList;
+                    this.connectedTo.selected = response.data.devicePeripheralByUid.connectedTo;
                 });
             }
         }
     }
 </script>
+<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
+

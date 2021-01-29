@@ -4,6 +4,8 @@ import Router from 'vue-router';
 import {authenticationService} from '@/_services';
 import {Role} from '@/_helpers';
 
+import i18n from './../i18n'
+
 // Containers
 const TheContainer = () => import('@/containers/TheContainer');
 
@@ -22,8 +24,8 @@ const Device = () => import('@/views/devices/Device');
 const DeviceEdit = () => import('@/views/devices/DeviceEdit');
 const DeviceNew = () => import('@/views/devices/DeviceNew');
 
-const Peripherals = () => import('@/views/peripherals/Peripherals');
-const Peripheral = () => import('@/views/peripherals/Peripheral');
+const PeripheralList = () => import('@/views/peripherals/PeripheralList');
+const PeripheralView = () => import('@/views/peripherals/PeripheralView');
 const PeripheralEdit = () => import('@/views/peripherals/PeripheralEdit');
 const PeripheralNew = () => import('@/views/peripherals/PeripheralNew');
 
@@ -56,26 +58,26 @@ function configRoutes() {
         {
             path: '/',
             redirect: '/dashboard',
-            name: 'Home',
+            name: i18n.t('breadcrumb.home'),
             component: TheContainer,
             children: [
                 {
                     path: 'dashboard',
-                    name: 'Dashboard',
+                    name: i18n.t('breadcrumb.dashboard'),
                     component: Dashboard,
                     meta: {authorize: [Role.Admin, Role.User]}
                 },
                 {
                     path: 'zones',
-                    name: 'Zones',
+                    name: i18n.t('breadcrumb.zones'),
                     component: Zones,
                     meta: {authorize: [Role.Admin, Role.User]}
                 },
                 {
                     path: 'users',
                     meta: {
-                        label: 'Users',
-                        reload: true,
+                        label: i18n.t('breadcrumb.users'),
+                        reload: true
                     },
                     component: RouteContainer,
                     children: [
@@ -88,17 +90,17 @@ function configRoutes() {
                         },
                         {
                             path: '/users/:id/profile',
-                            name: "Detalii utilizator",
+                            name: i18n.t('breadcrumb.user.details'),
                             component: User
                         },
                         {
                             path: '/users/:id/edit',
-                            name: "Edit",
+                            name: i18n.t('breadcrumb.user.edit'),
                             component: UserEdit
                         },
                         {
                             path: '/users/create',
-                            name: "New user",
+                            name: i18n.t('breadcrumb.user.create'),
                             component: UserNew
                         }
                     ]
@@ -106,7 +108,7 @@ function configRoutes() {
                 {
                     path: 'devices',
                     meta: {
-                        label: 'Devices',
+                        label: i18n.t('breadcrumb.devices'),
                         reload: true,
                     },
                     component: RouteContainer,
@@ -120,17 +122,17 @@ function configRoutes() {
                         },
                         {
                             path: '/devices/:id/view',
-                            name: "Detalii dispozitiv",
+                            name: i18n.t('breadcrumb.device.details'),
                             component: Device
                         },
                         {
                             path: '/devices/:id/edit',
-                            name: "Editare dispozitiv",
+                            name: i18n.t('breadcrumb.device.edit'),
                             component: DeviceEdit
                         },
                         {
                             path: '/devices/create',
-                            name: "Dispozitiv nou",
+                            name: i18n.t('breadcrumb.device.create'),
                             component: DeviceNew
                         }
                     ]
@@ -138,31 +140,31 @@ function configRoutes() {
                 {
                     path: 'peripherals',
                     meta: {
-                        label: 'Peripherals',
+                        label: i18n.t('breadcrumb.peripherals'),
                         reload: true,
                     },
                     component: RouteContainer,
                     children: [
                         {
                             path: '',
-                            component: Peripherals,
+                            component: PeripheralList,
                             meta: {
                                 reload: true,
                             }
                         },
                         {
                             path: '/peripherals/:id/view',
-                            name: "Periferic",
-                            component: Peripheral
+                            name: i18n.t('breadcrumb.peripheral.details'),
+                            component: PeripheralView
                         },
                         {
                             path: '/peripherals/:id/edit',
-                            name: "Editeaza periferic",
+                            name: i18n.t('breadcrumb.peripheral.edit'),
                             component: PeripheralEdit
                         },
                         {
                             path: '/peripherals/create',
-                            name: "Periferic nou",
+                            name: i18n.t('breadcrumb.peripheral.create'),
                             component: PeripheralNew
                         }
                     ]
@@ -170,7 +172,7 @@ function configRoutes() {
                 {
                     path: 'cables',
                     meta: {
-                        label: 'Cables',
+                        label: i18n.t('breadcrumb.cables'),
                         reload: true,
                     },
                     component: RouteContainer,
@@ -184,17 +186,17 @@ function configRoutes() {
                         },
                         {
                             path: '/cables/:id/view',
-                            name: "Cablu",
+                            name: i18n.t('breadcrumb.cable.details'),
                             component: Cable
                         },
                         {
                             path: '/cables/:id/edit',
-                            name: "Editare cablu",
+                            name: i18n.t('breadcrumb.cable.edit'),
                             component: CableEdit
                         },
                         {
                             path: '/cables/create',
-                            name: "Cablu nou",
+                            name: i18n.t('breadcrumb.cable.create'),
                             component: CableNew
                         }
                     ]
