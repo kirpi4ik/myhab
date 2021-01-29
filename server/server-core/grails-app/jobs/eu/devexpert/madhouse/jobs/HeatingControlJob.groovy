@@ -1,6 +1,8 @@
 package eu.devexpert.madhouse.jobs
 
+
 import eu.devexpert.madhouse.domain.Configuration
+import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.infra.Zone
@@ -16,6 +18,9 @@ import org.quartz.JobExecutionException
 
 import java.util.concurrent.TimeUnit
 
+import static eu.devexpert.madhouse.ConfigKey.CONFIG_LIST_SCHEDULED_TEMP
+import static eu.devexpert.madhouse.ConfigKey.CONFIG_TEMP_ALL_DAY
+
 /**
  *
  */
@@ -27,7 +32,6 @@ class HeatingControlJob implements Job, EventPublisher {
     }
     public static final String PERIPHERAL_HEAT_CTRL_CATEGORY = "HEAT"
     public static final String PERIPHERAL_TEMPERATURE_SENSOR_CATEGORY = 'TEMP'
-    public static final String CONFIG_LIST_SCHEDULED_TEMP = "key.temp.schedule.list.value"
     def heatService
     def tempAllDay = 21
 
@@ -66,7 +70,7 @@ class HeatingControlJob implements Job, EventPublisher {
         actions.each { actuatorUid, action ->
             publish(TopicName.EVT_HEAT.id(), new EventData().with {
                 p0 = TopicName.EVT_HEAT.id()
-                p1 = "PERIPHERAL"
+                p1 = EntityType.PERIPHERAL.name()
                 p2 = actuatorUid
                 p3 = "thermostat"
                 p4 = action
@@ -105,7 +109,7 @@ class HeatingControlJob implements Job, EventPublisher {
 
     def getDesiredTemperature(Zone zone) {
         def now = DateTime.now()
-        def setTemp = Double.valueOf(zone.configurations.find { config -> config.key == "key.temp.allDay.value" }?.value ?: tempAllDay)
+        def setTemp = Double.valueOf(zone.configurations.find { config -> config.key == CONFIG_TEMP_ALL_DAY }?.value ?: tempAllDay)
         Set<Configuration> tempScheduler = zone.configurations.findAll { config -> config.key == CONFIG_LIST_SCHEDULED_TEMP }.sort { it.value }
 
         for (Configuration config : tempScheduler) {

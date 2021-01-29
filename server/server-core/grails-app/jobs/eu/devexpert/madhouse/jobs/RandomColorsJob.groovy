@@ -1,10 +1,10 @@
 package eu.devexpert.madhouse.jobs
 
-import com.hazelcast.core.HazelcastInstance
-import com.hazelcast.core.IMap
+
+import eu.devexpert.madhouse.ConfigKey
 import eu.devexpert.madhouse.domain.Configuration
-import eu.devexpert.madhouse.domain.device.port.DevicePort
-import eu.devexpert.madhouse.init.cache.CacheMap
+import eu.devexpert.madhouse.domain.EntityType
+import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.utils.DeviceHttpService
 import grails.events.EventPublisher
 import org.apache.commons.lang3.RandomUtils
@@ -15,32 +15,28 @@ import org.quartz.JobExecutionException
 import java.util.concurrent.TimeUnit
 
 class RandomColorsJob implements Job, EventPublisher {
-    HazelcastInstance hazelcastInstance;
 
     static triggers = {
-        simple name: 'randomColors', repeatInterval: TimeUnit.SECONDS.toMillis(5)
+        simple name: 'randomColors', repeatInterval: TimeUnit.SECONDS.toMillis(5000)
     }
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-//        def map = hazelcastInstance.getMap(CacheMap.EXPIRE)
-//        def red = map.get("r")
-//        def green = map.get("g")
-//        def blue = map.get("b")
-        def b = DevicePort.findById(22632)
-        def r = DevicePort.findById(22633)
-        def g = DevicePort.findById(22634)
-
-
-        def periph = b.peripherals.findAll { p ->
+        Collection<DevicePeripheral> randomPeripherals = DevicePeripheral.findAll { p ->
             Configuration.where {
-                entityId == p.id && entityType == "PERIPHERAL" && key == "key.light.rgbRandom" && value == "true"
+                entityId == p.id && entityType == EntityType.PERIPHERAL.name() && key == ConfigKey.CONFIG_LIGHT_RGB_RANDOM && value == "true"
             }[0] != null
         }
-        if (!periph.empty) {
-            new DeviceHttpService(port: r, action: RandomUtils.nextInt(0, 255)).writeState()
-            new DeviceHttpService(port: g, action: RandomUtils.nextInt(0, 255)).writeState()
-            new DeviceHttpService(port: b, action: RandomUtils.nextInt(0, 255)).writeState()
+
+        randomPeripherals.each { peripheral ->
+            peripheral.connectedTo.each { port ->
+                def rgbConf = Configuration.where {
+                    entityId == port.id && entityType == EntityType.PORT.name() && key == ConfigKey.CONFIG_LIGHT_RGB_COLOR
+                }[0]
+                if (rgbConf != null) {
+                    new DeviceHttpService(port: port, action: RandomUtils.nextInt(50, 280)).writeState()
+                }
+            }
         }
     }
 }

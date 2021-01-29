@@ -36,6 +36,7 @@ class DevicePort extends BaseEntity implements Configurable<DevicePort> {
     static belongsTo = Device
 
     static constraints = {
+        peripherals cascade: 'save-update'
         internalRef nullable: true
         name nullable: true
         type nullable: true

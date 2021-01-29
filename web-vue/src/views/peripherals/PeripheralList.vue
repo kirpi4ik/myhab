@@ -4,7 +4,7 @@
             <transition name="slide">
                 <CCard>
                     <CCardHeader>
-                        Periferice
+                        {{ $t("peripheral.list.nav_title") }}
                     </CCardHeader>
                     <CCardBody>
                         <CDataTable
@@ -56,7 +56,7 @@
     import {PERIPHERAL_LIST_ALL, PERIPHERAL_DELETE} from "../../graphql/zones";
 
     export default {
-        name: 'Peripherals',
+        name: 'PeripheralList',
         data: () => {
             return {
                 items: [],
@@ -114,7 +114,7 @@
                 });
             },
             peripheralLink(uid) {
-                return `peripherals/${uid}/profile`
+                return `peripherals/${uid}/view`
             },
             viewPeripheralDetails(uid) {
                 const peripheralLink = this.peripheralLink(uid)

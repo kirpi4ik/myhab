@@ -58,4 +58,5 @@ abstract class BaseEntity implements Serializable {
         tsUpdated column: "ts_updated", nullable: true
         entityType column: "en_type", nullable: true
     }
+
 }

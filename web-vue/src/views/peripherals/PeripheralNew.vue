@@ -14,19 +14,34 @@
                             </div>
                         </CCardHeader>
                         <CCardBody>
-                            <CRow>
+                            <CRow v-for="(peripheralDetail, index) in peripheralDetails" :key="`detail-${index}`">
                                 <CCol sm="12">
-                                    <CInput
-                                            label="Peripheralname"
-                                            placeholder="peripheralname"
-                                            @input="updateFieldValue($event, 'peripheralname')"
-                                            ref="peripheralname"/>
-                                    <CInput
-                                            label="Password"
-                                            placeholder="password"
-                                            @input="updateFieldValue($event, 'password')"
-                                            ref="password"/>
+                                    <CInputCheckbox
+                                            v-if="peripheralDetail.key.endsWith('ed')"
+                                            :key="peripheralDetail.key"
+                                            :label="peripheralDetail.key"
+                                            :value="peripheralDetail.value"
+                                            :checked="peripheralDetail.value"
+                                            @update:checked="check($event, peripheralDetail.key)"
+                                            :inline="true"
+                                            :ref="peripheralDetail.key"
+                                    />
+                                    <CInput v-if="!peripheralDetail.key.endsWith('ed')"
+                                            :label="peripheralDetail.key.charAt(0).toUpperCase()+peripheralDetail.key.slice(1)"
+                                            :placeholder="peripheralDetail.key"
+                                            :value="peripheralDetail.value"
+                                            @input="updateFieldValue($event, peripheralDetail.key)"
+                                            :ref="peripheralDetail.key"/>
                                 </CCol>
+                            </CRow>
+                            <CRow>
+                                Categorie
+                                <multiselect
+                                        v-model="categories.selected"
+                                        :options="categories.options"
+                                        track-by="name"
+                                        label="name">
+                                </multiselect>
                             </CRow>
                         </CCardBody>
                         <CCardFooter>
@@ -48,7 +63,9 @@
 
 
 <script>
-    import {PERIPHERAL_CREATE} from "../../graphql/zones";
+    import {PERIPHERAL_CREATE, PERIPHERAL_VALUE_UPDATE, PERIPHERAL_META_GET} from "../../graphql/zones";
+
+    import Multiselect from 'vue-multiselect'
 
     export default {
         name: 'PeripheralNew',
@@ -56,30 +73,78 @@
             {key: 'key', _style: 'width:150px'},
             {key: 'value', _style: 'width:150px;'}
         ],
-        name: 'Peripherals',
+        components: {
+            'multiselect': Multiselect
+        },
         data: () => {
             return {
+                peripheralDetails: [
+                    {key: "name", value: ""},
+                    {key: "description", value: ""},
+                    {key: "code", value: ""},
+                    {key: "codeOld", value: ""},
+                    {key: "model", value: ""},
+                    {key: "maxAmp", value: ""}
+                ],
                 peripheral: [],
-                peripheralToCreate: {
-                    passwordExpired: true,
-                    accountLocked: true,
-                    accountExpired: true,
-                    enabled: false
+                roles: [],
+                peripheralToUpdate: {},
+                readonly: ["id", "__typename", "uid", "category", "connectedTo", "zones"],
+                zones: {
+                    selected: null,
+                    options: []
                 },
-                readonly: ["id", "__typename", "uid", "name"]
+                categories: {
+                    selected: null,
+                    options: []
+                },
+                connectedTo: {
+                    selected: null,
+                    options: []
+                }
             }
         },
+        created() {
+            this.init();
+        },
         methods: {
+            init() {
+                this.$apollo.query({
+                    query: PERIPHERAL_META_GET,
+                    variables: {},
+                    fetchPolicy: 'network-only'
+                }).then(response => {
+                    let cleanup = function (item, index) {
+                        delete item["__typename"]
+                    };
+
+                    response.data.peripheralCategoryList.forEach(cleanup);
+                    response.data.zoneList.forEach(cleanup);
+                    response.data.devicePortList.forEach(cleanup);
+
+                    this.categories.options = response.data.peripheralCategoryList;
+                    this.zones.options = response.data.zoneList;
+                    this.connectedTo.options = response.data.devicePortList;
+                });
+            },
+            check(value, key) {
+                this.peripheralToUpdate[key] = value
+
+            },
             updateFieldValue(value, key) {
-                this.peripheralToCreate[key] = value
+                this.peripheralToUpdate[key] = value
             },
             save() {
+                this.peripheralToUpdate.category = this.categories.selected;
+                this.peripheralToUpdate.zones = this.zones.selected;
+                this.peripheralToUpdate.connectedTo = this.connectedTo.selected;
                 this.$apollo.mutate({
-                    mutation: PERIPHERAL_CREATE, variables: {peripheral: this.peripheralToCreate}
+                    mutation: PERIPHERAL_CREATE, variables: {devicePeripheral: this.peripheralToUpdate}
                 }).then(response => {
-                    this.$router.push({path: "/peripherals/" + response.data.peripheralCreate.uid+ "/view"})
+                    this.$router.push({path: "/peripherals/" + response.data.devicePeripheralCreate.uid + "/view"})
                 });
-            }
+            },
         }
     }
 </script>
+<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
