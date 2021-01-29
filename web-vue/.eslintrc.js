@@ -25,7 +25,8 @@ module.exports = {
         "no-debugger": "off",
         "no-unused-vars": "off",
         "no-undef": "off",
-        "no-duplicate-attributes" : "off",
-        "no-dupe-keys" : "off"
+        "no-duplicate-attributes": "off",
+        "no-dupe-keys": "off",
+        "vue/no-mutating-props": "off"
     }
 };
