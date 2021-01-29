@@ -18,7 +18,6 @@
                                 table-filter
                                 sorter
                                 clickable-rows
-                                pagination
                         >
                             <template #name="data">
                                 <td>

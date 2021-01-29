@@ -19,8 +19,11 @@ import ToggleButton from 'vue-js-toggle-button'
 import apolloProvider from './graphql';
 
 import { Datetime } from 'vue-datetime'
+
 // You need a specific loader for CSS files
 import 'vue-datetime/dist/vue-datetime.css'
+
+import i18n from './i18n'
 Vue.use(Datetime);
 Vue.component('datetime', Datetime);
 
@@ -53,8 +56,11 @@ new Vue({
     router,
     icons,
     template: '<App/>',
+
     components: {
         App
     },
+
+    i18n,
     apolloProvider
 });

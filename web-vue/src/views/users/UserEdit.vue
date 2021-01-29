@@ -19,7 +19,7 @@
                                     <CInputCheckbox
                                             v-if="userDetail.key.endsWith('ed')"
                                             :key="userDetail.key"
-                                            :label="userDetail.key"
+                                            :label="userDetail.key.charAt(0).toUpperCase()+userDetail.key.slice(1)"
                                             :value="userDetail.value"
                                             :checked="userDetail.value"
                                             @update:checked="check($event, userDetail.key)"
@@ -27,7 +27,7 @@
                                             :ref="userDetail.key"
                                     />
                                     <CInput v-if="!userDetail.key.endsWith('ed')"
-                                            :label="userDetail.key"
+                                            :label="userDetail.key.charAt(0).toUpperCase()+userDetail.key.slice(1)"
                                             :placeholder="userDetail.key"
                                             :value="userDetail.value"
                                             @input="updateFieldValue($event, userDetail.key)"

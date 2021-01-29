@@ -71,7 +71,7 @@
         },
         methods: {
             loadUser() {
-                this.loading = true
+                this.loading = true;
                 let user = {};
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)

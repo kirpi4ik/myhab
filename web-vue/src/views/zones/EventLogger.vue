@@ -8,7 +8,7 @@
                 :show.sync="showLog">
             <CDataTable :items="events" :fields="tbl.fields" :striped="true" :border="true" :dark="false">
                 <template #actions="item">
-
+                    <div>{{item}}</div>
                 </template>
             </CDataTable>
             <template #footer>
