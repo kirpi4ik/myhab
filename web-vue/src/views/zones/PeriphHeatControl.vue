@@ -49,7 +49,7 @@
         CONFIGURATION_GET_VALUE,
         CONFIGURATION_SET_VALUE,
         PUSH_EVENT
-    } from "../../graphql/zones";
+    } from "../../graphql/queries";
 
     export default {
         name: 'PeriphHeatControl',

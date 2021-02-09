@@ -20,7 +20,7 @@
 <script>
     import {
         PERIPHERAl_EVENT_LOGS
-    } from "../../graphql/zones";
+    } from "../../graphql/queries";
 
     export default {
         name: 'EventLogger',
