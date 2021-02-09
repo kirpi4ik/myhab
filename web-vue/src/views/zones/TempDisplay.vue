@@ -1,6 +1,6 @@
 <template>
     <div style="display: inline">
-        <div v-for="port in tempDisplay.portIds" style="display: inline-block" class="temp_display" v-bind:key="port"> {{port.value}} &#176;C</div>
+        <div v-for="port in tempDisplay.portIds" style="display: inline-block" class="temp_display" v-bind:key="port.uid"> {{port.value}} &#176;C</div>
     </div>
 </template>
 <script>

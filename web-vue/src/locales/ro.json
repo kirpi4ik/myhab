@@ -7,9 +7,23 @@
     "create": "Creare",
     "add": "Adaugare",
     "cancel": "Renuntare",
+    "config": "Configurare",
+    "add_new": "Adauga",
+    "remove_from": "Starge din lista",
     "nav": {
       "back": "Inapoi",
       "next": "Pasul urmator"
+    }
+  },
+  "modal": {
+    "delete": {
+      "title": "Stergere",
+      "confirmation_msg": "Sunteti sigur ca doriti sa stergeti :"
+    }
+  },
+  "table": {
+    "header": {
+      "actions": "Actiune"
     }
   },
   "breadcrumb": {
@@ -20,6 +34,12 @@
       "details": "Detalii",
       "edit": "Editeaza",
       "create": "Periferic nou"
+    },
+    "ports": {
+      "list": "Porturi",
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Port nou"
     },
     "zones": "Locatii",
     "zone": {
@@ -44,7 +64,8 @@
       "details": "Detalii",
       "edit": "Editeaza",
       "create": "Cablaj nou"
-    }
+    },
+    "configurations": "Configurare"
   },
   "peripheral": {
     "fields": {
@@ -65,6 +86,58 @@
     },
     "edit": {
       "nav_title": "Editare periferic :"
+    }
+  },
+  "device": {
+    "edit": {
+      "nav_title": "Editare dispozitiv :"
+    },
+    "details": {
+      "title": "Detalii dispozitiv :"
+    },
+    "fields": {
+      "type": {
+        "label": "Tip"
+      },
+      "rack": {
+        "label": "Rack",
+        "fields": {
+          "name": "Denumire",
+          "description": "Descriere"
+        }
+      },
+      "networkAddress": {
+        "label": "Adresa retea",
+        "fields": {
+          "ip": "IP",
+          "port": "Port",
+          "gateway": "Gateway"
+        }
+      },
+      "authAccounts": {
+        "label": "Conturi access",
+        "fields": {
+          "username": "IP",
+          "password": "Port",
+          "isDefault": "Implicit"
+        }
+      }
+    }
+  },
+  "cables": {
+    "list": {
+      "nav_title": "Cabluri"
+    }
+  },
+  "port": {
+    "fields": {
+      "type": "Tip",
+      "state": "Stare"
+    }
+  },
+  "configurations": {
+    "list": {
+      "title": "Configurarile"
     }
   }
 }

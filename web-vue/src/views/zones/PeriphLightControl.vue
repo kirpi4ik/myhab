@@ -106,9 +106,8 @@
         CONFIGURATION_DELETE,
         CONFIGURATION_SET_VALUE,
         CACHE_GET_VALUE,
-        SET_COLOR,
         PUSH_EVENT
-    } from "../../graphql/zones";
+    } from "../../graphql/queries";
 
     export default {
         name: 'PeriphLightControl',

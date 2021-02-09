@@ -46,7 +46,7 @@
 </template>
 
 <script>
-    import {USER_GET_BY_ID_WITH_ROLES} from "../../graphql/zones";
+    import {USER_GET_BY_ID_WITH_ROLES} from "../../graphql/queries";
 
 
     export default {

@@ -36,7 +36,7 @@
             <TheHeaderDropdownAccnt/>
         </CHeaderNav>
         <CSubheader class="px-3">
-            <CBreadcrumbRouter class="border-0"/>
+            <CBreadcrumbRouter class="border-0" ref="mainBreadcrumb"/>
         </CSubheader>
     </CHeader>
 </template>

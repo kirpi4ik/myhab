@@ -5,12 +5,12 @@
                 <CCard>
                     <CForm>
                         <CCardHeader>
-                            <strong>Cable </strong> <small>{{cable.name}}</small>
+                            <strong>Port </strong> <small>{{port.name}}</small>
                             <div class="card-header-actions">
-                                <a @click="navConfig" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener" v-if="cable.id != null">
+                                <a @click="navConfig" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener" v-if="port.id != null">
                                     <small class="text-muted">{{ $t("actions.config") }}</small> |
                                 </a>
-                                <a @click="navDelete" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener" v-if="cable.id != null">
+                                <a @click="navDelete" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener" v-if="port.id != null">
                                     <small class="text-muted">{{ $t("actions.delete") }}</small> |
                                 </a>
                                 <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener"
@@ -20,31 +20,31 @@
                             </div>
                         </CCardHeader>
                         <CCardBody>
-                            <CRow v-for="(cableDetail, index) in cableDetails" :key="`detail-${index}`">
+                            <CRow v-for="(portDetail, index) in portDetails" :key="`detail-${index}`">
                                 <CCol sm="12">
-                                    <CInput v-if="!isBoolean(cableDetail.key)" :label="cableDetail.key.charAt(0).toUpperCase()+cableDetail.key.slice(1)"
-                                            :value="cableDetail.value"
-                                            @input="updateFieldValue($event, cableDetail.key)"
-                                            :ref="cableDetail.key"/>
-                                    <CInputCheckbox v-if="isBoolean(cableDetail.key)"
-                                                    :key="cableDetail.key"
-                                                    :label="cableDetail.key.charAt(0).toUpperCase()+cableDetail.key.slice(1)"
-                                                    :value="cableDetail.value"
-                                                    :checked="cableDetail.value"
-                                                    @update:checked="check($event, cableDetail.key)"
+                                    <CInput v-if="!isBoolean(portDetail.key)" :label="portDetail.key.charAt(0).toUpperCase()+portDetail.key.slice(1)"
+                                            :value="portDetail.value"
+                                            @input="updateFieldValue($event, portDetail.key)"
+                                            :ref="portDetail.key"/>
+                                    <CInputCheckbox v-if="isBoolean(portDetail.key)"
+                                                    :key="portDetail.key"
+                                                    :label="portDetail.key.charAt(0).toUpperCase()+portDetail.key.slice(1)"
+                                                    :value="portDetail.value"
+                                                    :checked="portDetail.value"
+                                                    @update:checked="check($event, portDetail.key)"
                                                     :inline="true"
-                                                    :ref="cableDetail.key"
+                                                    :ref="portDetail.key"
                                     />
                                 </CCol>
                             </CRow>
                             <CRow>
-                                {{ $t("cable.fields.type") }}
-                                <multiselect v-model="cableToUpdate['type']" :options="cableTypes">
+                                {{ $t("port.fields.type") }}
+                                <multiselect v-model="portToUpdate['type']" :options="portTypes">
                                 </multiselect>
                             </CRow>
                             <CRow>
-                                {{ $t("cable.fields.state") }}
-                                <multiselect v-model="cableToUpdate['state']" :options="cableStates">
+                                {{ $t("port.fields.state") }}
+                                <multiselect v-model="portToUpdate['state']" :options="portStates">
                                 </multiselect>
                             </CRow>
                         </CCardBody>
@@ -63,24 +63,24 @@
 
 
 <script>
-    import {CABLE_GET_BY_ID, CABLE_UPDATE, CABLE_CREATE, DEVICE_GET_BY_ID_MINIMAL} from "../../graphql/queries";
+    import {PORT_GET_BY_ID, PORT_UPDATE, PORT_CREATE, DEVICE_GET_BY_ID_MINIMAL} from "../../graphql/queries";
 
     import Multiselect from 'vue-multiselect'
 
     export default {
-        name: 'CableEditor',
+        name: 'PortEditor',
         components: {
             'multiselect': Multiselect
         },
         data: () => {
             return {
-                cableDetails: [],
-                cableToUpdate: {},
-                cable: [],
+                portDetails: [],
+                portToUpdate: {},
+                port: [],
                 readonly: ["id", "__typename", "uid", "device", "type", "state"],
                 booleans: ["runAction", "mustSendToServer", "runScenario"],
                 deleteConfirmShow: false,
-                cableTypes: [
+                portTypes: [
                     "UNKNOW",
                     "IN",
                     "OUT",
@@ -89,7 +89,7 @@
                     "I2C",
                     "NOT_CONFIGURED"
                 ],
-                cableStates: [
+                portStates: [
                     "UNKNOW",
                     "CONFIGURED",
                     "ACTIVE",
@@ -107,7 +107,7 @@
         },
         methods: {
             initCreate() {
-                this.cable = {
+                this.port = {
                     internalRef: "",
                     name: "",
                     description: "",
@@ -120,16 +120,16 @@
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)
                 }.bind(this);
-                this.cableDetails = Object.entries(this.cable).map(([key, value]) => {
+                this.portDetails = Object.entries(this.port).map(([key, value]) => {
                     return {key, value}
                 }).filter(removeReadonly);
-                this.cableToUpdate['type'] = this.cableTypes[0];
-                this.cableToUpdate['state'] = this.cableStates[0];
+                this.portToUpdate['type'] = this.portTypes[0];
+                this.portToUpdate['state'] = this.portStates[0];
             },
             init() {
-                let cable = {};
+                let port = {};
                 this.$apollo.query({
-                    query: CABLE_GET_BY_ID,
+                    query: PORT_GET_BY_ID,
                     variables: {id: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
@@ -140,48 +140,48 @@
                         return !this.readonly.includes(keyMap.key)
                     }.bind(this);
 
-                    this.cable = response.data.deviceCable;
-                    const cableDetailsToMap = cable ? Object.entries(this.cable) : [['id', 'Not found']];
-                    this.cableDetails = cableDetailsToMap.map(([key, value]) => {
+                    this.port = response.data.devicePort;
+                    const portDetailsToMap = port ? Object.entries(this.port) : [['id', 'Not found']];
+                    this.portDetails = portDetailsToMap.map(([key, value]) => {
                         return {key, value}
                     }).filter(removeReadonly);
 
-                    this.cableToUpdate['type'] = this.cable.type;
-                    this.cableToUpdate['state'] = this.cable.state;
+                    this.portToUpdate['type'] = this.port.type;
+                    this.portToUpdate['state'] = this.port.state;
                 });
             },
             isBoolean(key) {
                 return this.booleans.indexOf(key) != -1;
             },
             check(value, key) {
-                this.cableToUpdate[key] = value
+                this.portToUpdate[key] = value
 
             },
             updateFieldValue(value, key) {
-                this.cableToUpdate[key] = value
+                this.portToUpdate[key] = value
             },
             save() {
 
                 if (this.$route.meta.uiMode === 'EDIT') {
                     this.$apollo.mutate({
-                        mutation: CABLE_UPDATE, variables: {id: this.cable.id, deviceCable: this.cableToUpdate}
+                        mutation: PORT_UPDATE, variables: {id: this.port.id, devicePort: this.portToUpdate}
                     }).then(response => {
-                        this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/cables/" + response.data.deviceCableUpdate.id + "/view"})
+                        this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + response.data.devicePortUpdate.id + "/view"})
                     });
                 } else if (this.$route.meta.uiMode === 'CREATE') {
-                    this.cableToUpdate["device"] = this.cable.device;
+                    this.portToUpdate["device"] = this.port.device;
                     this.$apollo.mutate({
-                        mutation: CABLE_CREATE, variables: {deviceCable: this.cableToUpdate}
+                        mutation: PORT_CREATE, variables: {devicePort: this.portToUpdate}
                     }).then(response => {
-                        this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/cables/" + response.data.deviceCableCreate.id + "/edit"})
+                        this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + response.data.devicePortCreate.id + "/edit"})
                     });
                 }
             },
             navEdit(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/cables/" + this.cable.id + "/edit"})
+                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + this.port.id + "/edit"})
             },
             navConfig(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/cables/" + this.cable.id + "/configurations"})
+                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + this.port.id + "/configurations"})
             },
             navDelete(item, index) {
                 this.deleteConfirmShow = true;

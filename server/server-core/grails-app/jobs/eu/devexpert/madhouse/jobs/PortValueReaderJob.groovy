@@ -26,7 +26,7 @@ class PortValueReaderJob implements Job, EventPublisher {
     PortValueService portValueService
 
     static triggers = {
-        simple name: 'portValueReader', repeatInterval: 20000
+        simple name: 'portValueReader', repeatInterval: 6000
     }
     static group = "Internal"
     static description = "Read port status"

@@ -51,7 +51,7 @@
 </template>
 
 <script>
-    import {USERS_GET_ALL, USER_DELETE} from "../../graphql/zones";
+    import {USERS_GET_ALL, USER_DELETE} from "../../graphql/queries";
 
     export default {
         name: 'Users',
