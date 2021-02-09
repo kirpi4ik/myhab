@@ -2,7 +2,7 @@
     <CFooter>
         <div>
             <a href="https://madhouse.app" target="_self">MadHouse v{{version}}</a>
-            <span class="ml-1">&copy; 2020 DevExpert.</span>
+            <span class="ml-1">&copy; 2021 DevExpert.</span>
         </div>
         <div class="ml-auto">
             <span class="mr-1">Powered by</span>

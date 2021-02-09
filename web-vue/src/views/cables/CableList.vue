@@ -4,7 +4,7 @@
             <transition name="slide">
                 <CCard>
                     <CCardHeader>
-                        Dispozitive
+                        Cabluri
                     </CCardHeader>
                     <CCardBody>
                         <CDataTable
@@ -15,19 +15,23 @@
                                 :items-per-page="perPage"
                                 :pagination="$options.paginationProps"
                                 index-column
+                                clickable-rows
                                 table-filter
                                 sorter
-                                clickable-rows
                         >
-                            <template #name="data">
+                            <template #category="data">
                                 <td>
-                                    <strong>{{data.item.name}}</strong>
+                                    <strong>{{data.item.category.name}}</strong>
                                 </td>
                             </template>
-
+                            <template #patchPanel="data">
+                                <td>
+                                    <strong v-if="data.item.patchPanel != null">{{data.item.patchPanel.code}}</strong>
+                                </td>
+                            </template>
                             <template #actions="data">
                                 <td>
-                                    <CButton color="success" @click="viewDeviceDetails(data.item.uid)">View</CButton>
+                                    <CButton color="success" @click="$router.push({path: '/cables/'+data.item.id +'/view'})">View</CButton>
                                     |
                                     <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto">
                                         Remove
@@ -39,10 +43,10 @@
                     <CCardFooter>
                         <CButton color="success" @click="addNew">Add new</CButton>
                     </CCardFooter>
-                    <CModal title="Delete device" color="danger" :show.sync="deleteConfirmShow">
-                        Do you want delete : <strong>{{selectedItem.name}}</strong> ?
+                    <CModal title="Delete cable" color="danger" :show.sync="deleteConfirmShow">
+                        Do you want delete : <strong>{{selectedItem.cablename}}</strong> ?
                         <template #footer>
-                            <CButton @click="removeDevice" color="danger">Delete</CButton>
+                            <CButton @click="removeCable" color="danger">Delete</CButton>
                             <CButton @click="deleteConfirmShow = false" color="success">Cancel</CButton>
                         </template>
                     </CModal>
@@ -53,24 +57,25 @@
 </template>
 
 <script>
-    import {DEVICE_LIST_ALL, DEVICE_DELETE} from "../../graphql/zones";
+    import {CABLE_LIST_ALL, CABLE_DELETE} from "../../graphql/queries";
 
     export default {
-        name: 'Devices',
+        name: 'CableList',
         data: () => {
             return {
                 items: [],
                 fields: [
                     {key: 'id', label: 'ID'},
-                    {key: 'name', label: 'Name'},
                     {key: 'code', label: 'Code'},
-                    {key: 'description', label: 'Description'},
+                    {key: 'codeNew', label: 'Code nou'},
+                    {key: 'codeOld', label: 'Code vechi'},
+                    {key: 'category', label: 'Categorie'},
+                    {key: 'patchPanel', label: 'Patch'},
                     {
                         key: 'actions', label: 'Action',
                         sorter: false,
                         filter: false
                     }
-
                 ],
                 perPage: 5,
                 deleteConfirmShow: false,
@@ -84,42 +89,35 @@
             nextButtonHtml: 'next'
         },
         mounted() {
-            this.loadDevices();
+            this.loadCables();
         },
         watch: {
-            '$route.fullPath': 'loadDevices'
+            '$route.fullPath': 'loadCables'
         },
         methods: {
             modalCheck(item) {
                 this.deleteConfirmShow = true;
                 this.selectedItem = item
             },
-            removeDevice() {
+            removeCable() {
                 this.$apollo.mutate({
-                    mutation: DEVICE_DELETE, variables: {id: this.selectedItem.id}
+                    mutation: CABLE_DELETE, variables: {id: this.selectedItem.id}
                 }).then(response => {
-                    this.deleteConfirmShow = false;
-                    this.loadDevices();
+                    this.deleteConfirmShow = false
+                    this.loadCables();
                 });
             },
             addNew() {
-                this.$router.push({path: "/devices/create"})
+                this.$router.push({path: "/cables/create"})
             },
-            loadDevices() {
+            loadCables() {
                 this.$apollo.query({
-                    query: DEVICE_LIST_ALL,
+                    query: CABLE_LIST_ALL,
                     variables: {},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.items = response.data.deviceList;
+                    this.items = response.data.cableList;
                 });
-            },
-            deviceLink(uid) {
-                return `devices/${uid}/view`
-            },
-            viewDeviceDetails(uid) {
-                const deviceLink = this.deviceLink(uid);
-                this.$router.push({path: deviceLink})
             }
         }
     }

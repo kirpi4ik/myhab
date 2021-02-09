@@ -159,6 +159,11 @@ type DevicePeripheral {
     zones: [Zone]
 }
 
+type DevicePeripheralUpdateResult {
+    error: String
+    success: Boolean
+}
+
 type DevicePort {
     action: String
     cables: [Cable]
@@ -387,6 +392,7 @@ type Mutation {
     scenarioCreate(scenario: ScenarioCreate): Scenario
     scenarioDelete(id: Long!): DeleteResult
     scenarioUpdate(id: Long!, scenario: ScenarioUpdate): Scenario
+    updatePeripheral(id: Long!, peripheral: DevicePeripheralUpdate!): DevicePeripheralUpdateResult
     userCreate(user: UserCreate): User
     userDelete(id: Long!): DeleteResult
     userDeleteCascade(id: Long!): DeleteResponseCustom
@@ -468,6 +474,7 @@ type Query {
     configuration(id: Long!): Configuration
     configurationCount: Int
     configurationList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Configuration]
+    configurationListByEntity(entityId: Long!, entityType: EntityType!): [Configuration]
     device(id: Long!): Device
     deviceAccount(id: Long!): DeviceAccount
     deviceAccountCount: Int
@@ -893,13 +900,13 @@ input DeviceCreateNested {
 input DevicePeripheralCreate {
     category: PeripheralCategoryCreateNested!
     code: String!
-    codeOld: String!
+    codeOld: String
     connectedTo: [DevicePortCreateNested!]
     description: String
     entityType: EntityType
-    maxAmp: Float!
+    maxAmp: Float
     model: String
-    name: String
+    name: String!
     tsCreated: Date
     tsUpdated: Date
     uid: String

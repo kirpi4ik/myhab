@@ -44,7 +44,7 @@
 <script>
     import {router} from '@/_helpers';
 
-    import {NAV_BREADCRUMB, ZONE_GET_BY_UID, ZONES_GET_ROOT,} from "../../graphql/zones";
+    import {NAV_BREADCRUMB, ZONE_GET_BY_UID, ZONES_GET_ROOT,} from "../../graphql/queries";
     import PeriphLightControl from './PeriphLightControl'
     import PeriphHeatControl from './PeriphHeatControl'
     import PeriphTempControl from './PeriphTempControl'

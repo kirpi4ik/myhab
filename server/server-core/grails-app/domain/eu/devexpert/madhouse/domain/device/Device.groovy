@@ -27,15 +27,17 @@ class Device extends BaseEntity implements Configurable<Device> {
 
     static mapping = {
         table '`device_controllers`'
+        authAccounts sort: 'username', order: 'asc'
+        ports sort: 'name', order: 'asc'
     }
     static constraints = {
         name nullable: true
         model nullable: true
         description nullable: true
-        networkAddress nullable: true
+        networkAddress nullable: true, cascade: "all"
         offlineScenario nullable: true
         rack nullable: true
-        type nullable: true
+        type nullable: true, cascade: "all"
         status nullable: true
     }
     static embedded = ['networkAddress']
