@@ -62,7 +62,7 @@
         CONFIGURATION_ADDLIST_CONFIG_VALUE,
         CONFIGURATION_REMOVE_CONFIG,
         CONFIGURATION_GET_LIST_VALUE,
-    } from "../../graphql/zones";
+    } from "../../graphql/queries";
 
     export default {
         name: 'HeatScheduler',

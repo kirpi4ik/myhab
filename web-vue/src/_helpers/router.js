@@ -12,6 +12,8 @@ const TheContainer = () => import('@/containers/TheContainer');
 // Views
 const Dashboard = () => import('@/views/dashboard/Dashboard');
 
+const ConfigList = () => import('@/views/configuration/ConfigList');
+
 const Zones = () => import('@/views/zones/ZoneCombinedView');
 // Users
 const Users = () => import('@/views/users/Users');
@@ -19,8 +21,8 @@ const User = () => import('@/views/users/User');
 const UserEdit = () => import('@/views/users/UserEdit');
 const UserNew = () => import('@/views/users/UserNew');
 
-const Devices = () => import('@/views/devices/Devices');
-const Device = () => import('@/views/devices/Device');
+const DeviceList = () => import('@/views/devices/DeviceList');
+const DeviceView = () => import('@/views/devices/DeviceView');
 const DeviceEdit = () => import('@/views/devices/DeviceEdit');
 const DeviceNew = () => import('@/views/devices/DeviceNew');
 
@@ -29,8 +31,11 @@ const PeripheralView = () => import('@/views/peripherals/PeripheralView');
 const PeripheralEdit = () => import('@/views/peripherals/PeripheralEdit');
 const PeripheralNew = () => import('@/views/peripherals/PeripheralNew');
 
-const Cables = () => import('@/views/cables/Cables');
-const Cable = () => import('@/views/cables/Cable');
+const PortView = () => import('@/views/ports/PortView');
+const PortEditor = () => import('@/views/ports/PortEditor');
+
+const CableList = () => import('@/views/cables/CableList');
+const CableView = () => import('@/views/cables/CableView');
 const CableEdit = () => import('@/views/cables/CableEdit');
 const CableNew = () => import('@/views/cables/CableNew');
 
@@ -115,26 +120,100 @@ function configRoutes() {
                     children: [
                         {
                             path: '',
-                            component: Devices,
+                            component: DeviceList,
                             meta: {
                                 reload: true,
                             }
                         },
                         {
-                            path: '/devices/:id/view',
-                            name: i18n.t('breadcrumb.device.details'),
-                            component: Device
-                        },
-                        {
-                            path: '/devices/:id/edit',
-                            name: i18n.t('breadcrumb.device.edit'),
-                            component: DeviceEdit
-                        },
-                        {
-                            path: '/devices/create',
+                            path: 'create',
                             name: i18n.t('breadcrumb.device.create'),
                             component: DeviceNew
+                        },
+                        {
+                            path: ':deviceId',
+                            component: RouteContainer,
+                            children: [
+                                {
+                                    path: 'ports',
+                                    meta: {
+                                        label: i18n.t('breadcrumb.ports.list'),
+                                        reload: true,
+                                    },
+                                    component: RouteContainer,
+                                    children: [
+                                        {
+                                            path: 'create',
+                                            meta: {
+                                                label: i18n.t('breadcrumb.ports.create'),
+                                                reload: true,
+                                                uiMode: 'CREATE'
+                                            },
+                                            component: PortEditor
+                                        },
+                                        {
+                                            path: ':id',
+                                            component: RouteContainer,
+                                            meta: {
+                                                reload: true,
+                                            },
+                                            children: [
+                                                {
+                                                    path: 'view',
+                                                    name: i18n.t('breadcrumb.ports.details'),
+                                                    component: PortView,
+                                                    meta: {
+                                                        uiMode: 'VIEW'
+                                                    }
+                                                },
+                                                {
+                                                    path: 'edit',
+                                                    name: i18n.t('breadcrumb.ports.edit'),
+                                                    component: PortEditor,
+                                                    meta: {
+                                                        uiMode: 'EDIT'
+                                                    }
+                                                },
+                                                {
+                                                    path: 'configurations',
+                                                    name: i18n.t('breadcrumb.configurations'),
+                                                    component: ConfigList,
+                                                    meta: {
+                                                        entityType: 'PORT'
+                                                    }
+                                                }]
+                                        }
+                                    ]
+                                },
+
+                                {
+                                    path: 'view',
+                                    name: i18n.t('breadcrumb.device.details'),
+                                    component: DeviceView,
+                                    meta: {
+                                        uiMode: 'VIEW'
+                                    }
+                                },
+                                {
+                                    path: 'configurations',
+                                    name: i18n.t('breadcrumb.configurations'),
+                                    component: ConfigList,
+                                    meta: {
+                                        entityType: 'DEVICE'
+                                    }
+                                },
+                                {
+                                    path: 'edit',
+                                    name: i18n.t('breadcrumb.device.edit'),
+                                    component: DeviceEdit,
+                                    meta: {
+                                        uiMode: 'EDIT'
+                                    }
+                                }
+                            ]
+
                         }
+
                     ]
                 },
                 {
@@ -153,22 +232,41 @@ function configRoutes() {
                             }
                         },
                         {
-                            path: '/peripherals/:id/view',
-                            name: i18n.t('breadcrumb.peripheral.details'),
-                            component: PeripheralView
-                        },
-                        {
-                            path: '/peripherals/:id/edit',
-                            name: i18n.t('breadcrumb.peripheral.edit'),
-                            component: PeripheralEdit
-                        },
-                        {
-                            path: '/peripherals/create',
-                            name: i18n.t('breadcrumb.peripheral.create'),
-                            component: PeripheralNew
+                            path: ':id',
+                            component: RouteContainer,
+                            children: [
+                                {
+                                    path: 'view',
+                                    name: i18n.t('breadcrumb.peripheral.details'),
+                                    component: PeripheralView,
+                                    meta: {
+                                        uiMode: 'VIEW'
+                                    }
+                                },
+                                {
+                                    path: 'configurations',
+                                    name: i18n.t('breadcrumb.configurations'),
+                                    component: ConfigList,
+                                    meta: {
+                                        entityType: 'PERIPHERAL'
+                                    }
+                                },
+                                {
+                                    path: 'edit',
+                                    name: i18n.t('breadcrumb.peripheral.edit'),
+                                    component: PeripheralEdit,
+                                    meta: {
+                                        uiMode: 'EDIT'
+                                    }
+                                }
+
+                            ]
+
                         }
+
                     ]
                 },
+
                 {
                     path: 'cables',
                     meta: {
@@ -179,26 +277,44 @@ function configRoutes() {
                     children: [
                         {
                             path: '',
-                            component: Cables,
+                            component: CableList,
                             meta: {
                                 reload: true,
                             }
                         },
                         {
-                            path: '/cables/:id/view',
-                            name: i18n.t('breadcrumb.cable.details'),
-                            component: Cable
-                        },
-                        {
-                            path: '/cables/:id/edit',
-                            name: i18n.t('breadcrumb.cable.edit'),
-                            component: CableEdit
-                        },
-                        {
-                            path: '/cables/create',
-                            name: i18n.t('breadcrumb.cable.create'),
-                            component: CableNew
+                            path: ':id',
+                            component: RouteContainer,
+                            children: [
+                                {
+                                    path: 'view',
+                                    name: i18n.t('breadcrumb.cable.details'),
+                                    component: CableView,
+                                    meta: {
+                                        uiMode: 'VIEW'
+                                    }
+                                },
+                                {
+                                    path: 'configurations',
+                                    name: i18n.t('breadcrumb.configurations'),
+                                    component: ConfigList,
+                                    meta: {
+                                        entityType: 'PERIPHERAL'
+                                    }
+                                },
+                                {
+                                    path: 'edit',
+                                    name: i18n.t('breadcrumb.cable.edit'),
+                                    component: CableEdit,
+                                    meta: {
+                                        uiMode: 'EDIT'
+                                    }
+                                }
+
+                            ]
+
                         }
+
                     ]
                 }
                 // otherwise redirect to home

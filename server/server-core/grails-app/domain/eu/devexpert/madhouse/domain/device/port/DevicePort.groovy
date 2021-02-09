@@ -49,6 +49,8 @@ class DevicePort extends BaseEntity implements Configurable<DevicePort> {
         action nullable: true
         miscValue nullable: true
         mustSendToServer nullable: true
+        runAction nullable: true
+        runScenario nullable: true
     }
     static mapping = {
         table '`device_ports`'

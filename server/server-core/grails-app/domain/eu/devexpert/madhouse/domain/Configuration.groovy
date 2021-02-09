@@ -26,6 +26,19 @@ class Configuration {
         description nullable: true
     }
     static graphql = GraphQLMapping.lazy {
+        query('configurationListByEntity', [Configuration]) {
+            argument('entityType', EntityType)
+            argument('entityId', Long)
+            dataFetcher(new DataFetcher() {
+                @Override
+                Object get(DataFetchingEnvironment environment) {
+                    Configuration.createCriteria().list() {
+                        eq('entityType', environment.getArgument('entityType') as EntityType)
+                        eq('entityId', environment.getArgument('entityId') as Long)
+                    }
+                }
+            })
+        }
         query('configPropertyByKey', Configuration) {
             argument('key', String)
             argument('entityId', Long)

@@ -63,7 +63,7 @@
 
 
 <script>
-    import {PERIPHERAL_CREATE, PERIPHERAL_VALUE_UPDATE, PERIPHERAL_META_GET} from "../../graphql/zones";
+    import {PERIPHERAL_CREATE, PERIPHERAL_VALUE_UPDATE, PERIPHERAL_META_GET} from "../../graphql/queries";
 
     import Multiselect from 'vue-multiselect'
 
