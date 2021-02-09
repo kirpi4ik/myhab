@@ -27,11 +27,9 @@
 
                             <template #actions="data">
                                 <td>
-                                    <CButton color="success" @click="viewPeripheralDetails(data.item.uid)">View</CButton>
+                                    <CButton color="success" @click="viewPeripheralDetails(data.item.id)">{{ $t("actions.view") }}</CButton>
                                     |
-                                    <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto">
-                                        Remove
-                                    </CButton>
+                                    <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto"> {{ $t("actions.delete") }}</CButton>
                                 </td>
                             </template>
                         </CDataTable>
@@ -53,7 +51,7 @@
 </template>
 
 <script>
-    import {PERIPHERAL_LIST_ALL, PERIPHERAL_DELETE} from "../../graphql/zones";
+    import {PERIPHERAL_LIST_ALL, PERIPHERAL_DELETE} from "../../graphql/queries";
 
     export default {
         name: 'PeripheralList',
@@ -116,8 +114,8 @@
             peripheralLink(uid) {
                 return `peripherals/${uid}/view`
             },
-            viewPeripheralDetails(uid) {
-                const peripheralLink = this.peripheralLink(uid)
+            viewPeripheralDetails(id) {
+                const peripheralLink = this.peripheralLink(id)
                 this.$router.push({path: peripheralLink})
             }
         }

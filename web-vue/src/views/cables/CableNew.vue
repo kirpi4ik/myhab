@@ -48,7 +48,7 @@
 
 
 <script>
-    import {USER_CREATE} from "../../graphql/zones";
+    import {USER_CREATE} from "../../graphql/queries";
 
     export default {
         name: 'CableNew',

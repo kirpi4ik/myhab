@@ -76,7 +76,7 @@
                         </CCardBody>
                         <CCardFooter>
                             <CButton type="submit" size="sm" color="primary" @click="save">
-                                <CIcon name="cil-check-circle"/>
+                                <CIcon name="cil-check"/>
                                 {{ $t("actions.save") }}
                             </CButton>
                             <CButton type="reset" size="sm" color="danger" @click="$router.go(-1)">
@@ -93,7 +93,7 @@
 
 
 <script>
-    import {PERIPHERAL_GET_BY_ID_CHILDS, PERIPHERAL_VALUE_UPDATE} from "../../graphql/zones";
+    import {PERIPHERAL_GET_BY_ID_CHILDS, PERIPHERAL_VALUE_UPDATE} from "../../graphql/queries";
     import Multiselect from 'vue-multiselect'
 
     export default {
@@ -159,10 +159,10 @@
 
                 this.$apollo.query({
                     query: PERIPHERAL_GET_BY_ID_CHILDS,
-                    variables: {uid: this.$route.params.id},
+                    variables: {id: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.peripheral = response.data.devicePeripheralByUid;
+                    this.peripheral = response.data.devicePeripheral;
                     const peripheralDetailToMap = this.peripheral ? Object.entries(this.peripheral) : [['id', 'Not found']];
                     this.peripheralDetails = peripheralDetailToMap.map(([key, value]) => {
                         return {key, value}
@@ -177,12 +177,12 @@
                         item["peripherals"] = [peripheral]
                     };
 
-                    cleanup(response.data.devicePeripheralByUid.category);
+                    cleanup(response.data.devicePeripheral.category);
 
-                    response.data.devicePeripheralByUid.zones.forEach(cleanup);
-                    // response.data.devicePeripheralByUid.zones.forEach(setParent);
-                    response.data.devicePeripheralByUid.connectedTo.forEach(cleanup);
-                    // response.data.devicePeripheralByUid.connectedTo.forEach(setParent);
+                    response.data.devicePeripheral.zones.forEach(cleanup);
+                    // response.data.devicePeripheral.zones.forEach(setParent);
+                    response.data.devicePeripheral.connectedTo.forEach(cleanup);
+                    // response.data.devicePeripheral.connectedTo.forEach(setParent);
                     response.data.peripheralCategoryList.forEach(setParent);
                     response.data.peripheralCategoryList.forEach(cleanup);
                     response.data.zoneList.forEach(cleanup);
@@ -191,11 +191,11 @@
                     // response.data.devicePortList.forEach(setParent);
 
                     this.categories.options = response.data.peripheralCategoryList;
-                    this.categories.selected = response.data.devicePeripheralByUid.category;
+                    this.categories.selected = response.data.devicePeripheral.category;
                     this.zones.options = response.data.zoneList;
-                    this.zones.selected = response.data.devicePeripheralByUid.zones;
+                    this.zones.selected = response.data.devicePeripheral.zones;
                     this.connectedTo.options = response.data.devicePortList;
-                    this.connectedTo.selected = response.data.devicePeripheralByUid.connectedTo;
+                    this.connectedTo.selected = response.data.devicePeripheral.connectedTo;
                 });
             }
         }
