@@ -54,7 +54,7 @@
     import {USERS_GET_ALL, USER_DELETE} from "../../graphql/queries";
 
     export default {
-        name: 'Users',
+        name: 'UserList',
         data: () => {
             return {
                 items: [],
@@ -103,7 +103,6 @@
                     variables: {},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    debugger
                     this.items = response.data.userList;
                 });
             },

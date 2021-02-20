@@ -11,10 +11,16 @@ import grails.events.EventPublisher
 class EventController implements EventPublisher {
     static responseFormats = ['json', 'xml']
 
-    def triggerWithGet() {
+    def pubGetEvent() {
         EventData input = new EventData(params)
-        publish(input.p0, input)
-        publish(TopicName.EVT_LOG.id(), input)
+
+        if (input.p0 && request.remoteAddr.startsWith("192.")) {
+            publish(input.p0, input)
+            publish(TopicName.EVT_LOG.id(), input)
+        } else {
+            log.info("Event triggered with:  $params")
+            respond params
+        }
     }
 
     def shortUrlEvent() {

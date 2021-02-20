@@ -1,97 +1,99 @@
 <template>
-    <CRow>
-        <CCol col="6" lg="12">
-            <CCard>
-                <CCardHeader>
-                    <strong>{{ $t("device.details.title") }} <span class="field-value">{{ device.name }}</span> </strong>
-                    <div class="card-header-actions">
-                        <a @click="navEdit" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
-                            <small class="text-muted">{{ $t("actions.edit") }}</small> |
-                        </a>
-                        <a @click="navConfig" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
-                            <small class="text-muted">{{ $t("actions.config") }}</small> |
-                        </a>
-                        <a @click="navDelete" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
-                            <small class="text-muted">{{ $t("actions.delete") }}</small>
-                        </a>
-                    </div>
-                </CCardHeader>
-                <CCardBody>
-                    <CRow>
-                        <CCol sm="12">
-                            <CDataTable
-                                    striped
-                                    hover
-                                    small
-                                    fixed
-                                    :items="deviceDetails"
-                            />
-                        </CCol>
-                    </CRow>
-                    <CRow style="margin-top: 15px" v-if="device.networkAddress != null">
-                        <CCol sm="12">
-                            <strong> Network :</strong>
-                            <span style="margin-left: 15px">{{device.networkAddress.ip}}:{{device.networkAddress.port}}</span>
-                        </CCol>
-                    </CRow>
-                    <CRow style="margin-top: 15px" v-if="device.rack != null">
-                        <CCol sm="12">
-                            <strong> Rack :</strong>
-                            <span style="margin-left: 15px">{{device.rack.name}}</span> -
-                            <span>{{device.rack.description}}</span>
-                        </CCol>
-                    </CRow>
-                    <CRow style="margin-top: 15px">
-                        <CCol sm="12">
-                            <strong> Ports :</strong>
-                            <div style="width: 100%;">
+    <div>
+        <CRow>
+            <CCol sm="6">
+                <CCard>
+                    <CCardHeader>
+                        <strong>{{ $t("device.details.title") }} <span class="field-value">{{ device.name }}</span> </strong>
+                        <div class="card-header-actions">
+                            <a @click="navEdit" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
+                                <small class="text-muted">{{ $t("actions.edit") }}</small> |
+                            </a>
+                            <a @click="navConfig" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
+                                <small class="text-muted">{{ $t("actions.config") }}</small> |
+                            </a>
+                            <a @click="navDelete" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
+                                <small class="text-muted">{{ $t("actions.delete") }}</small>
+                            </a>
+                        </div>
+                    </CCardHeader>
+                    <CCardBody>
+                        <CRow>
+                            <CCol sm="12">
                                 <CDataTable
-                                        hover
-                                        bordered
                                         striped
-                                        :items="ports"
-                                        :fields="portsTemplate"
-                                        :items-per-page="6"
-                                        :pagination="$options.paginationProps"
-                                        index-column
-                                        table-filter
-                                        sorter
-                                        clickable-rows
-                                >
-                                    <template #name="data">
-                                        <td>
-                                            <strong>{{data.item.name}}</strong>
-                                        </td>
-                                    </template>
-                                    <template #actions="data">
-                                        <td>
-                                            <CButton color="success" @click="viewPortDetails(data.item)">{{ $t("actions.view") }}</CButton>
-                                            |
-                                            <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto"> {{ $t("actions.delete") }}</CButton>
-                                        </td>
-                                    </template>
-                                </CDataTable>
-                                <CButton type="submit" size="sm" color="success" @click="$router.push({path: '/devices/'+device.id +'/ports/create'})">
-                                    <CIcon name="cil-plus"/>
-                                    {{ $t("actions.add_new") }}
-                                </CButton>
-                            </div>
-                        </CCol>
-                    </CRow>
-                </CCardBody>
-                <CCardFooter>
-                    <CButton color="primary" @click="$router.push({path: '/devices'})">{{ $t("actions.nav.back") }}</CButton>
-                </CCardFooter>
-            </CCard>
-        </CCol>
-        <CModal :title="$t('modal.delete.title')" color="danger" :show.sync="deleteConfirmShow">
-            {{ $t("modal.delete.confirmation_msg") }} <strong>{{device.name}}</strong> ?
-            <template #footer>
-                <CButton @click="removeDevice" color="danger">{{ $t("actions.delete") }}</CButton>
-                <CButton @click="deleteConfirmShow = false" color="success">{{ $t("actions.cancel") }}</CButton>
-            </template>
-        </CModal>
-    </CRow>
+                                        hover
+                                        small
+                                        fixed
+                                        :items="deviceDetails"
+                                />
+                            </CCol>
+                        </CRow>
+                        <CRow style="margin-top: 15px" v-if="device.networkAddress != null">
+                            <CCol sm="12">
+                                <strong> Network :</strong>
+                                <span style="margin-left: 15px">{{device.networkAddress.ip}}:{{device.networkAddress.port}}</span>
+                            </CCol>
+                        </CRow>
+                        <CRow style="margin-top: 15px" v-if="device.rack != null">
+                            <CCol sm="12">
+                                <strong> Rack :</strong>
+                                <span style="margin-left: 15px">{{device.rack.name}}</span> -
+                                <span>{{device.rack.description}}</span>
+                            </CCol>
+                        </CRow>
+                        <CRow style="margin-top: 15px">
+                            <CCol sm="12">
+                                <strong> Ports :</strong>
+                                <div style="width: 100%;">
+                                    <CDataTable
+                                            hover
+                                            bordered
+                                            striped
+                                            :items="ports"
+                                            :fields="portsTemplate"
+                                            :items-per-page="6"
+                                            :pagination="$options.paginationProps"
+                                            index-column
+                                            table-filter
+                                            sorter
+                                            clickable-rows
+                                    >
+                                        <template #name="data">
+                                            <td>
+                                                <strong>{{data.item.name}}</strong>
+                                            </td>
+                                        </template>
+                                        <template #actions="data">
+                                            <td>
+                                                <CButton color="success" @click="viewPortDetails(data.item)">{{ $t("actions.view") }}</CButton>
+                                                |
+                                                <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto"> {{ $t("actions.delete") }}</CButton>
+                                            </td>
+                                        </template>
+                                    </CDataTable>
+                                    <CButton type="submit" size="sm" color="success" @click="$router.push({path: '/devices/'+device.id +'/ports/create'})">
+                                        <CIcon name="cil-plus"/>
+                                        {{ $t("actions.add_new") }}
+                                    </CButton>
+                                </div>
+                            </CCol>
+                        </CRow>
+                    </CCardBody>
+                    <CCardFooter>
+                        <CButton color="primary" @click="$router.push({path: '/devices'})">{{ $t("actions.nav.back") }}</CButton>
+                    </CCardFooter>
+                </CCard>
+            </CCol>
+            <CModal :title="$t('modal.delete.title')" color="danger" :show.sync="deleteConfirmShow">
+                {{ $t("modal.delete.confirmation_msg") }} <strong>{{device.name}}</strong> ?
+                <template #footer>
+                    <CButton @click="removeDevice" color="danger">{{ $t("actions.delete") }}</CButton>
+                    <CButton @click="deleteConfirmShow = false" color="success">{{ $t("actions.cancel") }}</CButton>
+                </template>
+            </CModal>
+        </CRow>
+    </div>
 </template>
 
 <script>

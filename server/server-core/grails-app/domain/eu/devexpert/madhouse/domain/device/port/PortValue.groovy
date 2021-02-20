@@ -16,7 +16,7 @@ class PortValue extends BaseEntity {
     event nullable: true
   }
   static mapping = {
-    table '`device_port_values`'
+    table '`port_values`'
     version false
   }
   static graphql = true

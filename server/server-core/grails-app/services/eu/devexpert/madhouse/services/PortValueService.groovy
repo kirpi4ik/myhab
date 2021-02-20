@@ -43,6 +43,7 @@ class PortValueService implements EventPublisher {
     def updatePortValue(DevicePort devicePort, String newValue) {
         def portLatestValues = PortValue.withCriteria {
             eq('portUid', devicePort.uid)
+            gt("tsCreated", DateTime.now().minusDays(10).toDate())
             order("tsCreated", "desc")
             maxResults(1)
         }
