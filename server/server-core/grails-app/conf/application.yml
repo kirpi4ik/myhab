@@ -147,7 +147,7 @@ environments:
   development:
     dataSource:
       dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse_02_25
+      url: jdbc:postgresql://localhost:5432/madhouse_0210
       username: "madhouse"
       password: "madhouse"
       driverClassName: "org.postgresql.Driver"
