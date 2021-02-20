@@ -5,7 +5,8 @@ import grails.util.Environment
 class UrlMappings {
     static excludes = ["/images/**", "/css/**", "/js/**", "/img/**", "/font/**", "/fonts/**", "/*.html"]
     static mappings = {
-        get '/api/public/event'(controller: "event", action: "triggerWithGet")
+        get '/api/public/event'(controller: "event", action: "pubGetEvent")
+        get '/pub-event'(controller: "event", action: "pubGetEvent")
         get '/e'(controller: "event", action: "shortUrlEvent")
         "/login/auth"(controller:'login', action:'auth')
 

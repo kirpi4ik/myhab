@@ -174,7 +174,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
     root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
 }
 
-logger 'eu.devexpert', ERROR, ['STDOUT', 'FULL_STACKTRACE']
+logger 'eu.devexpert', INFO, ['STDOUT', 'FULL_STACKTRACE']
 //logger 'org.jsoup', DEBUG, ['STDOUT']
 //logger 'org.springframework.security', DEBUG, ['STDOUT']
 //logger 'grails.plugin.springsecurity', DEBUG, ['STDOUT']
