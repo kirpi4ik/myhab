@@ -16,8 +16,8 @@ const ConfigList = () => import('@/views/configuration/ConfigList');
 
 const Zones = () => import('@/views/zones/ZoneCombinedView');
 // Users
-const Users = () => import('@/views/users/Users');
-const User = () => import('@/views/users/User');
+const UserList = () => import('@/views/users/UserList');
+const UserView = () => import('@/views/users/UserView');
 const UserEdit = () => import('@/views/users/UserEdit');
 const UserNew = () => import('@/views/users/UserNew');
 
@@ -88,7 +88,7 @@ function configRoutes() {
                     children: [
                         {
                             path: '',
-                            component: Users,
+                            component: UserList,
                             meta: {
                                 reload: true,
                             }
@@ -96,7 +96,7 @@ function configRoutes() {
                         {
                             path: '/users/:id/profile',
                             name: i18n.t('breadcrumb.user.details'),
-                            component: User
+                            component: UserView
                         },
                         {
                             path: '/users/:id/edit',

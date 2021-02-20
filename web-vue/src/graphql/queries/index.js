@@ -6,6 +6,7 @@ export * from './zones';
 export * from './cables';
 export * from './devices';
 export * from './configurations';
+export * from './users';
 
 export const NAV_BREADCRUMB = gql`
     query navigation($zoneUid:String){

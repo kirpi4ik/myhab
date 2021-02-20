@@ -50,7 +50,7 @@
 
 
     export default {
-        name: 'User',
+        name: 'UserView',
         fields: [
             {key: 'key', _style: 'width:150px'},
             {key: 'value', _style: 'width:150px;'}

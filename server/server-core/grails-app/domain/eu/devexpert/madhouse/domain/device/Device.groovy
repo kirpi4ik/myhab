@@ -21,9 +21,11 @@ class Device extends BaseEntity implements Configurable<Device> {
     Set<DevicePort> ports
     Set<DeviceAccount> authAccounts
     Rack rack;
+    List<DeviceBackup> backups
+
 
     static belongsTo = [rack: Rack, type: DeviceType]
-    static hasMany = [authAccounts: DeviceAccount, ports: DevicePort]
+    static hasMany = [authAccounts: DeviceAccount, ports: DevicePort, backups: DeviceBackup]
 
     static mapping = {
         table '`device_controllers`'
