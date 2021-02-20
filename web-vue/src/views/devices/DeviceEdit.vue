@@ -227,14 +227,6 @@
             updateFieldValue(value, key) {
                 this.deviceToUpdate[key] = value
             },
-            save() {
-                this.$apollo.mutate({
-                    mutation: DEVICE_VALUE_UPDATE, variables: {id: this.device.id, deviceUpdate: this.deviceToUpdate}
-                }).then(response => {
-                    this.$router.push({path: "/devices/" + this.$route.params.id + "/view"})
-                });
-            },
-
             init() {
                 let cleanup = function (item, index) {
                     if (item != null) {
@@ -247,7 +239,7 @@
 
                 this.$apollo.query({
                     query: DEVICE_GET_DETAILS_FOR_EDIT,
-                    variables: {id: this.$route.params.id},
+                    variables: {id: this.$route.params.deviceId},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.device = response.data.device;
