@@ -232,6 +232,13 @@ function configRoutes() {
                             }
                         },
                         {
+                            path: 'create',
+                            component: PeripheralNew,
+                            meta: {
+                                reload: true,
+                            }
+                        },
+                        {
                             path: ':id',
                             component: RouteContainer,
                             children: [
