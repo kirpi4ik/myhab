@@ -141,7 +141,7 @@
                 this.$apollo.mutate({
                     mutation: PERIPHERAL_CREATE, variables: {devicePeripheral: this.peripheralToUpdate}
                 }).then(response => {
-                    this.$router.push({path: "/peripherals/" + response.data.devicePeripheralCreate.uid + "/view"})
+                    this.$router.push({path: "/peripherals/" + response.data.devicePeripheralCreate.id + "/view"})
                 });
             },
         }
