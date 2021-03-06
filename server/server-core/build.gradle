@@ -110,6 +110,12 @@ dependencies {
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
     compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.2'
 
+    compile 'org.grails.plugins:grails-spring-websocket:2.5.0.RC1'
+
+    implementation "org.springframework.security:spring-security-config"
+    implementation "org.springframework.security:spring-security-messaging"
+    implementation "org.springframework.security:spring-security-web"
+
     runtime "org.apache.tomcat:tomcat-jdbc"
     runtime "javax.xml.bind:jaxb-api:2.3.0"
     testCompile "org.grails:grails-gorm-testing-support"
