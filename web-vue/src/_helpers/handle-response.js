@@ -13,7 +13,7 @@ export function handleResponse(response) {
             const error = (data && data.message) || response.statusText;
             return Promise.reject(error);
         }
-
+        localStorage.setItem('currentToken', data);
         return data;
     });
 }
