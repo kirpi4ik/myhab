@@ -42,6 +42,11 @@
 
 </template>
 <script>
+    import {Stomp, Client} from "@stomp/stompjs";
+    import SockJS from "sockjs-client";
+    import {authenticationService} from '@/_services';
+
+
     import {router} from '@/_helpers';
 
     import {NAV_BREADCRUMB, ZONE_GET_BY_UID, ZONES_GET_ROOT,} from "../../graphql/queries";
@@ -70,15 +75,59 @@
                 peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
                 peripheralTempUid: process.env.VUE_APP_CONF_PH_TEMP_UID,
                 peripheralHeatUid: process.env.VUE_APP_CONF_PH_HEAT_UID,
+                stompClient: null
             }
         },
         created() {
+            this.initStomp();
             this.loadInitial();
         },
         watch: {
             '$route.path': 'loadInitial'
         },
         methods: {
+            initStomp() {
+                this.stompConnect();
+            },
+            stompFailureCallback(error) {
+                console.log('STOMP: ' + error);
+                setTimeout(this.stompConnect, 5000);
+                console.log('STOMP: Reconecting in 5 seconds');
+            },
+            stompConnect() {
+                const wsUri = process.env.VUE_APP_SERVER_URL + '/stomp?access_token=' + authenticationService.currentUserValue.access_token;
+                var sock = new SockJS(wsUri);
+                console.log('STOMP: Attempting connection');
+
+                let message_callback = function (message) {
+                    this.loadInitial();
+                    if (message.headers['content-type'] === 'application/octet-stream') {
+                        console.log(message.binaryBody)
+                    } else {
+                        console.log(message.body)
+                        //JSON.parse(message.body);
+                    }
+                }.bind(this);
+
+                this.stompClient = new Client({
+                    brokerURL: wsUri,
+                    debug: function (str) {
+                        console.log(str);
+                    },
+                    heartbeatIncoming: 4000,
+                    heartbeatOutgoing: 4000,
+                    webSocketFactory: function () {
+                        return sock;
+                    },
+                    onConnect: () => {
+                        console.log("CONNECTED");
+                        this.stompClient.subscribe("/topic/events", message_callback, {});
+                    },
+                    onStompError: this.stompFailureCallback
+                });
+                this.stompClient.activate();
+
+            },
             loadInitial() {
                 let peripherals = [];
                 let peripheralUids = [];
@@ -93,7 +142,7 @@
                     if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
                         let port = peripheral.connectedTo[0];
                         portValue = port.value;
-                        state = portValue === 'OFF'
+                        state = portValue === 'OFF';
                         portId = port.id;
                         portUid = port.uid;
                         deviceState = port.device.status
@@ -123,7 +172,8 @@
                 if (this.$route.query.zoneUid != null && this.$route.query.zoneUid !== "") {
                     this.$apollo.query({
                         query: ZONE_GET_BY_UID,
-                        variables: {uid: this.$route.query.zoneUid}
+                        variables: {uid: this.$route.query.zoneUid},
+                        fetchPolicy: 'network-only'
                     }).then(response => {
                         zone = response.data.zoneByUid;
                         zones = zone.zones;
@@ -136,7 +186,8 @@
                 } else {
                     this.$apollo.query({
                         query: ZONES_GET_ROOT,
-                        variables: {}
+                        variables: {},
+                        fetchPolicy: 'network-only'
                     }).then(response => {
                         zones = response.data.zonesRoot;
                         zones.forEach(zoneInitCallback);

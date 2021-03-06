@@ -2,6 +2,8 @@ import eu.devexpert.madhouse.auth.ClaimProvider
 import eu.devexpert.madhouse.graphql.GQLSchemaFactory
 import eu.devexpert.madhouse.graphql.GraphQLGenerator
 import eu.devexpert.madhouse.graphql.fetchers.Mutation
+
+import eu.devexpert.madhouse.init.socket.WebSocketConfig
 import eu.devexpert.madhouse.listener.domain.UserPasswordEncoderListener
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -32,4 +34,7 @@ beans = {
     customClaimProvider(ClaimProvider)
 
     threadMetrics(JvmThreadMetrics)
+//
+    webSocketConfig(WebSocketConfig)
+//    webSocketSecurityConfig(WebSocketSecurityConfig)
 }

@@ -58,13 +58,18 @@ management:
       enabled: true
     httptrace:
       enabled: true
-
-
-
-
+allowedOrigin:  http://localhost:9999,http://localhost:443,http://localhost:80,chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam,https://madhouse.app
 
 ---
 grails:
+  cors:
+    enabled: true
+    allowedOrigins:
+      - http://localhost:9999
+      - chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam
+      - http://localhost:443
+      - http://localhost:80
+      - https://madhouse.app
   mime:
     disable:
       accept:
@@ -99,10 +104,6 @@ grails:
   converters:
     encoding: UTF-8
 ---
-grails:
-  cors:
-    enabled: true
-
 quartz.jdbcStore: true
 quartz:
   pluginEnabled: true
