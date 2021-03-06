@@ -28,10 +28,12 @@
     "@fortawesome/free-brands-svg-icons": "^5.15.1",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
     "@fortawesome/vue-fontawesome": "^2.0.0",
+    "@stomp/stompjs": "^6.1.0",
     "i18n": "^0.13.2",
     "luxon": "^1.25.0",
     "moment": "^2.29.1",
     "rxjs": "^6.6.3",
+    "sockjs-client": "^1.5.0",
     "uid": "^2.0.0",
     "vue": "^2.6.12",
     "vue-color": "^2.8.1",
@@ -42,8 +44,10 @@
     "vue-multiselect": "^2.1.6",
     "vue-round-slider": "^1.0.1",
     "vue-router": "^3.4.8",
+    "vue-socket.io": "^3.0.10",
     "vuelidate": "^0.7.6",
     "vuex": "^3.5.1",
+    "websocket": "^1.0.33",
     "weekstart": "^1.0.1"
   },
   "devDependencies": {
