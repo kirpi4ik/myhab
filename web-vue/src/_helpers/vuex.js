@@ -1,4 +1,5 @@
 import {Stomp, Client, ActivationState} from "@stomp/stompjs";
+import {Utils} from '@/_helpers';
 import SockJS from "sockjs-client";
 import {authenticationService} from '@/_services';
 import Vue from 'vue'
@@ -32,7 +33,7 @@ const mutations = {
 };
 const actions = {
     connect(context, handler) {
-        const wsUri = process.env.VUE_APP_SERVER_URL + '/stomp?access_token=' + authenticationService.currentUserValue.access_token;
+        const wsUri = Utils.host() + '/stomp?access_token=' + authenticationService.currentUserValue.access_token;
         console.log('STOMP: Attempting connection');
 
         let message_callback = function (message) {
@@ -46,7 +47,7 @@ const actions = {
         this.stompClient = new Client({
             brokerURL: wsUri,
             debug: function (str) {
-                console.log(str);
+                // console.log(str);
             },
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
@@ -70,7 +71,7 @@ const actions = {
     stompFailureCallback(error) {
         this.commit("stompConnection", 'OFFLINE');
         console.log('STOMP error: ' + error);
-        setTimeout(this.stompConnect, 5000);
+        setTimeout(this.connect, 5000);
         console.log('STOMP: Reconecting in 5 seconds');
     }
 };
