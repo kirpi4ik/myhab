@@ -5,6 +5,8 @@
 <script>
     import {authenticationService} from '@/_services';
     import {router, Role} from '@/_helpers';
+    import Vuex from "vuex";
+
 
     export default {
         name: 'App',
@@ -20,6 +22,10 @@
         },
         created() {
             authenticationService.currentUser.subscribe(x => this.currentUser = x);
+            this.connect();
+        },
+        methods:{
+            ...Vuex.mapActions(["connect"]),
         },
         watch: {
             $route: {

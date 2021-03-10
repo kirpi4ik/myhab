@@ -42,11 +42,6 @@
 
 </template>
 <script>
-    import {Stomp, Client} from "@stomp/stompjs";
-    import SockJS from "sockjs-client";
-    import {authenticationService} from '@/_services';
-
-
     import {router} from '@/_helpers';
 
     import {NAV_BREADCRUMB, ZONE_GET_BY_UID, ZONES_GET_ROOT,} from "../../graphql/queries";
@@ -74,60 +69,26 @@
                 categoryUid: this.$route.query.categoryUid,
                 peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
                 peripheralTempUid: process.env.VUE_APP_CONF_PH_TEMP_UID,
-                peripheralHeatUid: process.env.VUE_APP_CONF_PH_HEAT_UID,
-                stompClient: null
+                peripheralHeatUid: process.env.VUE_APP_CONF_PH_HEAT_UID
             }
         },
         created() {
-            this.initStomp();
             this.loadInitial();
         },
+        computed: {
+            stompMessage() {
+                return this.$store.state.stomp.message
+            }
+        },
         watch: {
-            '$route.path': 'loadInitial'
+            '$route.path': 'loadInitial',
+            stompMessage: function (newVal) {
+                if (newVal.eventName == 'evt_port_value_changed') {
+                    this.loadInitial();
+                }
+            }
         },
         methods: {
-            initStomp() {
-                this.stompConnect();
-            },
-            stompFailureCallback(error) {
-                console.log('STOMP: ' + error);
-                setTimeout(this.stompConnect, 5000);
-                console.log('STOMP: Reconecting in 5 seconds');
-            },
-            stompConnect() {
-                const wsUri = process.env.VUE_APP_SERVER_URL + '/stomp?access_token=' + authenticationService.currentUserValue.access_token;
-                var sock = new SockJS(wsUri);
-                console.log('STOMP: Attempting connection');
-
-                let message_callback = function (message) {
-                    this.loadInitial();
-                    if (message.headers['content-type'] === 'application/octet-stream') {
-                        console.log(message.binaryBody)
-                    } else {
-                        console.log(message.body)
-                        //JSON.parse(message.body);
-                    }
-                }.bind(this);
-
-                this.stompClient = new Client({
-                    brokerURL: wsUri,
-                    debug: function (str) {
-                        console.log(str);
-                    },
-                    heartbeatIncoming: 4000,
-                    heartbeatOutgoing: 4000,
-                    webSocketFactory: function () {
-                        return sock;
-                    },
-                    onConnect: () => {
-                        console.log("CONNECTED");
-                        this.stompClient.subscribe("/topic/events", message_callback, {});
-                    },
-                    onStompError: this.stompFailureCallback
-                });
-                this.stompClient.activate();
-
-            },
             loadInitial() {
                 let peripherals = [];
                 let peripheralUids = [];
