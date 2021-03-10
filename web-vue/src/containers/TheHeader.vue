@@ -30,8 +30,8 @@
             </CHeaderNavItem>
         </CHeaderNav>
         <CHeaderNav class="mr-4">
-            <font-awesome-icon :icon="['fas', 'wifi']" size="1x" style="color: green" v-if="stompConnection == 'ONLINE'"/>
-            <font-awesome-icon :icon="['fas', 'exclamation-triangle']" size="1x" style="color: red" v-if="stompConnection == 'OFFLINE'"/>
+            <font-awesome-icon :icon="['fas', 'wifi']" size="1x" style="color: green" v-if="stompConnection == 'ONLINE'" title="Server connected"/>
+            <font-awesome-icon :icon="['fas', 'exclamation-triangle']" size="1x" style="color: red" v-if="stompConnection == 'OFFLINE'" title="Async connection offline"/>
             <TheHeaderDropdownNotif/>
             <TheHeaderDropdownTaskList v-if="hasRole(['ROLE_ADMIN'])"/>
             <TheHeaderDropdownMsgInbox/>
