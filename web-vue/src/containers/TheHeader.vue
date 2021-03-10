@@ -30,9 +30,11 @@
             </CHeaderNavItem>
         </CHeaderNav>
         <CHeaderNav class="mr-4">
+            <font-awesome-icon :icon="['fas', 'wifi']" size="1x" style="color: green" v-if="stompConnection == 'ONLINE'"/>
+            <font-awesome-icon :icon="['fas', 'exclamation-triangle']" size="1x" style="color: red" v-if="stompConnection == 'OFFLINE'"/>
             <TheHeaderDropdownNotif/>
-            <TheHeaderDropdownTaskList  v-if="hasRole(['ROLE_ADMIN'])"/>
-            <TheHeaderDropdownMsgInbox />
+            <TheHeaderDropdownTaskList v-if="hasRole(['ROLE_ADMIN'])"/>
+            <TheHeaderDropdownMsgInbox/>
             <TheHeaderDropdownAccnt/>
         </CHeaderNav>
         <CSubheader class="px-3">
@@ -56,6 +58,11 @@
             TheHeaderDropdownNotif,
             TheHeaderDropdownMsgInbox,
             TheHeaderDropdownTaskList
+        },
+        computed: {
+            stompConnection() {
+                return this.$store.state.stomp.connection
+            }
         },
         methods: {
             hasRole: function (roles) {
