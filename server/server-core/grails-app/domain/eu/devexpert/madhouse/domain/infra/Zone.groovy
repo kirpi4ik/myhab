@@ -30,6 +30,7 @@ class Zone extends BaseEntity implements Configurable<Zone> {
 
     static mapping = {
         table '`zones`'
+        sort name: "asc"
         peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id']
         cables joinTable: [name: "zones_cables_join", key: 'zone_id']
 
