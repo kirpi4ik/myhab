@@ -53,7 +53,7 @@
                                         multiple>
                                     <template slot="option" slot-scope="props">
                                         <div>
-                                            <span>{{ props.option.name }} - [{{props.option.internalRef}}] - {{ props.option.description }}</span>
+                                            <span>[{{props.option.id}}]{{ props.option.name }} - [{{props.option.internalRef}}] - {{ props.option.device.name }}[{{props.option.device.code}}]</span>
                                         </div>
                                     </template>
                                 </multiselect>

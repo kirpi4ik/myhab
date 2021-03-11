@@ -29,6 +29,7 @@ class Device extends BaseEntity implements Configurable<Device> {
 
     static mapping = {
         table '`device_controllers`'
+        sort name: "asc"
         authAccounts sort: 'username', order: 'asc'
         ports sort: 'name', order: 'asc'
     }

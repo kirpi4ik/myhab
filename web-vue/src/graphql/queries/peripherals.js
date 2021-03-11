@@ -79,6 +79,10 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
                 internalRef
                 name
                 description
+                device{
+                    name
+                    code
+                }
             }
             zones{
                 id
@@ -105,6 +109,10 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
             internalRef
             name
             description
+            device{
+                name
+                code
+            }
         }
     }
 `;
