@@ -38,10 +38,10 @@ class Cable extends BaseEntity {
   }
   static mapping = {
     table '`cables`'
+    sort code: "asc"
     zones joinTable: [name: "zones_cables_join", key: 'cable_id']
     connectedTo joinTable: [name: "cables_ports_join", key: 'cable_id']
     peripherals joinTable: [name: "cables_peripherals_join", key: 'cable_id']
-    sort code: "asc"
   }
 
   static graphql = GraphQLMapping.lazy {
