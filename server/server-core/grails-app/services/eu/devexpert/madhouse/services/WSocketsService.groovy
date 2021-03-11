@@ -10,7 +10,7 @@ import org.joda.time.DateTime
 @Transactional
 class WSocketsService implements EventPublisher, WebSocket {
 
-    int periodMs = 3000
+    int periodMs = 2000
     long lastEvent = DateTime.now().millis
 
     @Subscriber('evt_light')

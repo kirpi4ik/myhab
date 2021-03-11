@@ -5,7 +5,6 @@ import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.job.EventData
-import eu.devexpert.madhouse.services.dsl.action.PowerService
 import grails.events.EventPublisher
 
 class EventController implements EventPublisher {
