@@ -36,6 +36,7 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
     }
     static mapping = {
         table '`device_peripherals`'
+        sort name: "asc"
         connectedTo joinTable: [name: "device_ports_peripherals_join", key: 'peripheral_id'], cascade: "all"
         zones joinTable: [name: "zones_peripherals_join", key: 'peripheral_id'], cascade: "all"
         sort name: "asc"

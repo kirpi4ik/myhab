@@ -18,6 +18,7 @@ class Rack extends BaseEntity {
     description nullable: true
   }
   static mapping = {
+    sort name: "asc"
     table '`racks`'
 
   }

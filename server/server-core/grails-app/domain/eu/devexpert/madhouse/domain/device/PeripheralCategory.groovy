@@ -11,6 +11,7 @@ class PeripheralCategory extends BaseEntity {
     static hasMany = [peripherals: DevicePeripheral, cables: Cable]
     static mapping = {
         table '`device_peripherals_categories`'
+        sort name: "asc"
     }
     static graphql = true
     static constraints = {
