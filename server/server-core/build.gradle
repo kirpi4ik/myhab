@@ -72,7 +72,7 @@ dependencies {
     compile "org.grails.plugins:events"
     compile "org.grails.plugins:gsp"
     compile "org.grails.plugins:hibernate5"
-    compile "org.hibernate:hibernate-core:5.4.0.Final"
+    compile "org.hibernate:hibernate-core:5.4.20.Final"
 
     /*compile "com.graphql-java:graphql-java:13.0"*/
     compile "org.grails.plugins:gorm-graphql-plugin:2.0.0"
