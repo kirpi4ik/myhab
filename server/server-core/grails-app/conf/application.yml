@@ -196,7 +196,7 @@ environments:
         minIdle: 5
         maxIdle: 25
         maxWait: 10000
-        maxAge: 600000
+        maxAge: 60000
         timeBetweenEvictionRunsMillis: 5000
         minEvictableIdleTimeMillis: 60000
         validationQuery: SELECT 1
