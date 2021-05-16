@@ -33,7 +33,7 @@ class WSocketsService implements EventPublisher, WebSocket {
     }
 
     @Subscriber('evt_device_status')
-    def evtReadDeviceStatus() {
+    def deviceStatusChanged() {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_device_status"))
     }
 }

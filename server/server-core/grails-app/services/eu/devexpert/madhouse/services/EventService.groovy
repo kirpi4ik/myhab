@@ -157,6 +157,11 @@ class EventService implements EventPublisher {
         return portUids
     }
 
+    /**
+     * Update device status : OFFLINE/ONLINE
+     * @param event
+     * @return
+     */
     @Transactional
     @Subscriber('evt_device_status')
     def deviceStatus(event) {
