@@ -93,7 +93,7 @@ dependencies {
     runtime "org.glassfish.web:el-impl:2.1.2-b03"
 
     runtime "com.h2database:h2"
-    compile 'org.postgresql:postgresql:9.4.1212'
+    compile 'org.postgresql:postgresql:42.2.20'
 
     compile "org.grails.plugins:spring-security-rest:3.0.0.RC1"
     compile group: 'org.kohsuke', name: 'groovy-sandbox', version: '1.18'
