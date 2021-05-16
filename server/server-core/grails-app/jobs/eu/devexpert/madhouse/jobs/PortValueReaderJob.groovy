@@ -53,7 +53,7 @@ class PortValueReaderJob implements Job, EventPublisher {
                             throw new UnavailableDeviceException()
                         }
                     }.onComplete { portValues ->
-                        portValueService.updatePortValues(deviceUid, portValues)
+                        portValueService.updateIfChangedPortValues(deviceUid, portValues)
                         publish(TopicName.EVT_DEVICE_STATUS.id(), [
                                 "p0": TopicName.EVT_DEVICE_STATUS.id(),
                                 "p1": EntityType.DEVICE.name(),
@@ -81,7 +81,7 @@ class PortValueReaderJob implements Job, EventPublisher {
                             throw new UnavailableDeviceException()
                         }
                     }.onComplete { portValues ->
-                        portValueService.updatePortValues(deviceUid, portValues)
+                        portValueService.updateIfChangedPortValues(deviceUid, portValues)
                         publish(TopicName.EVT_DEVICE_STATUS.id(), [
                                 "p0": TopicName.EVT_DEVICE_STATUS.id(),
                                 "p1": EntityType.DEVICE.name(),
