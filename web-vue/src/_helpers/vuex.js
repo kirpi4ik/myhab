@@ -65,8 +65,8 @@ const actions = {
             onStompError: this.stompFailureCallback,
             onWebSocketError: this.stompFailureCallback
         });
-        console.log('Connecting...');
-        this.stompClient.activate();
+        // console.log('Connecting...');
+        // this.stompClient.activate();
     },
     stompFailureCallback(error) {
         this.commit("stompConnection", 'OFFLINE');
