@@ -34,8 +34,10 @@ class PortValueReaderJob implements Job, EventPublisher {
     @Override
     @Transactional
     void execute(JobExecutionContext context) throws JobExecutionException {
+        log.trace("PortValueReaderJob reader execute")
         Device.findAll().each { installedDevice ->
             try {
+                log.trace("PortValueReaderJob read for [$installedDevice.uid]")
                 def deviceUid = installedDevice.uid
                 if (installedDevice.model.equals(DeviceModel.MEGAD_2561_RTC)) {
                     Promises.task {
@@ -53,6 +55,7 @@ class PortValueReaderJob implements Job, EventPublisher {
                             throw new UnavailableDeviceException()
                         }
                     }.onComplete { portValues ->
+                        log.trace("Completed MEGA device[$deviceUid] port values[$portValues]")
                         portValueService.updateIfChangedPortValues(deviceUid, portValues)
                         publish(TopicName.EVT_DEVICE_STATUS.id(), [
                                 "p0": TopicName.EVT_DEVICE_STATUS.id(),
@@ -81,6 +84,7 @@ class PortValueReaderJob implements Job, EventPublisher {
                             throw new UnavailableDeviceException()
                         }
                     }.onComplete { portValues ->
+                        log.trace("Completed ESP8266_1 device[$deviceUid] port values[$portValues]")
                         portValueService.updateIfChangedPortValues(deviceUid, portValues)
                         publish(TopicName.EVT_DEVICE_STATUS.id(), [
                                 "p0": TopicName.EVT_DEVICE_STATUS.id(),
