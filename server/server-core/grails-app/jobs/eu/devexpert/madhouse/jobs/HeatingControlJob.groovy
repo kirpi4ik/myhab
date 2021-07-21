@@ -15,6 +15,7 @@ import org.joda.time.DateTime
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
+import org.springframework.beans.factory.annotation.Value
 
 import java.util.concurrent.TimeUnit
 
@@ -37,46 +38,50 @@ class HeatingControlJob implements Job, EventPublisher {
 
     static group = "Internal"
     static description = "Heat control"
+    @Value('${heatControlEnabled}')
+    boolean heatControlEnabled
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-        def actions = [:]
-        Set<Zone> allzones = Zone.findAll()
-        def zonesWithScheduledTemp = allzones.findAll { zone -> zone.getConfigurations().find { configuration -> configuration.key == CONFIG_LIST_SCHEDULED_TEMP } != null }.sort { zone -> zone.parent }.reverse()
-        zonesWithScheduledTemp.each { zone ->
-            def desiredTempForActuator = getDesiredTemperature(zone)
-            def currentTemperatures = getCurrentTempSInZone(zone)
-            def currentTemp
-            if (desiredTempForActuator != null) {
-                if (currentTemperatures.size() > 0) {
-                    //there is at least one thermo sensor
-                    currentTemp = currentTemperatures[0]
-                } else {
-                    currentTemp = 0
-                }
-                Set<DevicePeripheral> actuatorHeatCtrlSet = DevicePeripheral.findAll("select dp from  DevicePeripheral dp where ?0 in elements(zones) and dp.category.name = ?1", [zone], PERIPHERAL_HEAT_CTRL_CATEGORY)
-                actuatorHeatCtrlSet.each { actuator ->
-                    if (currentTemp <= desiredTempForActuator) {
-                        actions << ["${actuator.uid}": "ON"]
-
+        if (heatControlEnabled) {
+            def actions = [:]
+            Set<Zone> allzones = Zone.findAll()
+            def zonesWithScheduledTemp = allzones.findAll { zone -> zone.getConfigurations().find { configuration -> configuration.key == CONFIG_LIST_SCHEDULED_TEMP } != null }.sort { zone -> zone.parent }.reverse()
+            zonesWithScheduledTemp.each { zone ->
+                def desiredTempForActuator = getDesiredTemperature(zone)
+                def currentTemperatures = getCurrentTempSInZone(zone)
+                def currentTemp
+                if (desiredTempForActuator != null) {
+                    if (currentTemperatures.size() > 0) {
+                        //there is at least one thermo sensor
+                        currentTemp = currentTemperatures[0]
                     } else {
-                        actions << ["${actuator.uid}": "OFF"]
-
+                        currentTemp = 0
                     }
-                }
+                    Set<DevicePeripheral> actuatorHeatCtrlSet = DevicePeripheral.findAll("select dp from  DevicePeripheral dp where ?0 in elements(zones) and dp.category.name = ?1", [zone], PERIPHERAL_HEAT_CTRL_CATEGORY)
+                    actuatorHeatCtrlSet.each { actuator ->
+                        if (currentTemp <= desiredTempForActuator) {
+                            actions << ["${actuator.uid}": "ON"]
 
+                        } else {
+                            actions << ["${actuator.uid}": "OFF"]
+
+                        }
+                    }
+
+                }
             }
-        }
-        actions.each { actuatorUid, action ->
-            publish(TopicName.EVT_HEAT.id(), new EventData().with {
-                p0 = TopicName.EVT_HEAT.id()
-                p1 = EntityType.PERIPHERAL.name()
-                p2 = actuatorUid
-                p3 = "thermostat"
-                p4 = action
-                p6 = "system"
-                it
-            })
+            actions.each { actuatorUid, action ->
+                publish(TopicName.EVT_HEAT.id(), new EventData().with {
+                    p0 = TopicName.EVT_HEAT.id()
+                    p1 = EntityType.PERIPHERAL.name()
+                    p2 = actuatorUid
+                    p3 = "thermostat"
+                    p4 = action
+                    p6 = "system"
+                    it
+                })
+            }
         }
     }
 
