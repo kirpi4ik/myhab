@@ -124,7 +124,7 @@ quartz:
   dataSource:
     development:
       driver: "org.postgresql.Driver"
-      URL: "jdbc:postgresql://localhost:5432/madhouse_02_25"
+      URL: "jdbc:postgresql://localhost:5432/madhouse"
       user: "madhouse"
       password: "madhouse"
       maxConnections: 5
@@ -150,7 +150,7 @@ environments:
   development:
     dataSource:
       dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse_02_25
+      url: jdbc:postgresql://localhost:5432/madhouse
       username: "madhouse"
       password: "madhouse"
       driverClassName: "org.postgresql.Driver"

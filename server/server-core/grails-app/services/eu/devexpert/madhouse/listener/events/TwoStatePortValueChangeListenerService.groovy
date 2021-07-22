@@ -22,7 +22,7 @@ class TwoStatePortValueChangeListenerService {
     @Subscriber("evt_port_value_changed")
     @Transactional(propagation = Propagation.REQUIRED)
     def update_port_value(event) {
-        def port = DevicePort.findByUid(event.data.p2)
+        def port = DevicePort.findByUid(event.data.p2, [lock: true])
         def newVal = ValueParser.parser(port).apply(event.data.p4)
 
         log.debug("Port [id: ${port.id}, name: ${port.name}] value changed to ${newVal}")
@@ -39,7 +39,7 @@ class TwoStatePortValueChangeListenerService {
     @Subscriber("evt_port_value_changed")
     @Transactional(propagation = Propagation.REQUIRED)
     def update_expiration_time(event) {
-        def port = DevicePort.findByUid(event.data.p2)
+        def port = DevicePort.findByUid(event.data.p2, [lock: true])
         def newVal = ValueParser.parser(port).apply(event.data.p4)
 
         def peripheral = port.peripherals[0]
