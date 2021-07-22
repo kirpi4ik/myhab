@@ -95,29 +95,37 @@
                 let zones = [];
                 let zone = [];
                 let periphInitCallback = function (peripheral) {
-                    let portValue = null;
-                    let state = false;
-                    let portId = null;
-                    let portUid = null;
-                    let deviceState = null;
-                    if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
-                        let port = peripheral.connectedTo[0];
-                        portValue = port.value;
-                        state = portValue === 'OFF';
-                        portId = port.id;
-                        portUid = port.uid;
-                        deviceState = port.device.status
-                    }
-                    if (peripheralUids.indexOf(peripheral.uid) === -1) {
-                        peripherals.push({
-                            data: peripheral,
-                            portValue: portValue,
-                            state: state,
-                            portId: portId,
-                            portUid: portUid,
-                            deviceState: deviceState
-                        });
-                        peripheralUids.push(peripheral.uid)
+                    if (peripheral != null) {
+                        let portValue = null;
+                        let state = false;
+                        let portId = null;
+                        let portUid = null;
+                        let deviceState = null;
+                        if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
+                            let port = peripheral.connectedTo[0];
+                            if (port != null && port.device != null) {
+                                portValue = port.value;
+                                state = portValue === 'OFF';
+                                portId = port.id;
+                                portUid = port.uid;
+                                deviceState = port.device.status
+                            } else {
+                                port = null;
+                                state = false;
+                                deviceState = null;
+                            }
+                        }
+                        if (peripheralUids.indexOf(peripheral.uid) === -1) {
+                            peripherals.push({
+                                data: peripheral,
+                                portValue: portValue,
+                                state: state,
+                                portId: portId,
+                                portUid: portUid,
+                                deviceState: deviceState
+                            });
+                            peripheralUids.push(peripheral.uid)
+                        }
                     }
                 };
                 let zoneInitCallback = function (childZone) {
