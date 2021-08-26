@@ -21,6 +21,7 @@ class EventService implements EventPublisher {
 
     def scenarioService
     def heatService
+    def intercomService
 
     @Transactional
     @Subscriber('evt_light')
@@ -122,6 +123,25 @@ class EventService implements EventPublisher {
     }
 
     @Transactional
+    @Subscriber('evt_intercom_door_lock')
+    def evt_intercom_door_lock(event) {
+        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
+            def peripheral = DevicePeripheral.findById(event.data.p2)
+            if (peripheral.category.name == "DOOR_LOCK") {
+                switch (event.data.p4.toLowerCase()) {
+                    case "open":
+                        intercomService.doorOpen(peripheral.getConnectedTo().first()?.deviceId)
+                        break
+                }
+                publish(TopicName.EVT_LOG.id(), event.data)
+//                    PortValueReaderJob.triggerNow();
+
+            }
+        }
+
+    }
+
+    @Transactional
     @Subscriber('evt_presence')
     def presence(event) {
         if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
@@ -166,7 +186,12 @@ class EventService implements EventPublisher {
     @Subscriber('evt_device_status')
     def deviceStatus(event) {
         if (EntityType.DEVICE.isEqual(event.data.p1)) {
-            def device = Device.findByUid(event.data.p2)
+            def device
+            if (isUid(event.data.p2)) {
+                device = Device.findByUid(event.data.p2)
+            } else {
+                device = Device.findById(event.data.p2)
+            }
             if (device.status != event.data.p4) {
                 device.status = event.data.p4
                 device.save(failOnError: true, flush: true)
@@ -182,4 +207,7 @@ class EventService implements EventPublisher {
         log.debug(event.toString())
     }
 
+    def isUid(id) {
+        return !id.matches("[0-9]+")
+    }
 }

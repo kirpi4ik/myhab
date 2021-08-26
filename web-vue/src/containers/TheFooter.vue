@@ -1,7 +1,7 @@
 <template>
     <CFooter>
         <div>
-            <a href="https://madhouse.app" target="_self">MadHouse v{{version}}</a>
+            <a href="https://madhouse.app" target="_self">MadHouse v{{version}} <small><i>[ {{ date }} ]</i></small></a>
             <span class="ml-1">&copy; 2021 DevExpert.</span>
         </div>
         <div class="ml-auto">
@@ -16,7 +16,8 @@
         name: 'TheFooter',
         data() {
             return {
-                version: process.env.VUE_APP_CONF_VERSION
+                version: process.env.VUE_APP_CONF_VERSION,
+                date : process.env.VUE_APP_CONF_VERSION_BUILD_DATE
             };
         },
     }

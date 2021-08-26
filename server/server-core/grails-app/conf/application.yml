@@ -58,7 +58,7 @@ management:
       enabled: true
     httptrace:
       enabled: true
-allowedOrigin:  http://localhost:9999,http://localhost:443,http://localhost:80,chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam,https://madhouse.app
+allowedOrigin:  http://localhost:9999,http://192.168.1.141:10000, http://localhost:443,http://localhost:80,chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam,https://madhouse.app
 heatControlEnabled: false
 
 ---
@@ -67,6 +67,7 @@ grails:
     enabled: true
     allowedOrigins:
       - http://localhost:9999
+      - http://192.168.1.141:10000
       - http://localhost:10000
       - chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam
       - http://localhost:443
