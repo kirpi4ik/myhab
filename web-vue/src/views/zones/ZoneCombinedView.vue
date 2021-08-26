@@ -16,7 +16,7 @@
                     <div class="card-body">
                         <div style="display: inline">
                             <HeatScheduler :zone="zone" :name="zone.name" v-if="categoryUid === peripheralHeatUid"/>
-                            <TempDisplay :zone="zone" :name="zone.name" v-if="categoryUid === peripheralHeatUid"/>
+                            <TempDisplay :zone="zone" :name="zone.name" v-if="categoryUid === peripheralTempUid"/>
                         </div>
                         <div v-on:click="navZone(zone.uid)" style="cursor:pointer; height: 100%">
                             <h2 class="mb-0">{{zone.name}}</h2>
@@ -37,6 +37,12 @@
                 <PeriphHeatControl :peripheral="peripheral" v-if="categoryUid === peripheralHeatUid"></PeriphHeatControl>
             </CCol>
         </CRow>
+        <CRow>
+            <CCol>
+                <TempChartControl/>
+
+            </CCol>
+        </CRow>
 
     </div>
 
@@ -50,6 +56,7 @@
     import PeriphTempControl from './PeriphTempControl'
     import HeatScheduler from './HeatScheduler'
     import TempDisplay from "./TempDisplay";
+    import TempChartControl from "./TempChartControl";
 
     export default {
         name: 'ZoneCombinedView',
@@ -58,7 +65,8 @@
             PeriphLightControl,
             PeriphTempControl,
             PeriphHeatControl,
-            HeatScheduler
+            HeatScheduler,
+            TempChartControl
         },
         data() {
             return {

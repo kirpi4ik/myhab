@@ -46,17 +46,25 @@
                 >
                 </ZoneActionControl>
             </CCol>
+            <CCol md="3" sm="6">
+                <PeriphLockControl
+                        header="Poarta mica"
+                        :peripheralId="peripheralLockId">
+                </PeriphLockControl>
+            </CCol>
         </template>
     </CRow>
 </template>
 
 <script>
     import ZoneActionControl from './ZoneActionControl'
+    import PeriphLockControl from '../../zones/PeriphLockControl'
 
     export default {
         name: 'ZoneActionListControl',
         components: {
-            ZoneActionControl
+            ZoneActionControl,
+            PeriphLockControl
         },
         data() {
             return {
@@ -68,8 +76,8 @@
                 zoneExtUid: process.env.VUE_APP_CONF_ZONE_EXT_UID,
 
                 zoneEtajUid: process.env.VUE_APP_CONF_ZONE_ETAJ_UID,
-                zoneParterUid: process.env.VUE_APP_CONF_ZONE_PARTER_UID
-
+                zoneParterUid: process.env.VUE_APP_CONF_ZONE_PARTER_UID,
+                peripheralLockId: Number(process.env.VUE_APP_CONF_PH_LOCK_ID)
             }
         }
     }

@@ -70,6 +70,7 @@
                     {key: 'codeNew', label: 'Code nou'},
                     {key: 'codeOld', label: 'Code vechi'},
                     {key: 'category', label: 'Categorie'},
+                    {key: 'description', label: 'Descriere'},
                     {key: 'patchPanel', label: 'Patch'},
                     {
                         key: 'actions', label: 'Action',
@@ -103,7 +104,7 @@
                 this.$apollo.mutate({
                     mutation: CABLE_DELETE, variables: {id: this.selectedItem.id}
                 }).then(response => {
-                    this.deleteConfirmShow = false
+                    this.deleteConfirmShow = false;
                     this.loadCables();
                 });
             },

@@ -141,6 +141,10 @@
                 this.peripheralToUpdate.category = this.categories.selected;
                 this.peripheralToUpdate.zones = this.zones.selected;
                 this.peripheralToUpdate.connectedTo = this.connectedTo.selected;
+                //we don;t need anymore device field to pass
+                delete this.peripheralToUpdate.connectedTo.forEach(function (item, index) {
+                    delete item["device"]
+                });
                 this.$apollo.mutate({
                     mutation: PERIPHERAL_VALUE_UPDATE, variables: {id: this.peripheral.id, devicePeripheralUpdate: this.peripheralToUpdate}
                 }).then(response => {

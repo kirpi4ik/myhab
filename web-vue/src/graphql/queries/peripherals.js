@@ -56,6 +56,29 @@ export const PERIPHERAL_META_GET = gql`
         }
     }
 `;
+export const PERIPHERAL_GET_BY_ID = gql`
+    query devicePeripheralById($id:Long!){
+        devicePeripheral(id: $id) {
+            id
+            uid
+            name
+            description
+            connectedTo{
+                id
+                uid
+                internalRef
+                name
+                description
+                device{
+                    id
+                    name
+                    code
+                    status
+                }
+            }
+        }        
+    }
+`;
 export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
     query devicePeripheralById($id:Long!){
         devicePeripheral(id: $id) {
@@ -79,10 +102,6 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
                 internalRef
                 name
                 description
-                device{
-                    name
-                    code
-                }
             }
             zones{
                 id

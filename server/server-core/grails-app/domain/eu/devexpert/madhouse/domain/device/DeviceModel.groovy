@@ -5,5 +5,6 @@ package eu.devexpert.madhouse.domain.device
  */
 enum DeviceModel {
   MEGAD_2561_RTC,
-  ESP8266_1
+  ESP8266_1,
+  TMEZON_INTERCOM
 }

@@ -114,7 +114,7 @@
                     mode: "",
                     model: "",
                     device: {
-                        id: this.$route.params.id
+                        id: this.$route.params.deviceId
                     }
                 };
                 let removeReadonly = function (keyMap) {
