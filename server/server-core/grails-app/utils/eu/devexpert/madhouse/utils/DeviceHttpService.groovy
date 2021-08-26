@@ -30,7 +30,7 @@ public class DeviceHttpService {
         }
         if (device != null && device.model == DeviceModel.MEGAD_2561_RTC) {
             url = "$PROTOCOL://${device?.networkAddress?.ip}:${device.networkAddress.port}/${device?.authAccounts?.first()?.password}/${uri != null ? uri : ''}"
-            log.debug("READ STAT for [${DeviceModel.MEGAD_2561_RTC}] from : ${url}")
+            log.trace("READ STAT for [${DeviceModel.MEGAD_2561_RTC}] from : ${url}")
             try {
                 return connect(url).timeout(DEVICE_URL_TIMEOUT).get()
             } catch (Exception ce) {
@@ -39,7 +39,7 @@ public class DeviceHttpService {
         } else if (device != null && device.model == DeviceModel.ESP8266_1) {
             try {
                 url = "$PROTOCOL://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}"
-                log.debug("READ STAT for [${DeviceModel.ESP8266_1}] from : ${url}")
+                log.trace("READ STAT for [${DeviceModel.ESP8266_1}] from : ${url}")
 
                 return connect(url)
                         .timeout(DEVICE_URL_TIMEOUT_ESP)
@@ -54,7 +54,7 @@ public class DeviceHttpService {
         } else if (device != null && device.model == DeviceModel.TMEZON_INTERCOM) {
             try {
                 url = "$PROTOCOL://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}"
-                log.debug("READ STAT for [${DeviceModel.TMEZON_INTERCOM}] from : ${url}")
+                log.trace("READ STAT for [${DeviceModel.TMEZON_INTERCOM}] from : ${url}")
 
                 return connect(url)
                         .timeout(DEVICE_URL_TIMEOUT)

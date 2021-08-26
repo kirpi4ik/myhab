@@ -19,13 +19,13 @@ class IntercomService {
         } catch (SocketException se) {
             //Unexpected end of file from server
             log.trace("Unexpected end of file from server [${se.message}]")
-        }
-        try {
-            def doorunlock = new DeviceHttpService(device: device, uri: "web/cgi-bin/hi3510/doorUnlock.cgi?&-time=${DateTime.now().millis}").writeState()
-            def resp = doorunlock?.text()
-            log.debug("Door unlock")
-        } catch (Exception ex) {
-            throw new PeripheralActionException(ex.message)
+            try {
+                def doorunlock = new DeviceHttpService(device: device, uri: "web/cgi-bin/hi3510/doorUnlock.cgi?&-time=${DateTime.now().millis}").writeState()
+                def resp = doorunlock?.text()
+                log.debug("Door unlock")
+            } catch (Exception ex) {
+                throw new PeripheralActionException(ex.message)
+            }
         }
     }
 
