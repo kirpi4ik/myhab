@@ -83,7 +83,11 @@ task versionTxt() {
         def vueEnv = new File("${projectDir}/web-vue/.env")
         var.load(vueEnv.newDataInputStream())
         var.setProperty("VUE_APP_CONF_VERSION", "${projectVersion}")
-        var.store(vueEnv.newWriter(), null)
+        var.setProperty("VUE_APP_CONF_VERSION_BUILD_DATE", "${new Date().format("YYYY-MM-DD'T'HH:mm")}")
+        def writer = new PrintWriter(new FileOutputStream(vueEnv))
+        var.list(writer)
+        writer.close()
+        writer.flush()
     }
 }
 task copyClientResources(dependsOn: ':web-vue:build') { // <1>

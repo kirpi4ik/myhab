@@ -7,6 +7,7 @@ import eu.devexpert.madhouse.domain.device.DeviceModel
 import eu.devexpert.madhouse.domain.device.DeviceStatus
 import eu.devexpert.madhouse.exceptions.UnavailableDeviceException
 import eu.devexpert.madhouse.services.EspDeviceService
+import eu.devexpert.madhouse.services.IntercomService
 import eu.devexpert.madhouse.services.MegaDriverService
 import eu.devexpert.madhouse.services.PortValueService
 import grails.async.Promises
@@ -24,6 +25,7 @@ class PortValueReaderJob implements Job, EventPublisher {
     MegaDriverService megaDriverService
     EspDeviceService espDeviceService
     PortValueService portValueService
+    IntercomService intercomService
 
     static triggers = {
         simple name: 'portValueReader', repeatInterval: 6000
@@ -94,6 +96,35 @@ class PortValueReaderJob implements Job, EventPublisher {
                                 "p4": DeviceStatus.ONLINE,
                                 "p6": "system"
                         ])
+                    }.onError { Throwable t ->
+                        log.error("onError reading port value : deviceUid=${installedDevice.uid}")
+                    }
+                } else if (installedDevice.model.equals(DeviceModel.TMEZON_INTERCOM)) {
+                    Promises.task {
+                        try {
+                            intercomService.readState(deviceUid)
+                        } catch (UnavailableDeviceException ex) {
+                            publish(TopicName.EVT_DEVICE_STATUS.id(), [
+                                    "p0": TopicName.EVT_DEVICE_STATUS.id(),
+                                    "p1": EntityType.DEVICE.name(),
+                                    "p2": installedDevice?.uid,
+                                    "p3": "read_device_controller_status",
+                                    "p4": DeviceStatus.OFFLINE,
+                                    "p6": "system"
+                            ])
+                            throw new UnavailableDeviceException()
+                        }
+                    }.onComplete { portValues ->
+                        publish(TopicName.EVT_DEVICE_STATUS.id(), [
+                                "p0": TopicName.EVT_DEVICE_STATUS.id(),
+                                "p1": EntityType.DEVICE.name(),
+                                "p2": installedDevice?.uid,
+                                "p3": "read_device_controller_status",
+                                "p4": DeviceStatus.ONLINE,
+                                "p6": "system"
+                        ])
+                        log.trace("Completed INTERCOM device[$deviceUid] read state")
+
                     }.onError { Throwable t ->
                         log.error("onError reading port value : deviceUid=${installedDevice.uid}")
                     }

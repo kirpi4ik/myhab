@@ -89,6 +89,7 @@ type DeleteResult {
 
 type Device {
     authAccounts: [DeviceAccount]
+    backups: [DeviceBackup]
     code: String
     configurations: [Configuration]
     description: String
@@ -122,6 +123,21 @@ type DeviceAccount {
     tsUpdated: Date
     uid: String
     username: String
+    version: Long
+}
+
+type DeviceBackup {
+    configuration: String
+    device: Device
+    entityType: EntityType
+    "A list of validation errors on the entity"
+    errors: [Error]
+    firmware: ByteArray
+    frmVersion: String
+    id: Long
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
     version: Long
 }
 
@@ -623,6 +639,7 @@ type Zone {
 enum DeviceModel {
     ESP8266_1
     MEGAD_2561_RTC
+    TMEZON_INTERCOM
 }
 
 enum DeviceStatus {
@@ -842,6 +859,28 @@ input DeviceAccountUpdateNested {
     username: String
 }
 
+input DeviceBackupCreateNested {
+    configuration: String
+    entityType: EntityType
+    firmware: ByteArray
+    frmVersion: String
+    id: Long
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+}
+
+input DeviceBackupUpdateNested {
+    configuration: String
+    entityType: EntityType
+    firmware: ByteArray
+    frmVersion: String
+    id: Long
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+}
+
 input DeviceCategoryCreate {
     description: String!
     entityType: EntityType
@@ -863,6 +902,7 @@ input DeviceCategoryUpdate {
 
 input DeviceCreate {
     authAccounts: [DeviceAccountCreateNested!]
+    backups: [DeviceBackupCreateNested!]
     code: String!
     description: String
     entityType: EntityType
@@ -881,6 +921,7 @@ input DeviceCreate {
 
 input DeviceCreateNested {
     authAccounts: [DeviceAccountCreateNested]
+    backups: [DeviceBackupCreateNested]
     code: String
     description: String
     entityType: EntityType
@@ -972,8 +1013,8 @@ input DevicePortCreate {
     mustSendToServer: Boolean
     name: String
     peripherals: [DevicePeripheralCreateNested!]
-    runAction: Boolean!
-    runScenario: Boolean!
+    runAction: Boolean
+    runScenario: Boolean
     scenarios: [ScenarioCreateNested!]
     state: PortState
     subscriptions: [EventSubscriptionCreateNested!]
@@ -1100,6 +1141,7 @@ input DeviceTypeUpdateNested {
 
 input DeviceUpdate {
     authAccounts: [DeviceAccountUpdateNested]
+    backups: [DeviceBackupUpdateNested]
     code: String
     description: String
     entityType: EntityType
@@ -1119,6 +1161,7 @@ input DeviceUpdate {
 
 input DeviceUpdateNested {
     authAccounts: [DeviceAccountUpdateNested]
+    backups: [DeviceBackupUpdateNested]
     code: String
     description: String
     entityType: EntityType
@@ -1682,6 +1725,9 @@ input ZoneUpdateNested {
     zones: [ZoneUpdateNested]
 }
 
+
+"Built-in Byte Array"
+scalar ByteArray
 
 "Built-in Date"
 scalar Date
