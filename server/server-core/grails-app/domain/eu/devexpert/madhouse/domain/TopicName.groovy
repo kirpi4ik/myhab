@@ -10,7 +10,8 @@ enum TopicName {
     EVT_PORT_VALUE_CHANGED,
     EVT_LOG,
     EVT_DEVICE_STATUS,
-    POWER;
+    EVT_INTERCOM_DOOR_LOCK,
+    POWER,;
 
     String id() {
         return name().toLowerCase();

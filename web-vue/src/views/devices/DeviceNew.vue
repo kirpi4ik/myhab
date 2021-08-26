@@ -104,7 +104,7 @@
                     rack: [],
                 },
                 deviceModels: {
-                    options: ['MEGAD_2561_RTC', 'ESP8266_1']
+                    options: ['MEGAD_2561_RTC', 'ESP8266_1', 'TMEZON_INTERCOM']
                 },
                 deviceTypes: {
                     options: []
