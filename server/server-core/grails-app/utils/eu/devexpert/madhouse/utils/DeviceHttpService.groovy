@@ -23,7 +23,7 @@ public class DeviceHttpService {
     def uri
     def value
 
-    def readState() throws UnavailableDeviceException{
+    def readState() throws UnavailableDeviceException {
         def url = "[node defined]"
         if (device == null && port != null) {
             device = port.device
@@ -47,6 +47,18 @@ public class DeviceHttpService {
                         .header("Authorization", "Basic " + new String(encodeBase64("${device.authAccounts?.first()?.username}:${device.authAccounts?.first()?.password}".bytes)))
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
+                        .get()
+            } catch (Exception ce) {
+                throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
+            }
+        } else if (device != null && device.model == DeviceModel.TMEZON_INTERCOM) {
+            try {
+                url = "$PROTOCOL://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}"
+                log.debug("READ STAT for [${DeviceModel.TMEZON_INTERCOM}] from : ${url}")
+
+                return connect(url)
+                        .timeout(DEVICE_URL_TIMEOUT)
+                        .ignoreContentType(true)
                         .get()
             } catch (Exception ce) {
                 throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
@@ -88,6 +100,17 @@ public class DeviceHttpService {
                     throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
 
                 }
+            }
+        } else if (device?.model == DeviceModel.TMEZON_INTERCOM) {
+            def url
+            try {
+                url = "$PROTOCOL://${device.networkAddress.ip}:${device.networkAddress.port}/${uri}"
+                return connect(url)
+                        .ignoreContentType(true)
+                        .get()
+            } catch (ConnectException | HttpStatusException ce) {
+                throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
+
             }
         } else {
             log.debug("UNKNOWN DEVICE")

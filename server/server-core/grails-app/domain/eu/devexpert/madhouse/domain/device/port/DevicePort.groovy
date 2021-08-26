@@ -33,7 +33,8 @@ class DevicePort extends BaseEntity implements Configurable<DevicePort> {
 
     static hasMany = [cables: Cable, peripherals: DevicePeripheral, scenarios: Scenario, subscriptions: EventSubscription]
 
-    static belongsTo = Device
+    static belongsTo = [device: Device]
+
 
     static constraints = {
         peripherals cascade: 'save-update'
