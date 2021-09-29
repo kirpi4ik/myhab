@@ -11,6 +11,7 @@ enum TopicName {
     EVT_LOG,
     EVT_DEVICE_STATUS,
     EVT_INTERCOM_DOOR_LOCK,
+    EVT_DEVICE_PUSH,
     POWER,;
 
     String id() {

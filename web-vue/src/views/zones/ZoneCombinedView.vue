@@ -39,7 +39,7 @@
         </CRow>
         <CRow>
             <CCol>
-                <TempChartControl/>
+                <TempChartControl v-if="categoryUid === peripheralTempUid"/>
 
             </CCol>
         </CRow>

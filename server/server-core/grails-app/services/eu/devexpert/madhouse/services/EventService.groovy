@@ -1,20 +1,20 @@
 package eu.devexpert.madhouse.services
 
+import eu.devexpert.madhouse.ConfigKey
 import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
-import eu.devexpert.madhouse.domain.device.DeviceStatus
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.infra.Zone
 import eu.devexpert.madhouse.domain.job.EventData
-import eu.devexpert.madhouse.jobs.PortValueReaderJob
 import eu.devexpert.madhouse.utils.DeviceHttpService
 import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
+import org.joda.time.DateTime
 
 @Slf4j
 class EventService implements EventPublisher {
@@ -210,4 +210,40 @@ class EventService implements EventPublisher {
     def isUid(id) {
         return !id.matches("[0-9]+")
     }
+
+    @Transactional
+    @Subscriber('evt_device_push')
+    def receiveEventFromDevice(event) {
+        if (event.data.mdid && event.data.pt) {
+            Device dvc = Device.findByCode(event.data.mdid)
+            DevicePort port = DevicePort.where {
+                internalRef == event.data.pt
+                device.id == dvc.id
+            }.first()
+            port.peripherals.each { peripheral ->
+                if (peripheral.category.name == "ACCESS_CONTROL") {
+                    peripheral.getConfigurationByKey(ConfigKey.CONFIG_LIST_RELATED_PERIPHERAL_IDS).each { config ->
+                        def accPeripheral = DevicePeripheral.findById(config.value)
+                        accPeripheral?.accessTokens?.each { accToken ->
+                            if (accToken.token == event.data.wg && (accToken.tsExpiration == null || accToken.tsExpiration.after(DateTime.now().toDate()))) {
+                                publish(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), new EventData().with {
+                                    p0 = TopicName.EVT_INTERCOM_DOOR_LOCK.id()
+                                    p1 = EntityType.PERIPHERAL.name()
+                                    p2 = accPeripheral.id
+                                    p3 = "access control"
+                                    p4 = "open"
+                                    p5 = '{"unlockCode": "' + event.data.wg + '"}'
+                                    p6 = accToken.user.name
+                                    it
+                                })
+                            } else {
+                                log.error("Invalid access token ${event.data.wg}")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }

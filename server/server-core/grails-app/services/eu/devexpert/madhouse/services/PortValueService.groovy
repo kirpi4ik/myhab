@@ -37,7 +37,7 @@ class PortValueService implements EventPublisher {
     def updateIfChangedPortValue(DevicePort devicePort, String actualDeviceValue) {
         if (devicePort.type.syncMs != -1) {
             if (devicePort.value == null || DateTime.now().minus(devicePort.tsUpdated?.time).isAfter(devicePort?.type?.syncMs))
-                if (!devicePort.value.equalsIgnoreCase(ValueParser.parser(devicePort).apply(actualDeviceValue))) {
+                if (!devicePort.value?.equalsIgnoreCase(ValueParser.parser(devicePort).apply(actualDeviceValue))) {
                     publish(TopicName.EVT_PORT_VALUE_CHANGED.id(), new EventData().with {
                         p0 = TopicName.EVT_PORT_VALUE_CHANGED.id()
                         p1 = EntityType.PORT.name()
