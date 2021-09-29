@@ -28,6 +28,7 @@ class User extends BaseEntity {
     String firstName
     String lastName
     String name
+    Set<PeripheralAccessToken> peripheralAccessTokens
 
     User(String username, String password) {
         this()
@@ -79,7 +80,7 @@ class User extends BaseEntity {
         email nullable: true
     }
 
-    static hasMany = [favJobs: Job]
+    static hasMany = [favJobs: Job, peripheralAccessTokens: PeripheralAccessToken]
 
     static mapping = {
         table '`users`'

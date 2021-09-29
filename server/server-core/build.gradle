@@ -113,6 +113,7 @@ dependencies {
     compile 'org.grails.plugins:grails-spring-websocket:2.5.0.RC1'
 
     implementation "org.springframework.security:spring-security-config"
+    /*implementation "org.springframework.security:spring-security-oauth2-authorization-server"*/
     implementation "org.springframework.security:spring-security-messaging"
     implementation "org.springframework.security:spring-security-web"
 

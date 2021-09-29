@@ -139,7 +139,7 @@ class MegaDriverService implements EventPublisher {
         def device = Device.findByUid(event?.data?.deviceUid)
         if (event.data.pt != null) {
             def port = DevicePort.where {
-                'ref' == event.data.pt
+                'internalRef' == event.data.pt
                 'device' == device
             }.find()
 
