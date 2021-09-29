@@ -2,6 +2,7 @@ package eu.devexpert.madhouse.domain.device
 
 import eu.devexpert.madhouse.domain.Configuration
 import eu.devexpert.madhouse.domain.EntityType
+import eu.devexpert.madhouse.domain.PeripheralAccessToken
 import eu.devexpert.madhouse.domain.common.BaseEntity
 import eu.devexpert.madhouse.domain.common.Configurable
 import eu.devexpert.madhouse.domain.device.port.DevicePort
@@ -21,9 +22,10 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
     PeripheralCategory category
     Set<DevicePort> connectedTo
     Set<Zone> zones
+    Set<PeripheralAccessToken> accessTokens
 
     static belongsTo = [DevicePort, Zone, PeripheralCategory]
-    static hasMany = [connectedTo: DevicePort, zones: Zone]
+    static hasMany = [connectedTo: DevicePort, zones: Zone, accessTokens : PeripheralAccessToken]
     static hasOne = [category: PeripheralCategory]
 
     static constraints = {
@@ -39,6 +41,7 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
         sort name: "asc"
         connectedTo joinTable: [name: "device_ports_peripherals_join", key: 'peripheral_id'], cascade: "all"
         zones joinTable: [name: "zones_peripherals_join", key: 'peripheral_id'], cascade: "all"
+        accessTokens joinTable: [name: "peripherals_access_tokens_join", key: 'peripheral_id'], cascade: "all"
         sort name: "asc"
     }
 

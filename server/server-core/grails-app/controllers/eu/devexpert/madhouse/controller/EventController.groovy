@@ -16,6 +16,8 @@ class EventController implements EventPublisher {
         if (input.p0 && request.remoteAddr.startsWith("192.")) {
             publish(input.p0, input)
             publish(TopicName.EVT_LOG.id(), input)
+        } else if (params.mdid && params.pt) {
+            publish(TopicName.EVT_DEVICE_PUSH.id(), params)
         } else {
             log.info("Event triggered with:  $params")
             respond params

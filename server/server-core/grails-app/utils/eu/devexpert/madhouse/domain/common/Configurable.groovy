@@ -11,6 +11,13 @@ trait Configurable<BaseEntity> {
         }
     }
 
+    List<Configuration> getConfigurationByKey(String key) {
+        return Configuration.createCriteria().list {
+            eq('entityType', getEntityType())
+            eq('entityId', getId())
+            eq('key', key)
+        }
+    }
     abstract Long getId()
     abstract EntityType getEntityType()
 }
