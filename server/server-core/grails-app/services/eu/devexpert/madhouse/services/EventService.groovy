@@ -130,7 +130,7 @@ class EventService implements EventPublisher {
             if (peripheral.category.name == "DOOR_LOCK") {
                 switch (event.data.p4.toLowerCase()) {
                     case "open":
-                        intercomService.doorOpen(peripheral.getConnectedTo().first()?.deviceId)
+                        intercomService.doorOpen(peripheral.getConnectedTo().first()?.deviceId, peripheral.getConnectedTo().first())
                         break
                 }
                 publish(TopicName.EVT_LOG.id(), event.data)
