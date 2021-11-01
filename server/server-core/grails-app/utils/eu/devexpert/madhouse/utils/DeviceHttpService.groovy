@@ -19,6 +19,7 @@ public class DeviceHttpService {
     def DEVICE_URL_TIMEOUT_ESP = 5000
     def port
     def action
+    def actions = []
     def device
     def uri
     def value
@@ -69,17 +70,32 @@ public class DeviceHttpService {
     }
 
     def writeState() {
+        def act = []
+
         if (device?.model == DeviceModel.MEGAD_2561_RTC || port?.device?.model == DeviceModel.MEGAD_2561_RTC) {
-            if (port != null && action != null) {
+            if (port != null && (action != null || !actions.empty)) {
                 def actionValue
-                if (action instanceof PortAction) {
-                    actionValue = action.value
-                } else {
-                    actionValue = action
+                if (action != null) {
+                    if (action instanceof PortAction) {
+                        act << "${port.internalRef}:${action.value}"
+                    } else {
+                        act << "${port.internalRef}:${action}"
+                    }
+                }
+                if (!actions.empty) {
+                    actions.each {
+                        if (it instanceof PortAction) {
+                            act << "${port.internalRef}:${it.value}"
+                        } else {
+                            act << "${it}"
+                        }
+                    }
+
                 }
                 def url
                 try {
-                    url = "$PROTOCOL://${port.device.networkAddress.ip}:${port.device.networkAddress.port}/${port.device.authAccounts.first().password}/?cmd=${port.internalRef}:${actionValue}"
+                    url = "$PROTOCOL://${port.device.networkAddress.ip}:${port.device.networkAddress.port}/${port.device.authAccounts.first().password}/?cmd=${act.join(";")}"
+
                     return connect(url).timeout(DEVICE_URL_TIMEOUT).get()
                 } catch (ConnectException | HttpStatusException ce) {
                     throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
