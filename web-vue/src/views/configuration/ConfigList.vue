@@ -113,7 +113,7 @@
             init() {
                 this.$apollo.query({
                     query: CONFIGURATION_LIST,
-                    variables: {entityId: this.$route.params.id, entityType: this.$route.meta.entityType},
+                    variables: {entityId: this.$route.params.idPrimary, entityType: this.$route.meta.entityType},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.configurations = response.data.configurationListByEntity;
@@ -172,7 +172,7 @@
             addNew: function () {
                 let newItem = {
                     entityType: this.$route.meta.entityType,
-                    entityId: this.$route.params.id,
+                    entityId: this.$route.params.idPrimary,
                     key: null,
                     value: null,
                     tempId: uid()

@@ -57,6 +57,7 @@
     import HeatScheduler from './HeatScheduler'
     import TempDisplay from "./TempDisplay";
     import TempChartControl from "./TempChartControl";
+    import _ from "lodash";
 
     export default {
         name: 'ZoneCombinedView',
@@ -152,7 +153,8 @@
                         variables: {uid: this.$route.query.zoneUid},
                         fetchPolicy: 'network-only'
                     }).then(response => {
-                        zone = response.data.zoneByUid;
+                        let data = _.cloneDeep(response.data)
+                        zone = data.zoneByUid;
                         zones = zone.zones;
                         zone.peripherals.sort((a, b) => (a.name > b.name) ? 1 : -1).forEach(periphInitCallback);
                         zones.forEach(zoneInitCallback);
@@ -166,7 +168,8 @@
                         variables: {},
                         fetchPolicy: 'network-only'
                     }).then(response => {
-                        zones = response.data.zonesRoot;
+                        let data = _.cloneDeep(response.data)
+                        zones = data.zonesRoot;
                         zones.forEach(zoneInitCallback);
                         this.zone = zone;
                         this.zones = zones;

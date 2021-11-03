@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "@apollo/client/core"
 
 export const PERIPHERAL_CREATE = gql`
     mutation($devicePeripheral: DevicePeripheralCreate) {

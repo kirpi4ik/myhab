@@ -13,7 +13,7 @@
                                 <a @click="navConfig" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
                                     <small class="text-muted">{{ $t("actions.config") }}</small> |
                                 </a>
-                                <a @click="$router.push({path: '/devices/' + $route.params.deviceId + '/view'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
+                                <a @click="$router.push({path: '/devices/' + $route.params.idPrimary + '/view'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
                                     <small class="text-muted">{{ $t("actions.cancel") }}</small>
                                 </a>
                             </div>
@@ -133,17 +133,12 @@
     import {PORT_GET_BY_ID} from "../../graphql/queries";
     import i18n from './../../i18n'
 
-    import Multiselect from 'vue-multiselect'
-
     export default {
         name: 'PortEditor',
         fields: [
             {key: 'key', _style: 'width:150px'},
             {key: 'value', _style: 'width:150px;'}
         ],
-        components: {
-            'multiselect': Multiselect
-        },
         data: () => {
             return {
                 portDetails: [],
@@ -174,9 +169,6 @@
                     variables: {id: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    let cleanup = function (item, index) {
-                        delete item["__typename"]
-                    };
                     let removeReadonly = function (keyMap) {
                         return !this.readonly.includes(keyMap.key)
                     }.bind(this);
@@ -202,14 +194,14 @@
                 this.$apollo.mutate({
                     mutation: PERIPHERAL_CREATE, variables: {devicePeripheral: this.portToUpdate}
                 }).then(response => {
-                    this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + response.data.devicePort.uid + "/view"})
+                    this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.devicePort.uid + "/view"})
                 });
             },
             navEdit(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + this.port.id + "/edit"})
+                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + this.port.id + "/edit"})
             },
             navConfig(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + this.port.id + "/configurations"})
+                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + this.port.id + "/configurations"})
             },
             navDelete(item, index) {
                 this.deleteConfirmShow = true;
@@ -217,4 +209,3 @@
         }
     }
 </script>
-<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
