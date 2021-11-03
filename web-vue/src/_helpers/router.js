@@ -94,12 +94,12 @@ function configRoutes() {
                             }
                         },
                         {
-                            path: '/users/:id/profile',
+                            path: '/users/:idPrimary/profile',
                             name: i18n.t('breadcrumb.user.details'),
                             component: UserView
                         },
                         {
-                            path: '/users/:id/edit',
+                            path: '/users/:idPrimary/edit',
                             name: i18n.t('breadcrumb.user.edit'),
                             component: UserEdit
                         },
@@ -131,7 +131,7 @@ function configRoutes() {
                             component: DeviceNew
                         },
                         {
-                            path: ':deviceId',
+                            path: ':idPrimary',
                             component: RouteContainer,
                             children: [
                                 {
@@ -239,7 +239,7 @@ function configRoutes() {
                             }
                         },
                         {
-                            path: ':id',
+                            path: ':idPrimary',
                             component: RouteContainer,
                             children: [
                                 {
@@ -290,7 +290,7 @@ function configRoutes() {
                             }
                         },
                         {
-                            path: ':id',
+                            path: ':idPrimary',
                             component: RouteContainer,
                             children: [
                                 {

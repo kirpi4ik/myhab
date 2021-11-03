@@ -79,7 +79,7 @@
 
                 this.$apollo.query({
                     query: USER_GET_BY_ID_WITH_ROLES,
-                    variables: {uid: this.$route.params.id},
+                    variables: {uid: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     user = response.data.userByUid;
@@ -99,7 +99,7 @@
                 this.loading = false
             },
             rowClicked(item, index) {
-                this.$router.push({path: "/users/" + this.$route.params.id + "/edit"})
+                this.$router.push({path: "/users/" + this.$route.params.idPrimary + "/edit"})
             },
             goBack() {
                 this.$router.go(-1)

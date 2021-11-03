@@ -13,8 +13,9 @@
                                 <a @click="navDelete" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener" v-if="port.id != null">
                                     <small class="text-muted">{{ $t("actions.delete") }}</small> |
                                 </a>
+
                                 <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener"
-                                   @click="$router.push({path: '/devices/' + $route.params.deviceId + '/view'})">
+                                   @click="$router.push({path: '/devices/' + $route.params.idPrimary + '/view'})">
                                     <small class="text-muted">{{ $t("actions.cancel") }}</small>
                                 </a>
                             </div>
@@ -39,12 +40,12 @@
                             </CRow>
                             <CRow>
                                 {{ $t("port.fields.type") }}
-                                <multiselect v-model="portToUpdate['type']" :options="portTypes">
+                                <multiselect v-model="portToUpdateType" :options="portTypes">
                                 </multiselect>
                             </CRow>
                             <CRow>
                                 {{ $t("port.fields.state") }}
-                                <multiselect v-model="portToUpdate['state']" :options="portStates">
+                                <multiselect v-model="portToUpdateState" :options="portStates">
                                 </multiselect>
                             </CRow>
                         </CCardBody>
@@ -63,7 +64,7 @@
 
 
 <script>
-    import {PORT_GET_BY_ID, PORT_UPDATE, PORT_CREATE, DEVICE_GET_BY_ID_MINIMAL} from "../../graphql/queries";
+    import {PORT_GET_BY_ID, PORT_UPDATE, PORT_CREATE} from "../../graphql/queries";
 
     import Multiselect from 'vue-multiselect'
 
@@ -75,6 +76,8 @@
         data: () => {
             return {
                 portDetails: [],
+                portToUpdateType: "UNKNOW",
+                portToUpdateState: "UNKNOW",
                 portToUpdate: {},
                 port: [],
                 readonly: ["id", "__typename", "uid", "device", "type", "state"],
@@ -114,7 +117,7 @@
                     mode: "",
                     model: "",
                     device: {
-                        id: this.$route.params.deviceId
+                        id: this.$route.params.idPrimary
                     }
                 };
                 let removeReadonly = function (keyMap) {
@@ -123,8 +126,8 @@
                 this.portDetails = Object.entries(this.port).map(([key, value]) => {
                     return {key, value}
                 }).filter(removeReadonly);
-                this.portToUpdate['type'] = this.portTypes[0];
-                this.portToUpdate['state'] = this.portStates[0];
+                this.portToUpdateType = this.portTypes[0];
+                this.portToUpdateState = this.portStates[0];
             },
             init() {
                 let port = {};
@@ -133,9 +136,6 @@
                     variables: {id: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    let cleanup = function (item, index) {
-                        delete item["__typename"]
-                    };
                     let removeReadonly = function (keyMap) {
                         return !this.readonly.includes(keyMap.key)
                     }.bind(this);
@@ -146,8 +146,8 @@
                         return {key, value}
                     }).filter(removeReadonly);
 
-                    this.portToUpdate['type'] = this.port.type;
-                    this.portToUpdate['state'] = this.port.state;
+                    this.portToUpdateType = this.port.type;
+                    this.portToUpdateState = this.port.state;
                 });
             },
             isBoolean(key) {
@@ -166,22 +166,22 @@
                     this.$apollo.mutate({
                         mutation: PORT_UPDATE, variables: {id: this.port.id, devicePort: this.portToUpdate}
                     }).then(response => {
-                        this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + response.data.devicePortUpdate.id + "/view"})
+                        this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.devicePortUpdate.id + "/view"})
                     });
                 } else if (this.$route.meta.uiMode === 'CREATE') {
                     this.portToUpdate["device"] = this.port.device;
                     this.$apollo.mutate({
                         mutation: PORT_CREATE, variables: {devicePort: this.portToUpdate}
                     }).then(response => {
-                        this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + response.data.devicePortCreate.id + "/edit"})
+                        this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.devicePortCreate.id + "/edit"})
                     });
                 }
             },
             navEdit(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + this.port.id + "/edit"})
+                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + this.port.id + "/edit"})
             },
             navConfig(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + this.port.id + "/configurations"})
+                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + this.port.id + "/configurations"})
             },
             navDelete(item, index) {
                 this.deleteConfirmShow = true;

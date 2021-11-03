@@ -1,10 +1,8 @@
 import Vue from 'vue';
 import VueApollo from 'vue-apollo';
-import ApolloClient from 'apollo-client';
-import {HttpLink} from 'apollo-link-http';
-import {setContext} from 'apollo-link-context';
-import {onError} from 'apollo-link-error';
-import {InMemoryCache} from 'apollo-cache-inmemory';
+import {ApolloClient, HttpLink, InMemoryCache} from '@apollo/client/core';
+import {setContext} from '@apollo/client/link/context';
+import {onError} from '@apollo/client/link/error';
 import {authenticationService} from '@/_services';
 import {router, Utils} from '@/_helpers';
 
@@ -26,7 +24,7 @@ const withAuthToken = setContext((_, {headers}) => {
 });
 
 // we use a usefull error handling tool provided by Apollo in order to execute some code when errors occur.
-const onErrorLink = onError(({graphQLErrors, networkError}) => {
+const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) => {
     // We log every GraphQL errors
     if (graphQLErrors) {
         graphQLErrors.map(({message, locations, path}) =>
@@ -49,16 +47,26 @@ const onErrorLink = onError(({graphQLErrors, networkError}) => {
         console.log(`[Network error]: ${networkError}`);
         router.push({path: error.path, query: {error: error.code}});
     }
+    if (operation.variables) {
+        const omitTypename = (key, value) => (key === '__typename' ? undefined : value);
+        operation.variables = JSON.parse(JSON.stringify(operation.variables), omitTypename);
+    }
+    return forward(operation).map((data) => {
+        return data;
+    });
 });
 
 const apolloClient = new ApolloClient({
     link: onErrorLink.concat(withAuthToken).concat(httpLink),
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+        addTypename: false
+    }),
     watchQuery: {
         fetchPolicy: 'cache-and-network',
         errorPolicy: 'ignore',
     },
     query: {
+        //fetchPolicy: "no-cache",
         fetchPolicy: 'cache-and-network',
         errorPolicy: 'all',
     },

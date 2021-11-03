@@ -118,7 +118,7 @@
                     this.$apollo.mutate({
                         mutation: ROLES_SAVE, variables: {input: roles}
                     }).then(response => {
-                        this.$router.push({path: "/users/" + this.$route.params.id + "/profile"})
+                        this.$router.push({path: "/users/" + this.$route.params.idPrimary + "/profile"})
                     });
                 });
             },
@@ -145,7 +145,7 @@
 
                 this.$apollo.query({
                     query: USER_GET_BY_ID,
-                    variables: {uid: this.$route.params.id},
+                    variables: {uid: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.user = response.data.userByUid;
