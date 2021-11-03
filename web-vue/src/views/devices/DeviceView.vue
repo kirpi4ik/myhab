@@ -151,7 +151,7 @@
 
                 this.$apollo.query({
                     query: DEVICE_GET_BY_ID_CHILDS,
-                    variables: {id: this.$route.params.deviceId},
+                    variables: {id: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     device = response.data.device;
@@ -174,10 +174,10 @@
                 });
             },
             navEdit(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/edit"})
+                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/edit"})
             },
             navConfig(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/configurations"})
+                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/configurations"})
             },
             navDelete(item, index) {
                 this.deleteConfirmShow = true;
@@ -186,7 +186,7 @@
                 this.$router.go(-1)
             },
             viewPortDetails(item) {
-                this.$router.push({path: "/devices/" + this.$route.params.deviceId + "/ports/" + item.id + "/view"})
+                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + item.id + "/view"})
             }
         }
     }

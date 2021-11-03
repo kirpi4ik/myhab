@@ -28,25 +28,25 @@
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 60)">Porneste
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 60)">Opreste dupa
                                 1min
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 300)">Porneste
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 300)">Opreste dupa
                                 5min
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 600)">Porneste
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 600)">Opreste dupa
                                 10min
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 1200)">Porneste
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 1200)">Opreste dupa
                                 20min
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 3600)">Porneste
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 3600)">Opreste dupa
                                 1h
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 7200)">Porneste
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 7200)">Opreste dupa
                                 2h
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 10800)">Porneste
+                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 10800)">Opreste dupa
                                 3h
                             </CDropdownItem>
                             <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', null)">Nelimitat

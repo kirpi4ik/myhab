@@ -21,6 +21,7 @@
     import {
         PERIPHERAl_EVENT_LOGS
     } from "../../graphql/queries";
+    import _ from "lodash";
 
     export default {
         name: 'EventLogger',
@@ -52,12 +53,13 @@
                     },
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    response.data.eventsByP2.forEach(function (event, index) {
+                    let data = _.cloneDeep(response.data)
+                    data.eventsByP2.forEach(function (event, index) {
                         let date = new Date(event.tsCreated);
                         let strDate = (date.getMonth() < 10 ? '0' : '') + date.getMonth() + '/' + (date.getDate() < 10 ? '0' : '') + date.getDate() + ' ' + (date.getHours() < 10 ? '0' : '') + date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
                         event.strDate = strDate
                     });
-                    this.events = response.data.eventsByP2
+                    this.events = data.eventsByP2
                 });
             },
             openLog: function () {

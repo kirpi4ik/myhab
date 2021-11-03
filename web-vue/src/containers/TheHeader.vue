@@ -38,7 +38,7 @@
             <TheHeaderDropdownAccnt/>
         </CHeaderNav>
         <CSubheader class="px-3">
-            <CBreadcrumbRouter class="border-0" ref="mainBreadcrumb"/>
+            <BreadcrumbRouteNav class="border-0" ref="mainBreadcrumb"/>
         </CSubheader>
     </CHeader>
 </template>
@@ -48,8 +48,8 @@
     import TheHeaderDropdownMsgInbox from './TheHeaderDropdownMsgInbox'
     import TheHeaderDropdownNotif from './TheHeaderDropdownNotif'
     import TheHeaderDropdownTaskList from './TheHeaderDropdownTaskList'
+    import BreadcrumbRouteNav from './BreadcrumbRouteNav'
     import {authenticationService} from '@/_services';
-    import {Role} from '@/_helpers';
 
     export default {
         name: 'TheHeader',
@@ -57,7 +57,8 @@
             TheHeaderDropdownAccnt,
             TheHeaderDropdownNotif,
             TheHeaderDropdownMsgInbox,
-            TheHeaderDropdownTaskList
+            TheHeaderDropdownTaskList,
+            BreadcrumbRouteNav
         },
         computed: {
             stompConnection() {
