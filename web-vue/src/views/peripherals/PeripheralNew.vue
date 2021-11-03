@@ -114,13 +114,6 @@
                     variables: {},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    let cleanup = function (item, index) {
-                        delete item["__typename"]
-                    };
-
-                    response.data.peripheralCategoryList.forEach(cleanup);
-                    response.data.zoneList.forEach(cleanup);
-                    response.data.devicePortList.forEach(cleanup);
 
                     this.categories.options = response.data.peripheralCategoryList;
                     this.zones.options = response.data.zoneList;

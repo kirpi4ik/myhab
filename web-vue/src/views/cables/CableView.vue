@@ -5,7 +5,7 @@
                 <CCardHeader>
                     <strong>Port </strong> <small>{{cable.code}}</small>
                     <div class="card-header-actions">
-                        <a @click="$router.push({path: '/cables/'+$route.params.id+'/edit'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
+                        <a @click="$router.push({path: '/cables/'+$route.params.idPrimary+'/edit'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
                             <small class="text-muted">{{ $t("actions.edit") }}</small> |
                         </a>
                         <a @click="$router.push({path: '/cables'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
@@ -103,12 +103,9 @@
 
                 this.$apollo.query({
                     query: CABLE_BY_ID,
-                    variables: {id: this.$route.params.id},
+                    variables: {id: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    let cleanup = function (item, index) {
-                        delete item["__typename"]
-                    };
                     let removeReadonly = function (keyMap) {
                         return !this.readonly.includes(keyMap.key)
                     }.bind(this);

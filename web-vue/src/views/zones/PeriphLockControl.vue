@@ -55,6 +55,7 @@
     import {authenticationService} from '@/_services';
     import EventLogger from './EventLogger'
     import {PERIPHERAL_GET_BY_ID, PUSH_EVENT} from "../../graphql/queries";
+    import _ from "lodash";
 
     export default {
         name: 'PeriphLockControl',
@@ -83,7 +84,8 @@
                     variables: {id: this.peripheralId},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.peripheral = response.data.devicePeripheral;
+                    let data = _.cloneDeep(response.data)
+                    this.peripheral = data.devicePeripheral;
                     this.peripheral.deviceState = this.peripheral.connectedTo[0].device.status
 
                 });

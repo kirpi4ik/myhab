@@ -154,7 +154,7 @@
         </CModal>
         <CToaster :autohide="3000">
             <template v-for="toast in fixedToasts">
-                <CToast :key="'toast' + toast" :show="true" :header="toast.header" :color="toast.color">
+                <CToast :key="'toast-' + toast.message" :show="true" :header="toast.header" :color="toast.color" >
                     {{toast.message}}
                 </CToast>
             </template>
@@ -173,6 +173,7 @@
     } from "../../graphql/queries";
     import Multiselect from 'vue-multiselect'
     import {uid} from 'uid';
+    import _ from 'lodash';
 
     export default {
         name: 'DeviceEdit',
@@ -228,35 +229,22 @@
                 this.deviceToUpdate[key] = value
             },
             init() {
-                let cleanup = function (item, index) {
-                    if (item != null) {
-                        delete item["__typename"]
-                    }
-                };
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)
                 }.bind(this);
 
                 this.$apollo.query({
                     query: DEVICE_GET_DETAILS_FOR_EDIT,
-                    variables: {id: this.$route.params.deviceId},
+                    variables: {id: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.device = response.data.device;
+                    this.device = _.cloneDeep(response.data.device);
+                    // this.device = response.data.device;
                     if (this.device.networkAddress == null) {
                         this.device.networkAddress = {}
                     }
                     this.deviceTypes.options = response.data.deviceTypeList;
                     this.deviceRacks.options = response.data.rackList;
-
-                    cleanup(this.device);
-                    cleanup(this.device.networkAddress);
-                    cleanup(this.device.rack);
-                    cleanup(this.device.type);
-
-                    this.device.authAccounts.forEach(cleanup);
-                    this.deviceTypes.options.forEach(cleanup);
-                    this.deviceRacks.options.forEach(cleanup);
 
                     const deviceDetailToMap = this.device ? Object.entries(this.device) : [['id', 'Not found']];
                     this.deviceDetails = deviceDetailToMap.map(([key, value]) => {
@@ -350,7 +338,7 @@
                         message: response.data.deviceUpdate.name + ' saved !'
                     });
                     this.init();
-                    // this.$router.push({path: "/peripherals/" + this.$route.params.id + "/view"})
+                    // this.$router.push({path: "/peripherals/" + this.$route.params.idPrimary + "/view"})
                 });
             }
         }

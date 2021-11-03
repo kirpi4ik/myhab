@@ -109,7 +109,7 @@
 
                 this.$apollo.query({
                     query: PERIPHERAL_GET_BY_ID_CHILDS,
-                    variables: {id: this.$route.params.id},
+                    variables: {id: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     peripheral = response.data.devicePeripheral;
@@ -137,7 +137,7 @@
                 this.loading = false
             },
             navEdit(item, index) {
-                this.$router.push({path: "/peripherals/" + this.$route.params.id + "/edit"})
+                this.$router.push({path: "/peripherals/" + this.$route.params.idPrimary + "/edit"})
             },
             navConfig(item, index) {
                 this.$router.push({path: "/peripherals/" + this.peripheral.id + "/configurations"})
