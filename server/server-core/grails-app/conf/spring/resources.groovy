@@ -36,5 +36,4 @@ beans = {
     threadMetrics(JvmThreadMetrics)
 //
     webSocketConfig(WebSocketConfig)
-//    webSocketSecurityConfig(WebSocketSecurityConfig)
 }
