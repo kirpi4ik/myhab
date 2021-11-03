@@ -93,7 +93,7 @@
             '$route.path': 'loadInitial',
             stompMessage: function (newVal) {
                 if (newVal.eventName == 'evt_port_value_changed') {
-                    // this.loadInitial();
+                    this.loadInitial();
                 }
             }
         },
