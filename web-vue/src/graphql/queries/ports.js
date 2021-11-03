@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "@apollo/client/core"
 
 export const PORT_GET_BY_ID = gql`
     query($id:Long!){

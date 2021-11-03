@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "@apollo/client/core"
 
 export const ZONES_GET_ALL = gql`
     query {

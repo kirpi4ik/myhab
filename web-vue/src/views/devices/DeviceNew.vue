@@ -121,11 +121,6 @@
         },
         methods: {
             init() {
-                let cleanup = function (item, index) {
-                    if (item != null) {
-                        delete item["__typename"]
-                    }
-                };
                 let removeReadonly = function (keyMap) {
                     return !this.readonly.includes(keyMap.key)
                 }.bind(this);
@@ -137,12 +132,6 @@
                 }).then(response => {
                     this.deviceTypes.options = response.data.deviceTypeList;
                     this.deviceRacks.options = response.data.rackList;
-
-                    cleanup(this.device.type);
-                    cleanup(this.device.rack);
-
-                    this.deviceTypes.options.forEach(cleanup);
-                    this.deviceRacks.options.forEach(cleanup);
 
                     const deviceDetailToMap = this.device ? Object.entries(this.device) : [['id', 'Not found']];
                     this.deviceDetails = deviceDetailToMap.map(([key, value]) => {

@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "@apollo/client/core"
 
 export const USER_VALUE_UPDATE = gql`
     mutation ($id:Long!, $user:UserUpdate) {
