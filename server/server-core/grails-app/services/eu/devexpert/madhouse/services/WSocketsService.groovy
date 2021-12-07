@@ -5,6 +5,7 @@ import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
 import grails.plugin.springwebsocket.WebSocket
+import groovy.json.JsonOutput
 import org.joda.time.DateTime
 
 @Transactional
@@ -27,6 +28,11 @@ class WSocketsService implements EventPublisher, WebSocket {
         }
     }
 
+    @Subscriber('evt_ui_update_port_value')
+    def mqttPortChanged(event) {
+        convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_port_value_persisted", jsonPayload: JsonOutput.toJson(event.data)))
+    }
+
     @Subscriber('evt_heat')
     def evtHeat() {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_heat"))
@@ -36,4 +42,6 @@ class WSocketsService implements EventPublisher, WebSocket {
     def deviceStatusChanged() {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_device_status"))
     }
+
+
 }

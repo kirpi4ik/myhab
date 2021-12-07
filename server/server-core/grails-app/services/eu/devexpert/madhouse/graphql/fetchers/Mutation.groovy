@@ -1,6 +1,6 @@
 package eu.devexpert.madhouse.graphql.fetchers
 
-import eu.devexpert.madhouse.domain.TopicName
+
 import eu.devexpert.madhouse.services.UserService
 import grails.events.EventPublisher
 import graphql.schema.DataFetcher

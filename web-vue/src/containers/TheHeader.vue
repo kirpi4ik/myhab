@@ -1,15 +1,7 @@
 <template>
     <CHeader fixed with-subheader light>
-        <CToggler
-                in-header
-                class="ml-3 d-lg-none"
-                v-c-emit-root-event:toggle-sidebar-mobile
-        />
-        <CToggler
-                in-header
-                class="ml-3 d-md-down-none"
-                v-c-emit-root-event:toggle-sidebar
-        />
+        <CToggler in-header class="ml-3 d-lg-none" v-c-emit-root-event:toggle-sidebar-mobile/>
+        <CToggler in-header class="ml-3 d-md-down-none" v-c-emit-root-event:toggle-sidebar/>
         <CHeaderBrand
                 class="mx-auto d-lg-none"
                 src="img/brand/coreui-base.svg"
@@ -30,6 +22,7 @@
             </CHeaderNavItem>
         </CHeaderNav>
         <CHeaderNav class="mr-4">
+            <ClockComponent/>
             <font-awesome-icon :icon="['fas', 'wifi']" size="1x" style="color: green" v-if="stompConnection == 'ONLINE'" title="Server connected"/>
             <font-awesome-icon :icon="['fas', 'exclamation-triangle']" size="1x" style="color: red" v-if="stompConnection == 'OFFLINE'" title="Async connection offline"/>
             <TheHeaderDropdownNotif/>
@@ -49,6 +42,7 @@
     import TheHeaderDropdownNotif from './TheHeaderDropdownNotif'
     import TheHeaderDropdownTaskList from './TheHeaderDropdownTaskList'
     import BreadcrumbRouteNav from './BreadcrumbRouteNav'
+    import ClockComponent from './ClockComponent'
     import {authenticationService} from '@/_services';
 
     export default {
@@ -58,7 +52,8 @@
             TheHeaderDropdownNotif,
             TheHeaderDropdownMsgInbox,
             TheHeaderDropdownTaskList,
-            BreadcrumbRouteNav
+            BreadcrumbRouteNav,
+            ClockComponent
         },
         computed: {
             stompConnection() {

@@ -42,7 +42,18 @@
                                         </div>
                                         <div v-if="Array.isArray(item.value)">
                                             <CBadge color="success" v-for="(badge) in item.value" style="margin-right: 2px" v-bind:key="badge.uid">
-                                                {{badge.name}}
+                                                <a v-if="badge.__typename == 'DevicePeripheral'" @click="$router.push({path: '/peripherals/'+badge.id+'/view'})">
+                                                    {{badge.name}}
+                                                </a>
+                                                <a v-else-if="badge.__typename == 'Zone'" @click="$router.push({path: '/zones/'+badge.id+'/view'})">
+                                                    {{badge.name}}
+                                                </a>
+                                                <a v-else-if="badge.__typename == 'DevicePort'" @click="$router.push({path: '/devices/'+badge.device.id+'/ports/'+badge.id+'/view'})">
+                                                    {{badge.name}}
+                                                </a>
+                                                <span v-else>
+                                                    {{badge.name}}
+                                                </span>
                                             </CBadge>
                                         </div>
                                     </td>

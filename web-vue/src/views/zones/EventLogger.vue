@@ -47,7 +47,7 @@
                 this.$apollo.query({
                     query: PERIPHERAl_EVENT_LOGS,
                     variables: {
-                        p2: this.peripheral.data.uid,
+                        p2: this.peripheral.uid,
                         count: 10,
                         offset: 0
                     },

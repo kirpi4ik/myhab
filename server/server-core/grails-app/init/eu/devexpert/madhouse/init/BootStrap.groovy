@@ -7,8 +7,8 @@ import org.jeasy.rules.api.Rules
 class BootStrap {
     def alertService
     def hazelcastInstance;
+    def mqttInbound;
     def schedulerService
-    def configPeripherals
     def grailsApplication
     def initService
 
@@ -17,7 +17,6 @@ class BootStrap {
 //        def var = new Alert(AlertPriority.P1, "helo", "description")
 //        alertService.sendAlert(var)
 
-        println configPeripherals.categories
         List<String> list = new ArrayList<>()
         list << "xxx"
         list << "yyy"

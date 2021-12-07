@@ -1,7 +1,7 @@
 package eu.devexpert.madhouse.controller
 
 import eu.devexpert.madhouse.domain.EntityType
-import eu.devexpert.madhouse.domain.TopicName
+import eu.devexpert.madhouse.domain.events.TopicName
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.job.EventData

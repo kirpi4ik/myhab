@@ -21,32 +21,49 @@
                             </div>
                         </CCardHeader>
                         <CCardBody>
-                            <CRow v-for="(portDetail, index) in portDetails" :key="`detail-${index}`">
+                            <CRow>
                                 <CCol sm="12">
-                                    <CInput v-if="!isBoolean(portDetail.key)" :label="portDetail.key.charAt(0).toUpperCase()+portDetail.key.slice(1)"
-                                            :value="portDetail.value"
-                                            @input="updateFieldValue($event, portDetail.key)"
-                                            :ref="portDetail.key"/>
-                                    <CInputCheckbox v-if="isBoolean(portDetail.key)"
-                                                    :key="portDetail.key"
-                                                    :label="portDetail.key.charAt(0).toUpperCase()+portDetail.key.slice(1)"
-                                                    :value="portDetail.value"
-                                                    :checked="portDetail.value"
-                                                    @update:checked="check($event, portDetail.key)"
-                                                    :inline="true"
-                                                    :ref="portDetail.key"
-                                    />
+                                    <CInput label="Internal Ref" :value="port['internalRef']" @input="updateFieldValue($event, 'internalRef')" ref="internalRef" sync/>
                                 </CCol>
                             </CRow>
                             <CRow>
-                                {{ $t("port.fields.type") }}
-                                <multiselect v-model="portToUpdateType" :options="portTypes">
-                                </multiselect>
+                                <CCol sm="12">
+                                    <CInput label="Name" :value="port['name']" @input="updateFieldValue($event, 'name')" ref="name" sync/>
+                                </CCol>
                             </CRow>
                             <CRow>
-                                {{ $t("port.fields.state") }}
-                                <multiselect v-model="portToUpdateState" :options="portStates">
-                                </multiselect>
+                                <CCol sm="12">
+                                    <CInput label="Description" :value="port['description']" @input="updateFieldValue($event, 'description')" ref="description" sync/>
+                                </CCol>
+                            </CRow>
+                            <CRow>
+                                <CCol sm="12">
+                                    <CInput label="Value" :value="port['value']" @input="updateFieldValue($event, 'value')" ref="value" sync/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>Type</label>
+                                    <v-select label="name" v-model="port.type" :options="portTypes"/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>State</label>
+                                    <v-select label="name" v-model="port.state" :options="portStates"/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>Cables</label>
+                                    <v-select label="name" v-model="port.cables" :options="cables" multiple/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>Peripherals</label>
+                                    <v-select label="name" v-model="port.peripherals" :options="peripherals" multiple/>
+                                </CCol>
                             </CRow>
                         </CCardBody>
                         <CCardFooter>
@@ -64,40 +81,24 @@
 
 
 <script>
-    import {PORT_GET_BY_ID, PORT_UPDATE, PORT_CREATE} from "../../graphql/queries";
-
-    import Multiselect from 'vue-multiselect'
+    import {PORT_CREATE, PORT_DETAILS_TO_CREATE, PORT_GET_BY_ID, PORT_UPDATE} from "../../graphql/queries";
+    import vSelect from "vue-select";
+    import _ from "lodash";
 
     export default {
         name: 'PortEditor',
         components: {
-            'multiselect': Multiselect
+            'v-select': vSelect
         },
         data: () => {
             return {
                 portDetails: [],
-                portToUpdateType: "UNKNOW",
-                portToUpdateState: "UNKNOW",
-                portToUpdate: {},
                 port: [],
-                readonly: ["id", "__typename", "uid", "device", "type", "state"],
-                booleans: ["runAction", "mustSendToServer", "runScenario"],
-                deleteConfirmShow: false,
-                portTypes: [
-                    "UNKNOW",
-                    "IN",
-                    "OUT",
-                    "ADC",
-                    "DSEN",
-                    "I2C",
-                    "NOT_CONFIGURED"
-                ],
-                portStates: [
-                    "UNKNOW",
-                    "CONFIGURED",
-                    "ACTIVE",
-                    "INACTIVE"
-                ]
+                portTypes: [],
+                portStates: [],
+                peripherals: [],
+                cables: [],
+                deleteConfirmShow: false
             }
         },
         created() {
@@ -109,6 +110,9 @@
             }
         },
         methods: {
+            updateFieldValue(newVal, field) {
+                this.port[field] = newVal
+            },
             initCreate() {
                 this.port = {
                     internalRef: "",
@@ -120,53 +124,65 @@
                         id: this.$route.params.idPrimary
                     }
                 };
-                let removeReadonly = function (keyMap) {
-                    return !this.readonly.includes(keyMap.key)
-                }.bind(this);
-                this.portDetails = Object.entries(this.port).map(([key, value]) => {
-                    return {key, value}
-                }).filter(removeReadonly);
-                this.portToUpdateType = this.portTypes[0];
-                this.portToUpdateState = this.portStates[0];
+
+                this.$apollo.query({
+                    query: PORT_DETAILS_TO_CREATE,
+                    variables: {id: this.$route.params.idPrimary},
+                    fetchPolicy: 'network-only'
+                }).then(response => {
+                    this.peripherals = _.transform(_.cloneDeep(response.data.devicePeripheralList), function (result, obj) {
+                        obj.name = obj.name + ' - ' + obj.description
+                        result.push(obj);
+                    }, []);
+                    this.cables = _.transform(_.cloneDeep(response.data.cableList), function (result, obj) {
+                        obj.name = obj.code
+                        result.push(obj);
+                    }, []);
+                    this.portTypes = response.data.portTypes
+                    this.portStates = response.data.portStates
+
+                });
             },
             init() {
-                let port = {};
                 this.$apollo.query({
                     query: PORT_GET_BY_ID,
                     variables: {id: this.$route.params.id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    let removeReadonly = function (keyMap) {
-                        return !this.readonly.includes(keyMap.key)
-                    }.bind(this);
+                    this.port = _.cloneDeep(response.data.devicePort);
+                    this.peripherals = _.transform(_.cloneDeep(response.data.devicePeripheralList), function (result, obj) {
+                        obj.name = obj.name + ' - ' + obj.description
+                        result.push(obj);
+                    }, []);
+                    this.port.cables = _.transform(_.cloneDeep(this.port.cables), function (result, obj) {
+                        obj.name = obj.code
+                        result.push(obj);
+                    }, []);
+                    this.cables = _.transform(_.cloneDeep(response.data.cableList), function (result, obj) {
+                        obj.name = obj.code
+                        result.push(obj);
+                    }, []);
+                    this.portTypes = response.data.portTypes
+                    this.portStates = response.data.portStates
 
-                    this.port = response.data.devicePort;
-                    const portDetailsToMap = port ? Object.entries(this.port) : [['id', 'Not found']];
-                    this.portDetails = portDetailsToMap.map(([key, value]) => {
-                        return {key, value}
-                    }).filter(removeReadonly);
-
-                    this.portToUpdateType = this.port.type;
-                    this.portToUpdateState = this.port.state;
                 });
             },
-            isBoolean(key) {
-                return this.booleans.indexOf(key) != -1;
-            },
-            check(value, key) {
-                this.portToUpdate[key] = value
-
-            },
-            updateFieldValue(value, key) {
-                this.portToUpdate[key] = value
-            },
             save() {
-
                 if (this.$route.meta.uiMode === 'EDIT') {
+                    let portClone = _.cloneDeep(this.port)
+                    delete portClone.id
+                    if (portClone.peripherals) {
+                        portClone.peripherals.forEach(function (peripheral) {
+                            delete peripheral.name
+                        })
+                        portClone.cables.forEach(function (cable) {
+                            delete cable.name
+                        })
+                    }
                     this.$apollo.mutate({
-                        mutation: PORT_UPDATE, variables: {id: this.port.id, devicePort: this.portToUpdate}
+                        mutation: PORT_UPDATE, variables: {id: this.port.id, port: portClone}
                     }).then(response => {
-                        this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.devicePortUpdate.id + "/view"})
+                        this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.updatePort.id + "/view"})
                     });
                 } else if (this.$route.meta.uiMode === 'CREATE') {
                     this.portToUpdate["device"] = this.port.device;
@@ -189,4 +205,4 @@
         }
     }
 </script>
-<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
+<style src="vue-select/dist/vue-select.css"></style>
