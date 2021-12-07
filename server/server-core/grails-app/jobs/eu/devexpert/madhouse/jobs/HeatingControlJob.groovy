@@ -3,7 +3,7 @@ package eu.devexpert.madhouse.jobs
 
 import eu.devexpert.madhouse.domain.Configuration
 import eu.devexpert.madhouse.domain.EntityType
-import eu.devexpert.madhouse.domain.TopicName
+import eu.devexpert.madhouse.domain.events.TopicName
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.infra.Zone
 import eu.devexpert.madhouse.domain.job.EventData
@@ -61,21 +61,21 @@ class HeatingControlJob implements Job, EventPublisher {
                     Set<DevicePeripheral> actuatorHeatCtrlSet = DevicePeripheral.findAll("select dp from  DevicePeripheral dp where ?0 in elements(zones) and dp.category.name = ?1", [zone], PERIPHERAL_HEAT_CTRL_CATEGORY)
                     actuatorHeatCtrlSet.each { actuator ->
                         if (currentTemp <= desiredTempForActuator) {
-                            actions << ["${actuator.uid}": "ON"]
+                            actions << ["${actuator.id}": "ON"]
 
                         } else {
-                            actions << ["${actuator.uid}": "OFF"]
+                            actions << ["${actuator.id}": "OFF"]
 
                         }
                     }
 
                 }
             }
-            actions.each { actuatorUid, action ->
+            actions.each { actuatorId, action ->
                 publish(TopicName.EVT_HEAT.id(), new EventData().with {
                     p0 = TopicName.EVT_HEAT.id()
                     p1 = EntityType.PERIPHERAL.name()
-                    p2 = actuatorUid
+                    p2 = actuatorId
                     p3 = "thermostat"
                     p4 = action
                     p6 = "system"

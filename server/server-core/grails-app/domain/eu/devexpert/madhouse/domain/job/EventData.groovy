@@ -3,19 +3,14 @@ package eu.devexpert.madhouse.domain.job
 import eu.devexpert.madhouse.domain.Configuration
 import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.common.BaseEntity
+import eu.devexpert.madhouse.domain.common.Event
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 
-class EventData extends BaseEntity {
+class EventData extends Event  {
     String category // event category - optional
-    String p0 // topic name
-    String p1 // target type entity
-    String p2 // target id
-    String p3 // source of event
-    String p4 // event parameter( like port action : on/off/rev  - see PortAction.class)
-    String p5 // json parameter
-    String p6  // event producer reference(username)
+
 //
 //  def beforeInsert() {
 //    super.beforeInsert()

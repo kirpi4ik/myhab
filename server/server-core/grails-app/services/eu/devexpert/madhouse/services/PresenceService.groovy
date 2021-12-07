@@ -13,6 +13,6 @@ class PresenceService {
     @Subscriber("evt_presence")
     @Transactional(propagation = Propagation.REQUIRED)
     def sensor_presence_on(event) {
-        powerService.execute([portIds: [2241], action: PortAction.REVERSE])
+        powerService.execute([portIds: [2241], action: PortAction.TOGGLE])
     }
 }

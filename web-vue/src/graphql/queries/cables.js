@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client/core"
+import {gql} from "@apollo/client/core"
 
 export const CABLE_CREATE = gql`
     mutation($cable: CableCreate) {
@@ -8,10 +8,9 @@ export const CABLE_CREATE = gql`
     }
 `;
 export const CABLE_VALUE_UPDATE = gql`
-    mutation ($id:Long!, $cableUpdate:CableUpdate) {
-        cableUpdate(id:$id, cable: $cableUpdate){
-            id,
-            uid
+    mutation ($id:Long!, $cable: CableUpdate!) {
+        updateCable(id:$id, cable: $cable){
+            id
         }
     }
 `;
@@ -31,9 +30,10 @@ export const CABLE_LIST_ALL = gql`
             codeNew
             codeOld
             description
+            patchPanelPort
             patchPanel{
                 id
-                code
+                name
             }
             category{
                 name
@@ -63,14 +63,14 @@ export const CABLE_BY_ID = gql`
             nrWires
             patchPanel {
                 id
-                code
+                name
                 size
                 rack {
                     id
                     name
                     description
                 }
-                code
+                name
                 description
             }
             patchPanelPort
@@ -82,30 +82,140 @@ export const CABLE_BY_ID = gql`
 
             category {
                 id
-                title
                 name
             }
             peripherals {
                 id
-                version
                 name
-                code
                 model
                 description
-                maxAmp
-                codeOld
+                __typename
             }
             connectedTo {
                 id
                 name
-                code
-                model
                 description
+                device{
+                    id
+                    code                    
+                }
+                __typename
+            }
+            zones {
+                id
+                name
+                __typename
+            }
+        }
+    }
+`;
+export const CABLE_EDIT_GET_DETAILS = gql`
+    query cableById($id: Long!) {
+        cable(id: $id) {
+            id
+            version
+            uid
+            tsCreated
+            tsUpdated
+            entityType
+            rack {
+                id
+                name
+            }
+            patchPanel {
+                id
+                name
+            }
+            category {
+                id
+                name
+            }
+            code
+            codeNew
+            codeOld
+            description
+            patchPanelPort
+            nrWires
+            peripherals {
+                id
+                name
+            }
+            connectedTo {
+                id
+                name
+                internalRef
+                device{
+                    code
+                }
             }
             zones {
                 id
                 name
             }
+            maxAmp
+        }
+        rackList {
+            id
+            name
+            patchPanels {
+                id
+                name
+            }
+        }
+        cableCategoryList {
+            id
+            name
+        }
+        zoneList {
+            id
+            name
+        }
+        patchPanelList {
+            id
+            name
+        }
+        devicePeripheralList {
+            id
+            name
+        }
+
+        devicePortList {
+            id
+            internalRef
+            name
+            description
+            device {
+                code
+                description
+            }
+        }
+    }
+`;
+export const CABLE_CREATE_GET_DETAILS = gql`
+    query {
+        rackList{
+            id
+            name
+            patchPanels{
+                id
+                name
+            }
+        }
+        cableCategoryList{
+            id
+            name
+        }
+        zoneList{
+            id
+            name
+        }
+        patchPanelList{
+            id
+            name
+        }
+        devicePeripheralList{
+            id
+            name
         }
     }
 `;

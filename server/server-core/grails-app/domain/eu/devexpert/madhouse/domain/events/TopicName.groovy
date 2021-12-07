@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse.domain;
+package eu.devexpert.madhouse.domain.events;
 
 /**
  *
@@ -8,11 +8,14 @@ enum TopicName {
     EVT_HEAT,
     EVT_PRESENCE,
     EVT_PORT_VALUE_CHANGED,
+    EVT_PORT_VALUE_PERSISTED,
     EVT_LOG,
     EVT_DEVICE_STATUS,
     EVT_INTERCOM_DOOR_LOCK,
     EVT_DEVICE_PUSH,
-    POWER,;
+    EVT_MQTT_PORT_VALUE_CHANGED,
+    EVT_UI_UPDATE_PORT_VALUE,
+    POWER;
 
     String id() {
         return name().toLowerCase();

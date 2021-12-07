@@ -1,4 +1,4 @@
-package eu.devexpert.madhouse.init.socket
+package eu.devexpert.madhouse.async.socket
 
 import grails.plugin.springwebsocket.DefaultWebSocketConfig
 import groovy.util.logging.Slf4j

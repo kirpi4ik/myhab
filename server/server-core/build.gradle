@@ -1,6 +1,7 @@
 buildscript {
     repositories {
         mavenLocal()
+        jcenter()
         maven { url "https://repo.grails.org/grails/core" }
         maven { url "https://plugins.gradle.org/m2/" }
     }
@@ -12,7 +13,6 @@ buildscript {
     }
 }
 
-apply plugin: "idea"
 apply plugin: "org.grails.grails-web"
 apply plugin: "org.grails.plugins.views-json"
 apply plugin: "org.grails.grails-gsp"
@@ -74,7 +74,6 @@ dependencies {
     compile "org.grails.plugins:hibernate5"
     compile "org.hibernate:hibernate-core:5.4.20.Final"
 
-    /*compile "com.graphql-java:graphql-java:13.0"*/
     compile "org.grails.plugins:gorm-graphql-plugin:2.0.2.BUILD-SNAPSHOT"
 
 
@@ -95,7 +94,8 @@ dependencies {
     runtime "com.h2database:h2"
     compile 'org.postgresql:postgresql:42.2.20'
 
-    compile "org.grails.plugins:spring-security-rest:3.0.0.RC1"
+    // https://mvnrepository.com/artifact/org.grails.plugins/spring-security-rest
+    implementation 'org.grails.plugins:spring-security-rest:3.0.1'
     compile group: 'org.kohsuke', name: 'groovy-sandbox', version: '1.18'
     compile 'org.jsoup:jsoup:1.11.2'
 
@@ -111,6 +111,12 @@ dependencies {
     compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.2'
 
     compile 'org.grails.plugins:grails-spring-websocket:2.5.0.RC1'
+
+    implementation "org.springframework.integration:spring-integration-mqtt"
+    implementation 'org.springframework.integration:spring-integration-jmx'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+
+
 
     implementation "org.springframework.security:spring-security-config"
     /*implementation "org.springframework.security:spring-security-oauth2-authorization-server"*/

@@ -3,11 +3,18 @@
         <div class="card-body pb-2">
             <slot></slot>
             <div>
-                <font-awesome-icon icon="thermometer-half" size="3x" :class="`zone-icon-${peripheral.portValue < 20}`"/>
+                <font-awesome-icon icon="thermometer-half" size="3x" :class="`zone-icon-${peripheral.data.connectedTo[0].value < 20}`"/>
                 <h4 class="mb-1"> {{peripheral.data.name}}</h4>
-                <h4 class="mb-1">{{peripheral.portValue}}</h4>
+                <h4 class="mb-1">{{peripheral.data.connectedTo[0].value}}</h4>
             </div>
-
+            <div v-if="hasRole(['ROLE_ADMIN'])">
+                <CDropdown color="transparent p-0" placement="bottom-end" :ref="'dropdown-'+peripheral.data.id">
+                    <template #toggler-content>
+                        <CIcon name="cil-settings"/>
+                    </template>
+                    <CDropdownItem v-on:click="$router.push({path: '/peripherals/' + peripheral.data.id + '/view'})">Details</CDropdownItem>
+                </CDropdown>
+            </div>
         </div>
         <slot name="footer" class="card-footer">
             <div class="toggle-btn">
@@ -17,12 +24,23 @@
 </template>
 
 <script>
+    import {authenticationService} from '@/_services';
 
     export default {
         name: 'PeriphTempControl',
         props: {
             peripheral: Object
-        }
+        },
+        methods:
+            {
+                hasRole: function (roles) {
+                    const currentUser = authenticationService.currentUserValue;
+                    return currentUser.permissions.filter(function (userRole) {
+                        return roles.includes(userRole);
+                    }).length > 0;
+                }
+            }
+
     }
 </script>
 <style scoped>

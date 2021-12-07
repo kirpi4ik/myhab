@@ -58,6 +58,7 @@
                                             table-filter
                                             sorter
                                             clickable-rows
+                                            @row-clicked="$router.push({path: '/devices/' + $route.params.idPrimary + '/ports/' + $event.id + '/view'})"
                                     >
                                         <template #name="data">
                                             <td>
@@ -66,9 +67,12 @@
                                         </template>
                                         <template #actions="data">
                                             <td>
-                                                <CButton color="success" @click="viewPortDetails(data.item)">{{ $t("actions.view") }}</CButton>
-                                                |
-                                                <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto"> {{ $t("actions.delete") }}</CButton>
+                                                <a @click="$router.push({path: '/devices/'+data.item.id +'/ports/'+ data.item.id+'/edit'})" style="padding-right: 1em">
+                                                    <font-awesome-icon icon="edit" size="1x"/>
+                                                </a>
+                                                <a @click="modalCheck(data.item)">
+                                                    <font-awesome-icon icon="ban" size="1x"/>
+                                                </a>
                                             </td>
                                         </template>
                                     </CDataTable>
@@ -184,9 +188,6 @@
             },
             goBack() {
                 this.$router.go(-1)
-            },
-            viewPortDetails(item) {
-                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + item.id + "/view"})
             }
         }
     }

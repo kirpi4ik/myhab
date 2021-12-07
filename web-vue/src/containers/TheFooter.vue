@@ -6,7 +6,7 @@
         </div>
         <div class="ml-auto">
             <span class="mr-1">Powered by</span>
-            <a href="https://madhouse.app" target="_self">MadHouse &trade;</a>
+            <a href="https://madhouse.app" target="_self">kirpi4ik &trade;</a>
         </div>
     </CFooter>
 </template>
