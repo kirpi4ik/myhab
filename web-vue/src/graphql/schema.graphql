@@ -11,11 +11,11 @@ type BradCrumbLink {
 }
 
 type Cable {
-    category: PeripheralCategory
+    category: CableCategory
     code: String
     codeNew: String
     codeOld: String
-    connectedTo: [DevicePeripheral]
+    connectedTo: [DevicePort]
     description: String
     entityType: EntityType
     "A list of validation errors on the entity"
@@ -32,6 +32,19 @@ type Cable {
     uid: String
     version: Long
     zones: [Zone]
+}
+
+type CableCategory {
+    cables: [Cable]
+    entityType: EntityType
+    "A list of validation errors on the entity"
+    errors: [Error]
+    id: Long
+    name: String
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+    version: Long
 }
 
 type CacheResult {
@@ -155,9 +168,8 @@ type DeviceCategory {
 }
 
 type DevicePeripheral {
+    accessTokens: [PeripheralAccessToken]
     category: PeripheralCategory
-    code: String
-    codeOld: String
     configurations: [Configuration]
     connectedTo: [DevicePort]
     description: String
@@ -181,7 +193,6 @@ type DevicePeripheralUpdateResult {
 }
 
 type DevicePort {
-    action: String
     cables: [Cable]
     configurations: [Configuration]
     description: String
@@ -189,17 +200,10 @@ type DevicePort {
     entityType: EntityType
     "A list of validation errors on the entity"
     errors: [Error]
-    hystDeviationValue: String
     id: Long
     internalRef: String
-    miscValue: String
-    mode: String
-    model: String
-    mustSendToServer: Boolean
     name: String
     peripherals: [DevicePeripheral]
-    runAction: Boolean
-    runScenario: Boolean
     scenarios: [Scenario]
     state: PortState
     subscriptions: [EventSubscription]
@@ -353,6 +357,9 @@ type Layer {
 
 type Mutation {
     addListItemProperty(entityId: Long!, entityType: EntityType!, key: String!, value: String!): Configuration
+    cableCategoryCreate(cableCategory: CableCategoryCreate): CableCategory
+    cableCategoryDelete(id: Long!): DeleteResult
+    cableCategoryUpdate(cableCategory: CableCategoryUpdate, id: Long!): CableCategory
     cableCreate(cable: CableCreate): Cable
     cableDelete(id: Long!): DeleteResult
     cableUpdate(cable: CableUpdate, id: Long!): Cable
@@ -408,7 +415,9 @@ type Mutation {
     scenarioCreate(scenario: ScenarioCreate): Scenario
     scenarioDelete(id: Long!): DeleteResult
     scenarioUpdate(id: Long!, scenario: ScenarioUpdate): Scenario
+    updateCable(cable: CableUpdate!, id: Long!): Cable
     updatePeripheral(id: Long!, peripheral: DevicePeripheralUpdate!): DevicePeripheralUpdateResult
+    updatePort(id: Long!, port: DevicePortUpdate!): DevicePort
     userCreate(user: UserCreate): User
     userDelete(id: Long!): DeleteResult
     userDeleteCascade(id: Long!): DeleteResponseCustom
@@ -436,17 +445,32 @@ type NetworkAddressEmbedded {
 
 type PatchPanel {
     cables: [Cable]
-    code: String
     description: String
     entityType: EntityType
     "A list of validation errors on the entity"
     errors: [Error]
     id: Long
+    name: String
     rack: Rack
     size: Int
     tsCreated: Date
     tsUpdated: Date
     uid: String
+    version: Long
+}
+
+type PeripheralAccessToken {
+    entityType: EntityType
+    "A list of validation errors on the entity"
+    errors: [Error]
+    id: Long
+    peripheral: DevicePeripheral
+    token: String
+    tsCreated: Date
+    tsExpiration: Date
+    tsUpdated: Date
+    uid: String
+    user: User
     version: Long
 }
 
@@ -481,6 +505,9 @@ type PortValue {
 type Query {
     cable(id: Long!): Cable
     cableByUid(uid: String!): Cable
+    cableCategory(id: Long!): CableCategory
+    cableCategoryCount: Int
+    cableCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [CableCategory]
     cableCount: Int
     cableList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Cable]
     cache(cacheKey: String!, cacheName: String!): CacheResult
@@ -528,6 +555,8 @@ type Query {
     peripheralCategory(id: Long!): PeripheralCategory
     peripheralCategoryCount: Int
     peripheralCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PeripheralCategory]
+    portStates: [String]
+    portTypes: [String]
     portValue(id: Long!): PortValue
     portValueCount: Int
     portValueList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PortValue]
@@ -562,6 +591,7 @@ type Rack {
     errors: [Error]
     id: Long
     name: String
+    patchPanels: [PatchPanel]
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -606,6 +636,7 @@ type User {
     name: String
     password: String
     passwordExpired: Boolean
+    peripheralAccessTokens: [PeripheralAccessToken]
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -649,6 +680,7 @@ enum DeviceStatus {
 
 enum EntityType {
     CABLE
+    CABLE_CATEGORY
     DEVICE
     EVENT_DATA
     PATCH_PANEL
@@ -656,6 +688,7 @@ enum EntityType {
     PERIPHERAL_CATEGORY
     PORT
     PORT_VALUE
+    RACK
     ZONE
 }
 
@@ -674,20 +707,62 @@ enum PortState {
 
 enum PortType {
     ADC
+    BINARY_SENSOR
     DSEN
     I2C
     IN
     NOT_CONFIGURED
     OUT
+    SENSOR
+    SWITCH
     UNKNOW
 }
 
+input CableCategoryCreate {
+    cables: [CableCreateNested!]
+    entityType: EntityType
+    name: String!
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+}
+
+input CableCategoryCreateNested {
+    cables: [CableCreateNested]
+    entityType: EntityType
+    id: Long
+    name: String
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+}
+
+input CableCategoryUpdate {
+    cables: [CableUpdateNested]
+    entityType: EntityType
+    name: String
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+    version: Long
+}
+
+input CableCategoryUpdateNested {
+    cables: [CableUpdateNested]
+    entityType: EntityType
+    id: Long
+    name: String
+    tsCreated: Date
+    tsUpdated: Date
+    uid: String
+}
+
 input CableCreate {
-    category: PeripheralCategoryCreateNested
+    category: CableCategoryCreateNested
     code: String
     codeNew: String
     codeOld: String
-    connectedTo: [DevicePeripheralCreateNested!]
+    connectedTo: [DevicePortCreateNested!]
     description: String
     entityType: EntityType
     maxAmp: Float!
@@ -706,7 +781,6 @@ input CableCreateNested {
     code: String
     codeNew: String
     codeOld: String
-    connectedTo: [DevicePeripheralCreateNested]
     description: String
     entityType: EntityType
     id: Long
@@ -720,11 +794,11 @@ input CableCreateNested {
 }
 
 input CableUpdate {
-    category: PeripheralCategoryUpdateNested
+    category: CableCategoryUpdateNested
     code: String
     codeNew: String
     codeOld: String
-    connectedTo: [DevicePeripheralUpdateNested]
+    connectedTo: [DevicePortUpdateNested]
     description: String
     entityType: EntityType
     maxAmp: Float
@@ -744,7 +818,6 @@ input CableUpdateNested {
     code: String
     codeNew: String
     codeOld: String
-    connectedTo: [DevicePeripheralUpdateNested]
     description: String
     entityType: EntityType
     id: Long
@@ -939,9 +1012,8 @@ input DeviceCreateNested {
 }
 
 input DevicePeripheralCreate {
+    accessTokens: [PeripheralAccessTokenCreateNested!]
     category: PeripheralCategoryCreateNested!
-    code: String!
-    codeOld: String
     connectedTo: [DevicePortCreateNested!]
     description: String
     entityType: EntityType
@@ -955,8 +1027,7 @@ input DevicePeripheralCreate {
 }
 
 input DevicePeripheralCreateNested {
-    code: String
-    codeOld: String
+    accessTokens: [PeripheralAccessTokenCreateNested]
     description: String
     entityType: EntityType
     id: Long
@@ -969,9 +1040,8 @@ input DevicePeripheralCreateNested {
 }
 
 input DevicePeripheralUpdate {
+    accessTokens: [PeripheralAccessTokenUpdateNested]
     category: PeripheralCategoryUpdateNested
-    code: String
-    codeOld: String
     connectedTo: [DevicePortUpdateNested]
     description: String
     entityType: EntityType
@@ -986,8 +1056,7 @@ input DevicePeripheralUpdate {
 }
 
 input DevicePeripheralUpdateNested {
-    code: String
-    codeOld: String
+    accessTokens: [PeripheralAccessTokenUpdateNested]
     description: String
     entityType: EntityType
     id: Long
@@ -1000,21 +1069,13 @@ input DevicePeripheralUpdateNested {
 }
 
 input DevicePortCreate {
-    action: String
     cables: [CableCreateNested!]
     description: String
     device: DeviceCreateNested!
     entityType: EntityType
-    hystDeviationValue: String
-    internalRef: String
-    miscValue: String
-    mode: String
-    model: String
-    mustSendToServer: Boolean
+    internalRef: String!
     name: String
     peripherals: [DevicePeripheralCreateNested!]
-    runAction: Boolean
-    runScenario: Boolean
     scenarios: [ScenarioCreateNested!]
     state: PortState
     subscriptions: [EventSubscriptionCreateNested!]
@@ -1026,21 +1087,12 @@ input DevicePortCreate {
 }
 
 input DevicePortCreateNested {
-    action: String
-    cables: [CableCreateNested]
     description: String
     entityType: EntityType
-    hystDeviationValue: String
     id: Long
     internalRef: String
-    miscValue: String
-    mode: String
-    model: String
-    mustSendToServer: Boolean
     name: String
     peripherals: [DevicePeripheralCreateNested]
-    runAction: Boolean
-    runScenario: Boolean
     scenarios: [ScenarioCreateNested]
     state: PortState
     subscriptions: [EventSubscriptionCreateNested]
@@ -1052,21 +1104,13 @@ input DevicePortCreateNested {
 }
 
 input DevicePortUpdate {
-    action: String
     cables: [CableUpdateNested]
     description: String
     device: DeviceUpdateNested
     entityType: EntityType
-    hystDeviationValue: String
     internalRef: String
-    miscValue: String
-    mode: String
-    model: String
-    mustSendToServer: Boolean
     name: String
     peripherals: [DevicePeripheralUpdateNested]
-    runAction: Boolean
-    runScenario: Boolean
     scenarios: [ScenarioUpdateNested]
     state: PortState
     subscriptions: [EventSubscriptionUpdateNested]
@@ -1079,21 +1123,12 @@ input DevicePortUpdate {
 }
 
 input DevicePortUpdateNested {
-    action: String
-    cables: [CableUpdateNested]
     description: String
     entityType: EntityType
-    hystDeviationValue: String
     id: Long
     internalRef: String
-    miscValue: String
-    mode: String
-    model: String
-    mustSendToServer: Boolean
     name: String
     peripherals: [DevicePeripheralUpdateNested]
-    runAction: Boolean
-    runScenario: Boolean
     scenarios: [ScenarioUpdateNested]
     state: PortState
     subscriptions: [EventSubscriptionUpdateNested]
@@ -1403,9 +1438,9 @@ input NetworkAddressUpdateEmbedded {
 
 input PatchPanelCreate {
     cables: [CableCreateNested!]
-    code: String!
     description: String!
     entityType: EntityType
+    name: String!
     rack: RackCreateNested!
     size: Int
     tsCreated: Date
@@ -1415,11 +1450,10 @@ input PatchPanelCreate {
 
 input PatchPanelCreateNested {
     cables: [CableCreateNested]
-    code: String
     description: String
     entityType: EntityType
     id: Long
-    rack: RackCreateNested
+    name: String
     size: Int
     tsCreated: Date
     tsUpdated: Date
@@ -1428,9 +1462,9 @@ input PatchPanelCreateNested {
 
 input PatchPanelUpdate {
     cables: [CableUpdateNested]
-    code: String
     description: String
     entityType: EntityType
+    name: String
     rack: RackUpdateNested
     size: Int
     tsCreated: Date
@@ -1441,13 +1475,32 @@ input PatchPanelUpdate {
 
 input PatchPanelUpdateNested {
     cables: [CableUpdateNested]
-    code: String
     description: String
     entityType: EntityType
     id: Long
-    rack: RackUpdateNested
+    name: String
     size: Int
     tsCreated: Date
+    tsUpdated: Date
+    uid: String
+}
+
+input PeripheralAccessTokenCreateNested {
+    entityType: EntityType
+    id: Long
+    token: String
+    tsCreated: Date
+    tsExpiration: Date
+    tsUpdated: Date
+    uid: String
+}
+
+input PeripheralAccessTokenUpdateNested {
+    entityType: EntityType
+    id: Long
+    token: String
+    tsCreated: Date
+    tsExpiration: Date
     tsUpdated: Date
     uid: String
 }
@@ -1525,6 +1578,7 @@ input RackCreate {
     devices: [DeviceCreateNested!]
     entityType: EntityType
     name: String
+    patchPanels: [PatchPanelCreateNested!]
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1538,6 +1592,7 @@ input RackCreateNested {
     entityType: EntityType
     id: Long
     name: String
+    patchPanels: [PatchPanelCreateNested]
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1550,6 +1605,7 @@ input RackUpdate {
     devices: [DeviceUpdateNested]
     entityType: EntityType
     name: String
+    patchPanels: [PatchPanelUpdateNested]
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1564,6 +1620,7 @@ input RackUpdateNested {
     entityType: EntityType
     id: Long
     name: String
+    patchPanels: [PatchPanelUpdateNested]
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1636,6 +1693,7 @@ input UserCreate {
     lastName: String
     password: String!
     passwordExpired: Boolean!
+    peripheralAccessTokens: [PeripheralAccessTokenCreateNested!]
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1658,6 +1716,7 @@ input UserUpdate {
     lastName: String
     password: String
     passwordExpired: Boolean
+    peripheralAccessTokens: [PeripheralAccessTokenUpdateNested]
     tsCreated: Date
     tsUpdated: Date
     uid: String
@@ -1680,7 +1739,6 @@ input ZoneCreate {
 }
 
 input ZoneCreateNested {
-    cables: [CableCreateNested]
     categories: [String]
     configurations: [ConfigurationCreateNested]
     description: String
@@ -1711,7 +1769,6 @@ input ZoneUpdate {
 }
 
 input ZoneUpdateNested {
-    cables: [CableUpdateNested]
     categories: [String]
     configurations: [ConfigurationUpdateNested]
     description: String

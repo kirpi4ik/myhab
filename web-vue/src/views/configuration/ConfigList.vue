@@ -39,7 +39,7 @@
                                                 :key="item.key"
                                                 :value="item.value"
                                                 :checked="item.value"
-                                                @update:checked="check($event, item)"
+                                                @update:checked="updateFieldValue($event, item)"
                                                 :inline="true"
                                                 :ref="item.key"
                                         />
@@ -84,6 +84,7 @@
 </template>
 <script>
     import {CONFIGURATION_LIST, CONFIGURATION_SET_VALUE, CONFIGURATION_REMOVE_CONFIG} from "../../graphql/queries";
+    import _ from "lodash";
     import i18n from './../../i18n';
     import {uid} from 'uid';
 
@@ -116,7 +117,12 @@
                     variables: {entityId: this.$route.params.idPrimary, entityType: this.$route.meta.entityType},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.configurations = response.data.configurationListByEntity;
+                    this.configurations = _.transform(_.cloneDeep(response.data.configurationListByEntity), function (result, obj) {
+                        if (obj['key'].endsWith("ed")) {
+                            obj['value'] = obj['value'].toLowerCase() === 'true'
+                        }
+                        result.push(obj);
+                    }, []);
                 });
             },
             updateFieldKey(value, item) {
@@ -132,7 +138,6 @@
                 }
             },
             save: function (item) {
-
                 let tempId = item.tempId;
                 this.$apollo.mutate({
                     mutation: CONFIGURATION_SET_VALUE,
@@ -144,7 +149,11 @@
                     } else if (tempId != null) {
                         index = this.configurations.findIndex(k => k.tempId == item.tempId);
                     }
-                    this.$set(this.configurations, index, response.data.savePropertyValue)
+                    let savePropertyValue = response.data.savePropertyValue;
+                    if (savePropertyValue['key'].endsWith("ed")) {
+                        savePropertyValue['value'] = savePropertyValue['value'].toLowerCase() === 'true'
+                    }
+                    this.$set(this.configurations, index, savePropertyValue)
 
 
                 });

@@ -4,8 +4,8 @@
 
             <slot></slot>
             <div>
-                <font-awesome-icon icon="lightbulb" size="3x" :class="`zone-icon-${peripheral.state}`"/>
-                <CBadge v-if="peripheral.deviceState != 'ONLINE'">
+                <font-awesome-icon icon="lightbulb" size="3x" :class="`zone-icon-${peripheral.value === 'OFF'}`"/>
+                <CBadge v-if="peripheral.deviceState !== 'ONLINE'">
                     <font-awesome-icon :icon="['fas', 'exclamation-triangle']" size="3x"/>
                     OFFLINE
                 </CBadge>
@@ -23,51 +23,52 @@
                         </h4>
                     </div>
                     <div style="display: inline-block; width: 100%;" v-if="hasRole(['ROLE_ADMIN'])">
-                        <EventLogger :peripheral="peripheral" :name="peripheral.data.id"></EventLogger>
-                        <CDropdown color="transparent p-0" placement="bottom-end" :ref="'dropdown-'+peripheral.data.id">
+                        <EventLogger :peripheral="peripheral" :name="peripheral.id"></EventLogger>
+                        <CDropdown color="transparent p-0" placement="bottom-end" :ref="'dropdown-'+peripheral.id">
                             <template #toggler-content>
                                 <CIcon name="cil-settings"/>
                             </template>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 60)">Opreste dupa
+                            <CDropdownItem v-on:click="saveConfig(peripheral.id, 'key.on.timeout', 60)">Opreste dupa
                                 1min
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 300)">Opreste dupa
+                            <CDropdownItem v-on:click="saveConfig(peripheral.id, 'key.on.timeout', 300)">Opreste dupa
                                 5min
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 600)">Opreste dupa
+                            <CDropdownItem v-on:click="saveConfig(peripheral.id, 'key.on.timeout', 600)">Opreste dupa
                                 10min
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 1200)">Opreste dupa
+                            <CDropdownItem v-on:click="saveConfig(peripheral.id, 'key.on.timeout', 1200)">Opreste dupa
                                 20min
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 3600)">Opreste dupa
+                            <CDropdownItem v-on:click="saveConfig(peripheral.id, 'key.on.timeout', 3600)">Opreste dupa
                                 1h
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 7200)">Opreste dupa
+                            <CDropdownItem v-on:click="saveConfig(peripheral.id, 'key.on.timeout', 7200)">Opreste dupa
                                 2h
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', 10800)">Opreste dupa
+                            <CDropdownItem v-on:click="saveConfig(peripheral.id, 'key.on.timeout', 10800)">Opreste dupa
                                 3h
                             </CDropdownItem>
-                            <CDropdownItem v-on:click="saveConfig(peripheral.data.id, 'key.on.timeout', null)">Nelimitat
+                            <CDropdownItem v-on:click="saveConfig(peripheral.id, 'key.on.timeout', null)">Nelimitat
 
                             </CDropdownItem>
                             <CDropdownItem v-on:click="openPicker()" v-if="hasRGBSupport">Culoare</CDropdownItem>
+                            <CDropdownItem v-on:click="$router.push({path: '/peripherals/' + peripheral.id + '/view'})">Details</CDropdownItem>
                         </CDropdown>
-                        <CModal :title="'Setari culoare - '+peripheral.data.name"
+                        <CModal :title="'Setari culoare - '+peripheral.name"
                                 color="success"
                                 :show.sync="showRGB" v-if="hasRGBSupport">
                             <div style="display: inline">
                                 <div style="display: inline-block">
-                                    <sketch-picker v-model="colors" :name="peripheral.data.uid" @input="updateValue" :disableAlpha="true"/>
+                                    <sketch-picker v-model="colors" :name="peripheral.uid" @input="updateValue" :disableAlpha="true"/>
                                 </div>
-                                <div style="display: inline-block; margin: 10px; vertical-align: top; color: #0b2e13" >
+                                <div style="display: inline-block; margin: 10px; vertical-align: top; color: #0b2e13">
                                     <CInputCheckbox
                                             label="Random"
                                             :value.sync="rgbRandom"
                                             :checked.sync="rgbRandom"
                                             :inline="true"
-                                            @update:checked="saveConfig(peripheral.data.id, 'key.light.rgbRandom', rgbRandom)"
+                                            @update:checked="saveConfig(peripheral.id, 'key.light.rgbRandom', rgbRandom)"
                                     />
                                 </div>
                             </div>
@@ -81,15 +82,16 @@
         </div>
         <slot name="footer" class="card-footer">
             <div class="toggle-btn">
-                <toggle-button v-model="peripheral.state" :sync="true"
+                <toggle-button v-model="peripheral.state"  :sync="true"
                                :labels="{checked: 'Aprinde', unchecked: 'Stinge'}"
+                               @change="toggle()"
+                               :disabled="peripheral.deviceState != 'ONLINE'"
                                :switch-color="{checked: 'linear-gradient( #8DFF73, green)', unchecked: 'linear-gradient(#BF0000, #FFBE62)'}"
                                :color="{checked: '#009663', unchecked: '#FF0000', disabled: '#CCCCCC'}"
                                :speed="300"
-                               @change="periphStateChangeHandler(peripheral)"
-                               :font-size="14"
-                               :width="250"
-                               :height="40" :disabled="peripheral.deviceState != 'ONLINE'"/>
+                               :width="220"
+                               :height="40"
+                               :font-size="14"/>
             </div>
         </slot>
     </div>
@@ -99,15 +101,11 @@
     import {authenticationService} from '@/_services';
     import EventLogger from './EventLogger'
     import {Sketch} from 'vue-color'
+    import {lightService} from '@/_services/controls';
 
 
-    import {
-        CONFIGURATION_GET_VALUE,
-        CONFIGURATION_DELETE,
-        CONFIGURATION_SET_VALUE,
-        CACHE_GET_VALUE,
-        PUSH_EVENT
-    } from "../../graphql/queries";
+
+    import {CACHE_GET_VALUE, CONFIGURATION_DELETE, CONFIGURATION_SET_VALUE, PUSH_EVENT} from "../../graphql/queries";
 
     export default {
         name: 'PeriphLightControl',
@@ -119,10 +117,11 @@
             'sketch-picker': Sketch
         },
         created() {
-            this.loadConfig();
+            this.initConfig();
         },
         data() {
             return {
+                state: true,
                 peripheralTimeout: null,
                 peripheralTimeoutOn: null,
                 hasRGBSupport: false,
@@ -139,54 +138,31 @@
             }
         },
         methods: {
-            loadConfig: function () {
-                this.peripheral.show = false;
-                this.$apollo.query({
-                    query: CONFIGURATION_GET_VALUE,
-                    variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.on.timeout'},
-                    fetchPolicy: 'network-only'
-                }).then(response => {
-                    this.peripheralTimeout = response.data.configPropertyByKey
-                });
-                this.$apollo.query({
-                    query: CONFIGURATION_GET_VALUE,
-                    variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.light.hasRGBSupport'},
-                    fetchPolicy: 'network-only'
-                }).then(response => {
-                    if (response.data.configPropertyByKey != null) {
-                        this.hasRGBSupport = (response.data.configPropertyByKey.value == 'true')
-                        this.$apollo.query({
-                            query: CONFIGURATION_GET_VALUE,
-                            variables: {entityId: this.peripheral.data.id, entityType: 'PERIPHERAL', key: 'key.light.rgbRandom'},
-                            fetchPolicy: 'network-only'
-                        }).then(response => {
-                            if (response.data.configPropertyByKey != null) {
-                                this.rgbRandom = (response.data.configPropertyByKey.value == 'true')
-                            }
-                        });
+            getConfig: function (key) {
+                let conf = this.peripheral.data.configurations.filter(function (config) {
+                    return config.key === key
+                })
+                if (conf.length > 0) {
+                    return conf[0]
+                } else {
+                    return null
+                }
+            },
+            initConfig: function () {
+                this.peripheralTimeout = this.getConfig('key.on.timeout')
+                this.hasRGBSupport = this.getConfig('key.light.hasRGBSupport')
+                if (this.hasRGBSupport && this.hasRGBSupport.value == 'true') {
+                    let rgbRandom = this.getConfig('key.light.rgbRandom')
+                    if (rgbRandom != null) {
+                        this.rgbRandom = rgbRandom.value == 'true'
                     }
-                });
+                }
                 this.$apollo.query({
                     query: CACHE_GET_VALUE,
-                    variables: {cacheName: 'expiring', cacheKey: this.peripheral.portId},
+                    variables: {cacheName: 'expiring', cacheKey: this.peripheral.data.connectedTo[0].id},
                     fetchPolicy: 'network-only'
                 }).then(response => {
                     this.peripheralTimeoutOn = response.data.cache.cachedValue
-                });
-            },
-            periphStateChangeHandler: function (peripheral) {
-                let event = {
-                    "p0": "evt_light",
-                    "p1": "PERIPHERAL",
-                    "p2": peripheral.data.uid,
-                    "p3": "mweb",
-                    "p4": peripheral.state === true ? "off" : "on",
-                    "p6": authenticationService.currentUserValue.login
-                };
-                this.$apollo.mutate({
-                    mutation: PUSH_EVENT, variables: {input: event}
-                }).then(response => {
-
                 });
             },
             saveConfig: function (peripheralId, key, value) {
@@ -210,6 +186,9 @@
                 }
                 return true;
             },
+            toggle(){
+                lightService.toggle(this.peripheral)
+            },
             hasRole: function (roles) {
                 const currentUser = authenticationService.currentUserValue;
                 return currentUser.permissions.filter(function (userRole) {
@@ -227,7 +206,7 @@
                 let event = {
                     "p0": "evt_light_set_color",
                     "p1": "PERIPHERAL",
-                    "p2": this.peripheral.data.uid,
+                    "p2": this.peripheral.data.id,
                     "p3": "mweb",
                     "p4": JSON.stringify(color),
                     "p6": authenticationService.currentUserValue.login

@@ -34,6 +34,7 @@ class Device extends BaseEntity implements Configurable<Device> {
         ports sort: 'name', order: 'asc'
     }
     static constraints = {
+        code nullable: false, unique: true
         name nullable: true
         model nullable: true
         description nullable: true

@@ -1,3 +1,5 @@
+import org.joda.time.DateTime;
+
 buildscript {
     repositories {
         maven {
@@ -16,14 +18,25 @@ buildscript {
         classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
         classpath 'com.bmuschko:gradle-docker-plugin:6.6.1'
         classpath 'commons-io:commons-io:2.6'
+        classpath 'joda-time:joda-time:2.10.13'
     }
 }
+
 plugins {
     id "com.bmuschko.docker-remote-api" version "6.6.1"
     id 'java-library'
 }
 group "eu.devexpert.madhouse"
+allprojects {
+    apply plugin: 'idea'
 
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven { url "https://repo.grails.org/grails/core" }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+}
 //tag::extVariables[]
 ext {
     projectName = 'madhousev2-web'
@@ -76,6 +89,7 @@ subprojects { project ->
         }
     }
 }
+
 task versionTxt() {
     doLast {
         new File("${projectDir}/src/main/docker", "version.txt").text = "${projectVersion}"
@@ -83,7 +97,7 @@ task versionTxt() {
         def vueEnv = new File("${projectDir}/web-vue/.env")
         var.load(vueEnv.newDataInputStream())
         var.setProperty("VUE_APP_CONF_VERSION", "${projectVersion}")
-        var.setProperty("VUE_APP_CONF_VERSION_BUILD_DATE", "${new Date().format("YYYY-MM-DD'T'HH:mm")}")
+        var.setProperty("VUE_APP_CONF_VERSION_BUILD_DATE", "${DateTime.now().toString("YYYY-MM-dd'T'HH:mm")}")
         def writer = new PrintWriter(new FileOutputStream(vueEnv))
         var.list(writer)
         writer.close()

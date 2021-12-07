@@ -58,8 +58,18 @@ management:
       enabled: true
     httptrace:
       enabled: true
-allowedOrigin:  http://localhost:9999,http://192.168.1.90:10000,http://localhost:10000, http://localhost:443,http://localhost:80,chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam,https://madhouse.app
+
+allowedOrigin:  http://192.168.1.90:10000,http://localhost:10000,chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam,https://beta.madhouse.app,https://madhouse.app
 heatControlEnabled: true
+autoImportDevices: false
+autoImportPorts: true
+
+mqtt:
+  hostname: ***REMOVED***
+  port: 1883
+  username: kirpi4ik
+  password: ***REMOVED***
+  topics: madhouse/#,mp50/+,mp51/+,mp52/+,mp53/+,mp54/+,mp55/+,mp56/+,me60/+,me61/+,me62/+,me63/+,me64/+,me65/+
 
 ---
 grails:
@@ -73,6 +83,7 @@ grails:
       - http://localhost:443
       - http://localhost:80
       - https://madhouse.app
+      - https://beta.madhouse.app
   mime:
     disable:
       accept:

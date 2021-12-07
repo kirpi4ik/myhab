@@ -3,6 +3,7 @@
             fixed
             :minimize="minimize"
             :show.sync="show"
+
     >
         <CSidebarBrand
                 :imgFull="{ width: 118, height: 46, alt: 'Logo', src: 'img/brand/coreui-base-white.svg'}"
@@ -20,14 +21,12 @@
 <script>
     import {NAV} from './_nav'
     import {authenticationService} from '@/_services';
-    import {Role} from '@/_helpers';
-
 
     export default {
         name: 'TheSidebar',
         data() {
             return {
-                minimize: false,
+                minimize: true,
                 navItems: [],
                 show: 'responsive'
             }

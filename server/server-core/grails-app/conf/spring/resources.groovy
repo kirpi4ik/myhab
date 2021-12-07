@@ -1,9 +1,10 @@
+import eu.devexpert.madhouse.async.mqtt.handlers.MQTTMessageHandler
 import eu.devexpert.madhouse.auth.ClaimProvider
 import eu.devexpert.madhouse.graphql.GQLSchemaFactory
 import eu.devexpert.madhouse.graphql.GraphQLGenerator
 import eu.devexpert.madhouse.graphql.fetchers.Mutation
 
-import eu.devexpert.madhouse.init.socket.WebSocketConfig
+import eu.devexpert.madhouse.async.socket.WebSocketConfig
 import eu.devexpert.madhouse.listener.domain.UserPasswordEncoderListener
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -36,4 +37,6 @@ beans = {
     threadMetrics(JvmThreadMetrics)
 //
     webSocketConfig(WebSocketConfig)
+    mQTTMessageHandler(MQTTMessageHandler)
+    mQTTMessageHandler(MQTTMessageHandler)
 }
