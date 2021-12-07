@@ -17,7 +17,10 @@
                                 index-column
                                 clickable-rows
                                 table-filter
+                                columnFilter
                                 sorter
+                                responsive
+                                @row-clicked="$router.push({path: '/peripherals/' +  $event.id + '/view'})"
                         >
                             <template #name="data">
                                 <td>
@@ -27,9 +30,12 @@
 
                             <template #actions="data">
                                 <td>
-                                    <CButton color="success" @click="viewPeripheralDetails(data.item.id)">{{ $t("actions.view") }}</CButton>
-                                    |
-                                    <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto"> {{ $t("actions.delete") }}</CButton>
+                                    <a @click="$router.push({path: '/peripherals/' +  data.item.id + '/edit'})" style="padding-right: 1em">
+                                        <font-awesome-icon icon="edit" size="1x"/>
+                                    </a>
+                                    <a @click="modalCheck(data.item)">
+                                        <font-awesome-icon icon="ban" size="1x"/>
+                                    </a>
                                 </td>
                             </template>
                         </CDataTable>
@@ -69,7 +75,7 @@
                         filter: false
                     }
                 ],
-                perPage: 5,
+                perPage: 10,
                 deleteConfirmShow: false,
                 selectedItem: {}
             }

@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client/core"
+import {gql} from "@apollo/client/core"
 
 export const PERIPHERAL_CREATE = gql`
     mutation($devicePeripheral: DevicePeripheralCreate) {
@@ -27,7 +27,6 @@ export const PERIPHERAL_LIST_ALL = gql`
         devicePeripheralList{
             id
             uid
-            code
             name
             description
         }
@@ -76,7 +75,7 @@ export const PERIPHERAL_GET_BY_ID = gql`
                     status
                 }
             }
-        }        
+        }
     }
 `;
 export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
@@ -86,8 +85,6 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
             uid
             name
             description
-            code
-            codeOld
             model
             maxAmp
             category{
@@ -102,13 +99,19 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
                 internalRef
                 name
                 description
+                device{
+                    id
+                }
+                __typename
             }
             zones{
                 id
                 uid
                 name
                 description
+                __typename
             }
+
         }
         peripheralCategoryList{
             id
@@ -135,7 +138,30 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
         }
     }
 `;
-
+export const PERIPHERAL_LIST_WUI = gql`
+    query devicePeripheralList{
+        devicePeripheralList {
+            id
+            uid
+            name
+            description
+            category{
+                id
+                uid
+                title
+                name
+            }
+            connectedTo{
+                id
+                uid
+                internalRef
+                name
+                description
+                value
+            }
+        }
+    }
+`;
 export const PERIPHERAl_EVENT_LOGS = gql`
     query eventsByP2($p2:String!, $count: Int!, $offset:Int!){
         eventsByP2(p2:$p2, count: $count, offset:$offset) {

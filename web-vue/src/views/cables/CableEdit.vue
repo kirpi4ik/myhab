@@ -14,49 +14,81 @@
                                     <small class="text-muted">{{ $t("actions.delete") }}</small> |
                                 </a>
                                 <a style="cursor: pointer" class="card-header-action" rel="noreferrer noopener"
-                                   @click="$router.push({path: '/devices/' + $route.params.idPrimary + '/view'})">
+                                   @click="navCancel">
                                     <small class="text-muted">{{ $t("actions.cancel") }}</small>
                                 </a>
                             </div>
                         </CCardHeader>
                         <CCardBody>
-                            <CRow v-for="(cableDetail, index) in cableDetails" :key="`detail-${index}`">
+                            <CRow>
                                 <CCol sm="12">
-                                    <CInput v-if="!isBoolean(cableDetail.key) && !isArray(cableDetail)&& !isObject(cableDetail)" :label="cableDetail.key.charAt(0).toUpperCase()+cableDetail.key.slice(1)"
-                                            :value="cableDetail.value"
-                                            @input="updateFieldValue($event, cableDetail.key)"
-                                            :ref="cableDetail.key"/>
-                                    <CInputCheckbox v-if="isBoolean(cableDetail.key)"
-                                                    :key="cableDetail.key"
-                                                    :label="cableDetail.key.charAt(0).toUpperCase()+cableDetail.key.slice(1)"
-                                                    :value="cableDetail.value"
-                                                    :checked="cableDetail.value"
-                                                    @update:checked="check($event, cableDetail.key)"
-                                                    :inline="true"
-                                                    :ref="cableDetail.key"
-                                    />
-                                    <CSelect v-if="!isArray(cableDetail)"
-                                                    :label="cableDetail.key.charAt(0).toUpperCase()+cableDetail.key.slice(1)"
-                                                    :options="cableDetail.value"
-                                                    @update:checked="check($event, cableDetail.key)"
-                                    />
-                                    <multiselect v-if="isArray(cableDetail)"
-                                                 :options="cableDetail.value"
-                                                 track-by="name"
-                                                 label="name">
-                                    </multiselect>
+                                    <CInput label="Code" :value="cable['code']" @input="updateFieldValue($event, 'code')" ref="code" sync/>
                                 </CCol>
                             </CRow>
-
                             <CRow>
-                                {{ $t("cable.fields.type") }}
-                                <multiselect v-model="cableToUpdateType" :options="cableTypes">
-                                </multiselect>
+                                <CCol sm="12">
+                                    <CInput label="Description" :value="cable['description']" @input="updateFieldValue($event, 'description')" ref="description" sync/>
+                                </CCol>
                             </CRow>
                             <CRow>
-                                {{ $t("cable.fields.state") }}
-                                <multiselect v-model="cableToUpdateState" :options="cableStates">
-                                </multiselect>
+                                <CCol sm="12">
+                                    <CInput label="Code new" :value="cable['codeNew']" @input="updateFieldValue($event, 'codeNew')" ref="codeNew" sync/>
+                                </CCol>
+                            </CRow>
+                            <CRow>
+                                <CCol sm="12">
+                                    <CInput label="Code old" :value="cable['codeOld']" @input="updateFieldValue($event, 'codeOld')" ref="codeOld" sync/>
+                                </CCol>
+                            </CRow>
+                            <CRow>
+                                <CCol sm="12">
+                                    <CInput label="Max amp" :value="cable['maxAmp']" @input="updateFieldValue($event, 'maxAmp')" ref="maxAmp" sync/>
+                                </CCol>
+                            </CRow>
+                            <CRow>
+                                <CCol sm="12">
+                                    <CInput label="Nr wires" :value="cable['nrWires']" @input="updateFieldValue($event, 'nrWires')" ref="nrWires" sync/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>Category</label>
+                                    <v-select label="name" v-model="cable.category" :options="categories"/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>Rack</label>
+                                    <v-select label="name" v-model="cable.rack" :options="racks" @input="rackChanged"/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol sm="5">
+                                    <label>Patch panel</label>
+                                    <v-select label="name" v-model="cable.patchPanel" :options="patchPanels"/>
+                                </CCol>
+                                <CCol>
+                                    <label>Port nr</label>
+                                    <v-select v-model="cable.patchPanelPort" :options="patchPanelPorts" :reduce="portNr => portNr.value"/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>Zones</label>
+                                    <v-select label="name" v-model="cable.zones" :options="zones" multiple/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>Peripherals</label>
+                                    <v-select label="name" v-model="cable.peripherals" :options="peripherals" multiple/>
+                                </CCol>
+                            </CRow>
+                            <CRow class="form-group">
+                                <CCol>
+                                    <label>Connected to ports</label>
+                                    <v-select label="name" v-model="cable.connectedTo" :options="ports" multiple/>
+                                </CCol>
                             </CRow>
                         </CCardBody>
                         <CCardFooter>
@@ -74,44 +106,32 @@
 
 
 <script>
-    import {CABLE_BY_ID, CABLE_VALUE_UPDATE, CABLE_CREATE, DEVICE_GET_BY_ID_MINIMAL} from "../../graphql/queries";
-
-    import Multiselect from 'vue-multiselect'
+    import {CABLE_CREATE, CABLE_CREATE_GET_DETAILS, CABLE_EDIT_GET_DETAILS, CABLE_VALUE_UPDATE} from "../../graphql/queries";
+    import vSelect from "vue-select";
+    import _ from "lodash";
 
     export default {
         name: 'CableEditor',
         components: {
-            'multiselect': Multiselect
+            'v-select': vSelect
         },
         data: () => {
             return {
-                cableDetails: [],
-                cableToUpdate: {},
-                cable: [],
-                readonly: ["id", "__typename", "uid", "device", "type", "state"],
-                booleans: ["runAction", "mustSendToServer", "runScenario"],
+                cable: {},
+                categories: [],
+                racks: [],
+                zones: [],
+                peripherals: [],
+                patchPanels: [],
+                ports: [],
+                patchPanelPorts: [],
                 deleteConfirmShow: false,
-                cableToUpdateType: null,
-                cableToUpdateState: null,
-                cableTypes: [
-                    "UNKNOW",
-                    "IN",
-                    "OUT",
-                    "ADC",
-                    "DSEN",
-                    "I2C",
-                    "NOT_CONFIGURED"
-                ],
-                cableStates: [
-                    "UNKNOW",
-                    "CONFIGURED",
-                    "ACTIVE",
-                    "INACTIVE"
-                ]
+                viewMode: 'CREATE'
             }
         },
         created() {
-            if (this.$route.meta.uiMode === 'CREATE') {
+            this.viewMode = this.$route.meta.uiMode
+            if (this.viewMode === 'CREATE') {
                 this.initCreate();
 
             } else {
@@ -120,89 +140,98 @@
         },
         methods: {
             initCreate() {
-                this.cable = {
-                    internalRef: "",
-                    name: "",
-                    description: "",
-                    mode: "",
-                    model: "",
-                    device: {
-                        id: this.$route.params.idPrimary
-                    }
-                };
-                let removeReadonly = function (keyMap) {
-                    return !this.readonly.includes(keyMap.key)
-                }.bind(this);
-
-                this.cableDetails = Object.entries(this.cable).map(([key, value]) => {
-                    return {key, value}
-                }).filter(removeReadonly);
-                this.cableToUpdateType = this.cableTypes[0];
-                this.cableToUpdateState = this.cableStates[0];
+                this.$apollo.query({
+                    query: CABLE_CREATE_GET_DETAILS,
+                    variables: {},
+                    fetchPolicy: 'network-only'
+                }).then(response => {
+                    this.zones = _.transform(response.data.zoneList, function (result, obj) {
+                        result.push({label: obj.name, value: obj.id});
+                    }, []);
+                    this.racks = response.data.rackList
+                    this.ports = response.data.devicePortList
+                    this.categories = response.data.cableCategoryList;
+                    this.peripherals = response.data.devicePeripheralList;
+                    this.patchPanels = response.data.patchPanelList
+                    this.patchPanelPorts = _.transform(_.range(1, 49), function (result, obj) {
+                        result.push({label: obj, value: obj});
+                    }, []);
+                });
             },
             init() {
-                let cable = {};
                 this.$apollo.query({
-                    query: CABLE_BY_ID,
+                    query: CABLE_EDIT_GET_DETAILS,
                     variables: {id: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    let removeReadonly = function (keyMap) {
-                        return !this.readonly.includes(keyMap.key)
-                    }.bind(this);
-                    this.cable = response.data.cable;
-                    const cableDetailsToMap = cable ? Object.entries(this.cable) : [['id', 'Not found']];
-                    this.cableDetails = cableDetailsToMap.map(([key, value]) => {
-                        return {key, value}
-                    }).filter(removeReadonly);
+                    this.cable = _.cloneDeep(response.data.cable);
+                    this.cable.connectedTo = _.transform(this.cable.connectedTo, function (result, obj) {
+                        let portName = _.clone(obj.name)
+                        obj.name = obj.device.code + ' - ' + portName + ' - [' + obj.internalRef + ']'
+                        result.push(obj);
+                    }, []);
+                    this.zones = response.data.zoneList;
+                    this.peripherals = response.data.devicePeripheralList;
+                    this.racks = response.data.rackList
+                    this.ports = _.transform(_.cloneDeep(response.data.devicePortList), function (result, obj) {
+                        let portName = _.clone(obj.name)
+                        obj.name = obj.device.code + ' - ' + portName + ' - [' + obj.internalRef + ']'
+                        result.push(obj);
+                    }, []);
+                    this.categories = response.data.cableCategoryList;
+                    this.patchPanels = response.data.patchPanelList
+                    this.patchPanelPorts = _.transform(_.range(1, 49), function (result, obj) {
+                        result.push({label: obj, value: obj});
+                    }, []);
 
-                    this.cableToUpdateType = this.cable.type;
-                    this.cableToUpdateState = this.cable.state;
                 });
             },
-            isBoolean(key) {
-                return this.booleans.indexOf(key) != -1;
+            rackChanged(newVal) {
+                this.patchPanels = newVal.patchPanels;
             },
-            isArray(item) {
-                debugger
-                return typeof item.value === 'array';
-            },
-            isObject(item) {
-                return typeof item.value === 'object' && item.value !== null
-            },
-            check(value, key) {
-                this.cableToUpdate[key] = value
-
-            },
-            updateFieldValue(value, key) {
-                this.cableToUpdate[key] = value
+            updateFieldValue(newVal, field) {
+                this.cable[field] = newVal
             },
             save() {
                 if (this.$route.meta.uiMode === 'EDIT') {
+                    let cableClone = _.cloneDeep(this.cable)
+                    delete cableClone.id
+                    if (cableClone.connectedTo) {
+                        cableClone.connectedTo.forEach(function (port) {
+                            delete port.device
+                            delete port.name
+                        })
+                    }
                     this.$apollo.mutate({
-                        mutation: CABLE_VALUE_UPDATE, variables: {id: this.cable.id, deviceCable: this.cableToUpdate}
+                        mutation: CABLE_VALUE_UPDATE, variables: {id: this.cable.id, cable: cableClone}
                     }).then(response => {
-                        this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/cables/" + response.data.deviceCableUpdate.id + "/view"})
+                        this.$router.push({path: "/cables/" + response.data.updateCable.id + "/view"})
                     });
                 } else if (this.$route.meta.uiMode === 'CREATE') {
-                    this.cableToUpdate["device"] = this.cable.device;
                     this.$apollo.mutate({
-                        mutation: CABLE_CREATE, variables: {deviceCable: this.cableToUpdate}
+                        mutation: CABLE_CREATE, variables: {cable: this.cableToUpdate}
                     }).then(response => {
-                        this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/cables/" + response.data.deviceCableCreate.id + "/edit"})
+                        this.$router.push({path: "/cables/" + response.data.cableUpdate.id + "/edit"})
                     });
                 }
             },
             navEdit(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/cables/" + this.cable.id + "/edit"})
+                this.$router.push({path: "/cables/" + this.cable.id + "/edit"})
             },
             navConfig(item, index) {
-                this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/cables/" + this.cable.id + "/configurations"})
+                this.$router.push({path: "/cables/" + this.cable.id + "/configurations"})
             },
             navDelete(item, index) {
                 this.deleteConfirmShow = true;
             },
+            navCancel(item, index) {
+                if (this.viewMode === 'CREATE') {
+                    this.$router.push({path: '/cables/'})
+                } else {
+                    this.$router.push({path: '/cables/' + this.cable.id + '/view'})
+                }
+            },
         }
     }
 </script>
-<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
+<style src="vue-select/dist/vue-select.css"></style>

@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client/core"
+import {gql} from "@apollo/client/core"
 
 export const PORT_GET_BY_ID = gql`
     query($id:Long!){
@@ -13,15 +13,7 @@ export const PORT_GET_BY_ID = gql`
             }
             type
             state
-            mustSendToServer
-            mode
-            model
-            runScenario
-            action
-            runAction
             value
-            miscValue
-            hystDeviationValue
             cables{
                 id
                 code
@@ -29,10 +21,39 @@ export const PORT_GET_BY_ID = gql`
             }
             peripherals{
                 id
-                code
                 name
             }
         }
+        devicePeripheralList{
+            id
+            name
+            description
+        }
+        cableList{
+            id
+            code
+        }
+        portTypes
+        portStates
+    }
+`;
+export const PORT_DETAILS_TO_CREATE = gql`
+    query($id:Long!){
+        device(id:$id){
+            id
+            name           
+        }
+        devicePeripheralList{
+            id
+            name
+            description
+        }
+        cableList{
+            id
+            code
+        }
+        portTypes
+        portStates
     }
 `;
 export const PORT_VALUE_UPDATE = gql`
@@ -44,10 +65,9 @@ export const PORT_VALUE_UPDATE = gql`
     }
 `;
 export const PORT_UPDATE = gql`
-    mutation ($id:Long!, $devicePort:DevicePortUpdate) {
-        devicePortUpdate(id:$id, devicePort: $devicePort){
-            id,
-            uid
+    mutation ($id: Long!, $port: DevicePortUpdate!) {
+        updatePort(id:$id, port: $port){
+            id
         }
     }
 `;

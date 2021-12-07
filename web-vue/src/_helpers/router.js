@@ -37,7 +37,7 @@ const PortEditor = () => import('@/views/ports/PortEditor');
 const CableList = () => import('@/views/cables/CableList');
 const CableView = () => import('@/views/cables/CableView');
 const CableEdit = () => import('@/views/cables/CableEdit');
-const CableNew = () => import('@/views/cables/CableNew');
+const CableNew = () => import('@/views/cables/CableEdit');
 
 const RouteContainer = () => import('@/containers/RouteContainer');
 
@@ -46,6 +46,7 @@ const Page403 = () => import('@/views/pages/Page403');
 const Page404 = () => import('@/views/pages/Page404');
 const Page500 = () => import('@/views/pages/Page500');
 const Login = () => import('@/views/pages/Login');
+const Wui = () => import('@/views/pages/wui');
 const Register = () => import('@/views/pages/Register');
 
 
@@ -290,6 +291,14 @@ function configRoutes() {
                             }
                         },
                         {
+                            path: 'create',
+                            name: i18n.t('breadcrumb.cable.create'),
+                            component: CableNew,
+                            meta: {
+                                uiMode: 'CREATE'
+                            }
+                        },
+                        {
                             path: ':idPrimary',
                             component: RouteContainer,
                             children: [
@@ -362,6 +371,11 @@ function configRoutes() {
                     path: 'register',
                     name: 'Register',
                     component: Register
+                },
+                {
+                    path: 'wui',
+                    name: 'WUI',
+                    component: Wui
                 }
             ]
         }

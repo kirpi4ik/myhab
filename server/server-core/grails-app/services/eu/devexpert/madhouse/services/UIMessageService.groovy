@@ -2,10 +2,10 @@ package eu.devexpert.madhouse.services
 
 import eu.devexpert.madhouse.ConfigKey
 import eu.devexpert.madhouse.domain.EntityType
-import eu.devexpert.madhouse.domain.TopicName
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
 import eu.devexpert.madhouse.domain.device.port.DevicePort
+import eu.devexpert.madhouse.domain.events.TopicName
 import eu.devexpert.madhouse.domain.infra.Zone
 import eu.devexpert.madhouse.domain.job.EventData
 import eu.devexpert.madhouse.utils.DeviceHttpService
@@ -16,8 +16,10 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
 
+import static eu.devexpert.madhouse.domain.EntityType.*
+
 @Slf4j
-class EventService implements EventPublisher {
+class UIMessageService implements EventPublisher {
 
     def scenarioService
     def heatService
@@ -26,44 +28,65 @@ class EventService implements EventPublisher {
     @Transactional
     @Subscriber('evt_light')
     def receiveLightEvent(event) {
-        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
-            def peripheral = DevicePeripheral.findByUid(event.data.p2)
-            def args = [:]
-            args.portUids = []
-            peripheral.getConnectedTo().each { port ->
-                args.portUids << port.uid
-            }
-            switch (event.data.p4) {
-                case "on":
-                    scenarioService.lightsOn(args)
-                    break
-                case "off":
-                    scenarioService.lightsOff(args)
-                    break
-                case "rev":
-                    scenarioService.lightsReverse(args)
-                    break
-            }
-        } else if (EntityType.ZONE.isEqual(event.data.p1)) {
-            def zone = Zone.findByUid(event.data.p2)
-            def eventArg = [:]
-            def args = [:]
-            args.portUids = []
-            eventArg.portUids = fromZone(args.portUids, zone)
+        switch (EntityType.byName(event.data.p1)) {
+            case PERIPHERAL:
+                def peripheral = DevicePeripheral.findById(event.data.p2)
+                def args = [:]
+                args.portIds = []
+                peripheral?.getConnectedTo()?.each { port ->
+                    args.portIds << port.id
+                }
+                switch (event.data.p4) {
+                    case "on":
+                        scenarioService.lightsOn(args)
+                        break
+                    case "off":
+                        scenarioService.lightsOff(args)
+                        break
+                    case "rev":
+                        scenarioService.lightsReverse(args)
+                        break
+                }
+                break
+            case PORT:
+                def args = [:]
+                args.portIds = [event.data.p2]
+
+                switch (event.data.p4) {
+                    case "on":
+                        scenarioService.lightsOn(args)
+                        break
+                    case "off":
+                        scenarioService.lightsOff(args)
+                        break
+                    case "rev":
+                        scenarioService.lightsReverse(args)
+                        break
+                }
+                break
+            case ZONE:
+                def zone = Zone.findById(event.data.p2)
+                def eventArg = [:]
+                def args = [:]
+                args.portIds = []
+                eventArg.portIds = fromZone(args.portIds, zone)
 
 
-            switch (event.data.p4) {
-                case "on":
-                    scenarioService.lightsOn(eventArg)
-                    break
-                case "off":
-                    scenarioService.lightsOff(eventArg)
-                    break
-                case "rev":
-                    scenarioService.lightsReverse(eventArg)
-                    break
-            }
+                switch (event.data.p4) {
+                    case "on":
+                        scenarioService.lightsOn(eventArg)
+                        break
+                    case "off":
+                        scenarioService.lightsOff(eventArg)
+                        break
+                    case "rev":
+                        scenarioService.lightsReverse(eventArg)
+                        break
+                }
+                break
+
         }
+
         publish(TopicName.EVT_LOG.id(), event.data)
 //        PortValueReaderJob.triggerNow();
     }
@@ -71,7 +94,7 @@ class EventService implements EventPublisher {
     @Transactional
     @Subscriber('evt_light_set_color')
     def receiveColorEvent(event) {
-        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
+        if (PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findByUid(event.data.p2)
             def args = [:]
             args.portUids = []
@@ -96,8 +119,8 @@ class EventService implements EventPublisher {
     @Transactional
     @Subscriber('evt_heat')
     def heat(event) {
-        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
-            def peripheral = DevicePeripheral.findByUid(event.data.p2)
+        if (PERIPHERAL.isEqual(event.data.p1)) {
+            def peripheral = DevicePeripheral.findById(event.data.p2)
             if (peripheral.category.name == "HEAT") {
                 def ports = []
                 peripheral.getConnectedTo().each { port ->
@@ -125,7 +148,7 @@ class EventService implements EventPublisher {
     @Transactional
     @Subscriber('evt_intercom_door_lock')
     def evt_intercom_door_lock(event) {
-        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
+        if (PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findById(event.data.p2)
             if (peripheral.category.name == "DOOR_LOCK") {
                 switch (event.data.p4.toLowerCase()) {
@@ -144,7 +167,7 @@ class EventService implements EventPublisher {
     @Transactional
     @Subscriber('evt_presence')
     def presence(event) {
-        if (EntityType.PERIPHERAL.isEqual(event.data.p1)) {
+        if (PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findByUid(event.data.p2)
             if (peripheral.category.name == "PRESENCE") {
                 def args = [:]
@@ -165,38 +188,16 @@ class EventService implements EventPublisher {
         publish(TopicName.EVT_LOG.id(), event.data)
     }
 
-    def fromZone(portUids, zone) {
+    def fromZone(portIds, zone) {
         zone.zones.each {
-            fromZone(portUids, it)
+            fromZone(portIds, it)
         }
         zone.getPeripherals().each { peripheral ->
             peripheral.getConnectedTo().each { port ->
-                portUids << port.uid
+                portIds << port.id
             }
         }
-        return portUids
-    }
-
-    /**
-     * Update device status : OFFLINE/ONLINE
-     * @param event
-     * @return
-     */
-    @Transactional
-    @Subscriber('evt_device_status')
-    def deviceStatus(event) {
-        if (EntityType.DEVICE.isEqual(event.data.p1)) {
-            def device
-            if (isUid(event.data.p2)) {
-                device = Device.findByUid(event.data.p2)
-            } else {
-                device = Device.findById(event.data.p2)
-            }
-            if (device.status != event.data.p4) {
-                device.status = event.data.p4
-                device.save(failOnError: true, flush: true)
-            }
-        }
+        return portIds
     }
 
     @Transactional
@@ -228,7 +229,7 @@ class EventService implements EventPublisher {
                             if (accToken.token == event.data.wg && (accToken.tsExpiration == null || accToken.tsExpiration.after(DateTime.now().toDate()))) {
                                 publish(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), new EventData().with {
                                     p0 = TopicName.EVT_INTERCOM_DOOR_LOCK.id()
-                                    p1 = EntityType.PERIPHERAL.name()
+                                    p1 = PERIPHERAL.name()
                                     p2 = accPeripheral.id
                                     p3 = "access control"
                                     p4 = "open"

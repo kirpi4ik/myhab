@@ -2,7 +2,6 @@ package eu.devexpert.madhouse.services.dsl
 
 import eu.devexpert.madhouse.domain.device.port.PortAction
 import eu.devexpert.madhouse.services.dsl.action.DslCommand
-import eu.devexpert.madhouse.services.dsl.action.PowerService
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import groovy.util.logging.Slf4j
@@ -29,7 +28,7 @@ class ScenarioService {
     }
 
     def lightsReverse(args) {
-        args.action = PortAction.REVERSE
+        args.action = PortAction.TOGGLE
         powerService.execute(args)
     }
 

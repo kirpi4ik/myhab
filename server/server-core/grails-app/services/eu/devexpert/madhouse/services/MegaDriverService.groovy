@@ -1,5 +1,7 @@
 package eu.devexpert.madhouse.services
 
+import eu.devexpert.madhouse.domain.Configuration
+import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.*
 import eu.devexpert.madhouse.exceptions.UnavailableDeviceException
@@ -16,6 +18,11 @@ import java.util.regex.Matcher
 class MegaDriverService implements EventPublisher {
     def dslService
 
+
+    def readConfig(String deviceCode) {
+
+    }
+
     @Transactional
     def readConfig(Device deviceController) {
         def deviceMainPage = new DeviceHttpService(device: deviceController).readState()
@@ -31,7 +38,7 @@ class MegaDriverService implements EventPublisher {
                 m.find()
                 def portName = m.group(0)
                 def portNr = portPage.select("form input").first().attr("value")
-                deviceController.addToPorts(readPortFromController(deviceController.uid, portNr, portName))
+                deviceController.addToPorts(readPortConfigFromController(deviceController.code, portNr, portName))
             }
         }
         deviceMainPage.select("a").findAll { it.text().matches("P[0-9]{1,2}.+") }.each { portLink ->
@@ -40,7 +47,7 @@ class MegaDriverService implements EventPublisher {
             m.find()
             def portName = m.group(0)
             def portNr = portPage.select("form input").first().attr("value")
-            deviceController.addToPorts(readPortFromController(deviceController.uid, portNr, portName))
+            deviceController.addToPorts(readPortConfigFromController(deviceController.code, portNr, portName))
         }
 
 
@@ -72,60 +79,29 @@ class MegaDriverService implements EventPublisher {
         }
     }
 
-    def readPortFromController(deviceUid, internalRef, portName) {
+    def readPortConfigFromController(code, internalRef, portName) {
         DevicePort port
         try {
-            Device deviceController = Device.findByUid(deviceUid)
+            Device deviceController = Device.findByCode(code)
             def portPage = new DeviceHttpService(device: deviceController, uri: "?pt=${internalRef}").readState()
 
             PortType portType = PortType.fromValue(portPage.select("form select[name=pty] option").find { option ->
                 option != null && option.hasAttr("selected")
             }?.attr("value"))
-            log.debug "Port ${internalRef}: $portType"
 
             port = new DevicePort(internalRef: internalRef, name: portName, type: portType, description: "", device: deviceController)
 
-            port.setMiscValue(portPage.select("form input[name=misc]")?.attr("value"))
-            port.setHystDeviationValue(portPage.select("form input[name=hst]")?.attr("value"))
-            port.setAction(portPage.select("form input[name=ecmd]")?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, key:"cfg.key.port.portType", portPage.select("form select[name=pty] option")?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.miscValue", portPage.select("form input[name=misc]")?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.HystDeviationValue", portPage.select("form input[name=hst]")?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.action", portPage.select("form input[name=ecmd]")?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.mode", portPage.select("form select[name=m] option").find { it.hasAttr("selected") }?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.outputState", portPage.select("form select[name=d] option").find { it.hasAttr("selected") }?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.analogMode", portPage.select("form select[name=m] option").find { it.hasAttr("selected") }?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.sensorMode", portPage.select("form select[name=m] option").find { it.hasAttr("selected") }?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.sensorModel", portPage.select("form select[name=d] option").find { it.hasAttr("selected") }?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.i2cMode", portPage.select("form select[name=m] option").find { it.hasAttr("selected") }?.attr("value"))
 
-            switch (portType) {
-                case PortType.UNKNOW:
-                    break
-                case PortType.IN:
-                    port.setMode(PortInputMode.fromValue(portPage.select("form select[name=m] option").find {
-                        it.hasAttr("selected")
-                    }?.attr("value"))?.name())
-                    break
-                case PortType.OUT:
-                    port.setMode(PortOutputMode.fromValue(portPage.select("form select[name=m] option").find {
-                        it.hasAttr("selected")
-                    }?.attr("value"))?.name())
-                    port.setValue(PortOutputState.fromValue(portPage.select("form select[name=d] option").find {
-                        it.hasAttr("selected")
-                    }?.attr("value"))?.name())
-                    break
-                case PortType.ADC:
-                    port.setMode(PortAnalogicMode.fromValue(portPage.select("form select[name=m] option").find {
-                        it.hasAttr("selected")
-                    }?.attr("value"))?.name())
-                    break
-                case PortType.DSEN:
-                    port.setMode(PortSensorMode.fromValue(portPage.select("form select[name=m] option").find {
-                        it.hasAttr("selected")
-                    }?.attr("value"))?.name())
-                    port.setModel(PortSensorModel.fromValue(portPage.select("form select[name=d] option").find {
-                        it.hasAttr("selected")
-                    }?.attr("value"))?.name())
-                    break
-                case PortType.I2C:
-                    port.setMode(PortI2CMode.fromValue(portPage.select("form select[name=m] option").find {
-                        it.hasAttr("selected")
-                    }?.attr("value"))?.name())
-                    break
-                case PortType.NOT_CONFIGURED:
-                    break
-            }
         } catch (Exception ex) {
             log.error("Read port from controller", ex.message)
         }
@@ -133,30 +109,6 @@ class MegaDriverService implements EventPublisher {
 
     }
 
-
-    @Subscriber('2561.input')
-    def parser(event) {
-        def device = Device.findByUid(event?.data?.deviceUid)
-        if (event.data.pt != null) {
-            def port = DevicePort.where {
-                'internalRef' == event.data.pt
-                'device' == device
-            }.find()
-
-            if (port != null) {
-                if (port.configuration.runScenario) {
-//          dSLService.execute(port.configuration.scenario)
-                }
-            }
-        }
-//    dslService.execute("""{
-//      if (isEvening) {
-//        lightsOn(ports: ["23734eef-8ca1-4933-9b15-60a3c539c56a"])
-//      }
-//    }""")
-
-
-    }
 
     @Subscriber('2561.run.action')
     def runAction(event) {

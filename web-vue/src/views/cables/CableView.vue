@@ -8,7 +8,7 @@
                         <a @click="$router.push({path: '/cables/'+$route.params.idPrimary+'/edit'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
                             <small class="text-muted">{{ $t("actions.edit") }}</small> |
                         </a>
-                        <a @click="$router.push({path: '/cables'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
+                        <a @click="$router.push({path: '/cables/'+$route.params.idPrimary+'/configurations'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
                             <small class="text-muted">{{ $t("actions.config") }}</small> |
                         </a>
                         <a @click="$router.push({path: '/cables'})" style="cursor: pointer" class="card-header-action" rel="noreferrer noopener">
@@ -38,8 +38,19 @@
                                 <template #value="{item}">
                                     <td>
                                         <div v-if="Array.isArray(item.value)">
-                                            <CBadge color="success" v-for="(badge) in item.value" style="margin-right: 2px" v-bind:key="badge.uid">
-                                                {{badge.name}}
+                                            <CBadge color="success" v-for="(badge) in item.value" style="margin-right: 2px" v-bind:key="badge.id">
+                                                <a v-if="badge.__typename == 'DevicePeripheral'" @click="$router.push({path: '/peripherals/'+badge.id+'/view'})">
+                                                    {{badge.name}}
+                                                </a>
+                                                <a v-else-if="badge.__typename == 'Zone'" @click="$router.push({path: '/zones/'+badge.id+'/view'})">
+                                                    {{badge.name}}
+                                                </a>
+                                                <a v-else-if="badge.__typename == 'DevicePort'" @click="$router.push({path: '/devices/'+badge.device.id+'/ports/'+badge.id+'/view'})">
+                                                    {{badge.name}}
+                                                </a>
+                                                <span v-else>
+                                                    {{badge.name}}
+                                                </span>
                                             </CBadge>
                                         </div>
                                         <div v-else-if="item.value instanceof Object && item.value.name!=null">
@@ -113,6 +124,7 @@
                     this.cable = response.data.cable;
                     const cableDetailsToMap = cable ? Object.entries(this.cable) : [['id', 'Not found']];
                     this.cableDetails = cableDetailsToMap.map(([key, value]) => {
+                        debugger
                         return {key, value}
                     }).filter(removeReadonly);
                 });
