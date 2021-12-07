@@ -15,9 +15,12 @@
                                 :items-per-page="perPage"
                                 :pagination="$options.paginationProps"
                                 index-column
-                                table-filter
-                                sorter
                                 clickable-rows
+                                table-filter
+                                columnFilter
+                                sorter
+                                responsive
+                                @row-clicked="navView"
                         >
                             <template #name="data">
                                 <td>
@@ -27,9 +30,12 @@
 
                             <template #actions="data">
                                 <td>
-                                    <CButton color="success" @click="viewDeviceDetails(data.item.id)">{{ $t("actions.view") }}</CButton>
-                                    |
-                                    <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto"> {{ $t("actions.delete") }}</CButton>
+                                    <a @click="$router.push({path: '/devices/'+data.item.id +'/edit'})" style="padding-right: 1em">
+                                        <font-awesome-icon icon="edit" size="1x"/>
+                                    </a>
+                                    <a @click="modalCheck(data.item)">
+                                        <font-awesome-icon icon="ban" size="1x"/>
+                                    </a>
                                 </td>
                             </template>
                         </CDataTable>
@@ -71,7 +77,7 @@
                     }
 
                 ],
-                perPage: 5,
+                perPage: 10,
                 deleteConfirmShow: false,
                 selectedItem: {}
             }
@@ -103,6 +109,9 @@
             },
             addNew() {
                 this.$router.push({path: "/devices/create"})
+            },
+            navView(device) {
+                this.$router.push({path: '/devices/' + device.id + '/view'})
             },
             loadDevices() {
                 this.$apollo.query({

@@ -6,7 +6,7 @@ package eu.devexpert.madhouse.domain.device.port
 enum PortAction {
   OFF(0),
   ON(1),
-  REVERSE(2),
+  TOGGLE(2),
   SAME_IN(3),
   REVERSE_OUT(4),
   int value;

@@ -1,5 +1,6 @@
 package eu.devexpert.madhouse.services
 
+import eu.devexpert.madhouse.async.mqtt.MqttTopicService
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.device.port.PortAction
@@ -13,12 +14,12 @@ import org.joda.time.DateTime
 @Transactional
 @Slf4j
 class IntercomService {
+    def mqttTopicService
 
     def doorOpen(deviceId, DevicePort port) throws UnavailableDeviceException {
         Device device = Device.findById(deviceId)
         try {
-            def doorunlock = new DeviceHttpService(device: device, port: port, actions: [PortAction.ON, "p7", PortAction.OFF]).writeState()
-            def resp = doorunlock?.text()
+            mqttTopicService.publish(port, [PortAction.ON, "p7", PortAction.OFF])
             log.debug("Door unlock")
         } catch (Exception ex) {
             throw new PeripheralActionException(ex.message)

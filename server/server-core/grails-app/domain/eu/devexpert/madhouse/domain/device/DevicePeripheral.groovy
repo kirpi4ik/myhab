@@ -13,8 +13,6 @@ import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.UpdateEntityDataFetcher
 
 class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripheral> {
-    String code
-    String codeOld
     String name
     String model
     String description
@@ -30,11 +28,9 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
 
     static constraints = {
         name nullable: false
-        code nullable: false
         model nullable: true
         description nullable: true
         maxAmp nullable: true
-        codeOld nullable: true
     }
     static mapping = {
         table '`device_peripherals`'

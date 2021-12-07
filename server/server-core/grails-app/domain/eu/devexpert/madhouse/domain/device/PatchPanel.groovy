@@ -4,11 +4,11 @@ import eu.devexpert.madhouse.domain.common.BaseEntity
 
 class PatchPanel extends BaseEntity {
     Rack rack
-    String code
+    String name
     String description
     int size
     Set<Cable> cables
-    static belongsTo = [Rack]
+    static belongsTo = [rack: Rack]
     static hasMany = [cables: Cable]
 
     static constraints = {

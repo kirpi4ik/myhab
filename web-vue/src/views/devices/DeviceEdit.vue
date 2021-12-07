@@ -338,7 +338,6 @@
                         message: response.data.deviceUpdate.name + ' saved !'
                     });
                     this.init();
-                    // this.$router.push({path: "/peripherals/" + this.$route.params.idPrimary + "/view"})
                 });
             }
         }

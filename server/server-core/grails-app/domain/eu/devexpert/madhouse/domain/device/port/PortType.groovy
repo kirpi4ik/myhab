@@ -10,7 +10,11 @@ enum PortType {
   ADC(2, -1),
   DSEN(3, 600000),
   I2C(4, 1000),
+  SWITCH(5, 5000),
+  BINARY_SENSOR(6, 5000),
+  SENSOR(7, 5000),
   NOT_CONFIGURED(255, -1),
+
   int value
   int syncMs
 

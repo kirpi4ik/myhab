@@ -77,6 +77,20 @@ export const NAV = [
                 icon: 'cil-list',
                 roles: [Role.Admin]
 
+            },
+            {
+                _name: 'CSidebarNavTitle',
+                _children: ['WUI'],
+                roles: [Role.Admin],
+                icon: 'cil-puzzle',
+            },
+            {
+                _name: 'CSidebarNavItem',
+                name: 'Parter',
+                to: '/pages/wui',
+                icon: 'cil-lightbulb',
+                roles: [Role.Admin]
+
             }
         ]
     }

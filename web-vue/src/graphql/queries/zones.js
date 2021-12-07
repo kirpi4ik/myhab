@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client/core"
+import {gql} from "@apollo/client/core"
 
 export const ZONES_GET_ALL = gql`
     query {
@@ -66,6 +66,11 @@ export const ZONE_GET_BY_UID = gql`
                         status
                     }
                 }
+                configurations{
+                    id
+                    key
+                    value
+                }
             }
         }
     }
@@ -92,6 +97,11 @@ export const ZONES_GET_ROOT = gql`
                 }
                 connectedTo{
                     uid
+                    value
+                }
+                configurations {
+                    id
+                    key
                     value
                 }
             }
