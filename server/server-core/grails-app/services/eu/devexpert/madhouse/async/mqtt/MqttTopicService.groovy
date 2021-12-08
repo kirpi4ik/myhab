@@ -56,7 +56,11 @@ class MqttTopicService {
             return act.join(";")
         }
         if (port.device.model.equals(DeviceModel.ESP8266_1)) {
-            return actions
+            if (actions)
+                return actions.first()
+            else {
+                return actions
+            }
         }
     }
 
