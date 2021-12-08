@@ -1,16 +1,32 @@
 <template>
+    <!--https://boxy-svg.com/app/disk:MtaL1PZN9k-->
     <div id="fullscreen">
-        <div class="svg-container">
-            <!--https://boxy-svg.com/app/disk:MtaL1PZN9k-->
-            <inline-svg
-                    src="svg/parter.svg"
-                    :transformSource="transform"
-                    fill-opacity="0.25"
-                    :stroke-opacity="0.5"
-                    :color="false"
-                    ref="svg"
-            ></inline-svg>
-        </div>
+        <transition name="slide-fade">
+            <div class="svg-container" v-if="isParter">
+                <inline-svg
+                        src="svg/parter.svg"
+                        :transformSource="transform"
+                        fill-opacity="0.25"
+                        :stroke-opacity="0.5"
+                        :color="false"
+                        ref="svg"
+                ></inline-svg>
+            </div>
+        </transition>
+        <transition name="slide-fade">
+            <div class="svg-container" v-if="isEtaj">
+                <inline-svg
+                        src="svg/etaj.svg"
+                        :transformSource="transform"
+                        fill-opacity="0.25"
+                        :stroke-opacity="0.5"
+                        :color="false"
+                        ref="svg"
+
+                ></inline-svg>
+            </div>
+        </transition>
+
         <CModal title="Introduceti codul de acces" color="warning" :show.sync="showPassword">
             <CForm validated novalidate>
                 <CInput type="number" description="Please enter your password." placeholder="Cod deblocare" :value="unlockCode" @input="unlockCode =  $event" was-validated>
@@ -52,7 +68,9 @@
 
                 showPassword: false,
                 showErrorModal: false,
-                unlockCode: null
+                unlockCode: null,
+                isParter: true,
+                isEtaj: false
             }
         },
         created() {
@@ -62,10 +80,21 @@
             document.addEventListener('click', function (event) {
                 console.log('click on light')
 
-                if (event.target.id.startsWith("lock_")) {
+                let targetId = event.target.id;
+                if (targetId.startsWith("lock_")) {
                     console.log("UNLOCK")
                     this.unlockCode = null;
                     this.showPassword = true;
+                } else if (targetId.startsWith("nav_")) {
+                    let direction = targetId.split("_")[1];
+                    if (direction == 'back' && this.isEtaj) {
+                        this.isEtaj = false;
+                        this.isParter = true;
+                    } else if (direction == 'forward' && this.isParter) {
+                        this.isEtaj = true;
+                        this.isParter = false;
+                    }
+
                 } else {
                     let closest;
                     let i = 0
@@ -215,7 +244,7 @@
                 svgForeignObjectElement.setAttribute("height", "50"); //Set rect data
 
                 var buttonElement = document.createElement('a');
-                buttonElement.innerText = 'Back'
+                buttonElement.innerText = 'DASH'
                 buttonElement.setAttribute("class", 'btn btn-success back');
                 buttonElement.href = "/#/"
                 svgForeignObjectElement.appendChild(buttonElement);
@@ -285,11 +314,17 @@
         stroke: #2b6095;
         stroke-width: 0.5;
     }
-    circle#lock_circle{
+
+    circle#lock_circle {
         stroke: #d3e5e5;
         stroke-width: 1.2;
         fill: rgb(98, 117, 129);
         paint-order: stroke;
         fill-opacity: 0.59;
+    }
+
+    .slide-fade-leave-active {
+        position: absolute;
+        transition: all 1s cubic-bezier(1.0, 0.5, 0.8, 1.0);
     }
 </style>
