@@ -100,5 +100,12 @@
             </a>
         </g>
     </g>
-
+    <g transform="matrix(6.609871, 0, 0, 6.609871, -58.166866, 108.108114)">
+        <defs></defs>
+        <path id="nav_back" d="M 16.832 7.41 L 15.422 6 L 9.422 12 L 15.422 18 L 16.832 16.59 L 12.252 12 Z" style="fill-rule: nonzero; fill-opacity: 0.51; paint-order: stroke; fill: rgb(115, 127, 129);"></path>
+    </g>
+    <g transform="matrix(6.609871, 0, 0, 6.609871, 665.099915, 91.656876)">
+        <defs></defs>
+        <path id="nav_forward" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" style="fill-rule: nonzero; fill-opacity: 0.51; paint-order: stroke; fill: rgb(115, 127, 129);"></path>
+    </g>
 </svg>
