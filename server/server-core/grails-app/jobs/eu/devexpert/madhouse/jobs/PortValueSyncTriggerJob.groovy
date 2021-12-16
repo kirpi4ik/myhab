@@ -4,6 +4,7 @@ import eu.devexpert.madhouse.async.mqtt.MqttTopicService
 import eu.devexpert.madhouse.domain.device.Device
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
+import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit
 /**
  *
  */
+@DisallowConcurrentExecution
 @Transactional
 class PortValueSyncTriggerJob implements Job, EventPublisher {
 
@@ -31,7 +33,7 @@ class PortValueSyncTriggerJob implements Job, EventPublisher {
         log.trace("PortValueReaderJob reader execute")
         Device.findAll().each { device ->
             def mqttSupported = device.getConfigurationByKey('cfg.key.device.mqtt.sync.supported')
-            if (!mqttSupported.isEmpty() && Boolean.valueOf(mqttSupported.first()?.value)) {
+            if (mqttSupported && Boolean.valueOf(mqttSupported.value)) {
                 device.ports.each { port ->
                     try {
                         mqttTopicService.forceRead(port, ["get:${port.internalRef}"])

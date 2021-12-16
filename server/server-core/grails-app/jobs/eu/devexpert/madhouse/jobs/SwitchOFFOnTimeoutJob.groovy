@@ -9,6 +9,7 @@ import eu.devexpert.madhouse.init.cache.CacheMap
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
 import org.joda.time.DateTime
+import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
@@ -16,6 +17,7 @@ import org.quartz.JobExecutionException
 /**
  * SwitchOFF peripheral after some timeout, also check if there is some peripheral in status ON but without cached expiration
  */
+@DisallowConcurrentExecution
 @Transactional
 class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
     HazelcastInstance hazelcastInstance;

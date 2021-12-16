@@ -99,6 +99,8 @@ dependencies {
     compile group: 'org.kohsuke', name: 'groovy-sandbox', version: '1.18'
     compile 'org.jsoup:jsoup:1.11.2'
 
+    implementation 'com.konghq:unirest-java:3.11.09'
+
 
     //ONVIF
     compile group: 'be.teletask.onvif', name: 'onvif', version: '1.0.2'
