@@ -1,6 +1,7 @@
 package eu.devexpert.madhouse.async.mqtt
 
 import eu.devexpert.madhouse.async.mqtt.handlers.MQTTMessageHandler
+import grails.core.GrailsApplication
 import groovy.util.logging.Slf4j
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions

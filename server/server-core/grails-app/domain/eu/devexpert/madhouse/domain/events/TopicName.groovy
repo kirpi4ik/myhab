@@ -15,6 +15,7 @@ enum TopicName {
     EVT_DEVICE_PUSH,
     EVT_MQTT_PORT_VALUE_CHANGED,
     EVT_UI_UPDATE_PORT_VALUE,
+    EVT_CFG_VALUE_CHANGED,
     POWER;
 
     String id() {
