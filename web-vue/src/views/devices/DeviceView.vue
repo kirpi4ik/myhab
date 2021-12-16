@@ -67,7 +67,7 @@
                                         </template>
                                         <template #actions="data">
                                             <td>
-                                                <a @click="$router.push({path: '/devices/'+data.item.id +'/ports/'+ data.item.id+'/edit'})" style="padding-right: 1em">
+                                                <a @click="$router.push({path: '/devices/'+ $route.params.idPrimary  +'/ports/'+ $event.id+'/edit'})" style="padding-right: 1em">
                                                     <font-awesome-icon icon="edit" size="1x"/>
                                                 </a>
                                                 <a @click="modalCheck(data.item)">

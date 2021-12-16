@@ -54,7 +54,7 @@ grails.plugin.springsecurity.controllerAnnotations.staticRules = [
         [pattern: '/**/favicon.ico', access: ['permitAll']],
         [pattern: '/graphql/**', access: 'isAuthenticated()'],
         [pattern: '/actuator/**', access: ['permitAll']],
-        [pattern: '/stomp/**', access: [ 'isFullyAuthenticated()']],//websokets must be changed to some role
+        [pattern: '/stomp/**', access: ['isFullyAuthenticated()']],//websokets must be changed to some role
         [pattern: '/admin/**', access: ['ROLE_ADMIN', 'isFullyAuthenticated()']],
         [pattern: '/oauth/authorize', access: "isFullyAuthenticated() and (request.getMethod().equals('GET') or request.getMethod().equals('POST'))"],
         [pattern: '/oauth/token', access: "isFullyAuthenticated() and request.getMethod().equals('POST')"]
@@ -73,3 +73,55 @@ grails.plugin.springsecurity.filterChain.chainMap = [
         [pattern: '/securedOAuth2Resources/**', filters: 'JOINED_FILTERS,-securityContextPersistenceFilter,-logoutFilter,-authenticationProcessingFilter,-rememberMeAuthenticationFilter,-oauth2BasicAuthenticationFilter,-exceptionTranslationFilter'],
         [pattern: '/**', filters: 'JOINED_FILTERS,-statelessSecurityContextPersistenceFilter,-oauth2ProviderFilter,-clientCredentialsTokenEndpointFilter,-oauth2BasicAuthenticationFilter,-oauth2ExceptionTranslationFilter']
 ]
+mqtt {
+    hostname = System.getenv("MQTT_HOST")
+    port = System.getenv("MQTT_PORT")
+    username = System.getenv("MQTT_USERNAME")
+    password = System.getenv("MQTT_PASSWORD")
+    topics = "madhouse/#,mp50/+,mp51/+,mp52/+,mp53/+,mp54/+,mp55/+,mp56/+,me60/+,me61/+,me62/+,me63/+,me64/+,me65/+"
+}
+dataSource {
+    driverClassName = "org.postgresql.Driver"
+    dialect = "org.hibernate.dialect.PostgreSQLDialect"
+    properties {
+        jmxEnabled = true
+        initialSize = 5
+        maxActive = 50
+        minIdle = 5
+        maxIdle = 25
+        maxWait = 10000
+        maxAge = 60000
+        timeBetweenEvictionRunsMillis = 5000
+        minEvictableIdleTimeMillis = 60000
+        validationQuery = "SELECT 1"
+        validationQueryTimeout = 3
+        validationInterval = 15000
+        testOnBorrow = true
+        testWhileIdle = true
+        testOnReturn = false
+        jdbcInterceptors = "ConnectionState"
+        defaultTransactionIsolation = 2 //# TRANSACTION_READ_COMMITTED
+    }
+}
+environments {
+    development {
+        dataSource {
+            dbCreate = "update"
+            url = "jdbc:postgresql://localhost:5432/madhouse"
+            username = "madhouse"
+            password = "madhouse"
+            logSql = false
+            formatSql = false
+        }
+    }
+    production {
+        dataSource {
+            dbCreate = "update"
+            url = System.getenv("DB_URL")
+            username = System.getenv("DB_USERNAME")
+            password = System.getenv("DB_PASSWORD")
+            logSql = false
+            formatSql = false
+        }
+    }
+}

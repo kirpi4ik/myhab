@@ -17,7 +17,7 @@ import org.quartz.JobExecutionException
  * SwitchOFF peripheral after some timeout, also check if there is some peripheral in status ON but without cached expiration
  */
 @Transactional
-class StatusOnTimeoutJob implements Job, EventPublisher {
+class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
     HazelcastInstance hazelcastInstance;
 
     static triggers = {

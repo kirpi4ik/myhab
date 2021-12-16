@@ -59,29 +59,19 @@ management:
     httptrace:
       enabled: true
 
-allowedOrigin:  http://192.168.1.90:10000,http://localhost:10000,chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam,https://beta.madhouse.app,https://madhouse.app
+allowedOrigin:  http://localhost:10000,chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam,https://madhouse.app,https://beta.madhouse.app
 heatControlEnabled: true
 autoImportDevices: false
 autoImportPorts: true
 
-mqtt:
-  hostname: ***REMOVED***
-  port: 1883
-  username: kirpi4ik
-  password: ***REMOVED***
-  topics: madhouse/#,mp50/+,mp51/+,mp52/+,mp53/+,mp54/+,mp55/+,mp56/+,me60/+,me61/+,me62/+,me63/+,me64/+,me65/+
 
 ---
 grails:
   cors:
     enabled: true
     allowedOrigins:
-      - http://localhost:9999
-      - http://192.168.1.90:10000
       - http://localhost:10000
       - chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam
-      - http://localhost:443
-      - http://localhost:80
       - https://madhouse.app
       - https://beta.madhouse.app
   mime:
@@ -118,7 +108,6 @@ grails:
   converters:
     encoding: UTF-8
 ---
-quartz.jdbcStore: true
 quartz:
   pluginEnabled: true
   autoStartup: true
@@ -127,66 +116,17 @@ quartz:
     class: "org.quartz.simpl.SimpleThreadPool"
     threadCount: 25
     threadPriority: 5
-  jobStore:
-    class: "org.quartz.impl.jdbcjobstore.JobStoreTX"
-    driverDelegateClass: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
-    useProperties: false
-    dataSource: "production"
-    tablePrefix: "qrtz_"
-  dataSource:
-    development:
-      driver: "org.postgresql.Driver"
-      URL: "jdbc:postgresql://localhost:5432/madhouse"
-      user: "madhouse"
-      password: "madhouse"
-      maxConnections: 5
-    production:
-      driver: "org.postgresql.Driver"
-      URL: "jdbc:postgresql://madhousev2-db:5432/madhouse"
-      user: "madhouse"
-      password: "madhouse"
-      maxConnections: 5
+
 hibernate:
   cache:
     queries: false
     use_second_level_cache: false
     use_query_cache: false
-dataSource:
-  pooled: true
-  jmxExport: true
-  driverClassName: org.h2.Driver
-  username: sa
-  password: ""
 
 environments:
   development:
-    dataSource:
-      dbCreate: update
-      url: jdbc:postgresql://localhost:5432/madhouse
-      username: "madhouse"
-      password: "madhouse"
-      driverClassName: "org.postgresql.Driver"
-      dialect: "org.hibernate.dialect.PostgreSQLDialect"
-      logSql: false
-      formatSql: false
-      properties:
-        jmxEnabled: true
-        initialSize: 5
-        maxActive: 50
-        minIdle: 5
-        maxIdle: 25
-        maxWait: 10000
-        maxAge: 60000
-        timeBetweenEvictionRunsMillis: 5000
-        minEvictableIdleTimeMillis: 60000
-        validationQuery: SELECT 1
-        validationQueryTimeout: 3
-        validationInterval: 15000
-        testOnBorrow: true
-        testWhileIdle: true
-        testOnReturn: false
-        jdbcInterceptors: ConnectionState
-        defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+    quartz:
+      jobStore: false
     logging:
       jul:
         usebridge: true
@@ -195,32 +135,13 @@ environments:
         debug:
           useFilter: true
   production:
-    dataSource:
-      dbCreate: update
-      url: jdbc:postgresql://madhousev2-db:5432/madhouse
-      username: "madhouse"
-      password: "madhouse"
-      driverClassName: "org.postgresql.Driver"
-      dialect: "org.hibernate.dialect.PostgreSQLDialect"
-      logSql: false
-      properties:
-        jmxEnabled: true
-        initialSize: 5
-        maxActive: 50
-        minIdle: 5
-        maxIdle: 25
-        maxWait: 10000
-        maxAge: 60000
-        timeBetweenEvictionRunsMillis: 5000
-        minEvictableIdleTimeMillis: 60000
-        validationQuery: SELECT 1
-        validationQueryTimeout: 3
-        validationInterval: 15000
-        testOnBorrow: true
-        testWhileIdle: true
-        testOnReturn: false
-        jdbcInterceptors: ConnectionState
-        defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+    quartz:
+      jobStore: true
+      class: "org.quartz.impl.jdbcjobstore.JobStoreTX"
+      driverDelegateClass: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
+      useProperties: false
+      dataSource: "production"
+      tablePrefix: "qrtz_"
     logging:
       jul:
         usebridge: true
