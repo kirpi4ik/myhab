@@ -173,7 +173,7 @@
                         variables: {key: key, value: value, entityId: peripheralId, entityType: 'PERIPHERAL'}
                     }).then(response => {
                         dropdown.hide();
-                        this.loadConfig();
+                        this.initConfig();
                     });
                 } else {
                     this.$apollo.mutate({
