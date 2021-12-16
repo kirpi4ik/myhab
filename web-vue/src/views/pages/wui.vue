@@ -283,7 +283,7 @@
                         if (srvAsset && srvAsset.portValue) {
                             svgEl.firstChild.textContent = srvAsset.portValue + '℃'
                         }
-                    } else if (svgAsset['category'] == 'lock') {
+                    } else if (svgAsset['category'] == 'LOCK') {
                         actionElementClass = "bulb-off";
                     }
                 } else if (svgElement[0] == 'nav') {
