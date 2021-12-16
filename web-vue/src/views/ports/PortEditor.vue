@@ -118,8 +118,6 @@
                     internalRef: "",
                     name: "",
                     description: "",
-                    mode: "",
-                    model: "",
                     device: {
                         id: this.$route.params.idPrimary
                     }
@@ -185,9 +183,12 @@
                         this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.updatePort.id + "/view"})
                     });
                 } else if (this.$route.meta.uiMode === 'CREATE') {
-                    this.portToUpdate["device"] = this.port.device;
+                    let portClone = _.cloneDeep(this.port)
+                    delete portClone.mode
+                    delete portClone.model
+
                     this.$apollo.mutate({
-                        mutation: PORT_CREATE, variables: {devicePort: this.portToUpdate}
+                        mutation: PORT_CREATE, variables: {devicePort: portClone}
                     }).then(response => {
                         this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.devicePortCreate.id + "/edit"})
                     });

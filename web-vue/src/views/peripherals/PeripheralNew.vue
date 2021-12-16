@@ -81,15 +81,12 @@
                 peripheralDetails: [
                     {key: "name", value: ""},
                     {key: "description", value: ""},
-                    {key: "code", value: ""},
-                    {key: "codeOld", value: ""},
                     {key: "model", value: ""},
                     {key: "maxAmp", value: ""}
                 ],
                 peripheral: [],
                 roles: [],
                 peripheralToUpdate: {},
-                readonly: ["id", "__typename", "uid", "category", "connectedTo", "zones"],
                 zones: {
                     selected: null,
                     options: []
@@ -128,6 +125,7 @@
                 this.peripheralToUpdate[key] = value
             },
             save() {
+                debugger
                 this.peripheralToUpdate.category = this.categories.selected;
                 this.peripheralToUpdate.zones = this.zones.selected;
                 this.peripheralToUpdate.connectedTo = this.connectedTo.selected;

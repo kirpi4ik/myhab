@@ -194,7 +194,7 @@
                     authAccounts: []
                 },
                 deviceModels: {
-                    options: ['MEGAD_2561_RTC', 'ESP8266_1', 'TMEZON_INTERCOM']
+                    options: ['MEGAD_2561_RTC', 'ESP8266_1', 'TMEZON_INTERCOM', 'NIBE_F1145_8_EM']
                 },
                 deviceTypes: {
                     options: []

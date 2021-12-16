@@ -26,6 +26,9 @@ class MqttTopicService {
             case ~/${MQTTTopic.MEGA.READ_SINGLE_VAL.regex}/:
                 matcher = topicName =~ MQTTTopic.MEGA.READ_SINGLE_VAL.regex
                 return new MQTTMessage(deviceType: DeviceModel.MEGAD_2561_RTC, deviceCode: matcher[0][1], portCode: matcher[0][2], portStrValue: new JsonSlurper().parse(message.payload['value']).value, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
+            case ~/${MQTTTopic.NIBE.READ_SINGLE_VAL.regex}/:
+                matcher = topicName =~ MQTTTopic.NIBE.READ_SINGLE_VAL.regex
+                return new MQTTMessage(deviceType: DeviceModel.NIBE_F1145_8_EM, deviceCode: matcher[0][1], portType: matcher[0][2], portCode: matcher[0][3], portStrValue: message.payload, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
         }
 
         return null
@@ -37,6 +40,9 @@ class MqttTopicService {
         }
         if (device.model.equals(DeviceModel.ESP8266_1)) {
             return new SimpleTemplateEngine().createTemplate(MQTTTopic.ESP.WRITE_SINGLE_VAL.regex).make([map: mqttMessage])
+        }
+        if (device.model.equals(DeviceModel.NIBE_F1145_8_EM)) {
+            return new SimpleTemplateEngine().createTemplate(MQTTTopic.NIBE.WRITE_SINGLE_VAL.regex).make([map: mqttMessage])
         }
     }
 
@@ -61,6 +67,10 @@ class MqttTopicService {
             else {
                 return actions
             }
+        }
+
+        if (port.device.model.equals(DeviceModel.NIBE_F1145_8_EM)) {
+            return actions
         }
     }
 

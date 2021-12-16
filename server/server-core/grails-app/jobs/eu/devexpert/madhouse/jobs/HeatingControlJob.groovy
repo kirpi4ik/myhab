@@ -12,6 +12,7 @@ import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
+import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
@@ -26,6 +27,7 @@ import static eu.devexpert.madhouse.ConfigKey.CONFIG_TEMP_ALL_DAY
  *
  */
 @Slf4j
+@DisallowConcurrentExecution
 @Transactional
 class HeatingControlJob implements Job, EventPublisher {
     static triggers = {
