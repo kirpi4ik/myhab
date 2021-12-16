@@ -7,6 +7,7 @@ import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.CreateEntityDataFetcher
 import org.grails.gorm.graphql.fetcher.impl.DeleteEntityDataFetcher
 import org.grails.gorm.graphql.fetcher.impl.EntityDataFetcher
+import org.springframework.beans.factory.annotation.Autowired
 
 class Configuration {
     Long id
@@ -18,13 +19,22 @@ class Configuration {
     String value
     String description
 
+    transient configurationService
+    static transients = ['configurationService']
+
     static mapping = {
         table '`configurations`'
+        autowire true
     }
     static constraints = {
         name nullable: true
         description nullable: true
     }
+
+    def beforeUpdate() {
+        configurationService.changed(this)
+    }
+
     static graphql = GraphQLMapping.lazy {
         query('configurationListByEntity', [Configuration]) {
             argument('entityType', EntityType)

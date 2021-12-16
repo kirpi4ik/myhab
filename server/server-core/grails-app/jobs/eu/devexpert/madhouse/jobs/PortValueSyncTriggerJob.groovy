@@ -14,16 +14,16 @@ import java.util.concurrent.TimeUnit
  *
  */
 @Transactional
-class PortValueReaderJob implements Job, EventPublisher {
+class PortValueSyncTriggerJob implements Job, EventPublisher {
 
     MqttTopicService mqttTopicService
 
 
     static triggers = {
-        simple name: 'portValueReader', repeatInterval: TimeUnit.SECONDS.toMillis(60)
+        simple name: 'portValueSyncTrigger', repeatInterval: TimeUnit.SECONDS.toMillis(60)
     }
     static group = "Internal"
-    static description = "Read port status"
+    static description = "Trigger read port status"
 
     @Override
     @Transactional
