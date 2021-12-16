@@ -4,7 +4,10 @@ import eu.devexpert.madhouse.ConfigKey
 import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.common.Event
 import eu.devexpert.madhouse.domain.device.Device
+import eu.devexpert.madhouse.domain.device.DevicePeripheral
+import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.device.port.PortAction
+import eu.devexpert.madhouse.domain.device.port.PortType
 import eu.devexpert.madhouse.domain.device.port.PortValue
 import eu.devexpert.madhouse.domain.events.TopicName
 import eu.devexpert.madhouse.domain.job.EventData
@@ -98,6 +101,20 @@ class PortValueService implements EventPublisher {
                     } else if (newVal == PortAction.OFF.name()) {
                         hazelcastInstance.getMap(CacheMap.EXPIRE).remove(String.valueOf(port.id))
                     }
+                }
+            }
+        }
+    }
+
+    @Subscriber("evt_cfg_value_changed")
+    def updateExpirationTimeOnCfg(event) {
+        if (event.data.p2 == EntityType.PERIPHERAL.name() && event.data.p4 == ConfigKey.STATE_ON_TIMEOUT) {
+            def peripheral = DevicePeripheral.findById(Long.valueOf(event.data.p3))
+            if (peripheral != null && peripheral.connectedTo) {
+                def firstPort = peripheral.connectedTo.first()
+                if (firstPort.value == PortAction.ON.name()) {
+                    def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(event.data.p5)).toDate().time
+                    hazelcastInstance.getMap(CacheMap.EXPIRE).put(String.valueOf(firstPort.id), [expireOn: expireInMs, peripheralId: peripheral.id])
                 }
             }
         }

@@ -49,7 +49,7 @@
 </template>
 <script>
     import {authenticationService} from '@/_services';
-    import {lightService} from '@/_services/controls';
+    import {heatService, lightService} from '@/_services/controls';
     import InlineSvg from 'vue-inline-svg';
     import {PERIPHERAL_LIST_WUI, PUSH_EVENT} from "../../graphql/queries";
     import _ from "lodash";
@@ -61,10 +61,11 @@
         data() {
             return {
                 peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
-                peripheralLights: {},
+                srvPeripherals: {},
                 portToPeripheralMap: {},
+                assetMap: {},
                 svgMap: {},
-                nodes: ['path', 'polygon', 'polyline'],
+                nodes: ['path', 'circle', 'polygon', 'polyline', 'text'],
 
                 showPassword: false,
                 showErrorModal: false,
@@ -77,50 +78,7 @@
             this.init()
         },
         mounted() {
-            document.addEventListener('click', function (event) {
-                console.log('click on light')
-
-                let targetId = event.target.id;
-                if (targetId.startsWith("lock_")) {
-                    console.log("UNLOCK")
-                    this.unlockCode = null;
-                    this.showPassword = true;
-                } else if (targetId.startsWith("nav_")) {
-                    let direction = targetId.split("_")[1];
-                    if (direction == 'back' && this.isEtaj) {
-                        this.isEtaj = false;
-                        this.isParter = true;
-                    } else if (direction == 'forward' && this.isParter) {
-                        this.isEtaj = true;
-                        this.isParter = false;
-                    }
-
-                } else {
-                    let closest;
-                    let i = 0
-                    do {
-                        closest = event.target.closest(this.nodes[i]);
-                    } while (closest == null && i++ < this.nodes.length)
-                    if (closest != null) {
-                        let reverseCss = closest.getAttribute("class")
-                        if (reverseCss == null) {
-                            reverseCss = "no-focus"
-                        }
-                        closest.setAttribute("class", "focus")
-                        setTimeout(function () {
-                            closest.setAttribute("class", reverseCss)
-                        }, 100)
-                        console.log('FOUND: ' + closest.id)
-                        let id = closest.id.split("_")[1];
-
-                        if (this.peripheralLights[id] != null) {
-                            console.log('TOGGLE: ' + this.peripheralLights[id].name)
-                            lightService.toggle(this.peripheralLights[id])
-                        }
-                    }
-                }
-                console.log("RETURN");
-            }.bind(this), false);
+            document.addEventListener('click', this.handleClick, false);
         },
 
         computed: {
@@ -132,18 +90,73 @@
             '$route.path': 'init',
             stompMessage: function (newVal) {
                 if (newVal.eventName == 'evt_port_value_persisted') {
-                    this.updatePeripheral(newVal.jsonPayload);
+                    this.updatePeripheralUI(newVal.jsonPayload);
                 }
             }
         },
         methods: {
-            updatePeripheral: function (jsonPayload) {
+            handleClick: function (event) {
+                let targetId = event.target.id;
+                if (targetId.startsWith("lock_")) {
+                    console.log("UNLOCK")
+                    this.unlockCode = null;
+                    this.showPassword = true;
+                } else if (targetId.startsWith("nav_")) {
+                    let direction = targetId.split("_")[1];
+                    if (direction == 'home') {
+                        this.$router.push({path: "/"})
+                    } else if (direction == 'back' && this.isEtaj) {
+                        this.isEtaj = false;
+                        this.isParter = true;
+                    } else if (direction == 'forward' && this.isParter) {
+                        this.isEtaj = true;
+                        this.isParter = false;
+                    }
+
+                } else if (targetId.startsWith("asset_")) {
+                    let closest;
+                    let i = 0
+                    do {
+                        closest = event.target.closest(this.nodes[i]);
+                    } while (closest == null && i++ < this.nodes.length)
+                    if (closest != null) {
+                        let svgElement = closest.id.split("_");
+                        let asset = {
+                            category: svgElement[1],
+                            info: svgElement[2],
+                            id: svgElement[3],
+                            assetOrder: svgElement[4]
+                        }
+
+
+                        let reverseCss = closest.getAttribute("class")
+                        if (reverseCss == null) {
+                            reverseCss = "no-focus"
+                        }
+                        closest.setAttribute("class", "focus")
+                        setTimeout(function () {
+                            closest.setAttribute("class", reverseCss)
+                        }, 100)
+
+                        let id = asset['id'];
+                        if (this.srvPeripherals[id] != null) {
+                            console.log('TOGGLE: ' + this.srvPeripherals[id].name)
+                            if (this.srvPeripherals[id].category.name == 'LIGHT') {
+                                lightService.toggle(this.srvPeripherals[id])
+                            } else if (this.srvPeripherals[id].category.name == 'HEAT') {
+                                heatService.toggle(this.srvPeripherals[id])
+                            }
+                        }
+                    }
+                }
+            },
+            updatePeripheralUI: function (jsonPayload) {
                 let payload = JSON.parse(jsonPayload);
                 let connectedPeripherals = this.portToPeripheralMap[payload.p2]
 
                 if (connectedPeripherals) {
                     connectedPeripherals.forEach(function (peripheralId) {
-                        const peripheralComp = _.map(this.peripheralLights, (peripheral) => {
+                        const peripheralComp = _.map(this.srvPeripherals, (peripheral) => {
                             if (peripheral['id'] == peripheralId) {
                                 peripheral['value'] = payload.p4;
                                 peripheral['state'] = payload.p4 === 'ON';
@@ -170,9 +183,9 @@
                 });
             },
             init: function () {
-                let peripheralLight = function (categoryToKeepId) {
+                let assetCategoryFilter = function (categoryToKeepId) {
                     return function (peripheral) {
-                        return peripheral.category.uid === categoryToKeepId;
+                        return true//peripheral.category.uid === categoryToKeepId;
                     }
                     // return peripheral.data.category.uid === this.$route.query.categoryUid
                 }.bind(this)
@@ -184,6 +197,13 @@
                                 this.portToPeripheralMap[port.id] = []
                             }
                             this.portToPeripheralMap[port.id].push(peripheral.id)
+                            if (!this.assetMap[peripheral.category.name]) {
+                                this.assetMap[peripheral.category.name] = []
+                            }
+                            if (!this.assetMap[peripheral.category.name][port.id]) {
+                                this.assetMap[peripheral.category.name][port.id] = []
+                            }
+                            this.assetMap[peripheral.category.name][port.id].push(peripheral.id)
                         }
                     }
                 }.bind(this)
@@ -201,20 +221,9 @@
                             state = false;
                             deviceState = null;
                         }
-
-                        for (let node of this.nodes) {
-                            Array.prototype.slice.call(document.getElementsByTagName(node)).filter(function (element) {
-                                return element.id.lastIndexOf("id_" + peripheral.id, 0) === 0
-                            }).forEach(function (path) {
-                                if (peripheral['state']) {
-                                    path.setAttribute("class", "bulb-on")
-                                } else {
-                                    path.setAttribute("class", "bulb-off")
-                                }
-                            });
-                        }
                     }
                 }.bind(this)
+
                 this.$apollo.query({
                     query: PERIPHERAL_LIST_WUI,
                     variables: {},
@@ -224,9 +233,9 @@
                     let data = _.cloneDeep(response.data)
                     //convert to map
                     data.devicePeripheralList.forEach(initPeripheralMap)
-                    let lights = data.devicePeripheralList.filter(peripheralLight(this.peripheralLightUid));
-                    lights.forEach(initState)
-                    this.peripheralLights = _.reduce(lights, function (hash, value) {
+                    let assets = data.devicePeripheralList.filter(assetCategoryFilter(this.peripheralLightUid));
+                    assets.forEach(initState)
+                    this.srvPeripherals = _.reduce(assets, function (hash, value) {
                         var key = value['id'];
                         hash[key] = value;
                         return hash;
@@ -237,51 +246,55 @@
             },
             transform: function (svg) {
                 this.svgMap = svg;
-                let svgForeignObjectElement = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject');
-                svgForeignObjectElement.setAttribute("x", 0); //Set rect data
-                svgForeignObjectElement.setAttribute("y", 0); //Set rect data
-                svgForeignObjectElement.setAttribute("width", "100"); //Set rect data
-                svgForeignObjectElement.setAttribute("height", "50"); //Set rect data
-
-                var buttonElement = document.createElement('a');
-                buttonElement.innerText = 'DASH'
-                buttonElement.setAttribute("class", 'btn btn-success back');
-                buttonElement.href = "/#/"
-                svgForeignObjectElement.appendChild(buttonElement);
-
-                svg.appendChild(svgForeignObjectElement);
-
                 for (const node of this.nodes) {
                     let elementsByTagName = svg.getElementsByTagName(node);
                     for (var i = 0; i < elementsByTagName.length; i++) {
-                        this.wrap(svg, elementsByTagName[i])
+                        this.svgElInit(svg, elementsByTagName[i])
                     }
                 }
 
                 return svg;
             },
-            wrap: function (svg, pathEl) {
+            svgElInit: function (svg, svgEl) {
                 let wrapper = document.createElementNS("http://www.w3.org/2000/svg", 'a')
-                // wrapper.setAttribute("xlink:href", "#0");
-                let bulbClass = "bulb-off";
-                let light = this.peripheralLights[pathEl.id.split("_")[1]];
-                if (light && light.state) {
-                    bulbClass = "bulb-on"
+                let actionElementClass = "";
+                let svgElement = svgEl.id.split("_");
+                if (svgElement[0] == 'asset') {
+                    let svgAsset = {
+                        category: svgElement[1].toUpperCase(),
+                        info: svgElement[2],
+                        id: svgElement[3],
+                        assetOrder: svgElement[4]
+                    }
+                    let srvAsset = this.srvPeripherals[svgAsset['id']];
+                    if (svgAsset['category'] == 'LIGHT') {
+                        if (srvAsset && srvAsset.state) {
+                            actionElementClass = "bulb-on"
+                        } else {
+                            actionElementClass = "bulb-off";
+                        }
+                    } else if (svgAsset['category'] == 'HEAT') {
+                        if (srvAsset && srvAsset.state) {
+                            actionElementClass = "heat-on"
+                        } else {
+                            actionElementClass = "heat-off";
+                        }
+                    } else if (svgAsset['category'] == 'TEMP') {
+                        if (srvAsset && srvAsset.portValue) {
+                            svgEl.firstChild.textContent = srvAsset.portValue + '℃'
+                        }
+                    } else if (svgAsset['category'] == 'lock') {
+                        actionElementClass = "bulb-off";
+                    }
+                } else if (svgElement[0] == 'nav') {
+                    actionElementClass = "bulb-off"
                 }
-                pathEl.setAttribute("class", bulbClass);
-                pathEl.parentNode.insertBefore(wrapper, pathEl);
-                wrapper.appendChild(pathEl);
-            },
-            openLock: function () {
-                debugger
-                alert('sss')
+                svgEl.setAttribute("class", actionElementClass);
+                svgEl.parentNode.insertBefore(wrapper, svgEl);
+                wrapper.appendChild(svgEl);
             }
 
         }
-    }
-
-    function openLock() {
-        alert('xxx')
     }
 </script>
 <style>
@@ -310,12 +323,40 @@
 
     .bulb-off {
         fill: #4a90d6;
-        fill-opacity: 0.40;
+        fill-opacity: 0.30;
         stroke: #2b6095;
         stroke-width: 0.5;
     }
 
-    circle#lock_circle {
+    circle.heat-on {
+        fill: rgb(244, 194, 168);
+        fill-opacity: 0.61;
+        stroke: rgb(116, 29, 29);
+    }
+
+    path.heat-on {
+        paint-order: fill;
+        stroke-width: 4.62558px;
+        fill: rgb(88, 77, 77);
+        stroke: rgb(226, 9, 9);
+        stroke-opacity: 0.34;
+    }
+
+    circle.heat-off {
+        fill: rgb(168, 193, 244);
+        fill-opacity: 0.61;
+        stroke: rgb(116, 29, 29);
+    }
+
+    path.heat-off {
+        paint-order: fill;
+        stroke-width: 4.62558px;
+        fill: rgb(88, 77, 77);
+        stroke: rgb(9, 96, 226);
+        stroke-opacity: 0.34;
+    }
+
+    circle#asset_lock_circle {
         stroke: #d3e5e5;
         stroke-width: 1.2;
         fill: rgb(98, 117, 129);
@@ -323,8 +364,35 @@
         fill-opacity: 0.59;
     }
 
+    circle#nav_home_1 {
+        stroke: #d3e5e5;
+        stroke-width: 1.2;
+        fill: rgb(98, 117, 129);
+        paint-order: stroke;
+        fill-opacity: 0.59;
+    }
+
+    text.txt-light {
+        fill: rgb(224, 227, 243);
+        font-family: Arial, sans-serif;
+        font-size: 113.1px;
+        fill-opacity: 0.8;
+    }
+
+    /* Enter and leave animations can use different */
+    /* durations and timing functions.              */
+    .slide-fade-enter-active {
+        transition: all .3s ease;
+    }
+
     .slide-fade-leave-active {
-        position: absolute;
-        transition: all 1s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+        transition: all .3s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+    }
+
+    .slide-fade-enter, .slide-fade-leave-to
+        /* .slide-fade-leave-active below version 2.1.8 */
+    {
+        transform: translateX(10px);
+        opacity: 0;
     }
 </style>

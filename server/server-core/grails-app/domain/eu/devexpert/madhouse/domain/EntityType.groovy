@@ -27,6 +27,7 @@ enum EntityType {
     EVENT_DATA(EventData.class),
     PATCH_PANEL(PatchPanel.class),
     PORT(DevicePort.class),
+    CONFIG(Configuration.class),
     PORT_VALUE(PortValue.class);
 
     static <T extends BaseEntity> EntityType get(T type) {
