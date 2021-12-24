@@ -97,11 +97,7 @@
         methods: {
             handleClick: function (event) {
                 let targetId = event.target.id;
-                if (targetId.startsWith("lock_")) {
-                    console.log("UNLOCK")
-                    this.unlockCode = null;
-                    this.showPassword = true;
-                } else if (targetId.startsWith("nav_")) {
+                if (targetId.startsWith("nav_")) {
                     let direction = targetId.split("_")[1];
                     if (direction == 'home') {
                         this.$router.push({path: "/dashboard"}).catch(() => {
@@ -141,11 +137,18 @@
                         let id = asset['id'];
                         if (this.srvPeripherals[id] != null) {
                             console.log('TOGGLE: ' + this.srvPeripherals[id].name)
-                            if (this.srvPeripherals[id].category.name == 'LIGHT') {
+                            if (this.srvPeripherals[id].category.name == 'DOOR_LOCK') {
+                                this.unlockCode = null;
+                                this.showPassword = true;
+                            } else if (this.srvPeripherals[id].category.name == 'LIGHT') {
                                 lightService.toggle(this.srvPeripherals[id])
                             } else if (this.srvPeripherals[id].category.name == 'HEAT') {
                                 heatService.toggle(this.srvPeripherals[id])
                             }
+                        }else {
+                            debugger
+                            console.log('null id')
+
                         }
                     }
                 }
@@ -204,7 +207,6 @@
                             if (!this.assetMap[categoryName][port.id]) {
                                 this.assetMap[categoryName][port.id] = []
                             }
-                            debugger
                             this.assetMap[categoryName][port.id].push(peripheral.id)
                         }
                     }
@@ -364,7 +366,7 @@
         stroke: none;
     }
 
-    rect.nav-button{
+    rect.nav-button {
         stroke: #2b6095;
         stroke-width: 0.5;
         fill: rgb(115, 127, 129);
@@ -372,12 +374,14 @@
         fill-opacity: 0.3;
         paint-order: stroke;
     }
-    path.nav-button{
+
+    path.nav-button {
         stroke: #2b6095;
         stroke-width: 0.5;
         fill: rgb(115, 127, 129);
         fill-rule: nonzero;
     }
+
     .bulb-on {
         fill: #d6d40f;
         fill-opacity: 0.7;
