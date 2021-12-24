@@ -101,6 +101,9 @@ dependencies {
 
     implementation 'com.konghq:unirest-java:3.11.09'
 
+    //Telegram bot api
+    implementation 'org.telegram:telegrambots-spring-boot-starter:5.5.0'
+
 
     //ONVIF
     compile group: 'be.teletask.onvif', name: 'onvif', version: '1.0.2'
