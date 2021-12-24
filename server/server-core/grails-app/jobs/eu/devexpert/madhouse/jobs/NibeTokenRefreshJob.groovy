@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit
 @Transactional
 class NibeTokenRefreshJob implements Job {
 
+    def telegramBotHandler
     static triggers = {
         simple repeatInterval: TimeUnit.SECONDS.toMillis(500)
         Unirest.config()
@@ -44,6 +45,7 @@ class NibeTokenRefreshJob implements Job {
             log.debug("Acc token : ${tk['access_token']}")
         } else {
             log.warn("There are no tokens configured for device ${device.id}")
+            telegramBotHandler.sendMessage('WARN',"There are no tokens configured for device ${device.id}")
         }
     }
 

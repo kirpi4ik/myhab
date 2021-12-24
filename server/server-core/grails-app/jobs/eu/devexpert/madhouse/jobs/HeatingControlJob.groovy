@@ -1,10 +1,10 @@
 package eu.devexpert.madhouse.jobs
 
-
 import eu.devexpert.madhouse.domain.Configuration
 import eu.devexpert.madhouse.domain.EntityType
-import eu.devexpert.madhouse.domain.events.TopicName
 import eu.devexpert.madhouse.domain.device.DevicePeripheral
+import eu.devexpert.madhouse.domain.device.port.PortAction
+import eu.devexpert.madhouse.domain.events.TopicName
 import eu.devexpert.madhouse.domain.infra.Zone
 import eu.devexpert.madhouse.domain.job.EventData
 import grails.events.EventPublisher
@@ -63,10 +63,9 @@ class HeatingControlJob implements Job, EventPublisher {
                     Set<DevicePeripheral> actuatorHeatCtrlSet = DevicePeripheral.findAll("select dp from  DevicePeripheral dp where ?0 in elements(zones) and dp.category.name = ?1", [zone], PERIPHERAL_HEAT_CTRL_CATEGORY)
                     actuatorHeatCtrlSet.each { actuator ->
                         if (currentTemp <= desiredTempForActuator) {
-                            actions << ["${actuator.id}": "ON"]
-
+                            actions << ["${actuator.id}": PortAction.ON]
                         } else {
-                            actions << ["${actuator.id}": "OFF"]
+                            actions << ["${actuator.id}": PortAction.OFF]
 
                         }
                     }
