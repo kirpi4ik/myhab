@@ -11,6 +11,11 @@
         />
         <CHeaderNav class="d-md-down-none mr-auto">
             <CHeaderNavItem class="px-3">
+                <CHeaderNavLink to="/pages/wui">
+                    <CIcon name="cil-mobile" style="width: 30px; height: 30px"/>
+                </CHeaderNavLink>
+            </CHeaderNavItem>
+            <CHeaderNavItem class="px-3">
                 <CHeaderNavLink to="/dashboard">
                     Dashboard
                 </CHeaderNavLink>

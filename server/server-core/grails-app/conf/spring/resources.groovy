@@ -6,6 +6,7 @@ import eu.devexpert.madhouse.graphql.fetchers.Mutation
 
 import eu.devexpert.madhouse.async.socket.WebSocketConfig
 import eu.devexpert.madhouse.listener.domain.UserPasswordEncoderListener
+import eu.devexpert.madhouse.telegram.TelegramBotHandler
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
@@ -39,4 +40,5 @@ beans = {
     webSocketConfig(WebSocketConfig)
     mQTTMessageHandler(MQTTMessageHandler)
     mQTTMessageHandler(MQTTMessageHandler)
+    telegramBotHandler(TelegramBotHandler)
 }

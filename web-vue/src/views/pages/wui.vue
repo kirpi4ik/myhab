@@ -1,32 +1,18 @@
 <template>
     <!--https://boxy-svg.com/app/disk:MtaL1PZN9k-->
     <div id="fullscreen">
-        <transition name="slide-fade">
-            <div class="svg-container" v-if="isParter">
+        <transition name="slide-fade" v-for="(svgPage) in this.svgPages">
+            <div class="svg-container" v-if="svgPage.visible">
                 <inline-svg
-                        src="svg/parter.svg"
+                        :src="svgPage.svgContent"
                         :transformSource="transform"
-                        fill-opacity="0.25"
-                        :stroke-opacity="0.5"
+                        :fill-opacity="svgPage.fillOpacity"
+                        :stroke-opacity="svgPage.strokeOpacity"
                         :color="false"
                         ref="svg"
                 ></inline-svg>
             </div>
         </transition>
-        <transition name="slide-fade">
-            <div class="svg-container" v-if="isEtaj">
-                <inline-svg
-                        src="svg/etaj.svg"
-                        :transformSource="transform"
-                        fill-opacity="0.25"
-                        :stroke-opacity="0.5"
-                        :color="false"
-                        ref="svg"
-
-                ></inline-svg>
-            </div>
-        </transition>
-
         <CModal title="Introduceti codul de acces" color="warning" :show.sync="showPassword">
             <CForm validated novalidate>
                 <CInput type="number" description="Please enter your password." placeholder="Cod deblocare" :value="unlockCode" @input="unlockCode =  $event" was-validated>
@@ -65,13 +51,27 @@
                 portToPeripheralMap: {},
                 assetMap: {},
                 svgMap: {},
-                nodes: ['path', 'circle', 'polygon', 'polyline', 'text'],
+                svgPages: [
+                    {
+                        id: "parter",
+                        visible: true,
+                        svgContent: 'svg/parter.svg',
+                        fillOpacity: 0.3,
+                        strokeOpacity: 0.5
+                    },
+                    {
+                        id: "etaj",
+                        visible: false,
+                        svgContent: 'svg/etaj.svg',
+                        fillOpacity: 0.3,
+                        strokeOpacity: 0.5
 
+                    }
+                ],
+                nodes: ['path', 'rect', 'circle', 'polygon', 'polyline', 'text'],
                 showPassword: false,
                 showErrorModal: false,
-                unlockCode: null,
-                isParter: true,
-                isEtaj: false
+                unlockCode: null
             }
         },
         created() {
@@ -104,15 +104,15 @@
                 } else if (targetId.startsWith("nav_")) {
                     let direction = targetId.split("_")[1];
                     if (direction == 'home') {
-                        this.$router.push({path: "/"})
-                    } else if (direction == 'back' && this.isEtaj) {
-                        this.isEtaj = false;
-                        this.isParter = true;
-                    } else if (direction == 'forward' && this.isParter) {
-                        this.isEtaj = true;
-                        this.isParter = false;
+                        this.$router.push({path: "/dashboard"}).catch(() => {
+                        });
+                    } else if (direction == 'back' || direction == 'forward') {
+                        if (direction == 'forward' && this.svgPageHasNext()) {
+                            this.svgPageGoNext()
+                        } else if (direction == 'back' && this.svgPageHasPrev()) {
+                            this.svgPageGoBack()
+                        }
                     }
-
                 } else if (targetId.startsWith("asset_")) {
                     let closest;
                     let i = 0
@@ -158,7 +158,7 @@
                     connectedPeripherals.forEach(function (peripheralId) {
                         const peripheralComp = _.map(this.srvPeripherals, (peripheral) => {
                             if (peripheral['id'] == peripheralId) {
-                                peripheral['value'] = payload.p4;
+                                peripheral['portValue'] = payload.p4;
                                 peripheral['state'] = payload.p4 === 'ON';
                                 return peripheral
                             }
@@ -197,13 +197,15 @@
                                 this.portToPeripheralMap[port.id] = []
                             }
                             this.portToPeripheralMap[port.id].push(peripheral.id)
-                            if (!this.assetMap[peripheral.category.name]) {
-                                this.assetMap[peripheral.category.name] = []
+                            let categoryName = peripheral.category.name.toLowerCase();
+                            if (!this.assetMap[categoryName]) {
+                                this.assetMap[categoryName] = []
                             }
-                            if (!this.assetMap[peripheral.category.name][port.id]) {
-                                this.assetMap[peripheral.category.name][port.id] = []
+                            if (!this.assetMap[categoryName][port.id]) {
+                                this.assetMap[categoryName][port.id] = []
                             }
-                            this.assetMap[peripheral.category.name][port.id].push(peripheral.id)
+                            debugger
+                            this.assetMap[categoryName][port.id].push(peripheral.id)
                         }
                     }
                 }.bind(this)
@@ -287,18 +289,64 @@
                         actionElementClass = "bulb-off";
                     }
                 } else if (svgElement[0] == 'nav') {
-                    actionElementClass = "bulb-off"
+                    if (svgElement[1] == 'back' || svgElement[1] == 'forward') {
+                        actionElementClass = "nav-button"
+                        if (svgElement[1] == 'back' && svg.id == this.svgPages[0].id) {
+                            actionElementClass = 'hidden'
+                        } else if (svgElement[1] == 'forward' && svg.id == this.svgPages[this.svgPages.length - 1].id) {
+                            actionElementClass = 'hidden'
+                        }
+                    } else {
+                        actionElementClass = "bulb-off"
+                    }
                 }
                 svgEl.setAttribute("class", actionElementClass);
                 svgEl.parentNode.insertBefore(wrapper, svgEl);
                 wrapper.appendChild(svgEl);
-            }
+            },
+            svgPageHasNext: function () {
+                let currentIndex = _.findIndex(this.svgPages, (e) => {
+                    return e.visible == true;
+                }, 0);
+                if (currentIndex + 1 < this.svgPages.length) {
+                    return true
+                }
+                return false;
+            },
+            svgPageHasPrev: function () {
+                let currentIndex = _.findIndex(this.svgPages, (e) => {
+                    return e.visible == true;
+                }, 0);
+                if (currentIndex - 1 >= 0) {
+                    return true
+                }
+                return false;
+            },
+            svgPageGoNext: function () {
+                let currentIndex = _.findIndex(this.svgPages, (e) => {
+                    return e.visible == true;
+                }, 0);
 
+                this.svgPages[currentIndex + 1].visible = true
+                this.svgPages[currentIndex].visible = false
+            },
+            svgPageGoBack: function () {
+                let currentIndex = _.findIndex(this.svgPages, (e) => {
+                    return e.visible == true;
+                }, 0);
+
+                this.svgPages[currentIndex - 1].visible = true
+                this.svgPages[currentIndex].visible = false
+            }
         }
     }
 </script>
 <style>
     body {
+    }
+
+    .hidden {
+        display: none;
     }
 
     .back {
@@ -316,6 +364,20 @@
         stroke: none;
     }
 
+    rect.nav-button{
+        stroke: #2b6095;
+        stroke-width: 0.5;
+        fill: rgb(115, 127, 129);
+        fill-rule: nonzero;
+        fill-opacity: 0.3;
+        paint-order: stroke;
+    }
+    path.nav-button{
+        stroke: #2b6095;
+        stroke-width: 0.5;
+        fill: rgb(115, 127, 129);
+        fill-rule: nonzero;
+    }
     .bulb-on {
         fill: #d6d40f;
         fill-opacity: 0.7;
