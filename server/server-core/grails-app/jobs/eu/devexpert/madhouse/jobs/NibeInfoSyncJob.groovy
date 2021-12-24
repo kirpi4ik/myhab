@@ -36,21 +36,18 @@ class NibeInfoSyncJob implements Job {
         def accConfig = device.getConfigurationByKey('cfg.key.device.oauth.access_token')
         if (accConfig && accConfig.value) {
             def bearerToken = accConfig.value
-            HttpResponse<String> response = Unirest.get("$API_URL/systems/$DEVICE_REF_ID/status/system")
+            HttpResponse<String> pumpResponse = Unirest.get("$API_URL/systems/$DEVICE_REF_ID/serviceinfo/categories/STATUS")
                     .header("Authorization", "Bearer ${bearerToken}")
                     .asString();
-
-            def statSystem = new JsonSlurper().parseText(response.getBody())
-            def heaterReverseTemp = (statSystem[3]['parameters'][1]['rawValue'] / 10)
-
-            HttpResponse<String> resp2 = Unirest.get("$API_URL/systems/$DEVICE_REF_ID/serviceinfo/categories/STATUS")
-                    .header("Authorization", "Bearer ${bearerToken}")
-                    .asString();
-            def parameters = new JsonSlurper().parseText(resp2.getBody())
-            def waterTemp = (parameters.find { it['parameterId'] == 40014 }['rawValue'] / 10)
+            if (pumpResponse.status == 200) {
+                def parameters = new JsonSlurper().parseText(pumpResponse.getBody())
+                def waterTemp = (parameters.find { it['parameterId'] == 40014 }['rawValue'] / 10)
 
 
-            mqttTopicService.publish(device.ports.find { it.internalRef == 't1' }, "${waterTemp}")
+                mqttTopicService.publish(device.ports.find { it.internalRef == 't1' }, "${waterTemp}")
+            } else {
+                log.warn("Can't synca data - response status ${pumpResponse.status}")
+            }
         } else {
             log.warn("Can't synca data - there are no access tokens configured for device ${device.id}")
         }
