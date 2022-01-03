@@ -24,26 +24,21 @@ import org.springframework.transaction.annotation.Propagation
 @Slf4j
 @Transactional(propagation = Propagation.REQUIRED)
 class PortValueService implements EventPublisher {
-    @Value('${autoImportPorts}')
-    boolean autoImportPorts
-
-    @Value('${autoImportDevices}')
-    boolean autoImportDevices
-
     def hazelcastInstance;
     def deviceService
+    def configProvider
 
     @Subscriber('evt_mqtt_port_value_changed')
     def updatePort(event) {
         def device = Device.findByCode(event.data.p2, [lock: true])
-        if (device == null && autoImportDevices) {
+        if (device == null && configProvider.get(Boolean.class, "admin.devices.autoimport")) {
             device = deviceService.importDevice(event.data.p1, event.data.p2)
         }
 
         def devicePort = device?.ports?.find {
             port -> port.internalRef == event.data.p4
         }
-        if (device != null && devicePort == null && autoImportPorts) {
+        if (device != null && devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport")) {
             devicePort = deviceService.importPort(device, event.data.p3, event.data.p4)
         }
         if (devicePort != null) {
