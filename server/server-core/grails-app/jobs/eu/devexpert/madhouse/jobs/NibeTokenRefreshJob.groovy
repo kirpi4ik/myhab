@@ -22,30 +22,28 @@ class NibeTokenRefreshJob implements Job {
     def telegramBotHandler
     static triggers = {
         simple repeatInterval: TimeUnit.SECONDS.toMillis(500)
-        Unirest.config()
-                .socketTimeout(2000)
-                .connectTimeout(2000)
-                .setDefaultHeader("Accept", "application/json")
-                .followRedirects(true)
-                .enableCookieManagement(false)
     }
 
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-        def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
-        Configuration refreshKeyFromCfg = device.getConfigurationByKey('cfg.key.device.oauth.refresh_token') ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.refresh_token')
-        Configuration accKeyFromCfg = device.getConfigurationByKey('cfg.key.device.oauth.access_token') ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.access_token')
-        if (refreshKeyFromCfg.value) {
-            def tk = regenerateTokens(device, refreshKeyFromCfg.value)
-            refreshKeyFromCfg.value = tk['refresh_token']
-            refreshKeyFromCfg.save()
-            accKeyFromCfg.value = tk['access_token']
-            accKeyFromCfg.save()
-            log.debug("Acc token : ${tk['access_token']}")
-        } else {
-            log.warn("There are no tokens configured for device ${device.id}")
-            telegramBotHandler.sendMessage('WARN',"There are no tokens configured for device ${device.id}")
+        try {
+            def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
+            Configuration refreshKeyFromCfg = device.getConfigurationByKey('cfg.key.device.oauth.refresh_token') ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.refresh_token')
+            Configuration accKeyFromCfg = device.getConfigurationByKey('cfg.key.device.oauth.access_token') ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.access_token')
+            if (refreshKeyFromCfg.value) {
+                def tk = regenerateTokens(device, refreshKeyFromCfg.value)
+                refreshKeyFromCfg.value = tk['refresh_token']
+                refreshKeyFromCfg.save()
+                accKeyFromCfg.value = tk['access_token']
+                accKeyFromCfg.save()
+                log.debug("Acc token : ${tk['access_token']}")
+            } else {
+                log.warn("There are no tokens configured for device ${device.id}")
+                telegramBotHandler.sendMessage('WARN', "There are no tokens configured for device ${device.id}")
+            }
+        } catch (Exception se) {
+            log.warn("Can't connect : ${se.message}")
         }
     }
 

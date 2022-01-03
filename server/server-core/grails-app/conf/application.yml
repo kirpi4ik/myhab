@@ -1,0 +1,151 @@
+---
+grails:
+  profile: vue
+  codegen:
+    defaultPackage: eu.devexpert.madhouse
+  gorm:
+    reactor:
+      # Whether to translate GORM events into Reactor events
+      # Disabled by default for performance reasons
+      events: false
+
+server:
+  port: 8181
+info:
+  app:
+    name: "@info.app.name@"
+    version: "@info.app.version@"
+    grailsVersion: "@info.app.grailsVersion@"
+spring:
+  jmx:
+    unique-names: true
+  main:
+    banner-mode: "off"
+  groovy:
+    template:
+      check-template-location: false
+  devtools:
+    restart:
+      additional-exclude:
+        - "*.gsp"
+        - "**/*.gsp"
+        - "*.gson"
+        - "**/*.gson"
+        - "logback.groovy"
+        - "*.properties"
+  resources:
+    cache:
+      period: 3s
+management:
+  endpoints:
+    enabled-by-default: true
+    web:
+      base-path: "/actuator"
+      path-mapping.health: healthcheck
+      exposure:
+        include: prometheus ,info, health
+
+  endpoint:
+    info:
+      enabled: true
+    prometheus:
+      enabled: true
+    health:
+      show-details: when_authorized
+    metrics:
+      enabled: true
+    httptrace:
+      enabled: true
+
+---
+grails:
+  cors:
+    enabled: true
+    allowedOrigins:
+      - http://localhost:10000
+      - chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam
+      - https://madhouse.app
+      - https://beta.madhouse.app
+  mime:
+    disable:
+      accept:
+        header:
+          userAgents:
+            - Gecko
+            - WebKit
+            - Presto
+            - Trident
+    types:
+      json:
+        - application/json
+        - text/json
+      hal:
+        - application/hal+json
+        - application/hal+xml
+      xml:
+        - text/xml
+        - application/xml
+      atom: application/atom+xml
+      css: text/css
+      csv: text/csv
+      js: text/javascript
+      rss: application/rss+xml
+      text: text/plain
+      all: "*/*"
+  urlmapping:
+    cache:
+      maxsize: 1000
+  controllers:
+    defaultScope: singleton
+  converters:
+    encoding: UTF-8
+---
+quartz:
+  pluginEnabled: true
+  autoStartup: true
+  purgeQuartzTablesOnStartup: false
+  threadPool:
+    class: "org.quartz.simpl.SimpleThreadPool"
+    threadCount: 25
+    threadPriority: 5
+
+hibernate:
+  cache:
+    queries: false
+    use_second_level_cache: false
+    use_query_cache: false
+
+environments:
+  development:
+    quartz:
+      jobStore: false
+    logging:
+      jul:
+        usebridge: true
+    plugin:
+      springsecurity:
+        debug:
+          useFilter: true
+  production:
+    quartz:
+      jobStore: true
+      class: "org.quartz.impl.jdbcjobstore.JobStoreTX"
+      driverDelegateClass: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
+      useProperties: false
+      dataSource: "production"
+      tablePrefix: "qrtz_"
+    logging:
+      jul:
+        usebridge: true
+    plugin:
+      springsecurity:
+        debug:
+          useFilter: true
+graphql:
+  enabled: true
+  graphiql:
+    enabled: true
+    path: /graphiql
+    template-path: classpath:graphiql/index.html
+    template-parameters:
+    page-title: GraphiQL

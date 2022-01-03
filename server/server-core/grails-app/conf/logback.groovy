@@ -2,6 +2,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.core.util.FileSize
 import grails.util.BuildSettings
 import grails.util.Environment
+import grails.util.Metadata
 import net.logstash.logback.composite.GlobalCustomFieldsJsonProvider
 import net.logstash.logback.composite.loggingevent.*
 import net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder
@@ -34,7 +35,7 @@ appender('STDOUT', ConsoleAppender) {
                 fieldName = 'message'
             }
             globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.2.7")}"
+                customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
             }
             threadName(ThreadNameJsonProvider) {
                 fieldName = 'thread'
@@ -83,7 +84,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     fieldName = 'message'
                 }
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.2.7")}"
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
                 }
                 threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
@@ -139,7 +140,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                     fieldName = 'message'
                 }
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
-                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: "2.2.7")}"
+                    customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
                 }
                 threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'

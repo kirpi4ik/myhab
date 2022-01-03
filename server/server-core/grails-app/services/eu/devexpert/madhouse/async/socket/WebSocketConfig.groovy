@@ -14,8 +14,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends DefaultWebSocketConfig {
 
-    @Value('${allowedOrigin}')
-    String allowedOrigin
+    def configProvider
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry messageBrokerRegistry) {
@@ -26,7 +25,7 @@ public class WebSocketConfig extends DefaultWebSocketConfig {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/stomp")
-                .setAllowedOrigins(allowedOrigin.split(","))
+                .setAllowedOrigins(configProvider.getList(String.class, "cors.allowedOrigin") as String[])
                 .withSockJS();
     }
 

@@ -1,11 +1,11 @@
 package eu.devexpert.madhouse.async.mqtt
 
+import eu.devexpert.config.ConfigProvider
 import eu.devexpert.madhouse.async.mqtt.handlers.MQTTMessageHandler
-import grails.core.GrailsApplication
 import groovy.util.logging.Slf4j
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.integration.annotation.IntegrationComponentScan
@@ -29,29 +29,15 @@ import javax.transaction.Transactional
 @Configuration
 public class MQTTConfiguration {
 
-    @Value('${mqtt.hostname}')
-    String hostname
-    @Value('${mqtt.port}')
-    String port
-    @Value('${mqtt.username}')
-    String username
-    @Value('${mqtt.password}')
-    String password
-    @Value('${mqtt.topics}')
-    String topics
+    @Autowired
+    ConfigProvider configProvider
 
     @Bean
     MqttPahoClientFactory mqttClientFactory() {
         MqttConnectOptions options = new MqttConnectOptions();
-        options.setServerURIs(["tcp://${hostname}:${port}"] as String[]);
-
-        if (username != null && !username.isEmpty()) {
-            options.setUserName(username);
-        }
-
-        if (password != null && !password.isEmpty()) {
-            options.setPassword(password.toCharArray());
-        }
+        options.setServerURIs(["tcp://${configProvider.get(String.class, "mqtt.hostname")}:${configProvider.get(String.class, "mqtt.port")}"] as String[]);
+        options.setUserName(configProvider.get(String.class, "mqtt.username"));
+        options.setPassword(configProvider.get(String.class, "mqtt.password").toCharArray());
 
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
         factory.setConnectionOptions(options);
@@ -63,7 +49,7 @@ public class MQTTConfiguration {
     @Transactional
     IntegrationFlow mqttInbound(MqttPahoClientFactory mqttClientFactory
                                 , MQTTMessageHandler mQTTMessageHandler) {
-        def topics = topics.split(",")
+        def topics = configProvider.get(String.class, "mqtt.topics").split(",")
 
         return IntegrationFlows
                 .from(new MqttPahoMessageDrivenChannelAdapter(MqttAsyncClient.generateClientId(), mqttClientFactory, topics as String[]))
