@@ -1,8 +1,10 @@
 include ":web-vue"
 include ":server-core"
+include ":madhouse-config"
 include ":server-rules"
 include ":server-grails"
 
 project(':server-rules').projectDir = file('server/server-libs/server-rules')
+project(':madhouse-config').projectDir = file('server/server-libs/madhouse-config')
 project(':server-grails').projectDir = file('server/server-libs/server-grails')
 project(':server-core').projectDir = file('server/server-core')

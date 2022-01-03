@@ -8,9 +8,7 @@ grails:
       # Whether to translate GORM events into Reactor events
       # Disabled by default for performance reasons
       events: false
-  config:
-    locations:
-      - classpath:madhouse.yml
+
 server:
   port: 8181
 info:
@@ -58,16 +56,6 @@ management:
       enabled: true
     httptrace:
       enabled: true
-
-allowedOrigin:  http://localhost:10000,chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam,https://madhouse.app,https://beta.madhouse.app
-heatControlEnabled: true
-autoImportDevices: false
-autoImportPorts: true
-telegram:
-  name: madhouseai_bot
-  token: ***REMOVED***
-  chanelId: -671277047
-  bot1x1ChannelId: 1490407067
 
 ---
 grails:

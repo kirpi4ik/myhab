@@ -28,7 +28,7 @@ grails.plugin.springsecurity.rest.logout.endpointUrl = "/api/logout"
 
 grails.plugin.springsecurity.rest.token.storage.jwt.useSignedJwt = true
 grails.plugin.springsecurity.rest.token.storage.jwt.expiration = 36000
-grails.plugin.springsecurity.rest.token.storage.jwt.secret = '***REMOVED***'
+grails.plugin.springsecurity.rest.token.storage.jwt.secret = System.getenv("JWT_SECRET")
 grails.plugin.springsecurity.rest.token.generation.jwt.algorithm = "HS256"
 grails.plugin.springsecurity.rest.token.generation.jwt.jweAlgorithm = "RSA-OAEP"
 
@@ -73,13 +73,7 @@ grails.plugin.springsecurity.filterChain.chainMap = [
         [pattern: '/securedOAuth2Resources/**', filters: 'JOINED_FILTERS,-securityContextPersistenceFilter,-logoutFilter,-authenticationProcessingFilter,-rememberMeAuthenticationFilter,-oauth2BasicAuthenticationFilter,-exceptionTranslationFilter'],
         [pattern: '/**', filters: 'JOINED_FILTERS,-statelessSecurityContextPersistenceFilter,-oauth2ProviderFilter,-clientCredentialsTokenEndpointFilter,-oauth2BasicAuthenticationFilter,-oauth2ExceptionTranslationFilter']
 ]
-mqtt {
-    hostname = System.getenv("MQTT_HOST")
-    port = System.getenv("MQTT_PORT")
-    username = System.getenv("MQTT_USERNAME")
-    password = System.getenv("MQTT_PASSWORD")
-    topics = "madhouse/#,mp50/+,mp51/+,mp52/+,mp53/+,mp54/+,mp55/+,mp56/+,me60/+,me61/+,me62/+,me63/+,me64/+,me65/+"
-}
+
 dataSource {
     driverClassName = "org.postgresql.Driver"
     dialect = "org.hibernate.dialect.PostgreSQLDialect"

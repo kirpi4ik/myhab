@@ -13,9 +13,13 @@ buildscript {
     }
 }
 
+apply plugin: "java"
 apply plugin: "org.grails.grails-web"
 apply plugin: "org.grails.plugins.views-json"
 apply plugin: "org.grails.grails-gsp"
+
+sourceCompatibility = "11"; // for example
+targetCompatibility = "11"; // defaults to sourceCompatibility
 
 repositories {
     mavenLocal()
@@ -45,6 +49,7 @@ dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     compile project(':server-rules')
+    compile project(':madhouse-config')
     compile project(':server-grails')
     compile 'io.micrometer:micrometer-core:latest.release'
     compile 'io.micrometer:micrometer-registry-prometheus:latest.release'
