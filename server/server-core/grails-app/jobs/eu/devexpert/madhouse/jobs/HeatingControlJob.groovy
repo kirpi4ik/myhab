@@ -35,17 +35,14 @@ class HeatingControlJob implements Job, EventPublisher {
     }
     public static final String PERIPHERAL_HEAT_CTRL_CATEGORY = "HEAT"
     public static final String PERIPHERAL_TEMPERATURE_SENSOR_CATEGORY = 'TEMP'
-    def heatService
-    def tempAllDay = 21
+    def configProvider
 
     static group = "Internal"
     static description = "Heat control"
-    @Value('${heatControlEnabled}')
-    boolean heatControlEnabled
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-        if (heatControlEnabled) {
+        if (configProvider.get(Boolean.class, "heat.thermostat.enabled")) {
             def actions = [:]
             Set<Zone> allzones = Zone.findAll()
             def zonesWithScheduledTemp = allzones.findAll { zone -> zone.getConfigurations().find { configuration -> configuration.key == CONFIG_LIST_SCHEDULED_TEMP } != null }.sort { zone -> zone.parent }.reverse()
@@ -115,7 +112,7 @@ class HeatingControlJob implements Job, EventPublisher {
 
     def getDesiredTemperature(Zone zone) {
         def now = DateTime.now()
-        def setTemp = Double.valueOf(zone.configurations.find { config -> config.key == CONFIG_TEMP_ALL_DAY }?.value ?: tempAllDay)
+        def setTemp = Double.valueOf(zone.configurations.find { config -> config.key == CONFIG_TEMP_ALL_DAY }?.value ?: configProvider.get(Integer.class, "heat.temp.allDay"))
         Set<Configuration> tempScheduler = zone.configurations.findAll { config -> config.key == CONFIG_LIST_SCHEDULED_TEMP }.sort { it.value }
 
         for (Configuration config : tempScheduler) {

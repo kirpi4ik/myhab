@@ -14,13 +14,7 @@ class DeviceService {
 
     def megaDriverService
     def espService
-
-    @Value('${autoImportDevices}')
-    boolean autoImportDevices
-
-    @Value('${autoImportPorts}')
-    boolean autoImportPorts
-
+    def configProvider
 
     DevicePort importPort(Device deviceController, def portType, def portCode) {
         def devicePort = DevicePort.withCriteria {
@@ -31,7 +25,7 @@ class DeviceService {
             maxResults(1)
         }
 
-        if (devicePort == null && autoImportPorts) {
+        if (devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport")) {
             if (device.model.equals(DeviceModel.MEGAD_2561_RTC)) {
                 devicePort = megaDriverService.readPortConfigFromController(device.code, portCode, portCode)
                 device.addToPorts(devicePort)
@@ -41,13 +35,13 @@ class DeviceService {
         return devicePort
     }
 
-    Device importDevice(DeviceModel deviceModel, String deviceCode) {
+    Device importDevice(String deviceModel, String deviceCode) {
         Device device = Device.withCriteria {
-            eq('model', deviceModel)
+            eq('model', DeviceModel.valueOf(deviceModel))
             eq('code', deviceCode)
             maxResults(1)
         }
-        if (device == null && autoImportDevices) {
+        if (device == null && configProvider.get(Boolean.class, "admin.devices.autoimport")) {
             if (deviceModel.equals(DeviceModel.MEGAD_2561_RTC)) {
                 device = megaDriverService.readConfig(deviceCode)
                 device?.save(failOnError: false, flush: true)
