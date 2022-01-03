@@ -1,0 +1,31 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven { url "https://repo.grails.org/grails/core" }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+}
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'idea'
+}
+
+repositories {
+    mavenLocal()
+    maven { url "https://repo.grails.org/grails/core" }
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:2.5.8'
+    implementation 'org.springframework:spring-beans:5.1.18.RELEASE'
+    runtime 'org.yaml:snakeyaml:1.30'
+    runtime 'commons-beanutils:commons-beanutils:1.9.4'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
+    implementation 'org.kohsuke:github-api:1.301'
+    implementation 'com.konghq:unirest-java:3.11.09'
+
+    compile 'org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r'
+
+
+}

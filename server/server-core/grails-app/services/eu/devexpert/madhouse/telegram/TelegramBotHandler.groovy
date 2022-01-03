@@ -1,6 +1,6 @@
 package eu.devexpert.madhouse.telegram
 
-import org.springframework.beans.factory.annotation.Value
+import eu.devexpert.config.ConfigProvider
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.methods.ParseMode
@@ -18,26 +18,16 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException
  */
 @Component
 class TelegramBotHandler extends TelegramLongPollingBot {
-    @Value('${telegram.name}')
-    String name;
-
-    @Value('${telegram.token}')
-    String token;
-
-    @Value('${telegram.chanelId}')
-    String privateChannelId;
-
-    @Value('${telegram.bot1x1ChannelId}')
-    String bot1x1ChannelId;
+    ConfigProvider configProvider
 
     @Override
     public String getBotUsername() {
-        return name;
+        return configProvider.get(String.class, "telegram.name");
     }
 
     @Override
     public String getBotToken() {
-        return token;
+        return configProvider.get(String.class, "telegram.token");
     }
 
     private final String GATE_OPEN_LABEL = "Deschide poarta";
@@ -64,7 +54,7 @@ class TelegramBotHandler extends TelegramLongPollingBot {
     def sendMessage(String level, msg) {
         SendMessage message = new SendMessage();
         message.setText("${level} | ${msg}");
-        message.setChatId(String.valueOf(privateChannelId));
+        message.setChatId(configProvider.get(String.class, "telegram.chanelId"));
         execute(message)
     }
 
@@ -112,7 +102,7 @@ class TelegramBotHandler extends TelegramLongPollingBot {
     def sendInfoToSupport(String message) throws TelegramApiException {
         SendMessage messageSupport = new SendMessage();
         messageSupport.setText(message);
-        messageSupport.setChatId(bot1x1ChannelId);
+        messageSupport.setChatId(configProvider.get(String.class, "telegram.bot1x1ChannelId"));
 
         execute(messageSupport);
     }
