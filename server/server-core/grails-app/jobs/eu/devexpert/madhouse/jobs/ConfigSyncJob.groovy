@@ -6,19 +6,21 @@ import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
 
+import java.util.concurrent.TimeUnit
+
 @Slf4j
 @DisallowConcurrentExecution
 class ConfigSyncJob implements Job {
     static triggers = {
-        simple repeatInterval: 5000 // execute job once in 5 seconds
+        simple repeatInterval: TimeUnit.SECONDS.toMillis(120)
     }
     def configProvider
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
         configProvider.asyncLoad({ loaded ->
-            if (!loaded) {
-                log.error "something is wrong with config"
+            if (loaded) {
+                log.debug "Configuration updated"
             }
         })
     }
