@@ -41,12 +41,12 @@ class User extends BaseEntity {
     }
 
     static graphql = GraphQLMapping.lazy {
-        query('userByUid', User) {
-            argument('uid', String)
+        query('userById', User) {
+            argument('id', String)
             dataFetcher(new DataFetcher() {
                 @Override
                 Object get(DataFetchingEnvironment environment) {
-                    User.findByUid(environment.getArgument('uid'))
+                    User.findById(environment.getArgument('id'))
                 }
             })
         }

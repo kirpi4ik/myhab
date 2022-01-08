@@ -21,8 +21,8 @@ class Query {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
-                def userUid = environment.getArgument("userUid")
-                def user = User.findByUid(userUid)
+                def userId = environment.getArgument("userId")
+                def user = User.findById(userId)
                 def userRoles = user.authorities
                 def response = []
                 user.authorities.each {

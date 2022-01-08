@@ -11,7 +11,7 @@
         </div>
         <slot name="body" class="card-footer">
             <div class="card-body row text-center">
-                <div class="col" v-on:click="lightNav(zoneUidLeft, categoryUid)" style="cursor: pointer">
+                <div class="col" v-on:click="lightNav(zoneIdLeft, category)" style="cursor: pointer">
                     <div v-if="leftHeader" class="text-value-lg">
                         {{leftHeader}}
                     </div>
@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="c-vr"></div>
-                <div class="col" v-on:click="lightNav(zoneUidRight, categoryUid)" style="cursor: pointer">
+                <div class="col" v-on:click="lightNav(zoneIdRight, category)" style="cursor: pointer">
                     <div v-if="rightHeader" class="text-value-lg">
                         {{rightHeader}}
                     </div>
@@ -46,14 +46,14 @@
             rightFooter: String,
             leftHeader: String,
             leftFooter: String,
-            zoneUidLeft: String,
-            zoneUidRight: String,
-            categoryUid: String,
+            zoneIdLeft: String,
+            zoneIdRight: String,
+            category: String,
             addHeaderClasses: [String, Array, Object]
         },
         methods: {
-            lightNav: function (zoneUid, categoryUid) {
-                router.push({path: 'zones', query: {zoneUid: zoneUid, categoryUid: categoryUid}})
+            lightNav: function (zoneId, category) {
+                router.push({path: `zones/${zoneId}`, query: {category: category}})
             }
         }
     }

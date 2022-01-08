@@ -10,7 +10,7 @@
                 </div>
                 <div style="display: inline">
                     <div v-if="hasRole(['ROLE_ADMIN'])" style="display: inline-block">
-                        <EventLogger :peripheral="{'data':peripheral}" :name="peripheral.uid"></EventLogger>
+                        <EventLogger :peripheral="{'data':peripheral}" :name="peripheral.id"></EventLogger>
                     </div>
                     <div style="display: inline-block; margin-left: 1em">
                         <h4>

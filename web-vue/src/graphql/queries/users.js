@@ -25,8 +25,8 @@ export const USERS_GET_ALL = gql`
     }
 `;
 export const USER_GET_BY_ID = gql`
-    query findUserByUid($uid:String!){
-        userByUid(uid: $uid) {
+    query findUserById($id:String!){
+        userById(id: $id) {
             id
             uid
             name
@@ -42,8 +42,8 @@ export const USER_GET_BY_ID = gql`
     }
 `;
 export const USER_GET_BY_ID_WITH_ROLES = gql`
-    query findUserByUid($uid:String!){
-        userByUid(uid: $uid) {
+    query findUserById($id:String!){
+        userById(id: $id) {
             id
             uid
             name
@@ -56,7 +56,7 @@ export const USER_GET_BY_ID_WITH_ROLES = gql`
             firstName
             lastName
         }
-        userRolesForUser(userUid: $uid) {
+        userRolesForUser(userId: $id) {
             userId
             roleId
         }
@@ -70,6 +70,7 @@ export const USER_GET_BY_ID_WITH_ROLES = gql`
 export const USER_CREATE = gql`
     mutation($user: UserCreate) {
         userCreate(user: $user) {
+            id
             uid
         }
     }
@@ -82,12 +83,12 @@ export const USER_DELETE = gql`
     }
 `;
 export const ROLES_GET_FOR_USER = gql`
-    query rolesForUser($uid: String!) {
+    query rolesForUser($id: String!) {
         roleList {
             id
             authority
         }
-        userRolesForUser(userUid: $uid) {
+        userRolesForUser(userId: $id) {
             userId
             roleId
         }

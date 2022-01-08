@@ -74,7 +74,7 @@ function configRoutes() {
                     meta: {authorize: [Role.Admin, Role.User]}
                 },
                 {
-                    path: 'zones',
+                    path: 'zones/:zoneId/',
                     name: i18n.t('breadcrumb.zones'),
                     component: Zones,
                     meta: {authorize: [Role.Admin, Role.User]}

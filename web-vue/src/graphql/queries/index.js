@@ -9,11 +9,11 @@ export * from './configurations';
 export * from './users';
 
 export const NAV_BREADCRUMB = gql`
-    query navigation($zoneUid:String){
+    query navigation($zoneId:String){
         navigation {
-            breadcrumb(zoneUid:$zoneUid) {
+            breadcrumb(zoneId:$zoneId) {
                 name
-                zoneUid
+                zoneId
             }
         }
     }

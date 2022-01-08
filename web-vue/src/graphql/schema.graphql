@@ -7,7 +7,7 @@ schema {
 
 type BradCrumbLink {
     name: String
-    zoneUid: String
+    zoneId: String
 }
 
 type Cable {
@@ -276,18 +276,6 @@ type EventDefinition {
     uid: String
 }
 
-type EventLog {
-    entityType: EntityType
-    "A list of validation errors on the entity"
-    errors: [Error]
-    id: Long
-    payload: String
-    peripheral: DevicePeripheral
-    tsCreated: Date
-    tsUpdated: Date
-    uid: String
-}
-
 type EventSubscription {
     entityType: EntityType
     "A list of validation errors on the entity"
@@ -388,9 +376,6 @@ type Mutation {
     eventDataCreate(eventData: EventDataCreate): EventData
     eventDataDelete(id: Long!): DeleteResult
     eventDataUpdate(eventData: EventDataUpdate, id: Long!): EventData
-    eventLogCreate(eventLog: EventLogCreate): EventLog
-    eventLogDelete(id: Long!): DeleteResult
-    eventLogUpdate(eventLog: EventLogUpdate, id: Long!): EventLog
     layerCreate(layer: LayerCreate): Layer
     layerDelete(id: Long!): DeleteResult
     layerUpdate(id: Long!, layer: LayerUpdate): Layer
@@ -434,7 +419,7 @@ type MutationResponse {
 }
 
 type Navigation {
-    breadcrumb(zoneUid: String): [BradCrumbLink]
+    breadcrumb(zoneId: String): [BradCrumbLink]
 }
 
 type NetworkAddressEmbedded {
@@ -504,7 +489,7 @@ type PortValue {
 
 type Query {
     cable(id: Long!): Cable
-    cableByUid(uid: String!): Cable
+    cableById(id: String!): Cable
     cableCategory(id: Long!): CableCategory
     cableCategoryCount: Int
     cableCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [CableCategory]
@@ -522,14 +507,14 @@ type Query {
     deviceAccount(id: Long!): DeviceAccount
     deviceAccountCount: Int
     deviceAccountList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceAccount]
-    deviceByUid(uid: String!): Device
+    deviceById(id: String!): Device
     deviceCategory(id: Long!): DeviceCategory
     deviceCategoryCount: Int
     deviceCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceCategory]
     deviceCount: Int
     deviceList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Device]
     devicePeripheral(id: Long!): DevicePeripheral
-    devicePeripheralByUid(uid: String!): DevicePeripheral
+    devicePeripheralById(id: String!): DevicePeripheral
     devicePeripheralCount: Int
     devicePeripheralList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DevicePeripheral]
     devicePort(id: Long!): DevicePort
@@ -541,9 +526,6 @@ type Query {
     eventData(id: Long!): EventData
     eventDataCount: Int
     eventDataList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [EventData]
-    eventLog(id: Long!): EventLog
-    eventLogCount: Int
-    eventLogList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [EventLog]
     eventsByP2(count: Int!, offset: Int!, p2: String!): [EventData]
     layer(id: Long!): Layer
     layerCount: Int
@@ -570,15 +552,15 @@ type Query {
     scenarioCount: Int
     scenarioList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Scenario]
     user(id: Long!): User
-    userByUid(uid: String!): User
+    userById(id: String!): User
     userCount: Int
     userList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [User]
     userRolesForUser(userUid: String!): [UserRole]
     zone(id: Long!): Zone
-    zoneByUid(uid: String!): Zone
+    zoneById(id: String!): Zone
     zoneCount: Int
     zoneList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Zone]
-    zonesByParentUid(uid: String!): [Zone]
+    zonesByParentId(id: String!): [Zone]
     zonesRoot: [Zone]
 }
 
@@ -670,6 +652,7 @@ type Zone {
 enum DeviceModel {
     ESP8266_1
     MEGAD_2561_RTC
+    NIBE_F1145_8_EM
     TMEZON_INTERCOM
 }
 
@@ -681,6 +664,7 @@ enum DeviceStatus {
 enum EntityType {
     CABLE
     CABLE_CATEGORY
+    CONFIG
     DEVICE
     EVENT_DATA
     PATCH_PANEL
@@ -1307,24 +1291,6 @@ input EventDefinitionUpdateNested {
     uid: String
 }
 
-input EventLogCreate {
-    entityType: EntityType
-    payload: String!
-    peripheral: DevicePeripheralCreateNested!
-    tsCreated: Date
-    tsUpdated: Date
-    uid: String
-}
-
-input EventLogUpdate {
-    entityType: EntityType
-    payload: String
-    peripheral: DevicePeripheralUpdateNested
-    tsCreated: Date
-    tsUpdated: Date
-    uid: String
-}
-
 input EventSubscriptionCreateNested {
     entityType: EntityType
     events: [EventDefinitionCreateNested]
@@ -1637,8 +1603,8 @@ input RoleUpdate {
 }
 
 input SaveUserRoles {
+    userId: String!
     userRoles: [UserRoleRef]
-    userUid: String!
 }
 
 input ScenarioCreate {

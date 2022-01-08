@@ -95,7 +95,7 @@ class UIMessageService implements EventPublisher {
     @Subscriber('evt_light_set_color')
     def receiveColorEvent(event) {
         if (PERIPHERAL.isEqual(event.data.p1)) {
-            def peripheral = DevicePeripheral.findByUid(event.data.p2)
+            def peripheral = DevicePeripheral.findById(event.data.p2)
             def args = [:]
             args.portUids = []
             peripheral.getConnectedTo().each { port ->
@@ -168,7 +168,7 @@ class UIMessageService implements EventPublisher {
     @Subscriber('evt_presence')
     def presence(event) {
         if (PERIPHERAL.isEqual(event.data.p1)) {
-            def peripheral = DevicePeripheral.findByUid(event.data.p2)
+            def peripheral = DevicePeripheral.findById(Long.valueOf(event.data.p2))
             if (peripheral.category.name == "PRESENCE") {
                 def args = [:]
                 args.portUids = []

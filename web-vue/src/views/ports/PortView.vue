@@ -48,7 +48,7 @@
                                                         </div>
                                                     </div>
                                                     <div v-if="Array.isArray(item.value)">
-                                                        <CBadge color="success" v-for="(badge) in item.value" style="margin-right: 2px" v-bind:key="badge.uid">
+                                                        <CBadge color="success" v-for="(badge) in item.value" style="margin-right: 2px" v-bind:key="badge.id">
                                                             {{badge.name}}
                                                         </CBadge>
                                                     </div>
@@ -209,7 +209,7 @@
                 this.$apollo.mutate({
                     mutation: PERIPHERAL_CREATE, variables: {devicePeripheral: this.portToUpdate}
                 }).then(response => {
-                    this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.devicePort.uid + "/view"})
+                    this.$router.push({path: "/devices/" + this.$route.params.idPrimary + "/ports/" + response.data.devicePort.id + "/view"})
                 });
             },
             navEdit(item, index) {
