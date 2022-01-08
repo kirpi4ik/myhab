@@ -17,18 +17,18 @@ class Navigation {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
-                def zoneUid = environment.getArgument("zoneUid")
+                def zoneId = environment.getArgument("zoneId")
                 def zones = []
-                getParent(zones, zoneUid)
+                getParent(zones, zoneId)
                 return zones.reverse()
             }
 
-            def getParent(zones, zoneUid) {
-                if (zoneUid != null) {
-                    def zone = Zone.findByUid(zoneUid)
-                    zones << [name: zone.name, zoneUid: zone.uid]
+            def getParent(zones, zoneId) {
+                if (zoneId != null) {
+                    def zone = Zone.findById(zoneId)
+                    zones << [name: zone.name, zoneId: zone.id]
                     if (zone.parent != null) {
-                        getParent(zones, zone.parent.uid)
+                        getParent(zones, zone.parent.id)
                     }
                 }
             }

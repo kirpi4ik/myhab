@@ -76,7 +76,7 @@
                 this.$apollo.mutate({
                     mutation: USER_CREATE, variables: {user: this.userToCreate}
                 }).then(response => {
-                    this.$router.push({path: "/users/" + response.data.userCreate.uid+ "/profile"})
+                    this.$router.push({path: "/users/" + response.data.userCreate.id+ "/profile"})
                 });
             }
         }

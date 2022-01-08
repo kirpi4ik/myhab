@@ -1,11 +1,11 @@
 <template>
     <div style="display: inline">
-        <div v-for="port in tempDisplay.portIds" style="display: inline-block" class="temp_display" v-bind:key="port.id"> {{port.value}} &#176;C</div>
+        <div v-for="port in tempDisplay.portIds" style="display: inline-block" class="temp_display" v-bind:key="port.uid"> {{port.value}} &#176;C</div>
     </div>
 </template>
 <script>
     export default {
-        name: 'TempDisplay',
+        name: 'MotionDisplayControl',
         props: {
             zone: Object
         },
@@ -24,7 +24,7 @@
             loadInitial() {
                 let portIds = this.tempDisplay.portIds;
                 this.zone.peripherals.forEach(function (peripheral, index) {
-                    if (peripheral.category.name == process.env.VUE_APP_CONF_PH_TEMP) {
+                    if (peripheral.category.name == 'MOTION') {
                         peripheral.connectedTo.forEach(function (port, index) {
                             portIds.push(port);
                         });
