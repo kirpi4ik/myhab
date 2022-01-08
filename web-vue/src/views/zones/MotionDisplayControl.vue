@@ -1,6 +1,6 @@
 <template>
     <div style="display: inline">
-        <div v-for="port in tempDisplay.portIds" style="display: inline-block" class="temp_display" v-bind:key="port.uid"> {{port.value}} &#176;C</div>
+        <div v-for="port in motionDisplay.portIds" style="display: inline-block" class="temp_display" v-bind:key="port.uid"> {{port.value}} </div>
     </div>
 </template>
 <script>
@@ -11,7 +11,7 @@
         },
         data() {
             return {
-                tempDisplay: {
+                motionDisplay: {
                     show: false,
                     portIds: []
                 },
@@ -22,7 +22,7 @@
         },
         methods: {
             loadInitial() {
-                let portIds = this.tempDisplay.portIds;
+                let portIds = this.motionDisplay.portIds;
                 this.zone.peripherals.forEach(function (peripheral, index) {
                     if (peripheral.category.name == 'MOTION') {
                         peripheral.connectedTo.forEach(function (port, index) {
