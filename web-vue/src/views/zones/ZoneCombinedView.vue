@@ -17,6 +17,7 @@
                         <div style="display: inline">
                             <HeatScheduler :zone="zone" :name="zone.name" v-if="category === categoryHeat"/>
                             <TempDisplay :zone="zone" :name="zone.name" v-if="category === categoryTemp"/>
+                            <MotionDisplayControl :zone="zone" :name="zone.name" v-if="category === 'MOTION'"/>
                         </div>
                         <div v-on:click="navZone(zone.id)" style="cursor:pointer; height: 100%">
                             <h2 class="mb-0">{{zone.name}}</h2>
