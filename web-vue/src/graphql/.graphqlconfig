@@ -7,7 +7,7 @@
         "url": "http://localhost:8181/graphql",
         "headers": {
           "user-agent": "JS GraphQL",
-          "Authorization": "Bearer "
+          "Authorization": "Bearer ***REMOVED***"
         },
         "introspect": true
       }

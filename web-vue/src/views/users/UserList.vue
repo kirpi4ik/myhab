@@ -25,7 +25,7 @@
 
                             <template #status="data">
                                 <td>
-                                    <CButton color="success" @click="viewUserDetails(data.item.uid)">View</CButton>
+                                    <CButton color="success" @click="viewUserDetails(data.item.id)">View</CButton>
                                     |
                                     <CButton color="danger" @click="modalCheck(data.item)" class="mr-auto">
                                         Remove
@@ -112,11 +112,11 @@
                         : status === 'Pending' ? 'warning'
                             : status === 'Banned' ? 'danger' : 'primary'
             },
-            userLink(uid) {
-                return `users/${uid}/profile`
+            userLink(id) {
+                return `users/${id}/profile`
             },
-            viewUserDetails(uid) {
-                const userLink = this.userLink(uid)
+            viewUserDetails(id) {
+                const userLink = this.userLink(id)
                 this.$router.push({path: userLink})
             }
         }

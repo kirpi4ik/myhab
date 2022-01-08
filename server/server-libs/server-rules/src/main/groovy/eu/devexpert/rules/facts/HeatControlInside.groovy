@@ -16,7 +16,7 @@ class HeatControlInside extends BasicRule {
     }
 
     public void execute(Facts facts) throws Exception {
-//        heatService.heatOn(facts["zoneUid"])
+//        heatService.heatOn(facts["zoneId"])
         println "XYZ:::$name::" + facts[name]
     }
 

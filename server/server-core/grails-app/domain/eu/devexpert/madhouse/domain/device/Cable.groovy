@@ -46,12 +46,12 @@ class Cable extends BaseEntity {
     }
 
     static graphql = GraphQLMapping.lazy {
-        query('cableByUid', Cable) {
-            argument('uid', String)
+        query('cableById', Cable) {
+            argument('id', String)
             dataFetcher(new DataFetcher() {
                 @Override
                 Object get(DataFetchingEnvironment environment) {
-                    Cable.findByUid(environment.getArgument('uid'))
+                    Cable.findById(environment.getArgument('id'))
                 }
             })
         }

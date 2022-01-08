@@ -108,7 +108,7 @@
                     mutation: USER_VALUE_UPDATE, variables: {id: this.user.id, user: this.userToUpdate}
                 }).then(response => {
                     let roles = {
-                        "userUid": this.user.uid,
+                        "userId": this.user.id,
                         "userRoles": this.roles.filter(function (role) {
                             return role.checked
                         }.bind(this)).map(function (role, index) {
@@ -131,7 +131,7 @@
                 let loadRoles = function () {
                     this.$apollo.query({
                         query: ROLES_GET_FOR_USER,
-                        variables: {uid: this.user.uid},
+                        variables: {id: this.user.id},
                         fetchPolicy: 'network-only'
                     }).then(response => {
                         this.roles = response.data.roleList.map(function (role, index) {
@@ -145,10 +145,10 @@
 
                 this.$apollo.query({
                     query: USER_GET_BY_ID,
-                    variables: {uid: this.$route.params.idPrimary},
+                    variables: {id: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    this.user = response.data.userByUid;
+                    this.user = response.data.userById;
                     const userDetailsToMap = this.user ? Object.entries(this.user) : [['id', 'Not found']]
                     this.userDetails = userDetailsToMap.map(([key, value]) => {
                         return {key, value}

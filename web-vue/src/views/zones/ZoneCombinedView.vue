@@ -5,25 +5,25 @@
                 <CLink v-on:click="navRoot">Acasa</CLink>
                 >
             </div>
-            <div v-for="link in breadcrumb" v-bind:key="link.zoneUid" class="bottom-space">
-                <CLink v-text="link.name" v-on:click="navZone(link.zoneUid)"></CLink>
+            <div v-for="link in breadcrumb" v-bind:key="link.zoneId" class="bottom-space">
+                <CLink v-text="link.name" v-on:click="navZone(link.zoneId)"></CLink>
                 >
             </div>
         </CRow>
         <CRow>
-            <CCol md="3" sm="6" v-for="zone in childZones" v-bind:key="zone.uid" class="dashboard">
+            <CCol md="3" sm="6" v-for="zone in childZones" v-bind:key="zone.id" class="dashboard">
                 <div class="card" :class="`zone-card-background text-white`">
                     <div class="card-body">
                         <div style="display: inline">
-                            <HeatScheduler :zone="zone" :name="zone.name" v-if="categoryUid === peripheralHeatUid"/>
-                            <TempDisplay :zone="zone" :name="zone.name" v-if="categoryUid === peripheralTempUid"/>
+                            <HeatScheduler :zone="zone" :name="zone.name" v-if="category === categoryHeat"/>
+                            <TempDisplay :zone="zone" :name="zone.name" v-if="category === categoryTemp"/>
                         </div>
-                        <div v-on:click="navZone(zone.uid)" style="cursor:pointer; height: 100%">
+                        <div v-on:click="navZone(zone.id)" style="cursor:pointer; height: 100%">
                             <h2 class="mb-0">{{zone.name}}</h2>
                         </div>
                     </div>
                     <slot name="footer" class="card-footer">
-                        <div class="zone-card-footer" v-on:click="navZone(zone.uid)" style="cursor:pointer">
+                        <div class="zone-card-footer" v-on:click="navZone(zone.id)" style="cursor:pointer">
                             <slot></slot>
                         </div>
                     </slot>
@@ -32,14 +32,14 @@
         </CRow>
         <CRow>
             <CCol md="3" sm="6" v-for="peripheral in peripheralList" :key="peripheral.id">
-                <PeriphLightControl :peripheral="peripheral" v-if="categoryUid === peripheralLightUid"></PeriphLightControl>
-                <PeriphTempControl :peripheral="peripheral" v-if="categoryUid === peripheralTempUid"></PeriphTempControl>
-                <PeriphHeatControl :peripheral="peripheral" v-if="categoryUid === peripheralHeatUid"></PeriphHeatControl>
+                <PeriphLightControl :peripheral="peripheral" v-if="category === categoryLight"></PeriphLightControl>
+                <PeriphTempControl :peripheral="peripheral" v-if="category === categoryTemp"></PeriphTempControl>
+                <PeriphHeatControl :peripheral="peripheral" v-if="category === categoryHeat"></PeriphHeatControl>
             </CCol>
         </CRow>
         <CRow>
             <CCol>
-                <TempChartControl v-if="categoryUid === peripheralTempUid"/>
+                <TempChartControl v-if="category === categoryTemp"/>
 
             </CCol>
         </CRow>
@@ -50,7 +50,7 @@
 <script>
     import {router} from '@/_helpers';
 
-    import {NAV_BREADCRUMB, ZONE_GET_BY_UID, ZONES_GET_ROOT,} from "../../graphql/queries";
+    import {NAV_BREADCRUMB, ZONE_GET_BY_ID, ZONES_GET_ROOT} from "../../graphql/queries";
     import PeriphLightControl from './PeriphLightControl'
     import PeriphHeatControl from './PeriphHeatControl'
     import PeriphTempControl from './PeriphTempControl'
@@ -75,10 +75,10 @@
                 childZones: [],
                 peripheralList: [],
                 breadcrumb: [],
-                categoryUid: this.$route.query.categoryUid,
-                peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
-                peripheralTempUid: process.env.VUE_APP_CONF_PH_TEMP_UID,
-                peripheralHeatUid: process.env.VUE_APP_CONF_PH_HEAT_UID
+                category: this.$route.query.category,
+                categoryLight: process.env.VUE_APP_CONF_PH_LIGHT,
+                categoryTemp: process.env.VUE_APP_CONF_PH_TEMP,
+                categoryHeat: process.env.VUE_APP_CONF_PH_HEAT
             }
         },
         created() {
@@ -135,19 +135,19 @@
                 let peripheralFilter = function (peripheral) {
                     //TODO: Add filter in query
                     //filter out peripheral which has categories different from the one requested in url
-                    return peripheral.category.uid === this.$route.query.categoryUid
+                    return peripheral.category.name === this.$route.query.category
                 }.bind(this);
 
                 let localPList
                 //query for root zones , where zones has parent currentLocalZone null
-                if (this.$route.query.zoneUid != null && this.$route.query.zoneUid !== "") {
+                if (this.$route.params.zoneId != null && this.$route.params.zoneId !== "") {
                     this.$apollo.query({
-                        query: ZONE_GET_BY_UID,
-                        variables: {uid: this.$route.query.zoneUid},
+                        query: ZONE_GET_BY_ID,
+                        variables: {id: this.$route.params.zoneId},
                         fetchPolicy: 'network-only'
                     }).then(response => {
                         let data = _.cloneDeep(response.data)
-                        this.currentZone = data.zoneByUid;
+                        this.currentZone = data.zoneById;
                         this.childZones = this.currentZone.zones;
                         localPList = this.currentZone.peripherals.filter(peripheralFilter)
 
@@ -173,24 +173,24 @@
                         localPList.forEach(peripheralInitCallback);
                     });
                 }
-                let zoneUid = null;
-                if (this.$route.query.zoneUid !== "") {
-                    zoneUid = this.$route.query.zoneUid
+                let zoneId = null;
+                if (this.$route.params.zoneId !== "") {
+                    zoneId = this.$route.params.zoneId
                 }
                 this.$apollo.query({
                     query: NAV_BREADCRUMB,
-                    variables: {zoneUid: zoneUid}
+                    variables: {zoneId: zoneId}
                 }).then(response => {
                     if (response.data.navigation != null) {
                         this.breadcrumb = response.data.navigation.breadcrumb;
                     }
                 });
             },
-            navZone: function (zoneUid) {
-                router.push({path: 'zones', query: {zoneUid: zoneUid, categoryUid: this.$route.query.categoryUid}})
+            navZone: function (zoneId) {
+                router.push({path: `${zoneId}`, query: {category: this.$route.query.category}})
             },
             navRoot: function () {
-                router.push({path: 'zones', query: {zoneUid: "", categoryUid: this.$route.query.categoryUid}})
+                router.push({path: '', query: {category: this.$route.query.category}})
             }
         }
     }

@@ -60,7 +60,7 @@
                                 :show.sync="showRGB" v-if="hasRGBSupport">
                             <div style="display: inline">
                                 <div style="display: inline-block">
-                                    <sketch-picker v-model="colors" :name="peripheral.uid" @input="updateValue" :disableAlpha="true"/>
+                                    <sketch-picker v-model="colors" :name="peripheral.id" @input="updateValue" :disableAlpha="true"/>
                                 </div>
                                 <div style="display: inline-block; margin: 10px; vertical-align: top; color: #0b2e13">
                                     <CInputCheckbox

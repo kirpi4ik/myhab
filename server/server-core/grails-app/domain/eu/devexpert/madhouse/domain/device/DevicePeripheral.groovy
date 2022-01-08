@@ -50,12 +50,12 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
             }
             input false
         }
-        query('devicePeripheralByUid', DevicePeripheral) {
-            argument('uid', String)
+        query('devicePeripheralById', DevicePeripheral) {
+            argument('id', String)
             dataFetcher(new DataFetcher() {
                 @Override
                 Object get(DataFetchingEnvironment environment) {
-                    DevicePeripheral.findByUid(environment.getArgument('uid'))
+                    DevicePeripheral.findById(environment.getArgument('id'))
                 }
             })
         }

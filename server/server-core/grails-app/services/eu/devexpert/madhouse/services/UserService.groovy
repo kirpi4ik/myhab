@@ -15,7 +15,7 @@ class UserService extends DefaultDataFetcher {
     Object get(DataFetchingEnvironment environment) throws Exception {
         try {
             def saveUserRoles = environment.getArgument("input")
-            def existingUser = User.findByUid(saveUserRoles.userUid)
+            def existingUser = User.findById(saveUserRoles.userId)
             def newRoleIds = []
             saveUserRoles.userRoles.each {
                 newRoleIds << Long.valueOf("${it.roleId}")

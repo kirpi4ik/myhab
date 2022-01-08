@@ -79,10 +79,10 @@
 
                 this.$apollo.query({
                     query: USER_GET_BY_ID_WITH_ROLES,
-                    variables: {uid: this.$route.params.idPrimary},
+                    variables: {id: this.$route.params.idPrimary},
                     fetchPolicy: 'network-only'
                 }).then(response => {
-                    user = response.data.userByUid;
+                    user = response.data.userById;
                     const userDetailsToMap = user ? Object.entries(user) : [['id', 'Not found']]
                     this.userDetails = userDetailsToMap.map(([key, value]) => {
                         return {key, value}

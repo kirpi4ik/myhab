@@ -46,7 +46,7 @@
         },
         data() {
             return {
-                peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
+                categoryLight: process.env.VUE_APP_CONF_PH_LIGHT,
                 srvPeripherals: {},
                 portToPeripheralMap: {},
                 assetMap: {},
@@ -190,7 +190,7 @@
                     return function (peripheral) {
                         return true//peripheral.category.uid === categoryToKeepId;
                     }
-                    // return peripheral.data.category.uid === this.$route.query.categoryUid
+                    // return peripheral.data.category.uid === this.$route.query.category
                 }.bind(this)
                 let initPeripheralMap = function (peripheral) {
                     if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
@@ -200,14 +200,14 @@
                                 this.portToPeripheralMap[port.id] = []
                             }
                             this.portToPeripheralMap[port.id].push(peripheral.id)
-                            let categoryName = peripheral.category.name.toLowerCase();
-                            if (!this.assetMap[categoryName]) {
-                                this.assetMap[categoryName] = []
+                            let category = peripheral.category.name.toLowerCase();
+                            if (!this.assetMap[category]) {
+                                this.assetMap[category] = []
                             }
-                            if (!this.assetMap[categoryName][port.id]) {
-                                this.assetMap[categoryName][port.id] = []
+                            if (!this.assetMap[category][port.id]) {
+                                this.assetMap[category][port.id] = []
                             }
-                            this.assetMap[categoryName][port.id].push(peripheral.id)
+                            this.assetMap[category][port.id].push(peripheral.id)
                         }
                     }
                 }.bind(this)
@@ -237,7 +237,7 @@
                     let data = _.cloneDeep(response.data)
                     //convert to map
                     data.devicePeripheralList.forEach(initPeripheralMap)
-                    let assets = data.devicePeripheralList.filter(assetCategoryFilter(this.peripheralLightUid));
+                    let assets = data.devicePeripheralList.filter(assetCategoryFilter(this.categoryLight));
                     assets.forEach(initState)
                     this.srvPeripherals = _.reduce(assets, function (hash, value) {
                         var key = value['id'];
