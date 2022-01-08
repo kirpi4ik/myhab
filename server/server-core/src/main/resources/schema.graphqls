@@ -1,6 +1,6 @@
 type Query{
     navigation : Navigation
-    userRolesForUser(userUid: String!): [UserRole]
+    userRolesForUser(userId: String!): [UserRole]
     cache(cacheName: String!, cacheKey: String!): CacheResult
 }
 
@@ -16,7 +16,7 @@ type UserRole {
 }
 
 type Navigation {
-    breadcrumb(zoneUid: String) : [BradCrumbLink]
+    breadcrumb(zoneId: String) : [BradCrumbLink]
 }
 
 type MutationResponse {
@@ -26,7 +26,7 @@ type MutationResponse {
 
 type BradCrumbLink {
     name : String
-    zoneUid : String
+    zoneId : String
 }
 type Mutation {
     pushEvent(input:EventDatInput) : EventDataResponse
@@ -56,7 +56,7 @@ input EventDatInput {
 }
 
 input SaveUserRoles {
-    userUid: String!
+    userId: String!
     userRoles: [UserRoleRef]
 }
 input UserRoleRef {

@@ -21,9 +21,9 @@ export const ZONES_GET_ALL = gql`
             }
         } }
 `;
-export const ZONE_GET_BY_UID = gql`
-    query zoneByUid($uid: String!) {
-        zoneByUid(uid: $uid) {
+export const ZONE_GET_BY_ID = gql`
+    query zoneById($id: String!) {
+        zoneById(id: $id) {
             id
             uid
             name
@@ -38,7 +38,7 @@ export const ZONE_GET_BY_UID = gql`
                     name
                     description
                     category {
-                        uid
+                        name
                     }
                     connectedTo{
                         id
@@ -56,7 +56,7 @@ export const ZONE_GET_BY_UID = gql`
                 name
                 description
                 category {
-                    uid
+                    name
                 }
                 connectedTo{
                     id
@@ -93,7 +93,7 @@ export const ZONES_GET_ROOT = gql`
                 name
                 description
                 category {
-                    uid
+                    name
                 }
                 connectedTo{
                     uid

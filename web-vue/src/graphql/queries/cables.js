@@ -3,6 +3,7 @@ import {gql} from "@apollo/client/core"
 export const CABLE_CREATE = gql`
     mutation($cable: CableCreate) {
         cableCreate(cable: $cable) {
+            id
             uid
         }
     }
@@ -42,8 +43,8 @@ export const CABLE_LIST_ALL = gql`
     }
 `;
 export const CABLE_GET_BY_ID_CHILDS = gql`
-    query cableByUid($uid:String!){
-        cableByUid(uid: $uid) {
+    query cableById($id:String!){
+        cableById(id: $id) {
             id
             uid
             description

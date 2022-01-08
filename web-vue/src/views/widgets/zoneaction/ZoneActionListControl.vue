@@ -10,9 +10,9 @@
                         right-header="Exterior"
                         right-footer="Iluminat"
                         icon="lightbulb"
-                        :zoneUidLeft="zoneIntUid"
-                        :zoneUidRight="zoneExtUid"
-                        :categoryUid="peripheralLightUid"
+                        :zoneIdLeft="zoneIntId"
+                        :zoneIdRight="zoneExtId"
+                        :category="categoryLight"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -25,9 +25,9 @@
                         right-header="Parter"
                         right-footer="Incalzire"
                         icon="fire"
-                        :zoneUidLeft="zoneEtajUid"
-                        :zoneUidRight="zoneParterUid"
-                        :categoryUid="peripheralHeatUid"
+                        :zoneIdLeft="zoneEtajId"
+                        :zoneIdRight="zoneParterId"
+                        :category="categoryHeat"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -40,9 +40,9 @@
                         right-header="Exterior"
                         right-footer="Temperatura"
                         icon="thermometer-half"
-                        :zoneUidLeft="zoneIntUid"
-                        :zoneUidRight="zoneExtUid"
-                        :categoryUid="peripheralTempUid"
+                        :zoneIdLeft="zoneIntId"
+                        :zoneIdRight="zoneExtId"
+                        :category="categoryTemp"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -68,15 +68,15 @@
         },
         data() {
             return {
-                peripheralLightUid: process.env.VUE_APP_CONF_PH_LIGHT_UID,
-                peripheralTempUid: process.env.VUE_APP_CONF_PH_TEMP_UID,
-                peripheralHeatUid: process.env.VUE_APP_CONF_PH_HEAT_UID,
+                categoryLight: process.env.VUE_APP_CONF_PH_LIGHT,
+                categoryTemp: process.env.VUE_APP_CONF_PH_TEMP,
+                categoryHeat: process.env.VUE_APP_CONF_PH_HEAT,
 
-                zoneIntUid: process.env.VUE_APP_CONF_ZONE_INT_UID,
-                zoneExtUid: process.env.VUE_APP_CONF_ZONE_EXT_UID,
+                zoneIntId: process.env.VUE_APP_CONF_ZONE_INT_ID,
+                zoneExtId: process.env.VUE_APP_CONF_ZONE_EXT_ID,
 
-                zoneEtajUid: process.env.VUE_APP_CONF_ZONE_ETAJ_UID,
-                zoneParterUid: process.env.VUE_APP_CONF_ZONE_PARTER_UID,
+                zoneEtajId: process.env.VUE_APP_CONF_ZONE_ETAJ_ID,
+                zoneParterId: process.env.VUE_APP_CONF_ZONE_PARTER_ID,
                 peripheralLockId: Number(process.env.VUE_APP_CONF_PH_LOCK_ID)
             }
         }

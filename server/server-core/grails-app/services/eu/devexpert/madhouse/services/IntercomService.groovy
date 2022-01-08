@@ -26,8 +26,8 @@ class IntercomService {
         }
     }
 
-    def readState(deviceUid) throws UnavailableDeviceException {
-        Device deviceController = Device.findByUid(deviceUid)
+    def readState(deviceId) throws UnavailableDeviceException {
+        Device deviceController = Device.findById(deviceId)
         def state = new DeviceHttpService(device: deviceController, uri: "web/cgi-bin/hi3510/getnetlinknum.cgi?&-getnetlinknum&-time=${DateTime.now().millis}").readState()
     }
 }

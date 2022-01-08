@@ -31,7 +31,7 @@ class Zone extends BaseEntity implements Configurable<Zone> {
     static mapping = {
         table '`zones`'
         sort name: "asc"
-        zones sort : "name"
+        zones sort: "name"
         peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id']
         cables joinTable: [name: "zones_cables_join", key: 'zone_id']
 
@@ -52,23 +52,23 @@ class Zone extends BaseEntity implements Configurable<Zone> {
             input true
         }
 
-        query('zoneByUid', Zone) {
-            argument('uid', String)
+        query('zoneById', Zone) {
+            argument('id', String)
             dataFetcher(new DataFetcher() {
                 @Override
                 Object get(DataFetchingEnvironment environment) {
-                    Zone.findByUid(environment.getArgument('uid'), [sort: "name", order: "asc"])
+                    Zone.findById(environment.getArgument('id') as Long, [sort: "name", order: "asc"])
                 }
             })
         }
-        query('zonesByParentUid', [Zone]) {
-            argument('uid', String)
+        query('zonesByParentId', [Zone]) {
+            argument('id', String)
             dataFetcher(new EntityDataFetcher<Zone>(Zone.gormPersistentEntity) {
                 @Override
                 protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
                     Zone.where {
                         parent {
-                            eq('uid', environment.getArgument('uid') as String)
+                            eq('id', environment.getArgument('id') as Long)
                         }
                     }.order("name", "asc")
 

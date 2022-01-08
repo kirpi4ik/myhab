@@ -54,12 +54,12 @@ class Device extends BaseEntity implements Configurable<Device> {
             }
             input false
         }
-        query('deviceByUid', Device) {
-            argument('uid', String)
+        query('deviceById', Device) {
+            argument('id', String)
             dataFetcher(new DataFetcher() {
                 @Override
                 Object get(DataFetchingEnvironment environment) {
-                    Device.findByUid(environment.getArgument('uid'))
+                    Device.findById(environment.getArgument('id'))
                 }
             })
         }
