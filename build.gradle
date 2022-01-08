@@ -30,6 +30,9 @@ group "eu.devexpert.madhouse"
 allprojects {
     apply plugin: 'idea'
 
+    sourceCompatibility = "11";
+    targetCompatibility = "11";
+
     repositories {
         mavenLocal()
         jcenter()
@@ -156,7 +159,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'openjdk:8u151-jdk-alpine'
+    from 'openjdk:11'
 
     exposePort 8181
     environmentVariable 'GRAILS_ENV', 'production'
