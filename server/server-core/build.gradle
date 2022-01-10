@@ -50,7 +50,6 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     compile project(':server-rules')
     compile project(':madhouse-config')
-    compile project(':server-grails')
     compile 'io.micrometer:micrometer-core:latest.release'
     compile 'io.micrometer:micrometer-registry-prometheus:latest.release'
 
