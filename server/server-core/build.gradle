@@ -49,7 +49,7 @@ dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     compile project(':server-rules')
-    compile project(':madhouse-config')
+    compile project(':server-config')
     compile 'io.micrometer:micrometer-core:latest.release'
     compile 'io.micrometer:micrometer-registry-prometheus:latest.release'
 
