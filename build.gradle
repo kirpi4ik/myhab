@@ -206,4 +206,4 @@ task removeImage(type: DockerRemoveImage) {
     group = dockerBuildGroup
     targetImageId { dockerTag }
 }
-apply from: "${commonBuild}/common-publishing.gradle"
+//apply from: "${commonBuild}/common-publishing.gradle"
