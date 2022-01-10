@@ -1,7 +1,7 @@
 <template>
     <!--https://boxy-svg.com/app/disk:MtaL1PZN9k-->
     <div id="fullscreen">
-        <transition name="slide-fade" v-for="(svgPage) in this.svgPages">
+        <transition name="slide-fade" v-for="(svgPage) in this.svgPages" v-bind:key="svgPage.id">
             <div class="svg-container" v-if="svgPage.visible">
                 <inline-svg
                         :src="svgPage.svgContent"
@@ -68,7 +68,7 @@
 
                     }
                 ],
-                nodes: ['path', 'rect', 'circle', 'polygon', 'polyline', 'text'],
+                nodes: ['path', 'rect', 'circle', 'polygon', 'polyline', 'text', 'g'],
                 showPassword: false,
                 showErrorModal: false,
                 unlockCode: null
@@ -145,8 +145,7 @@
                             } else if (this.srvPeripherals[id].category.name == 'HEAT') {
                                 heatService.toggle(this.srvPeripherals[id])
                             }
-                        }else {
-                            debugger
+                        } else {
                             console.log('null id')
 
                         }
@@ -220,6 +219,7 @@
                             peripheral['state'] = peripheral['portValue'] === 'ON';
                             peripheral['portId'] = port.id;
                             peripheral['portUid'] = port.uid;
+                            peripheral['deviceStatus'] = port.device.status;
                         } else {
                             port = null;
                             state = false;
@@ -283,10 +283,21 @@
                         } else {
                             actionElementClass = "heat-off";
                         }
+                    } else if (svgAsset['category'] == 'MOTION') {
+                        if (srvAsset && srvAsset.state) {
+                            actionElementClass = "motion-off"
+                        } else {
+                            actionElementClass = "motion-on";
+                        }
                     } else if (svgAsset['category'] == 'TEMP') {
                         if (srvAsset && srvAsset.portValue) {
                             svgEl.firstChild.textContent = srvAsset.portValue + '℃'
                         }
+                        if (srvAsset && srvAsset['deviceStatus'] == 'OFFLINE') {
+                            actionElementClass = "device-offline";
+                        }
+
+
                     } else if (svgAsset['category'] == 'LOCK') {
                         actionElementClass = "bulb-off";
                     }
@@ -382,6 +393,20 @@
         fill-rule: nonzero;
     }
 
+    .motion-off {
+        fill: #5a99de;
+        fill-opacity: 0.3;
+        stroke: #70808e;
+        stroke-width: 0.8;
+    }
+
+    .motion-on {
+        fill: #e8b8bc;
+        fill-opacity: 0.3;
+        stroke: #ba1334;
+        stroke-width: 0.8;
+    }
+
     .bulb-on {
         fill: #d6d40f;
         fill-opacity: 0.7;
@@ -392,6 +417,13 @@
         fill-opacity: 0.30;
         stroke: #2b6095;
         stroke-width: 0.5;
+    }
+
+    .device-offline {
+        color: red;
+        fill: rgb(88, 77, 77);
+        stroke: rgb(226, 9, 9);
+        text-decoration: line-through;
     }
 
     circle.heat-on {

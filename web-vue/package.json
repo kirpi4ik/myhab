@@ -85,7 +85,7 @@
     "vue-cli-plugin-i18n": "^1.0.1",
     "vue-headful": "^2.1.0",
     "vue-loader": "^15.9.4",
-    "vue-template-compiler": "^2.6.12",
+    "vue-template-compiler": "^2.6.14",
     "webpack": "^4.44.2",
     "webpack-cli": "^4.1.0",
     "webpack-dev-server": "^3.11.0"
@@ -115,7 +115,7 @@
     "last 2 versions",
     "not ie <= 9"
   ],
-  "copyright": "Copyright 2021 Dumitru Ciubenco",
+  "copyright": "Copyright 2022 Dumitru Ciubenco",
   "engines": {
     "node": ">= 8.10.x",
     "npm": ">= 5.6.0"
