@@ -1,6 +1,7 @@
 package eu.devexpert.config
 
 import groovy.transform.Synchronized
+import groovy.util.logging.Slf4j
 import kong.unirest.Unirest
 import kong.unirest.UnirestException
 import org.apache.commons.configuration2.CompositeConfiguration
@@ -21,14 +22,20 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.springframework.beans.factory.InitializingBean
 
+import java.time.Instant
 import java.util.concurrent.CompletableFuture
 
+@Slf4j
 class ConfigProvider implements InitializingBean {
+    private Date lastSyncDate = Date.from(Instant.ofEpochSecond(0))
     private final static CompositeConfiguration config = new CompositeConfiguration()
+    private final static File cloneDir = File.createTempDir()
+    private Git git
     String repoURI
     String branch
     String username
     String password
+
 
     def <T> T get(final Class<T> cls, final String key) {
         return config.get(cls, key)
@@ -44,50 +51,51 @@ class ConfigProvider implements InitializingBean {
 
     @Synchronized
     private boolean syncLoad() {
+        boolean result
         if (ping(repoURI)) {
             try {
-                Git git = Git.cloneRepository()
-                        .setURI("${repoURI}")
-                        .setDirectory(File.createTempDir())
-                        .setBranchesToClone(Arrays.asList("refs/heads/" + branch))// give ur branch name
-                        .setBranch("refs/heads/" + branch)
-                        .setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password))
-                        .call();
+                git.pull().setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password)).call()
                 def repository = git.getRepository()
                 ObjectId lastCommitId = repository.resolve(Constants.HEAD);
                 RevWalk revWalk = new RevWalk(repository)
                 RevCommit commit = revWalk.parseCommit(lastCommitId);
-                RevTree tree = commit.getTree();
-                TreeWalk treeWalk = new TreeWalk(repository)
-                treeWalk.addTree(tree)
-                treeWalk.setRecursive(true)
-                config.clear()
-                while (treeWalk.next()) {
-                    ObjectId objectId = treeWalk.getObjectId(0)
-                    ObjectLoader loader = repository.open(objectId)
+                if (Date.from(Instant.ofEpochSecond(commit.getCommitTime())).after(lastSyncDate)) {
+                    RevTree tree = commit.getTree();
+                    TreeWalk treeWalk = new TreeWalk(repository)
+                    treeWalk.addTree(tree)
+                    treeWalk.setRecursive(true)
+                    config.clear()
+                    while (treeWalk.next()) {
+                        ObjectId objectId = treeWalk.getObjectId(0)
+                        ObjectLoader loader = repository.open(objectId)
 
-                    if (treeWalk.getPathString().endsWith("yaml") || treeWalk.getPathString().endsWith("yml")) {
-                        YAMLConfiguration yamlConf = new YAMLConfiguration();
-                        yamlConf.read(new StringReader(new String(loader.bytes)))
-                        config.addConfiguration(yamlConf)
-                    } else if (treeWalk.getPathString().endsWith("xml")) {
-                        XMLConfiguration cfg = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
-                        FileHandler fh = new FileHandler(cfg);
-                        fh.load(new StringReader(new String(loader.bytes)));
-                        config.addConfiguration(cfg)
-                    } else if (treeWalk.getPathString().endsWith("json")) {
-                        JSONConfiguration jsonConf = new JSONConfiguration();
-                        jsonConf.read(new StringReader(new String(loader.bytes)))
-                        config.addConfiguration(jsonConf)
+                        if (treeWalk.getPathString().endsWith("yaml") || treeWalk.getPathString().endsWith("yml")) {
+                            YAMLConfiguration yamlConf = new YAMLConfiguration();
+                            yamlConf.read(new StringReader(new String(loader.bytes)))
+                            config.addConfiguration(yamlConf)
+                        } else if (treeWalk.getPathString().endsWith("xml")) {
+                            XMLConfiguration cfg = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
+                            FileHandler fh = new FileHandler(cfg);
+                            fh.load(new StringReader(new String(loader.bytes)));
+                            config.addConfiguration(cfg)
+                        } else if (treeWalk.getPathString().endsWith("json")) {
+                            JSONConfiguration jsonConf = new JSONConfiguration();
+                            jsonConf.read(new StringReader(new String(loader.bytes)))
+                            config.addConfiguration(jsonConf)
+                        }
                     }
+                    lastSyncDate = new Date()
+                    result = true
+                    log.debug("Config synchronization")
                 }
-                return true
+
             } catch (Exception ex) {
-                return false
+                ex.printStackTrace()
+                log.error(ex.message)
             }
-        } else {
-            return false
         }
+
+        return result
     }
 
     boolean ping(uri) {
@@ -95,20 +103,6 @@ class ConfigProvider implements InitializingBean {
             return Unirest.get(uri).asString().status < 400
         } catch (UnirestException ex) {
             return false
-        }
-    }
-
-    public static void main(String[] args) {
-
-        ConfigProvider cf = new ConfigProvider(
-                repoURI: System.getenv("CFG_REPO_URI"),
-                username: System.getenv("CFG_USERNAME"),
-                password: System.getenv("CFG_PASSWORD"),
-                branch: "dev")
-        if (cf.asyncLoad()) {
-            cf.config.keys.each { key ->
-                println "$key=${cf.config.get(Object.class, key)}"
-            }
         }
     }
 
@@ -121,12 +115,21 @@ class ConfigProvider implements InitializingBean {
                 .setDefaultHeader("Accept", "application/json")
                 .followRedirects(true)
                 .enableCookieManagement(false)
+
+
+        git = Git.cloneRepository()
+                .setURI("${repoURI}")
+                .setDirectory(cloneDir)
+                .setBranchesToClone(Arrays.asList("refs/heads/" + branch))// give ur branch name
+                .setBranch("refs/heads/" + branch)
+                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password))
+                .call();
         if (syncLoad()) {
             config.keys.each { key ->
                 println "$key = ${config.get(Object.class, key)}"
             }
         } else {
-            println("ERRRRRRROR")
+            println("Error read config")
         }
     }
 }
