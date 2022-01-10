@@ -97,7 +97,7 @@ task versionTxt() {
     doLast {
         new File("${projectDir}/src/main/docker", "version.txt").text = "${projectVersion}"
         def var = new Properties()
-        def vueEnv = new File("${projectDir}/web-vue/.env")
+        def vueEnv = new File("${projectDir}/client/web-vue/.env")
         var.load(vueEnv.newDataInputStream())
         var.setProperty("VUE_APP_CONF_VERSION", "${projectVersion}")
         var.setProperty("VUE_APP_CONF_VERSION_BUILD_DATE", "${DateTime.now().toString("YYYY-MM-dd'T'HH:mm")}")
