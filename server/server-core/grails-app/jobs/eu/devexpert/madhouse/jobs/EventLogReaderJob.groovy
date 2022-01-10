@@ -21,6 +21,6 @@ class EventLogReaderJob implements Job {
 
   @Override
   void execute(JobExecutionContext context) throws JobExecutionException {
-    log.debug("###################################-${context.getMergedJobDataMap().get("key")}")
+//    log.debug("###################################-${context.getMergedJobDataMap().get("key")}")
   }
 }

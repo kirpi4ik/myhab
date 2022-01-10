@@ -30,6 +30,9 @@ group "eu.devexpert.madhouse"
 allprojects {
     apply plugin: 'idea'
 
+    sourceCompatibility = "11";
+    targetCompatibility = "11";
+
     repositories {
         mavenLocal()
         jcenter()
@@ -94,7 +97,7 @@ task versionTxt() {
     doLast {
         new File("${projectDir}/src/main/docker", "version.txt").text = "${projectVersion}"
         def var = new Properties()
-        def vueEnv = new File("${projectDir}/web-vue/.env")
+        def vueEnv = new File("${projectDir}/client/web-vue/.env")
         var.load(vueEnv.newDataInputStream())
         var.setProperty("VUE_APP_CONF_VERSION", "${projectVersion}")
         var.setProperty("VUE_APP_CONF_VERSION_BUILD_DATE", "${DateTime.now().toString("YYYY-MM-dd'T'HH:mm")}")
@@ -156,7 +159,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'openjdk:8u151-jdk-alpine'
+    from 'openjdk:11'
 
     exposePort 8181
     environmentVariable 'GRAILS_ENV', 'production'
@@ -203,4 +206,4 @@ task removeImage(type: DockerRemoveImage) {
     group = dockerBuildGroup
     targetImageId { dockerTag }
 }
-apply from: "${commonBuild}/common-publishing.gradle"
+//apply from: "${commonBuild}/common-publishing.gradle"
