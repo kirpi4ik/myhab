@@ -3,6 +3,8 @@ package eu.devexpert.madhouse.jobs
 import eu.devexpert.madhouse.async.mqtt.MqttTopicService
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.DeviceModel
+import eu.devexpert.madhouse.domain.device.DeviceStatus
+import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
 import kong.unirest.HttpResponse
 import kong.unirest.Unirest
@@ -14,6 +16,7 @@ import org.quartz.JobExecutionException
 import java.util.concurrent.TimeUnit
 
 @DisallowConcurrentExecution
+@Transactional
 class NibeInfoSyncJob implements Job {
     public static final String API_URL = "https://api.nibeuplink.com/api/v1"
     public static final String DEVICE_REF_ID = "78047"
@@ -26,8 +29,8 @@ class NibeInfoSyncJob implements Job {
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
         try {
-            def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
             def accConfig = device.getConfigurationByKey('cfg.key.device.oauth.access_token')
             if (accConfig && accConfig.value) {
                 def bearerToken = accConfig.value
@@ -44,12 +47,18 @@ class NibeInfoSyncJob implements Job {
                     mqttTopicService.publish(device.ports.find { it.internalRef == 't1' }, "${waterTemp}")
                 } else {
                     log.warn("Can't synca data - response status ${pumpResponse.status}")
+                    device.setStatus(DeviceStatus.OFFLINE)
+                    device.save()
                 }
             } else {
                 log.warn("Can't synca data - there are no access tokens configured for device ${device.id}")
+                device.setStatus(DeviceStatus.OFFLINE)
+                device.save()
             }
         } catch (Exception se) {
             log.warn("Can't connect : ${se.message}")
+            device.setStatus(DeviceStatus.OFFLINE)
+            device.save()
         }
     }
 }

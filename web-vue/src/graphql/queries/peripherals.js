@@ -158,6 +158,9 @@ export const PERIPHERAL_LIST_WUI = gql`
                 name
                 description
                 value
+                device{
+                    status
+                }
             }
         }
     }
