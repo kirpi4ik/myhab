@@ -7,7 +7,7 @@
                 src="img/brand/coreui-base.svg"
                 width="97"
                 height="46"
-                alt="MadHouse Logo"
+                alt="MyHAB Logo"
         />
         <CHeaderNav class="d-md-down-none mr-auto">
             <CHeaderNavItem class="px-3">
