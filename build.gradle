@@ -27,7 +27,7 @@ plugins {
     id "com.bmuschko.docker-remote-api" version "6.6.1"
     id 'java-library'
 }
-group "eu.devexpert.madhouse"
+group "org.myhab"
 allprojects {
     apply plugin: 'idea'
 
@@ -43,14 +43,14 @@ allprojects {
 }
 //tag::extVariables[]
 ext {
-    projectName = 'madhousev2-web'
+    projectName = 'myhab'
     isGrailsPlugin = name.startsWith('grails-plugin')
     isBuildSnapshot = projectVersion.toString().endsWith("-SNAPSHOT")
     commonBuild = new File(project.rootDir, "gradle").absolutePath
     dockerBuildDir = mkdir("${buildDir}/docker")
     dockerBuildGroup = 'Docker'
     dockerRegistry = 'nexus.devexpert.eu:8888'
-    dockerRepo = 'madhousev2-web'
+    dockerRepo = 'myhab'
     dockerTag = "${dockerRepo}:${projectVersion}" // <1>
 }
 
@@ -73,7 +73,7 @@ docker {
 
 subprojects { project ->
     version projectVersion
-    group "eu.devexpert.madhouse"
+    group "org.myhab"
     ext {
         isGrailsPlugin = name.startsWith('grails-plugin')
         isBuildSnapshot = version.toString().endsWith("-SNAPSHOT")
@@ -171,7 +171,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
     volume '/app/config'
     workingDir '/app'
 
-    copyFile "${projectName}-${projectVersion}.jar", 'madhouse.jar'
+    copyFile "${projectName}-${projectVersion}.jar", 'myhab.jar'
     copyFile 'app-entrypoint.sh', 'app-entrypoint.sh' // <5>
     runCommand 'chmod +x app-entrypoint.sh'
 

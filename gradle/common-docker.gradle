@@ -26,7 +26,7 @@ task prepareDocker(type: Copy, dependsOn: assemble) { // <3>
         into dockerBuildDir
     }
     copy {
-        from "${buildDir}/madhouse-${projectVersion}.jar"
+        from "${buildDir}/myhab-${projectVersion}.jar"
         into dockerBuildDir
     }
 }
@@ -50,7 +50,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
     volume '/app/config'
     workingDir '/app'
 
-    copyFile "${projectName}-${projectVersion}.jar", 'madhouse.jar'
+    copyFile "${projectName}-${projectVersion}.jar", 'myhab.jar'
     copyFile 'app-entrypoint.sh', 'app-entrypoint.sh' // <5>
     runCommand 'chmod +x app-entrypoint.sh'
 
