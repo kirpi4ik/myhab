@@ -1,5 +1,6 @@
 package eu.devexpert.madhouse.jobs
 
+import eu.devexpert.madhouse.async.mqtt.MqttTopicService
 import eu.devexpert.madhouse.domain.Configuration
 import eu.devexpert.madhouse.domain.EntityType
 import eu.devexpert.madhouse.domain.device.Device
@@ -19,6 +20,8 @@ import java.util.concurrent.TimeUnit
 @PersistJobDataAfterExecution
 @Transactional
 class NibeTokenRefreshJob implements Job {
+
+    MqttTopicService mqttTopicService
 
     def telegramBotHandler
     static triggers = {
@@ -43,10 +46,12 @@ class NibeTokenRefreshJob implements Job {
                 log.warn("There are no tokens configured for device ${device.id}")
                 telegramBotHandler.sendMessage('WARN', "There are no tokens configured for device ${device.id}")
             }
+            if (device.status.equals(DeviceStatus.OFFLINE)) {
+                mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
+            }
         } catch (Exception se) {
             log.warn("Can't connect : ${se.message}")
-            device.setStatus(DeviceStatus.OFFLINE)
-            device.save()
+            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 
