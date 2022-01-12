@@ -1,6 +1,6 @@
 {
   "name": "@myhab/myhab-vue",
-  "description": "MyHAB AI",
+  "description": "myHAB AI",
   "author": "Dumitru Ciubenco",
   "scripts": {
     "serve": "vue-cli-service serve",
