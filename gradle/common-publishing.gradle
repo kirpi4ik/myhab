@@ -68,7 +68,7 @@ publishing {
             if (true) {
                 artifacts {
                     archives( file("$buildDir/${projectName}-${projectVersion}.jar")){
-                        name 'madhouse'
+                        name 'myhab'
                         type 'jar'
                         builtBy "spring"
                     }
