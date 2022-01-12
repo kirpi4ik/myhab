@@ -1,6 +1,6 @@
 package eu.devexpert.madhouse.services
 
-import eu.devexpert.madhouse.async.mqtt.MqttTopicService
+
 import eu.devexpert.madhouse.domain.device.Device
 import eu.devexpert.madhouse.domain.device.port.DevicePort
 import eu.devexpert.madhouse.domain.device.port.PortAction
