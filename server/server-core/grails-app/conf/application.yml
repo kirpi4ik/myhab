@@ -2,7 +2,7 @@
 grails:
   profile: vue
   codegen:
-    defaultPackage: eu.devexpert.madhouse
+    defaultPackage: org.myhab
   gorm:
     reactor:
       # Whether to translate GORM events into Reactor events

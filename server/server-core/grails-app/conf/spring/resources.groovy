@@ -1,13 +1,13 @@
-import eu.devexpert.config.ConfigProvider
-import eu.devexpert.madhouse.async.mqtt.handlers.MQTTMessageHandler
-import eu.devexpert.madhouse.auth.ClaimProvider
-import eu.devexpert.madhouse.graphql.GQLSchemaFactory
-import eu.devexpert.madhouse.graphql.GraphQLGenerator
-import eu.devexpert.madhouse.graphql.fetchers.Mutation
+import org.myhab.config.ConfigProvider
+import org.myhab.async.mqtt.handlers.MQTTMessageHandler
+import org.myhab.auth.ClaimProvider
+import org.myhab.graphql.GQLSchemaFactory
+import org.myhab.graphql.GraphQLGenerator
+import org.myhab.graphql.fetchers.Mutation
 
-import eu.devexpert.madhouse.async.socket.WebSocketConfig
-import eu.devexpert.madhouse.listener.domain.UserPasswordEncoderListener
-import eu.devexpert.madhouse.telegram.TelegramBotHandler
+import org.myhab.async.socket.WebSocketConfig
+import org.myhab.listener.domain.UserPasswordEncoderListener
+import org.myhab.telegram.TelegramBotHandler
 import grails.util.Environment
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
