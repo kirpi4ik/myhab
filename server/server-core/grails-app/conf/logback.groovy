@@ -65,7 +65,7 @@ appender('STDOUT', ConsoleAppender) {
 def targetDir = BuildSettings.TARGET_DIR
 if (Environment.isDevelopmentMode() && targetDir != null) {
     appender("FULL_STACKTRACE", RollingFileAppender) {
-        file = "/var/log/madhouse.log"
+        file = "/var/log/myhab.log"
         encoder(LoggingEventCompositeJsonEncoder) {
             providers(LoggingEventJsonProviders) {
                 timestamp(LoggingEventFormattedTimestampJsonProvider) {
@@ -109,7 +109,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
             }
         }
         rollingPolicy(FixedWindowRollingPolicy) {
-            fileNamePattern = "/var/log/madhouse-%i.log.zip"
+            fileNamePattern = "/var/log/myhab-%i.log.zip"
             minIndex = 1
             maxIndex = 10
         }
@@ -121,7 +121,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
     root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
 } else {
     appender("FULL_STACKTRACE", RollingFileAppender) {
-        file = "/var/log/madhouse.log"
+        file = "/var/log/myhab.log"
         encoder(LoggingEventCompositeJsonEncoder) {
             providers(LoggingEventJsonProviders) {
                 timestamp(LoggingEventFormattedTimestampJsonProvider) {
@@ -165,7 +165,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
             }
         }
         rollingPolicy(FixedWindowRollingPolicy) {
-            fileNamePattern = "/var/log/madhouse-%i.log.zip"
+            fileNamePattern = "/var/log/myhab-%i.log.zip"
             minIndex = 1
             maxIndex = 10
         }
