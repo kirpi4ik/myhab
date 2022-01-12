@@ -57,7 +57,7 @@ jobs:
           file: build/docker/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: kirpi4ik/madhouse:${{steps.get_version.outputs.version}}
+          tags: kirpi4ik/myhab:${{steps.get_version.outputs.version}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Build docker and push latest
@@ -67,6 +67,6 @@ jobs:
           file: build/docker/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: kirpi4ik/madhouse:latest
+          tags: kirpi4ik/myhab:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
