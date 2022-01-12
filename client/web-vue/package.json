@@ -1,6 +1,6 @@
 {
-  "name": "@madhouse/madhouse-vue",
-  "description": "MadHouse AI",
+  "name": "@myhab/myhab-vue",
+  "description": "MyHAB AI",
   "author": "Dumitru Ciubenco",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -120,6 +120,6 @@
     "node": ">= 8.10.x",
     "npm": ">= 5.6.0"
   },
-  "homepage": "http://madhouse.app",
+  "homepage": "http://myhab.org",
   "license": "MIT"
 }
