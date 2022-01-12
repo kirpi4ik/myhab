@@ -6,7 +6,7 @@ module.exports = {
         port: 9999,
         compress: false,
         headers: {
-            'X-MyHAB-mode': 'dev'
+            'X-myHAB-mode': 'dev'
         },
         liveReload: true
 
