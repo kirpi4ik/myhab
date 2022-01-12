@@ -62,7 +62,7 @@ public class MQTTConfiguration {
         MqttPahoMessageHandler mqttPahoMessageHandler = new MqttPahoMessageHandler(MqttAsyncClient.generateClientId(), mqttClientFactory());
         mqttPahoMessageHandler.setAsync(true);
         mqttPahoMessageHandler.setDefaultQos(1);
-        mqttPahoMessageHandler.setDefaultTopic(MQTTTopic.COMMON.DEFAULT.regex);
+        mqttPahoMessageHandler.setDefaultTopic(MQTTTopic.COMMON.topic(DeviceTopic.TopicTypes.LISTEN));
         return mqttPahoMessageHandler;
     }
 

@@ -45,20 +45,21 @@ class NibeInfoSyncJob implements Job {
 
 
                     mqttTopicService.publish(device.ports.find { it.internalRef == 't1' }, "${waterTemp}")
+
+                    if (device.status.equals(DeviceStatus.OFFLINE)) {
+                        mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
+                    }
                 } else {
                     log.warn("Can't synca data - response status ${pumpResponse.status}")
-                    device.setStatus(DeviceStatus.OFFLINE)
-                    device.save()
+                    mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 }
             } else {
                 log.warn("Can't synca data - there are no access tokens configured for device ${device.id}")
-                device.setStatus(DeviceStatus.OFFLINE)
-                device.save()
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
             }
         } catch (Exception se) {
             log.warn("Can't connect : ${se.message}")
-            device.setStatus(DeviceStatus.OFFLINE)
-            device.save()
+            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 }
