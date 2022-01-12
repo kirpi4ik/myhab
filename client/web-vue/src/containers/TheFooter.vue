@@ -1,12 +1,12 @@
 <template>
     <CFooter>
         <div>
-            <a href="https://madhouse.app" target="_self">MadHouse v{{version}} <small><i>[ {{ date }} ]</i></small></a>
-            <span class="ml-1">&copy; 2021 DevExpert.</span>
+            <a href="http://myhab.org" target="_self">MyHAB v{{version}} <small><i>[ {{ date }} ]</i></small></a>
+            <span class="ml-1">&copy; 2022 MyHAB.ORG</span>
         </div>
         <div class="ml-auto">
             <span class="mr-1">Powered by</span>
-            <a href="https://madhouse.app" target="_self">kirpi4ik &trade;</a>
+            <a href="http://myhab.org" target="_self">kirpi4ik &trade;</a>
         </div>
     </CFooter>
 </template>
