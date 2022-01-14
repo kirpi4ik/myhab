@@ -17,6 +17,7 @@ apply plugin: "java"
 apply plugin: "org.grails.grails-web"
 apply plugin: "org.grails.plugins.views-json"
 apply plugin: "org.grails.grails-gsp"
+apply plugin: 'codenarc'
 
 sourceCompatibility = "11"; // for example
 targetCompatibility = "11"; // defaults to sourceCompatibility
@@ -125,7 +126,6 @@ dependencies {
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
 
 
-
     implementation "org.springframework.security:spring-security-config"
     /*implementation "org.springframework.security:spring-security-oauth2-authorization-server"*/
     implementation "org.springframework.security:spring-security-messaging"
@@ -133,6 +133,9 @@ dependencies {
 
     runtime "org.apache.tomcat:tomcat-jdbc"
     runtime "javax.xml.bind:jaxb-api:2.3.0"
+
+    codenarc "org.codenarc:CodeNarc:$codenarcVersion"
+
     testCompile "org.grails:grails-gorm-testing-support"
     testCompile "org.mockito:mockito-core"
     testCompile "io.micronaut:micronaut-http-client"
@@ -155,4 +158,30 @@ bootJar {
         jar.name = "$groupId-${jar.name}"
     })
     archiveFileName = "myhab-${project.version}.jar"
+}
+sourceSets {
+    main {
+        groovy {
+            srcDirs = ['grails-app/controllers',
+                       'grails-app/domain',
+                       'grails-app/init',
+                       'grails-app/jobs',
+                       'grails-app/services',
+                       'grails-app/utils']
+        }
+    }
+}
+codenarc {
+    toolVersion = codenarcVersion
+    configFile = file("${projectDir}/config/codenarc/rules.groovy")
+    maxPriority1Violations = 0
+    maxPriority2Violations = 200
+    maxPriority3Violations = 1500
+}
+codenarcMain {
+    exclude '**/CustomScalars.groovy'
+}
+
+codenarcTest {
+    ignoreFailures = true
 }
