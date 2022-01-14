@@ -28,6 +28,7 @@ plugins {
     id 'java-library'
 }
 group "org.myhab"
+
 allprojects {
     apply plugin: 'idea'
 
@@ -74,8 +75,11 @@ docker {
 subprojects { project ->
     version projectVersion
     group "org.myhab"
+
     ext {
+        isGrailsApp = name.contains(project.name)
         isGrailsPlugin = name.startsWith('grails-plugin')
+        isGrailsProject = isGrailsApp || isGrailsPlugin
         isBuildSnapshot = version.toString().endsWith("-SNAPSHOT")
 
     }
