@@ -37,7 +37,6 @@ allprojects {
 
     repositories {
         mavenLocal()
-        jcenter()
         maven { url "https://repo.grails.org/grails/core" }
         maven { url "https://plugins.gradle.org/m2/" }
     }
