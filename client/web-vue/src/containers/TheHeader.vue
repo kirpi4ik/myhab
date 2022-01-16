@@ -7,7 +7,7 @@
                 src="img/brand/coreui-base.svg"
                 width="97"
                 height="46"
-                alt="MyHAB Logo"
+                alt="myHAB Logo"
         />
         <CHeaderNav class="d-md-down-none mr-auto">
             <CHeaderNavItem class="px-3">
