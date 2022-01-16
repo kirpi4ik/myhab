@@ -5,11 +5,11 @@
             :show.sync="show"
 
     >
-        <CSidebarBrand
-                :imgFull="{ width: 118, height: 46, alt: 'Logo', src: 'img/brand/coreui-base-white.svg'}"
-                :imgMinimized="{ width: 118, height: 46, alt: 'Logo', src: 'img/brand/coreui-signet-white.svg'}"
-                :wrappedInLink="{ href: 'https://madhouse.app/', target: '_self'}"
-        />
+        <CSidebarBrand>
+            <svg viewBox="0 0 800 800" width="50">
+                <use xlink:href="/img/logo.svg#logox"/>
+            </svg>
+        </CSidebarBrand>
         <CRenderFunction flat :content-to-render="navItems"/>
         <CSidebarMinimizer
                 class="d-md-down-none"

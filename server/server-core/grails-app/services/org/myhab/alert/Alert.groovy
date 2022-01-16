@@ -1,7 +1,7 @@
 package org.myhab.alert
 
 class Alert {
-    String alias = "madhouse_core"
+    String alias
     String message
     String description
     AlertPriority priority = AlertPriority.P5

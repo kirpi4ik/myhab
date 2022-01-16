@@ -27,7 +27,7 @@ plugins {
     id "com.bmuschko.docker-remote-api" version "6.6.1"
     id 'java-library'
 }
-group "org.myhab"
+group "${projectGroup}"
 
 allprojects {
     apply plugin: 'idea'
@@ -43,7 +43,6 @@ allprojects {
 }
 //tag::extVariables[]
 ext {
-    projectName = 'myhab'
     isGrailsPlugin = name.startsWith('grails-plugin')
     isBuildSnapshot = projectVersion.toString().endsWith("-SNAPSHOT")
     commonBuild = new File(project.rootDir, "gradle").absolutePath
@@ -73,7 +72,7 @@ docker {
 
 subprojects { project ->
     version projectVersion
-    group "org.myhab"
+    group "${projectGroup}"
 
     ext {
         isGrailsApp = name.contains(project.name)
@@ -174,7 +173,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
     volume '/app/config'
     workingDir '/app'
 
-    copyFile "${projectName}-${projectVersion}.jar", 'myhab.jar'
+    copyFile "${projectName}-${projectVersion}.jar", "${projectName}.jar"
     copyFile 'app-entrypoint.sh', 'app-entrypoint.sh' // <5>
     runCommand 'chmod +x app-entrypoint.sh'
 
