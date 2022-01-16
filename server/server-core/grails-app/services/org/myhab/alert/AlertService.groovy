@@ -20,7 +20,7 @@ class AlertService {
         AlertApi alertApi = client.alertV2()
         CreateAlertRequest request = new CreateAlertRequest();
         request.setMessage(alert.message);
-        request.setAlias(alert.alias);
+        request.setAlias(configProvider.get(String.class, "opsgenie.alias"));
         request.setDescription(alert.description);
         request.setNote(alert.note);
         request.setTeams(Arrays.asList(new TeamRecipient().name(configProvider.get(String.class, "opsgenie.team")).id(configProvider.get(String.class, "opsgenie.recipientId"))));

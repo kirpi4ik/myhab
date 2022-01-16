@@ -1,8 +1,8 @@
 <template>
     <CFooter>
         <div>
-            <a href="http://myhab.org" target="_self">MyHAB v{{version}} <small><i>[ {{ date }} ]</i></small></a>
-            <span class="ml-1">&copy; 2022 MyHAB.ORG</span>
+            <a href="http://myhab.org" target="_self">myHAB v{{version}} <small><i>[ {{ date }} ]</i></small></a>
+            <span class="ml-1">&copy; 2022 myHAB.ORG</span>
         </div>
         <div class="ml-auto">
             <span class="mr-1">Powered by</span>

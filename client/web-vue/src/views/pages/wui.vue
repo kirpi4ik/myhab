@@ -41,28 +41,28 @@
     import _ from "lodash";
 
     export default {
+        name: 'Wui',
         components: {
             'inline-svg': InlineSvg
         },
         data() {
             return {
-                categoryLight: process.env.VUE_APP_CONF_PH_LIGHT,
                 srvPeripherals: {},
                 portToPeripheralMap: {},
                 assetMap: {},
                 svgMap: {},
                 svgPages: [
                     {
-                        id: "parter",
+                        id: "screen-1",
                         visible: true,
-                        svgContent: 'svg/parter.svg',
+                        svgContent: 'svg/screen-1.svg',
                         fillOpacity: 0.3,
                         strokeOpacity: 0.5
                     },
                     {
-                        id: "etaj",
+                        id: "screen-2",
                         visible: false,
-                        svgContent: 'svg/etaj.svg',
+                        svgContent: 'svg/screen-2.svg',
                         fillOpacity: 0.3,
                         strokeOpacity: 0.5
 
@@ -89,7 +89,7 @@
         watch: {
             '$route.path': 'init',
             stompMessage: function (newVal) {
-                if (newVal.eventName == 'evt_port_value_persisted') {
+                if (newVal.eventName === 'evt_port_value_persisted') {
                     this.updatePeripheralUI(newVal.jsonPayload);
                 }
             }
@@ -99,13 +99,13 @@
                 let targetId = event.target.id;
                 if (targetId.startsWith("nav_")) {
                     let direction = targetId.split("_")[1];
-                    if (direction == 'home') {
+                    if (direction === 'home') {
                         this.$router.push({path: "/dashboard"}).catch(() => {
                         });
-                    } else if (direction == 'back' || direction == 'forward') {
-                        if (direction == 'forward' && this.svgPageHasNext()) {
+                    } else if (direction === 'back' || direction === 'forward') {
+                        if (direction === 'forward' && this.svgPageHasNext()) {
                             this.svgPageGoNext()
-                        } else if (direction == 'back' && this.svgPageHasPrev()) {
+                        } else if (direction === 'back' && this.svgPageHasPrev()) {
                             this.svgPageGoBack()
                         }
                     }
@@ -123,8 +123,6 @@
                             id: svgElement[3],
                             assetOrder: svgElement[4]
                         }
-
-
                         let reverseCss = closest.getAttribute("class")
                         if (reverseCss == null) {
                             reverseCss = "no-focus"
@@ -136,14 +134,20 @@
 
                         let id = asset['id'];
                         if (this.srvPeripherals[id] != null) {
-                            console.log('TOGGLE: ' + this.srvPeripherals[id].name)
-                            if (this.srvPeripherals[id].category.name == 'DOOR_LOCK') {
-                                this.unlockCode = null;
-                                this.showPassword = true;
-                            } else if (this.srvPeripherals[id].category.name == 'LIGHT') {
-                                lightService.toggle(this.srvPeripherals[id])
-                            } else if (this.srvPeripherals[id].category.name == 'HEAT') {
-                                heatService.toggle(this.srvPeripherals[id])
+                            switch (this.srvPeripherals[id].category.name) {
+                                case 'LOCK': {
+                                    this.unlockCode = null;
+                                    this.showPassword = true;
+                                    break
+                                }
+                                case 'LIGHT': {
+                                    lightService.toggle(this.srvPeripherals[id])
+                                    break
+                                }
+                                case 'HEAT': {
+                                    heatService.toggle(this.srvPeripherals[id])
+                                    break
+                                }
                             }
                         } else {
                             console.log('null id')
@@ -159,7 +163,7 @@
                 if (connectedPeripherals) {
                     connectedPeripherals.forEach(function (peripheralId) {
                         const peripheralComp = _.map(this.srvPeripherals, (peripheral) => {
-                            if (peripheral['id'] == peripheralId) {
+                            if (peripheral['id'] === peripheralId) {
                                 peripheral['portValue'] = payload.p4;
                                 peripheral['state'] = payload.p4 === 'ON';
                                 return peripheral
@@ -175,7 +179,7 @@
                     "p2": this.peripheral.id,
                     "p3": "mweb",
                     "p4": "open",
-                    "p5": '{"unlockCode": "' + this.unlockCode + '"}',
+                    "p5": `{"unlockCode": "${this.unlockCode}"}`,
                     "p6": authenticationService.currentUserValue.login
                 };
                 this.$apollo.mutate({
@@ -185,12 +189,6 @@
                 });
             },
             init: function () {
-                let assetCategoryFilter = function (categoryToKeepId) {
-                    return function (peripheral) {
-                        return true//peripheral.category.uid === categoryToKeepId;
-                    }
-                    // return peripheral.data.category.uid === this.$route.query.category
-                }.bind(this)
                 let initPeripheralMap = function (peripheral) {
                     if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
                         let port = peripheral.connectedTo[0];
@@ -237,7 +235,7 @@
                     let data = _.cloneDeep(response.data)
                     //convert to map
                     data.devicePeripheralList.forEach(initPeripheralMap)
-                    let assets = data.devicePeripheralList.filter(assetCategoryFilter(this.categoryLight));
+                    let assets = data.devicePeripheralList;
                     assets.forEach(initState)
                     this.srvPeripherals = _.reduce(assets, function (hash, value) {
                         var key = value['id'];
@@ -252,7 +250,7 @@
                 this.svgMap = svg;
                 for (const node of this.nodes) {
                     let elementsByTagName = svg.getElementsByTagName(node);
-                    for (var i = 0; i < elementsByTagName.length; i++) {
+                    for (let i = 0; i < elementsByTagName.length; i++) {
                         this.svgElInit(svg, elementsByTagName[i])
                     }
                 }
@@ -263,7 +261,7 @@
                 let wrapper = document.createElementNS("http://www.w3.org/2000/svg", 'a')
                 let actionElementClass = "";
                 let svgElement = svgEl.id.split("_");
-                if (svgElement[0] == 'asset') {
+                if (svgElement[0] === 'asset') {
                     let svgAsset = {
                         category: svgElement[1].toUpperCase(),
                         info: svgElement[2],
@@ -271,42 +269,51 @@
                         assetOrder: svgElement[4]
                     }
                     let srvAsset = this.srvPeripherals[svgAsset['id']];
-                    if (svgAsset['category'] == 'LIGHT') {
-                        if (srvAsset && srvAsset.state) {
-                            actionElementClass = "bulb-on"
-                        } else {
-                            actionElementClass = "bulb-off";
+                    switch (svgAsset['category']) {
+                        case 'LIGHT' : {
+                            if (srvAsset && srvAsset.state) {
+                                actionElementClass = "bulb-on"
+                            } else {
+                                actionElementClass = "bulb-off";
+                            }
+                            break
                         }
-                    } else if (svgAsset['category'] == 'HEAT') {
-                        if (srvAsset && srvAsset.state) {
-                            actionElementClass = "heat-on"
-                        } else {
-                            actionElementClass = "heat-off";
+                        case 'HEAT' : {
+                            if (srvAsset && srvAsset.state) {
+                                actionElementClass = "heat-on"
+                            } else {
+                                actionElementClass = "heat-off";
+                            }
+                            break
                         }
-                    } else if (svgAsset['category'] == 'MOTION') {
-                        if (srvAsset && srvAsset.state) {
-                            actionElementClass = "motion-off"
-                        } else {
-                            actionElementClass = "motion-on";
+                        case 'MOTION' : {
+                            if (srvAsset && srvAsset.state) {
+                                actionElementClass = "motion-off"
+                            } else {
+                                actionElementClass = "motion-on";
+                            }
+                            break
                         }
-                    } else if (svgAsset['category'] == 'TEMP') {
-                        if (srvAsset && srvAsset.portValue) {
-                            svgEl.firstChild.textContent = srvAsset.portValue + '℃'
+                        case 'TEMP' : {
+                            if (srvAsset && srvAsset.portValue) {
+                                svgEl.firstChild.textContent = srvAsset.portValue + '℃'
+                            }
+                            if (srvAsset && srvAsset['deviceStatus'] === 'OFFLINE') {
+                                actionElementClass = "device-offline";
+                            }
+                            break
                         }
-                        if (srvAsset && srvAsset['deviceStatus'] == 'OFFLINE') {
-                            actionElementClass = "device-offline";
+                        case 'LOCK' : {
+                            actionElementClass = "lock";
+                            break
                         }
-
-
-                    } else if (svgAsset['category'] == 'LOCK') {
-                        actionElementClass = "bulb-off";
                     }
-                } else if (svgElement[0] == 'nav') {
-                    if (svgElement[1] == 'back' || svgElement[1] == 'forward') {
+                } else if (svgElement[0] === 'nav') {
+                    if (svgElement[1] === 'back' || svgElement[1] === 'forward') {
                         actionElementClass = "nav-button"
-                        if (svgElement[1] == 'back' && svg.id == this.svgPages[0].id) {
+                        if (svgElement[1] === 'back' && svg.id === this.svgPages[0].id) {
                             actionElementClass = 'hidden'
-                        } else if (svgElement[1] == 'forward' && svg.id == this.svgPages[this.svgPages.length - 1].id) {
+                        } else if (svgElement[1] === 'forward' && svg.id === this.svgPages[this.svgPages.length - 1].id) {
                             actionElementClass = 'hidden'
                         }
                     } else {
@@ -316,28 +323,25 @@
                 svgEl.setAttribute("class", actionElementClass);
                 svgEl.parentNode.insertBefore(wrapper, svgEl);
                 wrapper.appendChild(svgEl);
+
             },
             svgPageHasNext: function () {
                 let currentIndex = _.findIndex(this.svgPages, (e) => {
-                    return e.visible == true;
+                    return e.visible === true;
                 }, 0);
-                if (currentIndex + 1 < this.svgPages.length) {
-                    return true
-                }
-                return false;
+                return currentIndex + 1 < this.svgPages.length;
+
             },
             svgPageHasPrev: function () {
                 let currentIndex = _.findIndex(this.svgPages, (e) => {
-                    return e.visible == true;
+                    return e.visible === true;
                 }, 0);
-                if (currentIndex - 1 >= 0) {
-                    return true
-                }
-                return false;
+                return currentIndex - 1 >= 0;
+
             },
             svgPageGoNext: function () {
                 let currentIndex = _.findIndex(this.svgPages, (e) => {
-                    return e.visible == true;
+                    return e.visible === true;
                 }, 0);
 
                 this.svgPages[currentIndex + 1].visible = true
@@ -345,7 +349,7 @@
             },
             svgPageGoBack: function () {
                 let currentIndex = _.findIndex(this.svgPages, (e) => {
-                    return e.visible == true;
+                    return e.visible === true;
                 }, 0);
 
                 this.svgPages[currentIndex - 1].visible = true
@@ -355,8 +359,6 @@
     }
 </script>
 <style>
-    body {
-    }
 
     .hidden {
         display: none;
@@ -454,7 +456,15 @@
         stroke-opacity: 0.34;
     }
 
-    circle#asset_lock_circle {
+    .lock {
+        cursor: pointer;
+        fill: #4a90d6;
+        fill-opacity: 0.30;
+        stroke: #d3e5e5;
+        stroke-width: 1.2;
+    }
+
+    circle.asset_lock_circle {
         stroke: #d3e5e5;
         stroke-width: 1.2;
         fill: rgb(98, 117, 129);
