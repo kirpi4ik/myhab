@@ -47,7 +47,7 @@ configurations {
 
 dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
+//    developmentOnly("org.springframework.boot:spring-boot-devtools")
     compile project(':server-rules')
     compile project(':server-config')
     compile 'io.micrometer:micrometer-core:latest.release'
@@ -151,7 +151,7 @@ bootJar {
         String groupId = jar.file.parentFile.parentFile.parentFile.parentFile.name
         jar.name = "$groupId-${jar.name}"
     })
-    archiveFileName = "myhab-${project.version}.jar"
+    archiveFileName = "${projectName}-${project.version}.jar"
 }
 sourceSets {
     main {
