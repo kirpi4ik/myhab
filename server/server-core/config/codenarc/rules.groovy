@@ -99,7 +99,7 @@ ruleset {
     CloneableWithoutClone
     CloseWithoutCloseable
     CompareToWithoutComparable
-    ConstantsOnlyInterface
+//    ConstantsOnlyInterface
     EmptyMethodInAbstractClass
     FinalClassWithProtectedMember
     ImplementationAsType
