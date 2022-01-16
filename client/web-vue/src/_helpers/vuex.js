@@ -16,6 +16,9 @@ const state = {
     },
     config: {
         grafanaUrl: "https://grafana.madhouse.app"
+    },
+    sidebarShow:{
+
     }
 };
 const mutations = {
