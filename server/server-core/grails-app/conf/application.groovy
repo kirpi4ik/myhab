@@ -1,9 +1,9 @@
 grails.resources.pattern = '/**'
 
-grails.plugin.springsecurity.oauthProvider.clientLookup.className = 'Client'
-grails.plugin.springsecurity.oauthProvider.accessTokenLookup.className = 'AccessToken'
-grails.plugin.springsecurity.oauthProvider.refreshTokenLookup.className = 'RefreshToken'
-grails.plugin.springsecurity.oauthProvider.authorizationCodeLookup.className = 'AuthorizationCode'
+grails.plugin.springsecurity.oauthProvider.clientLookup.className = 'org.myhab.domain.auth.Client'
+grails.plugin.springsecurity.oauthProvider.accessTokenLookup.className = 'org.myhab.domain.auth.AccessToken'
+grails.plugin.springsecurity.oauthProvider.refreshTokenLookup.className = 'org.myhab.domain.auth.RefreshToken'
+grails.plugin.springsecurity.oauthProvider.authorizationCodeLookup.className = 'org.myhab.domain.auth.AuthorizationCode'
 grails.plugin.springsecurity.oauthProvider.authorizationEndpointUrl = '/oauth/authorize'
 grails.plugin.springsecurity.oauthProvider.tokenEndpointUrl = '/oauth/token'
 grails.plugin.springsecurity.oauthProvider.errorEndpointUrl = '/oauth/error'
@@ -11,14 +11,14 @@ grails.plugin.springsecurity.oauthProvider.userApprovalEndpointUrl = '/oauth/con
 grails.plugin.springsecurity.oauthProvider.userApprovalParameter = 'user_oauth_approval'
 grails.plugin.springsecurity.oauthProvider.active = true
 
-grails.plugin.springsecurity.userLookup.userDomainClassName = 'User'
+grails.plugin.springsecurity.userLookup.userDomainClassName = 'org.myhab.domain.User'
 grails.plugin.springsecurity.userLookup.authoritiesPropertyName = 'authorities'
 grails.plugin.springsecurity.userLookup.enabledPropertyName = 'enabled'
 grails.plugin.springsecurity.userLookup.accountExpiredPropertyName = 'accountExpired'
 grails.plugin.springsecurity.userLookup.accountLockedPropertyName = 'accountLocked'
 grails.plugin.springsecurity.userLookup.passwordExpiredPropertyName = 'passwordExpired'
-grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'UserRole'
-grails.plugin.springsecurity.authority.className = 'Role'
+grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'org.myhab.domain.UserRole'
+grails.plugin.springsecurity.authority.className = 'org.myhab.domain.Role'
 
 grails.plugin.springsecurity.rest.login.active = true
 grails.plugin.springsecurity.rest.login.endpointUrl = "/api/login"
@@ -101,9 +101,9 @@ environments {
     development {
         dataSource {
             dbCreate = "update"
-            url = "jdbc:postgresql://localhost:5432/madhouse"
-            username = "madhouse"
-            password = "madhouse"
+            url = "jdbc:postgresql://localhost:5432/myhab"
+            username = "myhab"
+            password = "myhab"
             logSql = false
             formatSql = false
         }
