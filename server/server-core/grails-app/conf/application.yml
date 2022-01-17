@@ -61,15 +61,12 @@ management:
 grails:
   cors:
     enabled: true
-    allowedHeaders:
-      - Content-Type
-      - Authorization
-      - User-Agent
     allowedMethods:
       - GET
       - POST
     allowedOrigins:
       - http://localhost:10000
+      - http://localhost:10001
       - chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam
     allowedOriginPatterns:
       - https://beta.*.app
