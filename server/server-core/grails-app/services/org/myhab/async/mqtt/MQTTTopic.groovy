@@ -5,7 +5,7 @@ enum MQTTTopic {
         static String topic(TopicTypes topicType) {
             switch (topicType) {
                 case TopicTypes.LISTEN:
-                    return 'madhouse/#'
+                    return 'myhab/#'
                 case TopicTypes.READ_SINGLE_VAL:
                     return '(\\w+)/([0-9]+)'
                 case TopicTypes.WRITE_SINGLE_VAL:
@@ -55,17 +55,17 @@ enum MQTTTopic {
         static String topic(TopicTypes topicType) {
             switch (topicType) {
                 case TopicTypes.LISTEN:
-                    return 'madhouse/#'
+                    return 'myhab/#'
                 case TopicTypes.READ_SINGLE_VAL:
-                    return 'madhouse/(\\w+|_+)/(\\w+|_+)/(\\w+|_+)/state'
+                    return 'myhab/(\\w+|_+)/(\\w+|_+)/(\\w+|_+)/state'
                 case TopicTypes.WRITE_SINGLE_VAL:
-                    return 'madhouse/$map.deviceCode/$map.portType/$map.portCode/cmd'
+                    return 'myhab/$map.deviceCode/$map.portType/$map.portCode/cmd'
                 case TopicTypes.STAT_IP:
-                    return 'madhouse/$map.deviceCode/sensor/esp_ip_address/state'
+                    return 'myhab/$map.deviceCode/sensor/esp_ip_address/state'
                 case TopicTypes.STAT_PORT:
-                    return 'madhouse/$map.deviceCode/sensor/esp_ip_address/state'
+                    return 'myhab/$map.deviceCode/sensor/esp_ip_address/state'
                 case TopicTypes.STATUS:
-                    return 'madhouse/(\\w+|_+)/status'
+                    return 'myhab/(\\w+|_+)/status'
                 default: return null
             }
         }
@@ -80,17 +80,17 @@ enum MQTTTopic {
         static String topic(TopicTypes topicType) {
             switch (topicType) {
                 case TopicTypes.LISTEN:
-                    return 'madhouse/#'
+                    return 'myhab/#'
                 case TopicTypes.READ_SINGLE_VAL:
-                    return 'madhouse/(\\w+|_+)/(\\w+|_+)/(\\w+|_+)/value'
+                    return 'myhab/(\\w+|_+)/(\\w+|_+)/(\\w+|_+)/value'
                 case TopicTypes.WRITE_SINGLE_VAL:
-                    return 'madhouse/$map.deviceCode/$map.portType/$map.portCode/value'
+                    return 'myhab/$map.deviceCode/$map.portType/$map.portCode/value'
                 case TopicTypes.STAT_IP:
-                    return 'madhouse/$map.deviceCode/sensor/esp_ip_address/state'
+                    return 'myhab/$map.deviceCode/sensor/esp_ip_address/state'
                 case TopicTypes.STAT_PORT:
-                    return 'madhouse/$map.deviceCode/sensor/esp_ip_address/state'
+                    return 'myhab/$map.deviceCode/sensor/esp_ip_address/state'
                 case TopicTypes.STATUS:
-                    return 'madhouse/(\\w+|_+)/status'
+                    return 'myhab/(\\w+|_+)/status'
                 default: return null
             }
         }
