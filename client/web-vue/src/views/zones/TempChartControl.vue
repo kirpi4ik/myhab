@@ -9,15 +9,33 @@
     </CCard>
 </template>
 <script>
+    import _ from "lodash";
+
     function random(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min)
     }
+
+    import {CONFIG_GLOBAL_GET_STRING_VAL} from "../../graphql/queries";
 
     export default {
         name: 'TempChartControl',
         data() {
             return {
-                grafanaUrl: process.env.VUE_APP_CONF_GRAFANA_URL
+                grafanaUrl: ''
+            }
+        },
+        mounted() {
+            this.init()
+        },
+        methods: {
+            init: function() {
+                this.$apollo.query({
+                    query: CONFIG_GLOBAL_GET_STRING_VAL,
+                    variables: {key: 'grafana.url'},
+                    fetchPolicy: 'network-only'
+                }).then(response => {
+                    this.grafanaUrl = response.data.config
+                });
             }
         }
     }
