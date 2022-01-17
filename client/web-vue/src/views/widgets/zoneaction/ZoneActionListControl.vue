@@ -12,7 +12,7 @@
                         icon="lightbulb"
                         :zoneIdLeft="zoneIntId"
                         :zoneIdRight="zoneExtId"
-                        :category="categoryLight"
+                        category="LIGHT"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -27,7 +27,7 @@
                         icon="fire"
                         :zoneIdLeft="zoneEtajId"
                         :zoneIdRight="zoneParterId"
-                        :category="categoryHeat"
+                        category="HEAT"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -42,7 +42,7 @@
                         icon="thermometer-half"
                         :zoneIdLeft="zoneIntId"
                         :zoneIdRight="zoneExtId"
-                        :category="categoryTemp"
+                        category="TEMP"
                 >
                 </ZoneActionControl>
             </CCol>
@@ -68,10 +68,6 @@
         },
         data() {
             return {
-                categoryLight: process.env.VUE_APP_CONF_PH_LIGHT,
-                categoryTemp: process.env.VUE_APP_CONF_PH_TEMP,
-                categoryHeat: process.env.VUE_APP_CONF_PH_HEAT,
-
                 zoneIntId: process.env.VUE_APP_CONF_ZONE_INT_ID,
                 zoneExtId: process.env.VUE_APP_CONF_ZONE_EXT_ID,
 
