@@ -13,12 +13,6 @@ const state = {
     stomp: {
         message: null,
         connection: 'OFFLINE'
-    },
-    config: {
-        grafanaUrl: "https://grafana.madhouse.app"
-    },
-    sidebarShow:{
-
     }
 };
 const mutations = {
