@@ -1,6 +1,7 @@
 package org.myhab.graphql.fetchers
 
 import com.hazelcast.core.HazelcastInstance
+import org.myhab.config.ConfigProvider
 import org.myhab.domain.User
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Component
 class Query {
     @Autowired
     HazelcastInstance hazelcastInstance;
+    @Autowired
+    ConfigProvider configProvider
 
     def userRolesForUser() {
         return new DataFetcher() {
@@ -47,6 +50,16 @@ class Query {
             }
 
 
+        }
+    }
+    def config() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def key = environment.getArgument("key")
+                def config = configProvider.get(String, key)
+                return config
+            }
         }
     }
 
