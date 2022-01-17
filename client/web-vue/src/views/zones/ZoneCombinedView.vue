@@ -15,8 +15,8 @@
                 <div class="card" :class="`zone-card-background text-white`">
                     <div class="card-body">
                         <div style="display: inline">
-                            <HeatScheduler :zone="zone" :name="zone.name" v-if="category === categoryHeat"/>
-                            <TempDisplay :zone="zone" :name="zone.name" v-if="category === categoryTemp"/>
+                            <HeatScheduler :zone="zone" :name="zone.name" v-if="category === 'HEAT'"/>
+                            <TempDisplay :zone="zone" :name="zone.name" v-if="category === 'TEMP'"/>
                             <MotionDisplayControl :zone="zone" :name="zone.name" v-if="category === 'MOTION'"/>
                         </div>
                         <div v-on:click="navZone(zone.id)" style="cursor:pointer; height: 100%">
@@ -33,14 +33,14 @@
         </CRow>
         <CRow>
             <CCol md="3" sm="6" v-for="peripheral in peripheralList" :key="peripheral.id">
-                <PeriphLightControl :peripheral="peripheral" v-if="category === categoryLight"></PeriphLightControl>
-                <PeriphTempControl :peripheral="peripheral" v-if="category === categoryTemp"></PeriphTempControl>
-                <PeriphHeatControl :peripheral="peripheral" v-if="category === categoryHeat"></PeriphHeatControl>
+                <PeriphLightControl :peripheral="peripheral" v-if="category === 'LIGHT'"></PeriphLightControl>
+                <PeriphTempControl :peripheral="peripheral" v-if="category === 'TEMP'"></PeriphTempControl>
+                <PeriphHeatControl :peripheral="peripheral" v-if="category === 'HEAT'"></PeriphHeatControl>
             </CCol>
         </CRow>
         <CRow>
             <CCol>
-                <TempChartControl v-if="category === categoryTemp"/>
+                <TempChartControl v-if="category === 'TEMP'"/>
 
             </CCol>
         </CRow>
@@ -76,10 +76,7 @@
                 childZones: [],
                 peripheralList: [],
                 breadcrumb: [],
-                category: this.$route.query.category,
-                categoryLight: process.env.VUE_APP_CONF_PH_LIGHT,
-                categoryTemp: process.env.VUE_APP_CONF_PH_TEMP,
-                categoryHeat: process.env.VUE_APP_CONF_PH_HEAT
+                category: this.$route.query.category
             }
         },
         created() {
