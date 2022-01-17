@@ -37,7 +37,7 @@ appender('STDOUT', ConsoleAppender) {
             globalCustomFields(GlobalCustomFieldsJsonProvider) {
                 customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
             }
-            threadName(ThreadNameJsonProvider) {
+            threadName(LoggingEventThreadNameJsonProvider) {
                 fieldName = 'thread'
             }
             mdc(MdcJsonProvider) {
@@ -86,7 +86,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
                     customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
                 }
-                threadName(ThreadNameJsonProvider) {
+                threadName(LoggingEventThreadNameJsonProvider) {
                     fieldName = 'thread'
                 }
                 mdc(MdcJsonProvider) {
@@ -142,7 +142,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
                     customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
                 }
-                threadName(ThreadNameJsonProvider) {
+                threadName(LoggingEventThreadNameJsonProvider) {
                     fieldName = 'thread'
                 }
                 mdc(MdcJsonProvider) {
