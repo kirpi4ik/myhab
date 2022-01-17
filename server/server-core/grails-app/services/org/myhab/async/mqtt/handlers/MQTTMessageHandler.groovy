@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component
 class MQTTMessageHandler implements MessageHandler, EventPublisher {
     @Autowired
     MqttTopicService mqttTopicService
-    def espStateRegex = "madhouse/(\\w+|_+)/status" //online | offline
+    def espStateRegex = "myhab/(\\w+|_+)/status" //online | offline
 
     @Override
     void handleMessage(Message<?> message) throws MessagingException {
