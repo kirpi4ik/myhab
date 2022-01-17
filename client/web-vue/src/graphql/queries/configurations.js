@@ -79,3 +79,8 @@ export const CONFIGURATION_DELETE = gql`
         }
     }
 `;
+export const CONFIG_GLOBAL_GET_STRING_VAL = gql`
+    query ($key:String!){
+        config(key: $key) 
+    }
+`;
