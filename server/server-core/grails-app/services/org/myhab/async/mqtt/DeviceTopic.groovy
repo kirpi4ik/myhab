@@ -10,5 +10,6 @@ interface DeviceTopic {
         STAT_IP,
         STAT_PORT,
         STATUS,
+        STATUS_WRITE,
     }
 }
