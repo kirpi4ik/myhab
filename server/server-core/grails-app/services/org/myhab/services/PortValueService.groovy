@@ -47,6 +47,7 @@ class PortValueService implements EventPublisher {
                     newPortValue.portUid = devicePort.uid
                     newPortValue.value = newVal
                     newPortValue.save(failOnError: false, flush: true)
+
                     devicePort.setValue(newVal)
                     devicePort.save(failOnError: false, flush: true)
 
