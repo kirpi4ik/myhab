@@ -121,10 +121,8 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':
 
     doLast {
         copy {
-            from fileTree(dir: "${project(':server-core').buildDir}/libs/") // <3>
+            from "${project(':server-core').buildDir}/libs/${projectName}-${projectVersion}.jar"
             into "${buildDir}"
-
-            rename '(.+)', "${projectName}-${projectVersion}.jar"
         }
 
         logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue projects."
