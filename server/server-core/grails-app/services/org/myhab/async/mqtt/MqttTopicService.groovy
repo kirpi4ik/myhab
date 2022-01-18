@@ -98,7 +98,7 @@ class MqttTopicService {
 
     def publishStatus(Device d, DeviceStatus status) {
         mqttPublishGateway.sendToMqtt(new SimpleTemplateEngine()
-                .createTemplate(device(d).topicByType(STATUS))
+                .createTemplate(device(d.model).topicByType(STATUS))
                 .make([map: new MQTTMessage(deviceCode: d.code)]).toString(), status.name().toLowerCase())
     }
 }
