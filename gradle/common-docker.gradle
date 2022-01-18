@@ -26,7 +26,7 @@ task prepareDocker(type: Copy, dependsOn: assemble) { // <3>
         into dockerBuildDir
     }
     copy {
-        from "${buildDir}/myhab-${projectVersion}.jar"
+        from "${buildDir}/${projectName}-${projectVersion}.jar"
         into dockerBuildDir
     }
 }
