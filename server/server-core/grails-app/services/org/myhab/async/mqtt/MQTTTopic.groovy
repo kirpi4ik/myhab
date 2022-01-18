@@ -90,6 +90,8 @@ enum MQTTTopic {
                 case TopicTypes.STAT_PORT:
                     return 'myhab/$map.deviceCode/sensor/esp_ip_address/state'
                 case TopicTypes.STATUS:
+                    return 'myhab/(\\w+|_+)/status'
+                case TopicTypes.STATUS_WRITE:
                     return 'myhab/$map.deviceCode/status'
                 default: return null
             }
