@@ -100,9 +100,9 @@ dependencies {
     //opsgenie atlassian
     implementation "com.opsgenie.integration:sdk:2+"
     //LogBack kibana integration
-    implementation 'ch.qos.logback:logback-core:1.2.3'
-    implementation 'ch.qos.logback:logback-access:1.2.3'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'ch.qos.logback:logback-core:1.2.10'
+    implementation 'ch.qos.logback:logback-access:1.2.10'
+    implementation 'ch.qos.logback:logback-classic:1.2.10'
     implementation 'net.logstash.logback:logstash-logback-encoder:7.0.1'
 
     implementation 'org.grails.plugins:grails-spring-websocket:2.5.0.RC1'
