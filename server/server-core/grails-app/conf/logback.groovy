@@ -37,7 +37,7 @@ appender('STDOUT', ConsoleAppender) {
             globalCustomFields(GlobalCustomFieldsJsonProvider) {
                 customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
             }
-            threadName(LoggingEventThreadNameJsonProvider) {
+            threadName(ThreadNameJsonProvider) {
                 fieldName = 'thread'
             }
             mdc(MdcJsonProvider) {
@@ -86,7 +86,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
                     customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
                 }
-                threadName(LoggingEventThreadNameJsonProvider) {
+                threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
                 }
                 mdc(MdcJsonProvider) {
@@ -142,7 +142,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
                 globalCustomFields(GlobalCustomFieldsJsonProvider) {
                     customFields = "${toJson(pid: "${new ApplicationPid()}", appVersion: Metadata.current.'info.app.version', jvm: System.getProperty('java.version'))}"
                 }
-                threadName(LoggingEventThreadNameJsonProvider) {
+                threadName(ThreadNameJsonProvider) {
                     fieldName = 'thread'
                 }
                 mdc(MdcJsonProvider) {
@@ -176,7 +176,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
     root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
 }
 
-logger 'eu.devexpert', DEBUG, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
+logger 'org.myhab', DEBUG, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
 logger 'graphql', WARN, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
 //logger 'org.jsoup', DEBUG, ['STDOUT']
 //logger 'org.springframework.web.socket', DEBUG, ['STDOUT']
