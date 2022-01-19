@@ -27,6 +27,7 @@ repositories {
     maven { url "https://oss.jfrog.org/repo/" }
     maven {
         url "http://nexus.devexpert.eu/repository/maven"
+        allowInsecureProtocol true
         credentials {
             username = 'docker'
             if (file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").exists()) {
