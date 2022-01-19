@@ -133,7 +133,8 @@ bootRun {
             '-Dspring.output.ansi.enabled=always',
             '-noverify',
             '-XX:TieredStopAtLevel=1',
-            '-Xmx1024m')
+            '-Xmx1024m'
+            /*,'-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'*/)
     sourceResources sourceSets.main
     String springProfilesActive = 'spring.profiles.active'
     systemProperty springProfilesActive, System.getProperty(springProfilesActive)
@@ -146,18 +147,18 @@ bootJar {
     })
     archiveFileName = "${projectName}-${project.version}.jar"
 }
-sourceSets {
-    main {
-        groovy {
-            srcDirs = ['grails-app/controllers',
-                       'grails-app/domain',
-                       'grails-app/init',
-                       'grails-app/jobs',
-                       'grails-app/services',
-                       'grails-app/utils']
-        }
-    }
-}
+//sourceSets {
+//    main {
+//        groovy {
+//            srcDirs = ['grails-app/controllers',
+//                       'grails-app/domain',
+//                       'grails-app/init',
+//                       'grails-app/jobs',
+//                       'grails-app/services',
+//                       'grails-app/utils']
+//        }
+//    }
+//}
 codenarc {
     toolVersion = codenarcVersion
     configFile = file("${projectDir}/config/codenarc/rules.groovy")
