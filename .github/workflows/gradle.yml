@@ -41,7 +41,7 @@ jobs:
       - name: Build with Gradle
         env:
           NEXUS_DEVEXPERT_EU_PASSWORD: ${{ secrets.NEXUS_DEVEXPERT_EU_PASSWORD }}
-        run: ./gradlew createDockerfile
+        run: ./gradlew clean copyClientResources assembleServerAndClient createDockerfile
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
