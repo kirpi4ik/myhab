@@ -18,5 +18,5 @@ repositories {
 
 dependencies {
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    compile group: 'org.jeasy', name: 'easy-rules-core', version: '3.4.0'
+    implementation group: 'org.jeasy', name: 'easy-rules-core', version: '3.4.0'
 }
