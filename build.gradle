@@ -2,6 +2,8 @@ import org.joda.time.DateTime;
 
 buildscript {
     repositories {
+        mavenCentral()
+        gradlePluginPortal()
         maven {
             url "http://nexus.devexpert.eu/repository/maven"
             allowInsecureProtocol true
@@ -17,23 +19,19 @@ buildscript {
     }
     dependencies {
         classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
-        classpath 'com.bmuschko:gradle-docker-plugin:6.6.1'
+        classpath "com.bmuschko:gradle-docker-plugin:7.2.0"
         classpath 'commons-io:commons-io:2.6'
         classpath 'joda-time:joda-time:2.10.13'
     }
 }
 
 plugins {
-    id "com.bmuschko.docker-remote-api" version "6.6.1"
-    id 'java-library'
+    id "com.bmuschko.docker-remote-api" version "7.2.0"
 }
 group "${projectGroup}"
 
 allprojects {
     apply plugin: 'idea'
-
-    sourceCompatibility = "11";
-    targetCompatibility = "11";
 
     repositories {
         mavenLocal()
@@ -48,9 +46,10 @@ ext {
     commonBuild = new File(project.rootDir, "gradle").absolutePath
     dockerBuildDir = mkdir("${buildDir}/docker")
     dockerBuildGroup = 'Docker'
-    dockerRegistry = 'nexus.devexpert.eu:8888'
+    dockerRegistry = 'index.docker.io'
     dockerRepo = 'myhab'
-    dockerTag = "${dockerRepo}:${projectVersion}" // <1>
+    tagId = "${projectVersion}-x2"
+    dockerTag = "${dockerRepo}:${tagId}" // <1>
 }
 
 //end::extVariables[]
@@ -59,13 +58,9 @@ docker {
 //    url = 'http://localhost:2375'
 //    certPath = new File(System.properties['user.home'], '.boot2docker/certs/boot2docker-vm')
     registryCredentials {
-        url = 'http://nexus.devexpert.eu:8888/v1/'
-        username = 'docker'
-        if (file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").exists()) {
-            password = file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").text
-        } else {
-            password = "${System.env.NEXUS_DEVEXPERT_EU_PASSWORD}"
-        }
+        url = 'https://index.docker.io/v1/'
+        ***REMOVED***
+        password = '***REMOVED***'
     }
 }
 //tag::prepareDocker[]
@@ -169,6 +164,8 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     from 'openjdk:11'
 
+    label(['maintainer': 'Dumitru Ciubenco "dumitru.ciubenco@gmail.com"'])
+
     exposePort 8181
     environmentVariable 'GRAILS_ENV', 'production'
     // Create a config directory and expose as volume.
@@ -192,21 +189,21 @@ task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) { // <6>
     group = dockerBuildGroup
 
     inputDir = file(dockerBuildDir)
-    images.add(dockerTag)
+    images.add("kirpi4ik/myhab:${tagId}")
 }
 task tagImage(type: DockerTagImage, dependsOn: buildImage) {
     description "Tag custom docker image."
     group = dockerBuildGroup
     targetImageId buildImage.getImageId()
-    repository = "${dockerRegistry}/${dockerRepo}".toString()
-    tag = "${projectVersion}"
+    repository = "kirpi4ik/myhab".toString()
+    tag = "${tagId}"
 }
 
 task pushImage(type: DockerPushImage, dependsOn: tagImage) {
     group = dockerBuildGroup
     description "Push custom docker image."
 
-    images.add("${dockerRegistry}/${dockerTag}".toString())
+    images.add("kirpi4ik/myhab:${tagId}".toString())
 }
 //end::buildImage[]
 task removeImage(type: DockerRemoveImage) {
