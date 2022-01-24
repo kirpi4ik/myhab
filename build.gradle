@@ -151,7 +151,7 @@ task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
         from "${buildDir}/${projectName}-${projectVersion}.jar"
     }
 
-    eachFile { logger.quiet("## ${it.file.absolutePath}") }
+    eachFile { logger.quiet("## ${it.file.absolutePath} | ${it.file.length()}") }
 }
 //end::prepareDocker[]
 
