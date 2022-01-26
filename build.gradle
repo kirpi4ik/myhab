@@ -57,8 +57,11 @@ ext {
 docker {
     registryCredentials {
         url = 'https://index.docker.io/v1/'
-        username = file("${System.properties['user.home']}/.docker/hub.docker.com").readLines().get(0)
-        password = file("${System.properties['user.home']}/.docker/hub.docker.com").readLines().get(1)
+        def secret = file("${System.properties['user.home']}/.docker/hub.docker.com")
+        if (secret.exists()) {
+            username = secret.readLines().get(0)
+            password = secret.readLines().get(1)
+        }
     }
 }
 //tag::prepareDocker[]
