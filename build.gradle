@@ -48,19 +48,17 @@ ext {
     dockerBuildGroup = 'Docker'
     dockerRegistry = 'index.docker.io'
     dockerRepo = 'myhab'
-    tagId = "${projectVersion}-x2"
+    tagId = "${projectVersion}"
     dockerTag = "${dockerRepo}:${tagId}" // <1>
 }
 
 //end::extVariables[]
 //tag::prepareDocker[]
 docker {
-//    url = 'http://localhost:2375'
-//    certPath = new File(System.properties['user.home'], '.boot2docker/certs/boot2docker-vm')
     registryCredentials {
         url = 'https://index.docker.io/v1/'
-        ***REMOVED***
-        password = '***REMOVED***'
+        username = file("${System.properties['user.home']}/.docker/hub.docker.com").readLines().get(0)
+        password = file("${System.properties['user.home']}/.docker/hub.docker.com").readLines().get(1)
     }
 }
 //tag::prepareDocker[]
