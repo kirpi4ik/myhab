@@ -307,6 +307,13 @@
                             actionElementClass = "lock";
                             break
                         }
+                        case 'LUMINOSITY' : {
+                            if (srvAsset && srvAsset.portValue) {
+                                svgEl.getElementsByTagName("text").item(0).textContent = (srvAsset.portValue/10) + '%'
+                            }
+                            svgEl.getElementsByTagName("text").item(0).setAttribute("class", 'luminosity_text');
+                            break
+                        }
                     }
                 } else if (svgElement[0] === 'nav') {
                     if (svgElement[1] === 'back' || svgElement[1] === 'forward') {
@@ -485,6 +492,10 @@
         font-family: Arial, sans-serif;
         font-size: 113.1px;
         fill-opacity: 0.8;
+    }
+    text.luminosity_text{
+        fill: #d3e5e5;
+        fill-opacity: 0.9;
     }
 
     /* Enter and leave animations can use different */
