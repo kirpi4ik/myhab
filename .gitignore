@@ -2,6 +2,7 @@
 **/node_modules
 **/.idea
 **/build/
+**/bin/
 **/*.iml
 **/*.lock
 .gradle
