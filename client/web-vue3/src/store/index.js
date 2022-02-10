@@ -2,6 +2,7 @@ import { store } from 'quasar/wrappers';
 import { createStore } from 'vuex';
 
 import settings from './store.settings';
+import ws from './store.ws';
 
 // import example from './module-example'
 
@@ -18,6 +19,7 @@ export default store(function (/* { ssrContext } */) {
 	const Store = createStore({
 		modules: {
 			settings,
+      ws
 		},
 
 		// enable strict mode (adds overhead!)
