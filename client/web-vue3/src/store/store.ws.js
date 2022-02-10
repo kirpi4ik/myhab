@@ -59,7 +59,7 @@ const actions = {
     }
   },
   stompFailureCallback(error) {
-    this.commit("stompConnection", 'OFFLINE');
+    this.commit("wsConnection", 'OFFLINE');
     console.log('STOMP error: ' + error);
     setTimeout(this.connect, 5000);
     console.log('STOMP: Reconecting in 5 seconds');

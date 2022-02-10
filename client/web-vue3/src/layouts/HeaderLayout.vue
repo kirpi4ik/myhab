@@ -4,6 +4,8 @@
       <q-btn flat dense round @click="toggleSideBar" icon="menu" aria-label="Menu"/>
       <q-toolbar-title> myHAB [{{wsConnection}}]</q-toolbar-title>
       <div class="q-gutter-sm row items-center no-wrap">
+        <q-icon name="mdi-wifi" class="float-right" color="green" size="40px" v-if="wsConnection=='ONLINE'"/>
+        <q-icon name="mdi-wifi-off" class="float-right" color="red" size="40px" v-if="wsConnection=='OFFLINE'"/>
         <q-btn
           round
           dense
@@ -41,10 +43,7 @@
             <img src="~assets/avatar.png"/>
           </q-avatar>
         </q-btn>
-        <q-btn round flat>
-          {{wsConnection}}
 
-        </q-btn>
       </div>
     </q-toolbar>
   </q-header>
@@ -61,7 +60,7 @@
     },
     computed: {
       wsConnection() {
-        return this.$store.state.ws
+        return this.$store.state.ws.connection
       }
     },
     setup() {
