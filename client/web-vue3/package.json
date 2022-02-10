@@ -13,6 +13,7 @@
 	"dependencies": {
 		"@apollo/client": "^3.5.8",
 		"@quasar/extras": "^1.12.5",
+		"@stomp/stompjs": "^6.1.2",
 		"@vue/apollo-composable": "^4.0.0-alpha.16",
 		"@vue/apollo-option": "^4.0.0-alpha.16",
 		"axios": "^0.25.0",
@@ -21,11 +22,14 @@
 		"graphql-tag": "^2.12.6",
 		"lodash": "^4.17.21",
 		"quasar": "^2.5.3",
+		"sockjs-client": "^1.5.2",
 		"vue": "^3.2.30",
 		"vue-i18n": "^9.2.0-beta.30",
 		"vue-router": "^4.0.12",
+		"vue-socket.io": "^3.0.10",
 		"vuedraggable": "^4.1.0",
-		"vuex": "^4.0.2"
+		"vuex": "^4.0.2",
+		"websocket": "^1.0.34"
 	},
 	"devDependencies": {
 		"@babel/eslint-parser": "^7.13.14",
