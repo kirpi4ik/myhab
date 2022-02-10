@@ -1,6 +1,7 @@
-**/dist
-**/node_modules
 **/.gradle
+**/node_modules
 **/.idea
 **/build/
 **/*.iml
+**/*.lock
+.gradle
