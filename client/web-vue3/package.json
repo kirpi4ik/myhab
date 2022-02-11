@@ -2,7 +2,7 @@
 	"name": "@myhab/myhab-web",
 	"description": "myHAB AI",
 	"author": "Dumitru Ciubenco",
-	"private": true,
+	"private": false,
 	"scripts": {
 		"serve": "set QENV=development&& quasar dev -p 10002",
 		"build": "set QENV=production&& quasar build",
