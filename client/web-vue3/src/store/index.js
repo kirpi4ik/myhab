@@ -19,7 +19,7 @@ export default store(function (/* { ssrContext } */) {
 	const Store = createStore({
 		modules: {
 			settings,
-      ws
+			ws,
 		},
 
 		// enable strict mode (adds overhead!)

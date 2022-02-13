@@ -43,7 +43,7 @@ const onErrorLink = onError(({ graphQLErrors, networkError, operation, forward }
 			error.code = 'ERROR_SERVER_DOWN';
 		}
 		console.log(`[Network error]: ${networkError}`);
-    Router.push({ path: error.path, query: { error: error.code } });
+		Router.push({ path: error.path, query: { error: error.code } });
 	}
 	if (operation.variables) {
 		const omitTypename = (key, value) => (key === '__typename' ? undefined : value);

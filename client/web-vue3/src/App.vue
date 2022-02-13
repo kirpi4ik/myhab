@@ -1,19 +1,19 @@
 <template>
-  <router-view/>
+	<router-view />
 </template>
 <script>
-  import {defineComponent} from 'vue';
-  import {mapActions} from 'vuex';
+import { defineComponent } from 'vue';
+import { mapActions } from 'vuex';
 
-  export default defineComponent({
-    name: 'App',
-    methods: {
-      ...mapActions('settings', ['getSavedSettings']),
-      ...mapActions(["connect"]),
-    },
-    mounted() {
-      this.connect();
-      this.getSavedSettings();
-    },
-  });
+export default defineComponent({
+	name: 'App',
+	methods: {
+		...mapActions('settings', ['getSavedSettings']),
+		...mapActions(['connect']),
+	},
+	mounted() {
+		this.connect();
+		this.getSavedSettings();
+	},
+});
 </script>
