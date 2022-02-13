@@ -30,10 +30,8 @@ export default defineComponent({
 	props: {
 		peripheral: Object,
 	},
-	components: {},
 	setup(props) {
 		return {
-			asset: toRef(props, 'peripheral'),
 			showLog: ref(false),
 			data: {
 				columns: [
@@ -78,14 +76,13 @@ export default defineComponent({
 			},
 		};
 	},
-	mounted() {},
 	methods: {
 		init() {
 			this.$apollo
 				.query({
 					query: PERIPHERAl_EVENT_LOGS,
 					variables: {
-						p2: String(this.asset.id),
+						p2: String(this.peripheral.id),
 						count: 10,
 						offset: 0,
 					},
@@ -94,7 +91,7 @@ export default defineComponent({
 				.then(response => {
 					let data = _.cloneDeep(response.data);
 					data.eventsByP2.forEach(function (event, index) {
-						event.strDate = format(new Date(event.tsCreated), 'yyyy/MM/dd HH:mm');
+						event.strDate = format(new Date(event.tsCreated), process.env.DATE_FORMAT_LONG);
 					});
 					this.data.items = data.eventsByP2;
 				});
