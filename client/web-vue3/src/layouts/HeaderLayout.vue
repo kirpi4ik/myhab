@@ -15,8 +15,7 @@
 					color="white"
 					icon="fas fa-mobile-alt"
 					type="a"
-					href="https://github.com/kirpi4ik/myhab"
-					target="_blank"
+          to="/wui"
 				>
 				</q-btn>
 				<q-btn
