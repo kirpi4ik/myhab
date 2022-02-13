@@ -1,7 +1,7 @@
 <template>
 	<div class="row q-col-gutter-xs">
 		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-			<q-card class="q-ma-xs" style="background-color: white">
+			<q-card class="q-ma-md-xs" style="background-color: white">
 				<q-card-section class="bg-orange-5 text-amber-1 text-h6">
 					Iluminat
 					<q-icon name="fas fa-lightbulb" class="float-right" size="40px" />
@@ -14,7 +14,7 @@
 			</q-card>
 		</div>
 		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-			<q-card class="q-ma-xs" style="background-color: white">
+			<q-card class="q-ma-md-xs" style="background-color: white">
 				<q-card-section class="bg-deep-orange-8 text-amber-1 text-h6">
 					Climatizare
 					<q-icon name="fas fa-fire" class="float-right" size="40px" />
@@ -27,7 +27,7 @@
 			</q-card>
 		</div>
 		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-			<q-card class="q-ma-xs" style="background-color: white">
+			<q-card class="q-ma-md-xs" style="background-color: white">
 				<q-card-section class="bg-blue-5 text-amber-1 text-h6">
 					Temperatura
 					<q-icon name="fas fa-fire" class="float-right" size="40px" />

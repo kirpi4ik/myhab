@@ -95,10 +95,20 @@
             }
         },
         methods: {
+            assetIdParser: function (id) {
+                let svgElement = [...id.matchAll(/([A-Za-z_]+)-(([0-9]+)(-([0-9])))*/g)]
+                return {
+                    type: svgElement[0] != null ? svgElement[0][1] : null,
+                    info: svgElement[1] != null ? svgElement[1][1] : null,
+                    category: svgElement[1] != null ? svgElement[1][1].toUpperCase() : null,
+                    id: svgElement[2] != null ? svgElement[2][3] : null,
+                    assetOrder: svgElement[2] != null ? svgElement[2][5] : null
+                };
+            },
             handleClick: function (event) {
                 let targetId = event.target.id;
-                if (targetId.startsWith("nav_")) {
-                    let direction = targetId.split("_")[1];
+                if (targetId.startsWith("nav-")) {
+                    let direction = this.assetIdParser(targetId).info;
                     if (direction === 'home') {
                         this.$router.push({path: "/dashboard"}).catch(() => {
                         });
@@ -109,20 +119,14 @@
                             this.svgPageGoBack()
                         }
                     }
-                } else if (targetId.startsWith("asset_")) {
+                } else if (targetId.startsWith("asset-")) {
                     let closest;
                     let i = 0
                     do {
                         closest = event.target.closest(this.nodes[i]);
                     } while (closest == null && i++ < this.nodes.length)
                     if (closest != null) {
-                        let svgElement = closest.id.split("_");
-                        let asset = {
-                            category: svgElement[1],
-                            info: svgElement[2],
-                            id: svgElement[3],
-                            assetOrder: svgElement[4]
-                        }
+                        let asset = this.assetIdParser(closest.id)
                         let reverseCss = closest.getAttribute("class")
                         if (reverseCss == null) {
                             reverseCss = "no-focus"
@@ -131,11 +135,10 @@
                         setTimeout(function () {
                             closest.setAttribute("class", reverseCss)
                         }, 100)
-
                         let id = asset['id'];
                         if (this.srvPeripherals[id] != null) {
                             switch (this.srvPeripherals[id].category.name) {
-                                case 'LOCK': {
+                                case 'DOOR_LOCK': {
                                     this.unlockCode = null;
                                     this.showPassword = true;
                                     break
@@ -260,16 +263,10 @@
             svgElInit: function (svg, svgEl) {
                 let wrapper = document.createElementNS("http://www.w3.org/2000/svg", 'a')
                 let actionElementClass = "";
-                let svgElement = svgEl.id.split("_");
-                if (svgElement[0] === 'asset') {
-                    let svgAsset = {
-                        category: svgElement[1].toUpperCase(),
-                        info: svgElement[2],
-                        id: svgElement[3],
-                        assetOrder: svgElement[4]
-                    }
-                    let srvAsset = this.srvPeripherals[svgAsset['id']];
-                    switch (svgAsset['category']) {
+                let svgElement = this.assetIdParser(svgEl.id)
+                if (svgElement.type === 'asset') {
+                    let srvAsset = this.srvPeripherals[svgElement['id']];
+                    switch (svgElement['category']) {
                         case 'LIGHT' : {
                             if (srvAsset && srvAsset.state) {
                                 actionElementClass = "bulb-on"
@@ -303,24 +300,24 @@
                             }
                             break
                         }
-                        case 'LOCK' : {
+                        case 'DOOR_LOCK' : {
                             actionElementClass = "lock";
                             break
                         }
                         case 'LUMINOSITY' : {
                             if (srvAsset && srvAsset.portValue) {
-                                svgEl.getElementsByTagName("text").item(0).textContent = (srvAsset.portValue/10) + '%'
+                                svgEl.getElementsByTagName("text").item(0).textContent = (srvAsset.portValue / 10) + '%'
                             }
-                            svgEl.getElementsByTagName("text").item(0).setAttribute("class", 'luminosity_text');
+                            svgEl.getElementsByTagName("text").item(0).setAttribute("class", 'luminosity-text');
                             break
                         }
                     }
-                } else if (svgElement[0] === 'nav') {
-                    if (svgElement[1] === 'back' || svgElement[1] === 'forward') {
+                } else if (svgElement.type === 'nav') {
+                    if (svgElement.info === 'back' || svgElement.info === 'forward') {
                         actionElementClass = "nav-button"
-                        if (svgElement[1] === 'back' && svg.id === this.svgPages[0].id) {
+                        if (svgElement.info === 'back' && svg.id === this.svgPages[0].id) {
                             actionElementClass = 'hidden'
-                        } else if (svgElement[1] === 'forward' && svg.id === this.svgPages[this.svgPages.length - 1].id) {
+                        } else if (svgElement.info === 'forward' && svg.id === this.svgPages[this.svgPages.length - 1].id) {
                             actionElementClass = 'hidden'
                         }
                     } else {
@@ -471,7 +468,7 @@
         stroke-width: 1.2;
     }
 
-    circle.asset_lock_circle {
+    circle.asset-lock-circle {
         stroke: #d3e5e5;
         stroke-width: 1.2;
         fill: rgb(98, 117, 129);
@@ -479,7 +476,7 @@
         fill-opacity: 0.59;
     }
 
-    circle#nav_home_1 {
+    circle#nav-home-1 {
         stroke: #d3e5e5;
         stroke-width: 1.2;
         fill: rgb(98, 117, 129);
@@ -493,7 +490,8 @@
         font-size: 113.1px;
         fill-opacity: 0.8;
     }
-    text.luminosity_text{
+
+    text.luminosity-text {
         fill: #d3e5e5;
         fill-opacity: 0.9;
     }
