@@ -1,8 +1,8 @@
 <template>
   <!--https://boxy-svg.com/app/disk:MtaL1PZN9k-->
   <div id="fullscreen">
-    <transition name="slide-fade" v-for="(svgPage) in this.svgPages" v-bind:key="svgPage.id">
-      <div class="svg-container" v-if="svgPage.visible">
+    <swiper :pagination="{      dynamicBullets: true,    }" :modules="modules" class="swiper">
+      <swiper-slide v-for="(svgPage) in this.svgPages" v-bind:key="svgPage.id">
         <inline-svg
           :src="svgPage.svgContent"
           :transformSource="transform"
@@ -11,9 +11,9 @@
           :color="false"
           ref="svg"
         ></inline-svg>
-      </div>
-    </transition>
-    <q-dialog v-model="passDialog" transition-show="jump-up" transition-hide="jump-down">
+      </swiper-slide>
+    </swiper>
+    <q-dialog v-model="unlockConfirmation.show" transition-show="jump-up" transition-hide="jump-down">
       <q-card class="bg-white">
         <q-bar class="bg-deep-orange-7 text-white">
           <q-icon name="lock"/>
@@ -23,14 +23,13 @@
             <q-tooltip class="bg-primary">Close</q-tooltip>
           </q-btn>
         </q-bar>
-
         <q-card-section>
           <div class="text-h6">Atentie! Doriti sa deschideti ?</div>
         </q-card-section>
 
         <q-card-section class="q-pa-none" vertical align="center">
           <div class="q-pa-sm">
-            <q-btn flat class="text-h6" icon="fas fa-lock-open" label="Deschide" no-caps @click="open"></q-btn>
+            <q-btn flat class="text-h6" icon="fas fa-lock-open" label="Deschide" no-caps @click="unlock"></q-btn>
           </div>
         </q-card-section>
       </q-card>
@@ -38,16 +37,29 @@
   </div>
 </template>
 <script>
+  import {Swiper, SwiperSlide} from 'swiper/vue';
+  import {Pagination} from "swiper";
+  import "swiper/css";
+
+  import "swiper/css/pagination";
   import {authenticationService} from '@/_services';
   import {heatService, lightService} from '@/_services/controls';
   import InlineSvg from 'vue-inline-svg';
   import {PERIPHERAL_LIST_WUI, PUSH_EVENT} from "@/graphql/queries";
   import _ from "lodash";
+  import {ref} from "vue";
 
   export default {
     name: 'MobileWebLayout',
     components: {
-      'inline-svg': InlineSvg
+      'inline-svg': InlineSvg,
+      Swiper,
+      SwiperSlide
+    },
+    setup() {
+      return {
+        modules: [Pagination],
+      };
     },
     data() {
       return {
@@ -520,5 +532,37 @@
   {
     transform: translateX(10px);
     opacity: 0;
+  }
+
+  .swiper {
+    width: 100%;
+    height: 100%;
+  }
+
+  .swiper-slide {
+    text-align: center;
+    font-size: 18px;
+    background: #fff;
+
+    /* Center slide text vertically */
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+  }
+
+  .swiper-slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 </style>
