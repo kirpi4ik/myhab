@@ -13,9 +13,10 @@
                 ></inline-svg>
             </div>
         </transition>
-        <CModal title="Introduceti codul de acces" color="warning" :show.sync="showPassword">
+        <CModal title="Introduceti codul de acces" color="warning" :show.sync="unlockConfirmation.show">
             <CForm validated novalidate>
-                <CInput type="number" description="Please enter your password." placeholder="Cod deblocare" :value="unlockCode" @input="unlockCode =  $event" was-validated>
+                <CInput type="number" description="Please enter your password." placeholder="Cod deblocare" :value="unlockConfirmation.unlockCode" @input="unlockConfirmation.unlockCode =  $event"
+                        was-validated>
                     <template #append-content>
                         <CIcon name="cil-lock-unlocked"/>
                     </template>
@@ -69,9 +70,12 @@
                     }
                 ],
                 nodes: ['path', 'rect', 'circle', 'polygon', 'polyline', 'text', 'g'],
-                showPassword: false,
+                unlockConfirmation: {
+                    show: false,
+                    unlockCode: null,
+                    assetId: null
+                },
                 showErrorModal: false,
-                unlockCode: null
             }
         },
         created() {
@@ -139,8 +143,9 @@
                         if (this.srvPeripherals[id] != null) {
                             switch (this.srvPeripherals[id].category.name) {
                                 case 'DOOR_LOCK': {
-                                    this.unlockCode = null;
-                                    this.showPassword = true;
+                                    this.unlockConfirmation.show = true;
+                                    this.unlockConfirmation.assetId = id;
+                                    this.unlockConfirmation.unlockCode = null;
                                     break
                                 }
                                 case 'LIGHT': {
@@ -179,16 +184,16 @@
                 let event = {
                     "p0": "evt_intercom_door_lock",
                     "p1": "PERIPHERAL",
-                    "p2": this.peripheral.id,
+                    "p2": this.unlockConfirmation.assetId,
                     "p3": "mweb",
                     "p4": "open",
-                    "p5": `{"unlockCode": "${this.unlockCode}"}`,
+                    "p5": `{"unlockCode": "${this.unlockConfirmation.unlockCode}"}`,
                     "p6": authenticationService.currentUserValue.login
                 };
                 this.$apollo.mutate({
                     mutation: PUSH_EVENT, variables: {input: event}
                 }).then(response => {
-                    this.showPassword = false
+                    this.unlockConfirmation = false
                 });
             },
             init: function () {
