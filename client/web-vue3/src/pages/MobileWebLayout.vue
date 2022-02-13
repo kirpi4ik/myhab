@@ -118,7 +118,7 @@
         if (targetId.startsWith("nav-")) {
           let direction = this.assetIdParser(targetId).info;
           if (direction === 'home') {
-            this.$router.push({path: "/dashboard"}).catch(() => {
+            this.$router.push({path: "/"}).catch(() => {
             });
           } else if (direction === 'back' || direction === 'forward') {
             if (direction === 'forward' && this.svgPageHasNext()) {
