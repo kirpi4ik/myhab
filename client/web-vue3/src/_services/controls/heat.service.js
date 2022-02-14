@@ -1,6 +1,6 @@
 import { PUSH_EVENT } from '@/graphql/queries';
 import { authenticationService } from '@/_services';
-import apolloProvider from '../../graphql';
+import { apolloProvider } from '@/boot/graphql';
 
 export const heatService = {
 	toggle,
