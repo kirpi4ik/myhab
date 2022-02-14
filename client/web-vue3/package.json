@@ -24,6 +24,7 @@
 		"graphql-tag": "^2.12.6",
 		"lodash": "^4.17.21",
 		"quasar": "^2.5.5",
+		"rxjs": "^7.5.4",
 		"sockjs-client": "^1.5.2",
 		"swiper": "^8.0.5",
 		"vue": "^3.2.30",
