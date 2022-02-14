@@ -37,18 +37,18 @@
 	</div>
 </template>
 <script>
-  import {Swiper, SwiperSlide} from 'swiper/vue';
-  import {Pagination} from 'swiper';
-  import 'swiper/css';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Pagination } from 'swiper';
+import 'swiper/css';
 
-  import 'swiper/css/pagination';
-  import {authenticationService} from '@/_services';
-  import {heatService, lightService} from '@/_services/controls';
-  import InlineSvg from 'vue-inline-svg';
-  import {PERIPHERAL_LIST_WUI, PUSH_EVENT} from '@/graphql/queries';
-  import _ from 'lodash';
+import 'swiper/css/pagination';
+import { authenticationService } from '@/_services';
+import { heatService, lightService } from '@/_services/controls';
+import InlineSvg from 'vue-inline-svg';
+import { PERIPHERAL_LIST_WUI, PUSH_EVENT } from '@/graphql/queries';
+import _ from 'lodash';
 
-  export default {
+export default {
 	name: 'MobileWebLayout',
 	components: {
 		'inline-svg': InlineSvg,

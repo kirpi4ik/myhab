@@ -1,12 +1,13 @@
 import { boot } from 'quasar/wrappers';
 
+import { ApolloClients } from '@vue/apollo-composable';
 import { createApolloProvider } from '@vue/apollo-option';
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { authenticationService } from '@/_services';
 import { Utils } from '@/_helpers';
-import Router from '@/router';
+import router from '@/router';
 
 // Notice the use of the link-error tool from Apollo
 
@@ -45,7 +46,7 @@ const onErrorLink = onError(({ graphQLErrors, networkError, operation, forward }
 			error.code = 'ERROR_SERVER_DOWN';
 		}
 		console.log(`[Network error]: ${networkError}`);
-		Router.push({ path: error.path, query: { error: error.code } });
+		router.push({ path: error.path, query: { error: error.code } });
 	}
 	if (operation.variables) {
 		const omitTypename = (key, value) => (key === '__typename' ? undefined : value);
@@ -66,10 +67,15 @@ let apolloProvider = createApolloProvider({
 	defaultClient: apolloClient,
 });
 export default boot(({ app }) => {
-	// Set i18n instance on app
 	app.use(apolloProvider);
+	const apolloClients = {
+		default: apolloClient,
+		// clientA,
+		// clientB,
+	};
+	app.provide(ApolloClients, apolloClients);
 });
 
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
-export { apolloProvider };
+export { apolloProvider, apolloClient };

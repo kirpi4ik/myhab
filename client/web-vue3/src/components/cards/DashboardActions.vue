@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { defineComponent, defineAsyncComponent } from 'vue';
+import { defineComponent } from 'vue';
 import PeripheralLock from 'components/PeripheralLock.vue';
 
 export default defineComponent({
