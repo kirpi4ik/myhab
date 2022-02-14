@@ -20,7 +20,7 @@ export default route(function (/* { store, ssrContext } */) {
 			? createWebHistory
 			: createWebHashHistory;
 
-	const Router = createRouter({
+	const router = createRouter({
 		scrollBehavior: () => ({ left: 0, top: 0 }),
 		routes,
 
@@ -29,7 +29,7 @@ export default route(function (/* { store, ssrContext } */) {
 		// quasar.conf.js -> build -> publicPath
 		history: createHistory(process.env.MODE === 'ssr' ? void 0 : process.env.VUE_ROUTER_BASE),
 	});
-	Router.beforeEach((to, from, next) => {
+	router.beforeEach((to, from, next) => {
 		// redirect to login page if not logged in and trying to access a restricted page
 		const { authorize } = to.meta;
 		const currentUser = authenticationService.currentUserValue;
@@ -37,7 +37,7 @@ export default route(function (/* { store, ssrContext } */) {
 		if (authorize) {
 			if (!currentUser) {
 				// not logged in so redirect to login page with the return url
-				return next({ path: '/pages/login', query: { returnUrl: to.path } });
+				return next({ path: '/login', query: { returnUrl: to.path } });
 			}
 
 			// check if route is restricted by role
@@ -54,5 +54,5 @@ export default route(function (/* { store, ssrContext } */) {
 		next();
 	});
 
-	return Router;
+	return router;
 });
