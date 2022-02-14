@@ -1,4 +1,4 @@
-import { Role } from '@/_helpers';
+import { Role } from '@/_helpers/role';
 
 const routes = [
 	{

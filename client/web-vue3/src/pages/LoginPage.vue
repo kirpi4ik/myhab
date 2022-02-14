@@ -30,8 +30,7 @@
 
 <script>
 import { useRoute } from 'vue-router';
-import { defineComponent } from 'vue';
-import { ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { authenticationService } from '@/_services';
 
 export default defineComponent({

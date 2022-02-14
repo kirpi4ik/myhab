@@ -1,6 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
 
-import { requestOptions, handleResponse, Utils } from '@/_helpers';
+import { handleResponse, requestOptions, Utils } from '@/_helpers';
 
 const currentUserSubject = new BehaviorSubject(JSON.parse(localStorage.getItem('currentUser')));
 
@@ -28,4 +28,5 @@ function logout() {
 	// remove user from local storage to log user out
 	localStorage.removeItem('currentUser');
 	currentUserSubject.next(null);
+	location.replace('/login');
 }

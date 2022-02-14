@@ -20,7 +20,7 @@
 	</q-dialog>
 </template>
 <script>
-import { defineComponent, ref, toRef } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { PERIPHERAl_EVENT_LOGS } from '@/graphql/queries';
 import { format } from 'date-fns';
 import _ from 'lodash';

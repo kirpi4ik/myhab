@@ -7,7 +7,6 @@ import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { authenticationService } from '@/_services';
 import { Utils } from '@/_helpers';
-import router from '@/router';
 
 // Notice the use of the link-error tool from Apollo
 
@@ -41,12 +40,13 @@ const onErrorLink = onError(({ graphQLErrors, networkError, operation, forward }
 			authenticationService.logout();
 			error.path = '/login';
 			error.code = 'ERROR_NOT_AUTHENTICATED';
+			location.replace(error.path);
 		}
 		if (networkError.message === 'Failed to fetch') {
 			error.code = 'ERROR_SERVER_DOWN';
 		}
 		console.log(`[Network error]: ${networkError}`);
-		router.push({ path: error.path, query: { error: error.code } });
+		// router.push({ path: error.path, query: { error: error.code } });
 	}
 	if (operation.variables) {
 		const omitTypename = (key, value) => (key === '__typename' ? undefined : value);

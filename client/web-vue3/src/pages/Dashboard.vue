@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import { defineComponent, defineAsyncComponent } from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 
 export default defineComponent({
 	name: 'PageIndex',
