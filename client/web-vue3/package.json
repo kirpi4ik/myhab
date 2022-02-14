@@ -1,5 +1,6 @@
 {
 	"name": "@myhab/myhab-web",
+	"productName": "myHAB",
 	"description": "myHAB AI",
 	"author": "Dumitru Ciubenco",
 	"private": false,

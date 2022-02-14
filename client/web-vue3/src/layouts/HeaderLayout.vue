@@ -8,16 +8,7 @@
 					<q-icon name="mdi-wifi" class="float-right" color="green" size="40px" v-if="wsConnection == 'ONLINE'" />
 					<q-icon name="mdi-wifi-off" class="float-right" color="red" size="40px" v-if="wsConnection == 'OFFLINE'" />
 				</div>
-				<q-btn
-					round
-					dense
-					flat
-					color="white"
-					icon="fas fa-mobile-alt"
-					type="a"
-          to="/wui"
-				>
-				</q-btn>
+				<q-btn round dense flat color="white" icon="fas fa-mobile-alt" type="a" to="/wui"> </q-btn>
 				<q-btn
 					round
 					dense

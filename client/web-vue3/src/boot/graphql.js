@@ -18,7 +18,9 @@ const withAuthToken = setContext(() => {
 	// return the headers to the context so httpLink can read them
 	return {
 		headers: {
-			authorization: `Bearer ${authenticationService.currentUserValue.access_token}`,
+			authorization: `Bearer ${
+				authenticationService.currentUserValue != null ? authenticationService.currentUserValue.access_token : ''
+			}`,
 		},
 	};
 });
@@ -36,7 +38,7 @@ const onErrorLink = onError(({ graphQLErrors, networkError, operation, forward }
 		let error = { path: '/pages/500', code: 'ERROR_UNKNOW' };
 		if (networkError.statusCode === 401) {
 			authenticationService.logout();
-			error.path = '/pages/login';
+			error.path = '/login';
 			error.code = 'ERROR_NOT_AUTHENTICATED';
 		}
 		if (networkError.message === 'Failed to fetch') {
