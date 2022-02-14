@@ -10,9 +10,9 @@
 </template>
 
 <script>
-import HeaderLayout from 'layouts/HeaderLayout.vue';
-import SideBarLayout from 'layouts/SideBarLayout.vue';
-import BreadCrumbLayout from 'layouts/BreadCrumbLayout.vue';
+import HeaderLayout from 'layouts/components/HeaderLayout.vue';
+import SideBarLayout from 'layouts/components/SideBarLayout.vue';
+import BreadCrumbLayout from 'layouts/components/BreadCrumbLayout.vue';
 
 import { defineComponent } from 'vue';
 

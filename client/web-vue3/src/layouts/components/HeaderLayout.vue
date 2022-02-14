@@ -45,6 +45,20 @@
 					<q-avatar size="42px">
 						<img src="~assets/avatar.png" />
 					</q-avatar>
+					<q-menu>
+						<q-list style="min-width: 100px">
+							<q-item style="max-width: 420px" clickable v-ripple @click="authenticationService.logout()">
+								<q-item-section avatar>
+									<q-avatar>
+										<q-icon name="mdi-logout" />
+									</q-avatar>
+								</q-item-section>
+								<q-item-section>
+									<q-item-label>Logout</q-item-label>
+								</q-item-section>
+							</q-item>
+						</q-list>
+					</q-menu>
 				</q-btn>
 			</div>
 		</q-toolbar>
@@ -53,10 +67,11 @@
 <script>
 import { defineComponent } from 'vue';
 import UserMessages from './UserMessages';
-import { useUiState } from '../composables';
+import { useUiState } from '@/composables';
 import { useQuery } from '@vue/apollo-composable';
 import { CONFIG_GLOBAL_GET_STRING_VAL } from '@/graphql/queries';
 import ClockComponent from 'components/ClockComponent';
+import { authenticationService } from '@/_services';
 
 export default defineComponent({
 	name: 'HeaderLayout',
@@ -75,6 +90,7 @@ export default defineComponent({
 		return {
 			toggleSideBar,
 			result,
+			authenticationService,
 		};
 	},
 	mounted() {
