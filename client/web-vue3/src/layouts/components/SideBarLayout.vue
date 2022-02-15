@@ -10,58 +10,42 @@
             <q-item-label>Dashboard</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item to="/Dashboard2" active-class="q-item-no-link-highlighting">
-          <q-item-section avatar>
-            <q-icon name="dashboard"/>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Users</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-expansion-item icon="pages" label="Cables">
-          <q-list class="q-pl-lg">
-            <q-item to="/login" active-class="q-item-no-link-highlighting">
+        <q-expansion-item icon="mdi-clipboard-edit-outline" label="Administration" class="text-weight-bolder text-white">
+          <q-list class="q-pl-lg text-weight-light">
+            <q-item to="/users" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="email"/>
+                <q-icon name="mdi-account-details"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>login</q-item-label>
+                <q-item-label>Users</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item to="/Lock" active-class="q-item-no-link-highlighting">
+            <q-item to="/devices" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="lock"/>
+                <q-icon name="mdi-devices"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Lock Screen</q-item-label>
+                <q-item-label>Devices</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item to="/Lock-2" active-class="q-item-no-link-highlighting">
+            <q-item to="/peripherals" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="lock"/>
+                <q-icon name="mdi-light-switch"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Lock Screen - 2</q-item-label>
+                <q-item-label>Peripherals</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item to="/Pricing" active-class="q-item-no-link-highlighting">
+            <q-item to="/cables" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="list"/>
+                <q-icon name="mdi-cable-data"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Pricing</q-item-label>
+                <q-item-label>Cables</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item-label header class="text-weight-bolder text-white">Generic</q-item-label>
-            <q-item to="/Profile" active-class="q-item-no-link-highlighting">
-              <q-item-section avatar>
-                <q-icon name="person"/>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>User Profile</q-item-label>
-              </q-item-section>
-            </q-item>
-            <q-item to="/Maintenance" active-class="q-item-no-link-highlighting">
+            <q-item-label header class="text-weight-bolder text-white">Settings</q-item-label>
+            <q-item to="/maintenance" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="settings"/>
               </q-item-section>

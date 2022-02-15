@@ -54,7 +54,7 @@ export default {
 	right: 230px;
 	top: 45%;
 	transform: translate(-50%, -50%);
-	color: #d6dbdc;
+	color: #6a7a7f;
 	text-shadow: 0 0 20px rgb(7, 82, 108), 0 0 20px rgba(10, 175, 230, 0);
 }
 
