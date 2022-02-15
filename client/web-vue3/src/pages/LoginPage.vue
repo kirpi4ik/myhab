@@ -18,7 +18,7 @@
 							<q-input filled v-model="username" label="Username" lazy-rules />
 							<q-input type="password" filled v-model="password" label="Password" lazy-rules />
 							<div>
-								<q-btn label="Login" type="submit" color="primary" />
+								<q-btn label="Login" type="submit" color="secondary" />
 							</div>
 						</q-form>
 					</q-card-section>
