@@ -10,7 +10,7 @@
             <q-item-label>Dashboard</q-item-label>
           </q-item-section>
         </q-item>
-        <q-expansion-item icon="mdi-clipboard-edit-outline" label="Administration" class="text-weight-bolder text-white">
+        <q-expansion-item icon="mdi-clipboard-edit-outline" label="Infrastructure" class="text-weight-bolder text-white">
           <q-list class="q-pl-lg text-weight-light">
             <q-item to="/users" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
