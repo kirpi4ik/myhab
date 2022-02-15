@@ -1,4 +1,7 @@
 {
+  "project": {
+    "name": "myHAB"
+  },
 	"actions": {
 		"view": "Vizualizare",
 		"save": "Salvare",

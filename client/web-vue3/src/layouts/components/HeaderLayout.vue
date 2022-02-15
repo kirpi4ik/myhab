@@ -1,8 +1,8 @@
 <template>
-	<q-header elevated class="bg-grey-10">
+	<q-header elevated class="bg-primary">
 		<q-toolbar>
-			<q-btn flat dense round @click="toggleSideBar" icon="menu" aria-label="Menu" />
-			<q-toolbar-title> myHAB</q-toolbar-title>
+			<q-btn flat dense round @click="toggleSideBar" icon="menu" aria-label="Menu" color="secondary"/>
+			<q-toolbar-title></q-toolbar-title>
 			<div class="q-gutter-sm row items-center no-wrap">
 				<div>
 					<clock-component v-if="$q.screen.gt.sm" />
@@ -10,28 +10,28 @@
 						round
 						dense
 						flat
-						color="white"
+						color="secondary"
 						icon="mdi-cctv"
 						type="a"
 						:href="result.config"
 						v-if="result && result.config"
 					></q-btn>
-					<q-icon name="mdi-wifi" class="float-right" color="green" size="40px" v-if="wsConnection == 'ONLINE'" />
-					<q-icon name="mdi-wifi-off" class="float-right" color="red" size="40px" v-if="wsConnection == 'OFFLINE'" />
+					<q-icon name="mdi-wifi" class="float-right" color="positive" size="40px" v-if="wsConnection == 'ONLINE'" />
+					<q-icon name="mdi-wifi-off" class="float-right" color="negative" size="40px" v-if="wsConnection == 'OFFLINE'" />
 				</div>
-				<q-btn round dense flat color="white" icon="fas fa-mobile-alt" type="a" to="/wui"></q-btn>
+				<q-btn round dense flat color="secondary" icon="fas fa-mobile-alt" type="a" to="/wui"></q-btn>
 				<q-btn
 					round
 					dense
 					flat
-					color="white"
+					color="secondary"
 					:icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'"
 					@click="$q.fullscreen.toggle()"
 					v-if="$q.screen.gt.sm"
 				>
 				</q-btn>
-				<q-btn round dense flat color="white" icon="notifications">
-					<q-badge color="red" text-color="white" floating> 5</q-badge>
+				<q-btn round dense flat color="secondary" icon="notifications">
+					<q-badge color="negative" text-color="primary" floating> 5</q-badge>
 					<q-menu>
 						<q-list style="min-width: 100px">
 							<user-messages></user-messages>
