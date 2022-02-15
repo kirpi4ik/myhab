@@ -2,145 +2,148 @@
   "project": {
     "name": "myHAB"
   },
-	"actions": {
-		"view": "Vizualizare",
-		"save": "Salvare",
-		"edit": "Editare",
-		"delete": "Stergere",
-		"create": "Creare",
-		"add": "Adaugare",
-		"cancel": "Renuntare",
-		"config": "Configurare",
-		"add_new": "Adauga",
-		"remove_from": "Starge din lista",
-		"nav": {
-			"back": "Inapoi",
-			"next": "Pasul urmator"
-		}
-	},
-	"modal": {
-		"delete": {
-			"title": "Stergere",
-			"confirmation_msg": "Sunteti sigur ca doriti sa stergeti :"
-		}
-	},
-	"table": {
-		"header": {
-			"actions": "Actiune"
-		}
-	},
-	"breadcrumb": {
-		"home": "Acasa",
-		"dashboard": "Dashboard",
-		"peripherals": "Periferice",
-		"peripheral": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Periferic nou"
-		},
-		"ports": {
-			"list": "Porturi",
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Port nou"
-		},
-		"zones": "Locatii",
-		"zone": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Locatie noua"
-		},
-		"users": "Utilizatori",
-		"user": {
-			"details": "Detalii utilizator",
-			"edit": "Editeaza utilizator",
-			"create": "Utilizator nou"
-		},
-		"devices": "Dispozitive",
-		"device": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Dispozitiv nou"
-		},
-		"cables": "Cablaj",
-		"cable": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Cablaj nou"
-		},
-		"configurations": "Configurare"
-	},
-	"peripheral": {
-		"fields": {
-			"category": "Categorie",
-			"categories": "Categorii",
-			"zone": "Localizare",
-			"zones": "Localizari",
-			"connectedTo": "Conectat la "
-		},
-		"list": {
-			"nav_title": "Lista periferice"
-		},
-		"view": {
-			"nav_title": "Detalii Periferic :"
-		},
-		"create": {
-			"nav_title": "Periferice"
-		},
-		"edit": {
-			"nav_title": "Editare periferic :"
-		}
-	},
-	"device": {
-		"edit": {
-			"nav_title": "Editare dispozitiv :"
-		},
-		"details": {
-			"title": "Detalii dispozitiv :"
-		},
-		"fields": {
-			"type": {
-				"label": "Tip"
-			},
-			"rack": {
-				"label": "Rack",
-				"fields": {
-					"name": "Denumire",
-					"description": "Descriere"
-				}
-			},
-			"networkAddress": {
-				"label": "Adresa retea",
-				"fields": {
-					"ip": "IP",
-					"port": "Port",
-					"gateway": "Gateway"
-				}
-			},
-			"authAccounts": {
-				"label": "Conturi access",
-				"fields": {
-					"username": "IP",
-					"password": "Port",
-					"isDefault": "Implicit"
-				}
-			}
-		}
-	},
-	"cables": {
-		"list": {
-			"nav_title": "Cabluri"
-		}
-	},
-	"port": {
-		"fields": {
-			"type": "Tip",
-			"state": "Stare"
-		}
-	},
-	"configurations": {
-		"list": {
-			"title": "Configurarile"
-		}
-	}
+  "actions": {
+    "view": "Vizualizare",
+    "save": "Salvare",
+    "edit": "Editare",
+    "delete": "Stergere",
+    "create": "Creare",
+    "add": "Adaugare",
+    "cancel": "Renuntare",
+    "config": "Configurare",
+    "add_new": "Adauga",
+    "remove_from": "Starge din lista",
+    "nav": {
+      "back": "Inapoi",
+      "next": "Pasul urmator"
+    }
+  },
+  "modal": {
+    "delete": {
+      "title": "Stergere",
+      "confirmation_msg": "Sunteti sigur ca doriti sa stergeti :"
+    }
+  },
+  "table": {
+    "header": {
+      "actions": "Actiune"
+    }
+  },
+  "navigation": {
+    "home": "Acasa",
+    "dashboard": "Dashboard",
+    "infrastructure": "Infrastructura",
+    "peripherals": "Periferice",
+    "settings": "Setari",
+    "maintenance": "Maintenance",
+    "peripheral": {
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Periferic nou"
+    },
+    "ports": {
+      "list": "Porturi",
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Port nou"
+    },
+    "zones": "Locatii",
+    "zone": {
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Locatie noua"
+    },
+    "users": "Utilizatori",
+    "user": {
+      "details": "Detalii utilizator",
+      "edit": "Editeaza utilizator",
+      "create": "Utilizator nou"
+    },
+    "devices": "Dispozitive",
+    "device": {
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Dispozitiv nou"
+    },
+    "cables": "Cablaj",
+    "cable": {
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Cablaj nou"
+    },
+    "configurations": "Configurare"
+  },
+  "peripheral": {
+    "fields": {
+      "category": "Categorie",
+      "categories": "Categorii",
+      "zone": "Localizare",
+      "zones": "Localizari",
+      "connectedTo": "Conectat la "
+    },
+    "list": {
+      "nav_title": "Lista periferice"
+    },
+    "view": {
+      "nav_title": "Detalii Periferic :"
+    },
+    "create": {
+      "nav_title": "Periferice"
+    },
+    "edit": {
+      "nav_title": "Editare periferic :"
+    }
+  },
+  "device": {
+    "edit": {
+      "nav_title": "Editare dispozitiv :"
+    },
+    "details": {
+      "title": "Detalii dispozitiv :"
+    },
+    "fields": {
+      "type": {
+        "label": "Tip"
+      },
+      "rack": {
+        "label": "Rack",
+        "fields": {
+          "name": "Denumire",
+          "description": "Descriere"
+        }
+      },
+      "networkAddress": {
+        "label": "Adresa retea",
+        "fields": {
+          "ip": "IP",
+          "port": "Port",
+          "gateway": "Gateway"
+        }
+      },
+      "authAccounts": {
+        "label": "Conturi access",
+        "fields": {
+          "username": "IP",
+          "password": "Port",
+          "isDefault": "Implicit"
+        }
+      }
+    }
+  },
+  "cables": {
+    "list": {
+      "nav_title": "Cabluri"
+    }
+  },
+  "port": {
+    "fields": {
+      "type": "Tip",
+      "state": "Stare"
+    }
+  },
+  "configurations": {
+    "list": {
+      "title": "Configurarile"
+    }
+  }
 }
