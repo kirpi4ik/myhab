@@ -1,7 +1,8 @@
 <template>
 	<q-header elevated class="bg-primary">
 		<q-toolbar>
-			<q-btn flat dense round @click="toggleSideBar" icon="menu" aria-label="Menu" color="secondary"/>
+			<q-btn flat dense round @click="toggleSideBar" icon="menu" aria-label="Menu" color="secondary" />
+			<q-separator vertical inset />
 			<q-toolbar-title></q-toolbar-title>
 			<div class="q-gutter-sm row items-center no-wrap">
 				<div>
@@ -62,6 +63,7 @@
 				</q-btn>
 			</div>
 		</q-toolbar>
+		<bread-crumb-layout />
 	</q-header>
 </template>
 <script>
@@ -72,12 +74,14 @@ import { useQuery } from '@vue/apollo-composable';
 import { CONFIG_GLOBAL_GET_STRING_VAL } from '@/graphql/queries';
 import ClockComponent from 'components/ClockComponent';
 import { authenticationService } from '@/_services';
+import BreadCrumbLayout from 'layouts/components/BreadCrumbLayout.vue';
 
 export default defineComponent({
 	name: 'HeaderLayout',
 	components: {
 		UserMessages,
 		ClockComponent,
+		BreadCrumbLayout,
 	},
 	computed: {
 		wsConnection() {
