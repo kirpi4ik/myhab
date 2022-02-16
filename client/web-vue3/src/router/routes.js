@@ -24,10 +24,6 @@ const routes = [
         ]
       },
       {
-        path: '/wui',
-        component: () => import('pages/MobileWebLayout'),
-      },
-      {
         path: adminPrefix + '/users',
         component: () => import('layouts/CenterLayout'),
         children: [
@@ -162,7 +158,10 @@ const routes = [
     ],
     meta: {authorize: [Role.Admin, Role.User]},
   },
-
+  {
+    path: '/wui',
+    component: () => import('pages/MobileWebLayout'),
+  },
   // Always leave this as last one,
   // but you can also remove it
   {
