@@ -16,6 +16,7 @@ const routes = [
         children: [
           {
             path: '/zones/:zoneId',
+            name: 'zoneById',
             component: () => import('pages/ZoneCombinedView'),
             meta: {
               reload: true
@@ -161,6 +162,7 @@ const routes = [
   {
     path: '/wui',
     component: () => import('pages/MobileWebLayout'),
+    meta: {authorize: [Role.Admin, Role.User]},
   },
   // Always leave this as last one,
   // but you can also remove it
