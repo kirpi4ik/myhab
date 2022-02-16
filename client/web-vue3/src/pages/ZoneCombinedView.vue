@@ -13,12 +13,6 @@
 
             <q-item-section>
               <q-item-label class="text-weight-bold text-h5">{{ zone.name }}</q-item-label>
-              <q-item-label caption>
-                {{ des }}
-              </q-item-label>
-              <q-item-label class="text-grey-8">
-                {{ email }}
-              </q-item-label>
             </q-item-section>
 
             <q-item-section side>
