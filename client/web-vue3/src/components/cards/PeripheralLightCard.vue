@@ -2,7 +2,7 @@
   <q-card class="text-white" style="background: linear-gradient(#156cb8, #60a3c2)">
     <q-item>
       <q-item-section avatar>
-        <q-avatar size="60px" :class="asset['state']? 'shadow-10 bg-blue' : 'shadow-10 bg-yellow-4'">
+        <q-avatar size="60px" :class="asset['state'] ? 'shadow-10 bg-blue' : 'shadow-10 bg-yellow-4'">
           <q-icon name="mdi-lightbulb-on" color="yellow-10" size="40px" v-if="!asset['state']"/>
           <q-icon name="mdi-lightbulb-off" color="white" size="40px" v-if="asset['state']"/>
         </q-avatar>
@@ -10,6 +10,13 @@
 
       <q-item-section>
         <q-item-label class="text-weight-medium text-h5">{{ asset.data.name }}</q-item-label>
+        <q-item-label class="text-weight-light text-blue-grey-3">{{ asset.data.description }}</q-item-label>
+        <q-item-label class="text-weight-light text-blue-grey-1" v-if="asset.expiration">
+          [
+          timer: {{humanizeDuration(Number(config('key.on.timeout').value)*1000,{ largest: 2 })}}
+          | off at :{{format(new Date(Number(asset.expiration)), "HH:mm")}}
+          ]
+        </q-item-label>
       </q-item-section>
 
       <q-item-section side>
@@ -19,7 +26,6 @@
         <q-item-label>
           <q-btn size="sm" flat round icon="mdi-view-list" class="text-white"/>
         </q-item-label>
-
       </q-item-section>
     </q-item>
 
@@ -33,25 +39,33 @@
 </template>
 <script>
   import {defineComponent, toRefs} from 'vue';
-  import Toggle from '@vueform/toggle'
+  import Toggle from '@vueform/toggle';
+  import {format} from 'date-fns';
+  import humanizeDuration from 'humanize-duration';
+  import _ from 'lodash';
+
 
   export default defineComponent({
     name: 'PeripheralLightCard',
     components: {
-      Toggle
+      Toggle,
     },
     props: {
-      peripheral: Object
+      peripheral: Object,
     },
     setup(props) {
-      const {peripheral: asset} = toRefs(props)
-      return {asset};
+      const {peripheral: asset} = toRefs(props);
+      const config = (key) => _.find(asset.value.data.configurations, function (cfg) {
+        return cfg.key == key
+      })
+
+      return {asset, format, config, humanizeDuration};
     },
-    methods: {},
   });
 </script>
 <style>
-  .toggle, .toggle-container {
+  .toggle,
+  .toggle-container {
     width: 100% !important;
     height: 40px !important;
   }

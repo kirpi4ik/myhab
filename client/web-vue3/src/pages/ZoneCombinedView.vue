@@ -6,41 +6,53 @@
       </div>
 
       <div class="col-lg-4 col-md-4 col-xs-12 col-sm-12" v-for="peripheral in peripheralList" v-bind:key="peripheral.id">
-        <peripheral-light-card :peripheral="peripheral" v-if="category ==='LIGHT'"/>
-        <peripheral-heat-card :peripheral="peripheral" v-if="category ==='HEAT'"/>
+        <peripheral-light-card :peripheral="peripheral" v-if="category === 'LIGHT'"/>
+        <peripheral-heat-card :peripheral="peripheral" v-if="category === 'HEAT'"/>
       </div>
     </div>
   </q-page>
 </template>
 
 <script>
-  import ZoneCard from "@/components/cards/ZoneCard";
-  import PeripheralLightCard from "@/components/cards/PeripheralLightCard";
-  import PeripheralHeatCard from "@/components/cards/PeripheralHeatCard";
-  import {ZONE_GET_BY_ID, ZONES_GET_ROOT, NAV_BREADCRUMB} from "@/graphql/queries";
+  import ZoneCard from '@/components/cards/ZoneCard';
+  import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
+  import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
+  import {ZONE_GET_BY_ID, ZONES_GET_ROOT, CACHE_GET_ALL_VALUES} from '@/graphql/queries';
   import {useGlobalQueryLoading, useQuery} from '@vue/apollo-composable';
   import {useRoute} from 'vue-router';
-  import _ from "lodash";
-  import {ref} from "vue";
+  import _ from 'lodash';
+  import {ref} from 'vue';
 
   export default {
     components: {
       ZoneCard,
       PeripheralLightCard,
-      PeripheralHeatCard
+      PeripheralHeatCard,
     },
     setup() {
       const route = useRoute();
-      const category = route.query.category
-      let currentZone = {}
-      let childZones = ref([])
-      let peripheralList = ref([])
-      const toggleMe = ref(true)
+      const category = route.query.category;
+      let currentZone = {};
+      let childZones = ref([]);
+      let peripheralList = ref([]);
+      let assetExpirationMap = ref({})
 
-      const peripheralFilter = (peripheral) => {
-        return peripheral.category.name === category
-      }
-      const peripheralInitCallback = (peripheral) => {
+      const {onResult: onCacheResult} = useQuery(CACHE_GET_ALL_VALUES, {cacheName: 'expiring'}, {fetchPolicy: 'network-only', nextFetchPolicy: 'cache-and-network',},);
+      onCacheResult(queryResult => {
+        assetExpirationMap.value = _.reduce(queryResult.data.cacheAll,
+          function (hash, value) {
+            var key = value['cacheKey'];
+            hash[key] = value['cachedValue'];
+            return hash;
+          },
+          {},
+        );
+      });
+
+      const peripheralFilter = peripheral => {
+        return peripheral.category.name === category;
+      };
+      const peripheralInitCallback = peripheral => {
         if (peripheral != null) {
           if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
             let port = peripheral.connectedTo[0];
@@ -52,62 +64,65 @@
               peripheral['deviceState'] = 'OFFLINE';
             }
           }
-          peripheralList.value.push(
-            {
-              data: peripheral,
-              id: peripheral['id'],
-              value: peripheral['value'],
-              state: peripheral['state'],
-              deviceState: peripheral['deviceState']
-            }
-          )
+          let asset = {
+            data: peripheral,
+            id: peripheral['id'],
+            value: peripheral['value'],
+            state: peripheral['state'],
+            deviceState: peripheral['deviceState'],
+            expiration: assetExpirationMap.value[peripheral.connectedTo[0].id],
+          };
+          peripheralList.value.push(asset);
         }
-      }
+      };
 
-      let localPList
+      let localPList;
       if (route.params.zoneId) {
-        const {onResult: onResultById} = useQuery(ZONE_GET_BY_ID, {id: route.params.zoneId}, {
-          fetchPolicy: "network-only",   // Used for first execution
-          nextFetchPolicy: "cache-and-network" // Used for subsequent executions
-        })
+        const {onResult: onResultById} = useQuery(
+          ZONE_GET_BY_ID,
+          {id: route.params.zoneId},
+          {
+            fetchPolicy: 'network-only', // Used for first execution
+            nextFetchPolicy: 'cache-and-network', // Used for subsequent executions
+          },
+        );
         onResultById(queryResult => {
-          let data = _.cloneDeep(queryResult.data)
+          let data = _.cloneDeep(queryResult.data);
           currentZone = data.zoneById;
 
           if (currentZone.peripherals) {
-            localPList = currentZone.peripherals.filter(peripheralFilter)
-            localPList.sort((a, b) => (a.name > b.name) ? 1 : -1)
+            localPList = currentZone.peripherals.filter(peripheralFilter);
+            localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
             localPList.forEach(peripheralInitCallback);
           }
           childZones.value = currentZone.zones;
           // [...childZones].sort((a, b) => (a.name > b.name) ? 1 : -1)
-        })
+        });
       }
       if (route.params.zoneId == null) {
-        const {onResult: onResultRoot} = useQuery(ZONES_GET_ROOT)
+        const {onResult: onResultRoot} = useQuery(ZONES_GET_ROOT);
         onResultRoot(queryResult => {
-          let data = _.cloneDeep(queryResult.data)
+          let data = _.cloneDeep(queryResult.data);
 
           currentZones = [];
           if (data.zonesRoot.peripherals) {
-            localPList = data.zonesRoot.peripherals.filter(peripheralFilter)
-            localPList.sort((a, b) => (a.name > b.name) ? 1 : -1)
+            localPList = data.zonesRoot.peripherals.filter(peripheralFilter);
+            localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
             localPList.forEach(peripheralInitCallback);
           }
           childZones = data.zonesRoot.zones;
           // [...childZones].sort((a, b) => (a.name > b.name) ? 1 : -1)
-        })
+        });
       }
 
-
-      const loading = useGlobalQueryLoading()
+      const loading = useGlobalQueryLoading();
       return {
         loading,
         childZones,
         peripheralList,
         category,
-        toggleMe
-      }
-    }
+        assetExpirationMap
+      };
+    },
   };
 </script>
