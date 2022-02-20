@@ -13,8 +13,8 @@
 
 			<q-item-section>
 				<q-item-label class="text-weight-medium text-h5">{{ asset.data.name }}</q-item-label>
-        <q-item-label class="text-weight-light text-blue-grey-3">{{ asset.data.description }}</q-item-label>
-      </q-item-section>
+				<q-item-label class="text-weight-light text-blue-grey-3">{{ asset.data.description }}</q-item-label>
+			</q-item-section>
 
 			<q-item-section side>
 				<q-item-label>
