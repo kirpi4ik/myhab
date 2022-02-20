@@ -48,17 +48,17 @@ export const ZONE_GET_BY_ID = gql`
 						device {
 							status
 						}
-            configurations {
-              id
-              key
-              value
-            }
+						configurations {
+							id
+							key
+							value
+						}
 					}
-          configurations{
-            id
-            key
-            value
-          }
+					configurations {
+						id
+						key
+						value
+					}
 				}
 			}
 			peripherals {
@@ -108,11 +108,11 @@ export const ZONES_GET_ROOT = gql`
 				connectedTo {
 					uid
 					value
-          configurations {
-            id
-            key
-            value
-          }
+					configurations {
+						id
+						key
+						value
+					}
 				}
 				configurations {
 					id

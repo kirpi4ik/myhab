@@ -1,5 +1,5 @@
 <template>
-	<q-btn class="glossy" color="blue-3" icon="mdi-format-list-bulleted-square" @click="openLog" />
+	<q-btn size="sm" flat round class="text-white" icon="mdi-history" @click="openLog" />
 	<q-dialog v-model="showLog" transition-show="jump-up" transition-hide="jump-down">
 		<q-card class="bg-white">
 			<q-bar class="bg-green-5 text-white">

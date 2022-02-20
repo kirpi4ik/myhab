@@ -35,11 +35,15 @@
       let currentZone = {};
       let childZones = ref([]);
       let peripheralList = ref([]);
-      let assetExpirationMap = ref({})
+      let assetExpirationMap = ref({});
 
-      const {onResult: onCacheResult} = useQuery(CACHE_GET_ALL_VALUES, {cacheName: 'expiring'}, {fetchPolicy: 'network-only', nextFetchPolicy: 'cache-and-network',},);
+      const {onResult: onCacheResult} = useQuery(
+        CACHE_GET_ALL_VALUES,
+        {cacheName: 'expiring'}
+      );
       onCacheResult(queryResult => {
-        assetExpirationMap.value = _.reduce(queryResult.data.cacheAll,
+        assetExpirationMap.value = _.reduce(
+          queryResult.data.cacheAll,
           function (hash, value) {
             var key = value['cacheKey'];
             hash[key] = value['cachedValue'];
@@ -88,6 +92,7 @@
         );
         onResultById(queryResult => {
           let data = _.cloneDeep(queryResult.data);
+          peripheralList.value = [];
           currentZone = data.zoneById;
 
           if (currentZone.peripherals) {
@@ -100,6 +105,7 @@
         });
       }
       if (route.params.zoneId == null) {
+        peripheralList.value = [];
         const {onResult: onResultRoot} = useQuery(ZONES_GET_ROOT);
         onResultRoot(queryResult => {
           let data = _.cloneDeep(queryResult.data);
@@ -121,7 +127,7 @@
         childZones,
         peripheralList,
         category,
-        assetExpirationMap
+        assetExpirationMap,
       };
     },
   };
