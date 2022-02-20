@@ -19,10 +19,14 @@ const routes = [
             name: 'zoneById',
             component: () => import('pages/ZoneCombinedView'),
             meta: {
-              reload: true
+              reload: true,
+              navigation: {
+                type: 'ZONE',
+                id: 'zoneId'
+              }
             },
-          }
-        ]
+          },
+        ],
       },
       {
         path: adminPrefix + '/users',

@@ -45,13 +45,26 @@ class Query {
                 def cacheName = environment.getArgument("cacheName")
                 def cacheKey = environment.getArgument("cacheKey")
                 def cachedValue = hazelcastInstance.getMap(cacheName).get(cacheKey)
-
                 return [cacheName: cacheName, cacheKey: cacheKey, cachedValue: "${cachedValue ? cachedValue["expireOn"] : null}"]
+
             }
-
-
         }
     }
+
+    def cacheAll() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def cacheName = environment.getArgument("cacheName")
+                def result = []
+                hazelcastInstance.getMap(cacheName).entrySet().each { entry ->
+                    result << [cacheName: cacheName, cacheKey: entry.key, cachedValue: "${entry.value ? entry.value["expireOn"] : null}"]
+                }
+                return result
+            }
+        }
+    }
+
     def config() {
         return new DataFetcher() {
             @Override

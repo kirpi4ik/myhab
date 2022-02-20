@@ -71,6 +71,15 @@ export const CACHE_GET_VALUE = gql`
 		}
 	}
 `;
+export const CACHE_GET_ALL_VALUES = gql`
+  query getCacheAll($cacheName: String!){
+    cacheAll(cacheName: $cacheName) {
+      cacheKey
+      cacheName
+      cachedValue
+    }
+  }
+`;2
 export const CONFIGURATION_DELETE = gql`
 	mutation ($id: Long!) {
 		configurationDelete(id: $id) {

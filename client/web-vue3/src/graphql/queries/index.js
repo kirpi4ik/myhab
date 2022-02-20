@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client/core';
+import {gql} from '@apollo/client/core';
 
 export * from './ports';
 export * from './peripherals';
@@ -9,20 +9,21 @@ export * from './configurations';
 export * from './users';
 
 export const NAV_BREADCRUMB = gql`
-	query navigation($zoneId: String) {
-		navigation {
-			breadcrumb(zoneId: $zoneId) {
-				name
-				zoneId
-			}
-		}
-	}
+    query navigation($type: String!, $id: String!) {
+        navigation {
+            breadcrumb(type: $type, id: $id) {
+                name
+                type
+                id
+            }
+        }
+    }
 `;
 
 export const PUSH_EVENT = gql`
-	mutation pushEvent($input: EventDatInput) {
-		pushEvent(input: $input) {
-			p0
-		}
-	}
+    mutation pushEvent($input: EventDatInput) {
+        pushEvent(input: $input) {
+            p0
+        }
+    }
 `;
