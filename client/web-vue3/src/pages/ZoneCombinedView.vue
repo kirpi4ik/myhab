@@ -89,7 +89,6 @@
           onResultRoot(queryResult => {
             let data = _.cloneDeep(queryResult.data);
 
-            currentZones = [];
             if (data.zonesRoot.peripherals) {
               localPList = data.zonesRoot.peripherals.filter(peripheralFilter);
               localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
