@@ -69,15 +69,14 @@
   </q-card>
 </template>
 <script>
+  import _ from 'lodash';
   import {computed, defineComponent, ref, toRefs} from 'vue';
   import Toggle from '@vueform/toggle';
   import {format} from 'date-fns';
   import humanizeDuration from 'humanize-duration';
-  import _ from 'lodash';
   import EventLogger from 'components/EventLogger.vue';
-  import {useApolloClient, useMutation, useQuery} from '@vue/apollo-composable';
+  import {useApolloClient, useMutation} from '@vue/apollo-composable';
   import {CACHE_DELETE, CACHE_GET_ALL_VALUES, CONFIGURATION_REMOVE_CONFIG_BY_KEY, CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID,} from '@/graphql/queries';
-  import {peripheralService} from "@/_services/controls";
 
   export default defineComponent({
     name: 'PeripheralLightCard',
@@ -105,20 +104,7 @@
       ];
       const portId = asset.value.data.connectedTo[0].id;
 
-      const {onResult: onCacheResult} = useQuery(CACHE_GET_ALL_VALUES, {cacheName: 'expiring'});
-      onCacheResult(queryResult => {
-        assetExpirationMap.value = _.reduce(
-          queryResult.data.cacheAll,
-          function (hash, value) {
-            var key = value['cacheKey'];
-            hash[key] = value['cachedValue'];
-            return hash;
-          },
-          {},
-        );
-      });
-
-      const details = async () => {
+      const loadDetails = async () => {
         const {data: livePeripheral} = await client.query({
           query: PERIPHERAL_GET_BY_ID,
           variables: {id: asset.value.id}
@@ -139,14 +125,14 @@
       const {mutate: setTimeout} = useMutation(CONFIGURATION_SET_VALUE, {
         refetchQueries: [{query: CACHE_GET_ALL_VALUES, variables: {cacheName: 'expiring'}}],
         update: () => {
-          details();
+          loadDetails();
         }
       });
       const {mutate: deleteCache} = useMutation(CACHE_DELETE, {variables: {cacheName: 'expiring', cacheKey: portId}});
       const {mutate: deleteTimeout} = useMutation(CONFIGURATION_REMOVE_CONFIG_BY_KEY, {
         update: () => {
           deleteCache();
-          details();
+          loadDetails();
         },
       });
 
