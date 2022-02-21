@@ -1,12 +1,8 @@
-import { PUSH_EVENT } from '@/graphql/queries';
-import { authenticationService } from '@/_services';
-import { apolloProvider } from '@/boot/graphql';
-
-export const heatService = {
+export const peripheralService = {
   peripheralInit,
 };
 
-const peripheralInit = peripheral => {
+function peripheralInit(assetExpirationMap, peripheral) {
   if (peripheral != null) {
     if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
       let port = peripheral.connectedTo[0];
@@ -18,14 +14,16 @@ const peripheralInit = peripheral => {
         peripheral['deviceState'] = 'OFFLINE';
       }
     }
+
+    let portId = (peripheral.connectedTo && peripheral.connectedTo.length) ? peripheral.connectedTo[0].id : null
     let asset = {
       data: peripheral,
       id: peripheral['id'],
       value: peripheral['value'],
       state: peripheral['state'],
       deviceState: peripheral['deviceState'],
-      expiration: assetExpirationMap.value[peripheral.connectedTo[0].id],
+      expiration: assetExpirationMap.value[portId],
     };
-    peripheralList.value.push(asset);
+    return asset
   }
-};
+}
