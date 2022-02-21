@@ -14,6 +14,7 @@
 </template>
 
 <script>
+import peripheralInit from '@/_services/controls';
 import ZoneCard from '@/components/cards/ZoneCard';
 import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
 import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
@@ -77,48 +78,52 @@ export default {
 			}
 		};
 
-		let localPList;
-		if (route.params.zoneId) {
-			const { onResult: onResultById } = useQuery(
-				ZONE_GET_BY_ID,
-				{ id: route.params.zoneId },
-				{
-					fetchPolicy: 'network-only', // Used for first execution
-					nextFetchPolicy: 'cache-and-network', // Used for subsequent executions
-				},
-			);
-			onResultById(queryResult => {
-				let data = _.cloneDeep(queryResult.data);
+		const loadZones = () => {
+			let localPList;
+			if (route.params.zoneId) {
+				const { onResult: onResultById } = useQuery(
+					ZONE_GET_BY_ID,
+					{ id: route.params.zoneId },
+					{
+						fetchPolicy: 'network-only', // Used for first execution
+						nextFetchPolicy: 'cache-and-network', // Used for subsequent executions
+					},
+				);
+				onResultById(queryResult => {
+					let data = _.cloneDeep(queryResult.data);
+					peripheralList.value = [];
+					currentZone = data.zoneById;
+
+					if (currentZone.peripherals) {
+						localPList = currentZone.peripherals.filter(peripheralFilter);
+						localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
+						localPList.forEach(peripheralInitCallback);
+					}
+					childZones.value = currentZone.zones;
+					// [...childZones].sort((a, b) => (a.name > b.name) ? 1 : -1)
+				});
+			}
+			if (route.params.zoneId == null) {
 				peripheralList.value = [];
-				currentZone = data.zoneById;
+				const { onResult: onResultRoot } = useQuery(ZONES_GET_ROOT);
+				onResultRoot(queryResult => {
+					let data = _.cloneDeep(queryResult.data);
 
-				if (currentZone.peripherals) {
-					localPList = currentZone.peripherals.filter(peripheralFilter);
-					localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
-					localPList.forEach(peripheralInitCallback);
-				}
-				childZones.value = currentZone.zones;
-				// [...childZones].sort((a, b) => (a.name > b.name) ? 1 : -1)
-			});
-		}
-		if (route.params.zoneId == null) {
-			peripheralList.value = [];
-			const { onResult: onResultRoot } = useQuery(ZONES_GET_ROOT);
-			onResultRoot(queryResult => {
-				let data = _.cloneDeep(queryResult.data);
-
-				currentZones = [];
-				if (data.zonesRoot.peripherals) {
-					localPList = data.zonesRoot.peripherals.filter(peripheralFilter);
-					localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
-					localPList.forEach(peripheralInitCallback);
-				}
-				childZones = data.zonesRoot.zones;
-				// [...childZones].sort((a, b) => (a.name > b.name) ? 1 : -1)
-			});
-		}
+					currentZones = [];
+					if (data.zonesRoot.peripherals) {
+						localPList = data.zonesRoot.peripherals.filter(peripheralFilter);
+						localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
+						localPList.forEach(peripheralInitCallback);
+					}
+					childZones = data.zonesRoot.zones;
+					// [...childZones].sort((a, b) => (a.name > b.name) ? 1 : -1)
+				});
+			}
+		};
+		loadZones();
 
 		const loading = useGlobalQueryLoading();
+
 		return {
 			loading,
 			childZones,

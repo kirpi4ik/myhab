@@ -46,6 +46,13 @@ export const CONFIGURATION_REMOVE_CONFIG = gql`
 		}
 	}
 `;
+export const CONFIGURATION_REMOVE_CONFIG_BY_KEY = gql`
+	mutation ($entityId: Long!, $entityType: EntityType!, $key: String!) {
+		configDeleteByKey(entityId: $entityId, entityType: $entityType, key: $key) {
+			success
+		}
+	}
+`;
 export const CONFIGURATION_GET_VALUE = gql`
 	query configPropertyByKey($key: String!, $entityId: Long!, $entityType: EntityType!) {
 		configPropertyByKey(key: $key, entityId: $entityId, entityType: $entityType) {
@@ -68,6 +75,13 @@ export const CACHE_GET_VALUE = gql`
 	query getCache($cacheName: String!, $cacheKey: String!) {
 		cache(cacheName: $cacheName, cacheKey: $cacheKey) {
 			cachedValue
+		}
+	}
+`;
+export const CACHE_DELETE = gql`
+	mutation cacheDelete($cacheName: String!, $cacheKey: String!) {
+		cacheDelete(cacheName: $cacheName, cacheKey: $cacheKey) {
+			success
 		}
 	}
 `;

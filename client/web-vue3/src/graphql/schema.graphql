@@ -352,6 +352,7 @@ type Mutation {
   cableCreate(cable: CableCreate): Cable
   cableDelete(id: Long!): DeleteResult
   cableUpdate(cable: CableUpdate, id: Long!): Cable
+  cacheDelete(cacheKey: String!, cacheName: String!): MutationResponse
   configDeleteByKey(entityId: Long!, entityType: EntityType!, key: String!): ConfigurationDeleteByKeyResult
   configurationCreate(configuration: ConfigurationCreate): Configuration
   configurationDelete(id: Long!): DeleteResult

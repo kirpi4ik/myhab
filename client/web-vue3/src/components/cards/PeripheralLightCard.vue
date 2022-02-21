@@ -12,12 +12,13 @@
 				<q-item-label class="text-weight-medium text-h5">{{ asset.data.name }}</q-item-label>
 				<q-item-label class="text-weight-light text-blue-grey-3">{{ asset.data.description }}</q-item-label>
 				<q-item-label class="text-weight-light text-teal-2 text-caption">
-					<label v-if="config('key.on.timeout').value"
+					<label v-if="config('key.on.timeout')"
 						>[ timer: {{ humanizeDuration(Number(config('key.on.timeout').value) * 1000, { largest: 2 }) }}</label
 					>
 					<label v-if="asset.expiration" class="text-weight-light text-blue-grey-3">
-						| off at :{{ format(new Date(Number(asset.expiration)), 'HH:mm') }} </label
-					>]
+						| off at :{{ format(new Date(Number(asset.expiration)), 'HH:mm') }}
+					</label>
+					<label v-if="config('key.on.timeout')">]</label>
 				</q-item-label>
 			</q-item-section>
 
@@ -36,7 +37,11 @@
 									<q-item-label>Timeout: {{ humanizeDuration(item.value * 1000, { largest: 2 }) }}</q-item-label>
 								</q-item-section>
 							</q-item>
-							<q-item clickable v-close-popup @click="deleteTimeout({ id: config('key.on.timeout').id })">
+							<q-item
+								clickable
+								v-close-popup
+								@click="deleteTimeout({ entityId: asset.id, entityType: 'PERIPHERAL', key: 'key.on.timeout' })"
+							>
 								<q-item-section>
 									<q-item-label>Sterge timeout</q-item-label>
 								</q-item-section>
@@ -64,14 +69,20 @@
 	</q-card>
 </template>
 <script>
-import { defineComponent, toRefs } from 'vue';
+import { defineComponent, toRefs, computed } from 'vue';
 import Toggle from '@vueform/toggle';
 import { format } from 'date-fns';
 import humanizeDuration from 'humanize-duration';
 import _ from 'lodash';
 import EventLogger from 'components/EventLogger.vue';
 import { useGlobalQueryLoading, useMutation, useQuery } from '@vue/apollo-composable';
-import { CONFIGURATION_SET_VALUE, CONFIGURATION_DELETE, CACHE_GET_ALL_VALUES } from '@/graphql/queries';
+import {
+	CONFIGURATION_SET_VALUE,
+	CONFIGURATION_REMOVE_CONFIG_BY_KEY,
+	CACHE_GET_ALL_VALUES,
+	CACHE_DELETE,
+	ZONE_GET_BY_ID,
+} from '@/graphql/queries';
 
 export default defineComponent({
 	name: 'PeripheralLightCard',
@@ -82,7 +93,7 @@ export default defineComponent({
 	props: {
 		peripheral: Object,
 	},
-	setup(props) {
+	setup(props, { emit }) {
 		const { peripheral: asset } = toRefs(props);
 		const stItems = [
 			{ value: 30 },
@@ -95,16 +106,30 @@ export default defineComponent({
 			{ value: 10800 },
 			{ value: 18000 },
 		];
+		const portId = asset.value.data.connectedTo[0].id;
+
 		const config = key =>
 			_.find(asset.value.data.configurations, function (cfg) {
 				return cfg.key == key;
 			});
 
+		const message = computed({
+			get: () => props.peripheral,
+			set: value => emit('updated', value),
+		});
+
 		const { mutate: setTimeout } = useMutation(CONFIGURATION_SET_VALUE, {
 			refetchQueries: [{ query: CACHE_GET_ALL_VALUES, variables: { cacheName: 'expiring' } }],
 		});
-		const { mutate: deleteTimeout } = useMutation(CONFIGURATION_DELETE);
-		return { asset, format, config, humanizeDuration, stItems, setTimeout, deleteTimeout };
+		const { mutate: deleteCache } = useMutation(CACHE_DELETE, { variables: { cacheName: 'expiring', cacheKey: portId } });
+		const { mutate: deleteTimeout } = useMutation(CONFIGURATION_REMOVE_CONFIG_BY_KEY, {
+			update: () => {
+				deleteCache();
+				message.value = asset;
+			},
+		});
+
+		return { asset, format, config, humanizeDuration, stItems, setTimeout, deleteTimeout, portId };
 	},
 });
 </script>
