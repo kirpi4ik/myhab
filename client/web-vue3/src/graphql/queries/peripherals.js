@@ -68,24 +68,24 @@ export const PERIPHERAL_GET_BY_ID = gql`
 				internalRef
 				name
 				description
-        value
+				value
 				device {
 					id
 					name
 					code
 					status
 				}
-        configurations {
-          id
-          key
-          value
-        }
+				configurations {
+					id
+					key
+					value
+				}
 			}
-      configurations {
-        id
-        key
-        value
-      }
+			configurations {
+				id
+				key
+				value
+			}
 		}
 	}
 `;

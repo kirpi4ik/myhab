@@ -8,6 +8,12 @@ const state = {
 	connection: 'OFFLINE',
 };
 
+const getters = {
+  ws: state => {
+    return state;
+  },
+};
+
 const mutations = {
 	wsMessage(state, newValue) {
 		state.message = newValue;
@@ -17,8 +23,7 @@ const mutations = {
 	},
 };
 
-let stompClient = null;
-
+let wsStompClient = null;
 const actions = {
 	connect(context, handler) {
 		if (authenticationService.currentUserValue) {
@@ -33,7 +38,7 @@ const actions = {
 				}
 			}.bind(this);
 
-			this.stompClient = new Client({
+			this.wsStompClient = new Client({
 				brokerURL: wsUri,
 				debug: function (str) {
 					console.log(str);
@@ -46,16 +51,16 @@ const actions = {
 				onConnect: () => {
 					console.log('CONNECTED');
 					this.commit('wsConnection', 'ONLINE');
-					this.stompClient.subscribe('/topic/events', message_callback, {});
+					this.wsStompClient.subscribe('/topic/events', message_callback, {});
 					if (handler != null) {
-						this.stompClient.subscribe('/topic/events', handler, {});
+						this.wsStompClient.subscribe('/topic/events', handler, {});
 					}
 				},
 				onStompError: this.stompFailureCallback,
 				onWebSocketError: this.stompFailureCallback,
 			});
 			console.log('Connecting...');
-			this.stompClient.activate();
+			this.wsStompClient.activate();
 		}
 	},
 	stompFailureCallback(error) {
@@ -66,11 +71,7 @@ const actions = {
 	},
 };
 
-const getters = {
-	getWs: state => {
-		return state;
-	},
-};
+
 
 export default {
 	namespaced: false,

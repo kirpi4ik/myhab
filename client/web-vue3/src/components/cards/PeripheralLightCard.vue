@@ -63,20 +63,22 @@
     <q-separator></q-separator>
     <q-card-section>
       <div class="q-pa-sm text-grey-8">
-        <toggle v-model="asset['state']"/>
+        <toggle v-model="asset['state']" @change="lightService.toggle(peripheral)"/>
       </div>
     </q-card-section>
   </q-card>
 </template>
 <script>
   import _ from 'lodash';
-  import {computed, defineComponent, ref, toRefs} from 'vue';
+  import {useStore} from 'vuex'
+  import {lightService} from '@/_services/controls';
+  import EventLogger from 'components/EventLogger.vue';
+  import {computed, defineComponent, toRefs, watch} from 'vue';
   import Toggle from '@vueform/toggle';
   import {format} from 'date-fns';
   import humanizeDuration from 'humanize-duration';
-  import EventLogger from 'components/EventLogger.vue';
   import {useApolloClient, useMutation} from '@vue/apollo-composable';
-  import {CACHE_DELETE, CACHE_GET_ALL_VALUES, CONFIGURATION_REMOVE_CONFIG_BY_KEY, CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID,} from '@/graphql/queries';
+  import {CACHE_DELETE, CACHE_GET_VALUE, CACHE_GET_ALL_VALUES, CONFIGURATION_REMOVE_CONFIG_BY_KEY, CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID,} from '@/graphql/queries';
 
   export default defineComponent({
     name: 'PeripheralLightCard',
@@ -88,8 +90,8 @@
       peripheral: Object,
     },
     setup(props, {emit}) {
-      const {client} = useApolloClient()
-      let assetExpirationMap = ref({});
+      const store = useStore();
+      const {client} = useApolloClient();
       let {peripheral: asset} = toRefs(props);
       const stItems = [
         {value: 30},
@@ -103,30 +105,53 @@
         {value: 18000},
       ];
       const portId = asset.value.data.connectedTo[0].id;
-
       const loadDetails = async () => {
         const {data: livePeripheral} = await client.query({
           query: PERIPHERAL_GET_BY_ID,
-          variables: {id: asset.value.id}
-        })
-        message.value = _.cloneDeep(livePeripheral.devicePeripheral);
-      }
+          variables: {id: asset.value.id},
+        });
+        let assetRW = _.cloneDeep(livePeripheral.devicePeripheral);
+        const {data: cfg} = await client.query({
+          query: CACHE_GET_VALUE,
+          variables: {cacheName: 'expiring', cacheKey: portId},
+        });
+        if (cfg.cache) {
+          assetRW['expiration'] = cfg.cache.cachedValue;
+        }
+
+        compPeripheral.value = assetRW;
+      };
+
+      const wsMessage = computed(() => store.getters.ws.message)
+      watch(() => store.getters.ws.message, function () {
+        if (wsMessage.value.eventName == 'evt_port_value_persisted') {
+          let payload = JSON.parse(wsMessage.value.jsonPayload);
+          if (portId == payload.p2) {
+            asset.value['value'] = payload.p4;
+            asset.value['state'] = payload.p4 === 'OFF';
+          }
+        } else if (wsMessage.value.eventName == 'evt_cfg_value_changed') {
+          let payload = JSON.parse(wsMessage.value.jsonPayload);
+          if (asset.value.id == payload.p3 && 'PERIPHERAL' == payload.p2) {
+            loadDetails()
+          }
+        }
+      });
 
       const config = key =>
         _.find(asset.value.data.configurations, function (cfg) {
           return cfg.key == key;
         });
 
-      const message = computed({
+      const compPeripheral = computed({
         get: () => props.peripheral,
         set: value => emit('onUpdate', value),
       });
 
       const {mutate: setTimeout} = useMutation(CONFIGURATION_SET_VALUE, {
-        refetchQueries: [{query: CACHE_GET_ALL_VALUES, variables: {cacheName: 'expiring'}}],
         update: () => {
           loadDetails();
-        }
+        },
       });
       const {mutate: deleteCache} = useMutation(CACHE_DELETE, {variables: {cacheName: 'expiring', cacheKey: portId}});
       const {mutate: deleteTimeout} = useMutation(CONFIGURATION_REMOVE_CONFIG_BY_KEY, {
@@ -136,7 +161,7 @@
         },
       });
 
-      return {asset, format, config, humanizeDuration, stItems, setTimeout, deleteTimeout, portId};
+      return {asset, format, config, humanizeDuration, stItems, setTimeout, deleteTimeout, portId, lightService,};
     },
   });
 </script>
