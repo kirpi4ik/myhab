@@ -6,6 +6,7 @@ import org.myhab.domain.User
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import org.myhab.init.cache.CacheMap
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -55,10 +56,13 @@ class Query {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
-                def cacheName = environment.getArgument("cacheName")
+                String cacheName = environment.getArgument("cacheName")
                 def result = []
-                hazelcastInstance.getMap(cacheName).entrySet().each { entry ->
-                    result << [cacheName: cacheName, cacheKey: entry.key, cachedValue: "${entry.value ? entry.value["expireOn"] : null}"]
+                CacheMap.values().each { cMap ->
+                    def cName = cacheName ?: cMap.name
+                    hazelcastInstance.getMap(cName).entrySet().each { entry ->
+                        result << [cacheName: cName, cacheKey: entry.key, cachedValue: "${entry.value ? entry.value["expireOn"] : null}"]
+                    }
                 }
                 return result
             }

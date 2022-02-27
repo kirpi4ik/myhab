@@ -86,7 +86,7 @@ export const CACHE_DELETE = gql`
 	}
 `;
 export const CACHE_GET_ALL_VALUES = gql`
-	query getCacheAll($cacheName: String!) {
+	query getCacheAll($cacheName: String) {
 		cacheAll(cacheName: $cacheName) {
 			cacheKey
 			cacheName
