@@ -2,7 +2,7 @@ type Query{
     navigation : Navigation
     userRolesForUser(userId: String!): [UserRole]
     cache(cacheName: String!, cacheKey: String!): CacheResult
-    cacheAll(cacheName: String!): [CacheResult]
+    cacheAll(cacheName: String): [CacheResult]
     config(key: String!): String
 }
 

@@ -90,9 +90,9 @@ class PortValueService implements EventPublisher {
                     def config = peripheral.configurations.find { it.key == ConfigKey.STATE_ON_TIMEOUT }
                     if (config != null && newVal == PortAction.ON.name()) {
                         def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
-                        hazelcastInstance.getMap(CacheMap.EXPIRE).put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
+                        hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
                     } else if (newVal == PortAction.OFF.name()) {
-                        hazelcastInstance.getMap(CacheMap.EXPIRE).remove(String.valueOf(port.id))
+                        hazelcastInstance.getMap(CacheMap.EXPIRE.name).remove(String.valueOf(port.id))
                     }
                 }
             }
@@ -107,7 +107,7 @@ class PortValueService implements EventPublisher {
                 def firstPort = peripheral.connectedTo.first()
                 if (firstPort.value == PortAction.ON.name()) {
                     def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(event.data.p5)).toDate().time
-                    hazelcastInstance.getMap(CacheMap.EXPIRE).put(String.valueOf(firstPort.id), [expireOn: expireInMs, peripheralId: peripheral.id])
+                    hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(firstPort.id), [expireOn: expireInMs, peripheralId: peripheral.id])
                 }
             }
         }

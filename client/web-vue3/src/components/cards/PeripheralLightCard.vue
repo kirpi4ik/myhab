@@ -77,14 +77,14 @@
   import Toggle from '@vueform/toggle';
   import {format} from 'date-fns';
   import humanizeDuration from 'humanize-duration';
-  import {useApolloClient, useMutation} from '@vue/apollo-composable';
+  import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
   import {CACHE_DELETE, CACHE_GET_VALUE, CACHE_GET_ALL_VALUES, CONFIGURATION_REMOVE_CONFIG_BY_KEY, CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID,} from '@/graphql/queries';
 
   export default defineComponent({
     name: 'PeripheralLightCard',
     components: {
       Toggle,
-      EventLogger,
+      EventLogger
     },
     props: {
       peripheral: Object,
@@ -105,21 +105,25 @@
         {value: 18000},
       ];
       const portId = asset.value.data.connectedTo[0].id;
-      const loadDetails = async () => {
-        const {data: livePeripheral} = await client.query({
+
+      const loadDetails =  () => {
+        client.query({
           query: PERIPHERAL_GET_BY_ID,
           variables: {id: asset.value.id},
-        });
-        let assetRW = _.cloneDeep(livePeripheral.devicePeripheral);
-        const {data: cfg} = await client.query({
-          query: CACHE_GET_VALUE,
-          variables: {cacheName: 'expiring', cacheKey: portId},
-        });
-        if (cfg.cache) {
-          assetRW['expiration'] = cfg.cache.cachedValue;
-        }
-
-        compPeripheral.value = assetRW;
+          fetchPolicy: 'network-only'
+        }).then(data => {
+          let assetRW = _.cloneDeep(data.data.devicePeripheral);
+          const {data: cfg} = client.query({
+            query: CACHE_GET_VALUE,
+            variables: {cacheName: 'expiring', cacheKey: portId},
+            fetchPolicy: 'network-only'
+          }).then(cfg => {
+            if (cfg.data.cache) {
+              assetRW['expiration'] = cfg.data.cache.cachedValue;
+            }
+            compPeripheral.value = assetRW;
+          });
+        })
       };
 
       const wsMessage = computed(() => store.getters.ws.message)
@@ -129,6 +133,7 @@
           if (portId == payload.p2) {
             asset.value['value'] = payload.p4;
             asset.value['state'] = payload.p4 === 'OFF';
+            loadDetails()
           }
         } else if (wsMessage.value.eventName == 'evt_cfg_value_changed') {
           let payload = JSON.parse(wsMessage.value.jsonPayload);
@@ -161,7 +166,7 @@
         },
       });
 
-      return {asset, format, config, humanizeDuration, stItems, setTimeout, deleteTimeout, portId, lightService,};
+      return {asset, format, config, humanizeDuration, stItems, setTimeout, deleteTimeout, portId, lightService, loading: useGlobalQueryLoading()};
     },
   });
 </script>
