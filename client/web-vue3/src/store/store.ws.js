@@ -9,9 +9,9 @@ const state = {
 };
 
 const getters = {
-  ws: state => {
-    return state;
-  },
+	ws: state => {
+		return state;
+	},
 };
 
 const mutations = {
@@ -70,8 +70,6 @@ const actions = {
 		console.log('STOMP: Reconecting in 5 seconds');
 	},
 };
-
-
 
 export default {
 	namespaced: false,

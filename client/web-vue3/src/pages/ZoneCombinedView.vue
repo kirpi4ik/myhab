@@ -27,7 +27,7 @@
     components: {
       ZoneCard,
       PeripheralLightCard,
-      PeripheralHeatCard
+      PeripheralHeatCard,
     },
     setup() {
       const route = useRoute();
@@ -59,43 +59,21 @@
       };
 
       const loadZones = () => {
-
         let localPList;
         if (route.params.zoneId) {
-          const {onResult: onResultById} = useQuery(
-            ZONE_GET_BY_ID,
-            {id: route.params.zoneId},
-            {
-              fetchPolicy: undefined,
-              nextFetchPolicy: 'cache-first',
-            },
-          );
+          const {result, onResult: onResultById} = useQuery(ZONE_GET_BY_ID, {id: route.params.zoneId}, {fetchPolicy: "cache-first", nextFetchPolicy: "cache-only"});
+
           onResultById(queryResult => {
             let data = _.cloneDeep(queryResult.data);
             peripheralList.value = [];
             currentZone = data.zoneById;
 
             if (currentZone.peripherals) {
-              localPList = currentZone.peripherals.filter(peripheralFilter);
+              localPList = _.cloneDeep(currentZone.peripherals.filter(peripheralFilter));
               localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
               localPList.forEach(peripheralInitCallback);
             }
             childZones.value = currentZone.zones;
-          });
-        }
-        if (route.params.zoneId == null) {
-          peripheralList.value = [];
-          const {onResult: onResultRoot} = useQuery(ZONES_GET_ROOT);
-          onResultRoot(queryResult => {
-            let data = _.cloneDeep(queryResult.data);
-
-            if (data.zonesRoot.peripherals) {
-              localPList = data.zonesRoot.peripherals.filter(peripheralFilter);
-              localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
-              localPList.forEach(peripheralInitCallback);
-            }
-            childZones = data.zonesRoot.zones;
-            // [...childZones].sort((a, b) => (a.name > b.name) ? 1 : -1)
           });
         }
       };
@@ -105,7 +83,6 @@
         let index = _.findIndex(peripheralList.value, item => {
           return item.id == peripheral.id;
         });
-        // debugger
         peripheralList.value[index] = peripheralService.peripheralInit(null, peripheral);
       };
 
