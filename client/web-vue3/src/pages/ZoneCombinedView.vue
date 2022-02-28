@@ -17,8 +17,8 @@
   import ZoneCard from '@/components/cards/ZoneCard';
   import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
   import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
-  import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID, ZONES_GET_ROOT} from '@/graphql/queries';
-  import {useQuery} from '@vue/apollo-composable';
+  import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID} from '@/graphql/queries';
+  import {useApolloClient, useQuery} from '@vue/apollo-composable';
   import {useRoute} from 'vue-router';
   import _ from 'lodash';
   import {ref} from 'vue';
@@ -30,6 +30,7 @@
       PeripheralHeatCard,
     },
     setup() {
+      const {client} = useApolloClient();
       const route = useRoute();
       const category = route.query.category;
       let currentZone = {};
@@ -37,7 +38,8 @@
       let peripheralList = ref([]);
       let cacheMap = ref({});
 
-      const {onResult: onCacheResult} = useQuery(CACHE_GET_ALL_VALUES, {});
+
+      const {onResult: onCacheResult} = useQuery(CACHE_GET_ALL_VALUES, {}, {fetchPolicy: 'no-cache'});
       onCacheResult(queryResult => {
         cacheMap.value = _.reduce(
           queryResult.data.cacheAll,
@@ -59,24 +61,27 @@
       };
 
       const loadZones = () => {
-        let localPList;
-        if (route.params.zoneId) {
-          const {result, onResult: onResultById} = useQuery(ZONE_GET_BY_ID, {id: route.params.zoneId}, {fetchPolicy: "cache-first", nextFetchPolicy: "cache-only"});
-
-          onResultById(queryResult => {
+        client.query({
+          query: ZONE_GET_BY_ID,
+          variables: {id: route.params.zoneId},
+          fetchPolicy: 'network-only',
+        }).then(queryResult => {
+          let localPList;
+          if (route.params.zoneId) {
             let data = _.cloneDeep(queryResult.data);
             peripheralList.value = [];
             currentZone = data.zoneById;
-
             if (currentZone.peripherals) {
-              localPList = _.cloneDeep(currentZone.peripherals.filter(peripheralFilter));
+              localPList = currentZone.peripherals.filter(peripheralFilter);
               localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
               localPList.forEach(peripheralInitCallback);
             }
             childZones.value = currentZone.zones;
-          });
-        }
+          }
+        })
       };
+
+
       loadZones();
 
       const updatedPeripheral = peripheral => {
