@@ -78,14 +78,7 @@
   import {format} from 'date-fns';
   import humanizeDuration from 'humanize-duration';
   import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
-  import {
-    CACHE_DELETE,
-    CACHE_GET_VALUE,
-    CACHE_GET_ALL_VALUES,
-    CONFIGURATION_REMOVE_CONFIG_BY_KEY,
-    CONFIGURATION_SET_VALUE,
-    PERIPHERAL_GET_BY_ID,
-  } from '@/graphql/queries';
+  import {CACHE_DELETE, CACHE_GET_VALUE, CONFIGURATION_REMOVE_CONFIG_BY_KEY, CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID,} from '@/graphql/queries';
 
   export default defineComponent({
     name: 'PeripheralLightCard',

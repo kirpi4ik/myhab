@@ -6,7 +6,7 @@
       </div>
       <div class="col-lg-4 col-md-4 col-xs-12 col-sm-12" v-for="peripheral in peripheralList" v-bind:key="peripheral.id">
         <peripheral-light-card :peripheral="peripheral" v-if="category === 'LIGHT'" @onUpdate="updatedPeripheral($event)"/>
-        <peripheral-heat-card :peripheral="peripheral" v-if="category === 'HEAT'"/>
+        <peripheral-heat-card :peripheral="peripheral" v-if="category === 'HEAT'" @onUpdate="updatedPeripheral($event)"/>
       </div>
     </div>
   </q-page>
