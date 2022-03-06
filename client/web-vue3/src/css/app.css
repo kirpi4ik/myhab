@@ -3,6 +3,11 @@
   color: white;
 }
 
+.zone-card {
+  height: 150px;
+  background: url('~assets/layer-1.png'), linear-gradient(#546e82, #7c919f);
+}
+
 .toggle,
 .toggle-container {
   width: 100% !important;
