@@ -2,3 +2,36 @@
 .body {
   color: white;
 }
+
+.toggle,
+.toggle-container {
+  width: 100% !important;
+  height: 40px !important;
+}
+
+.toggle {
+  border: 2px solid #bcbdbc !important;
+}
+
+.toggle-handle {
+  height: 40px !important;
+  width: 40px !important;
+  box-shadow: 0px 0px 0px 2px rgba(63, 78, 108, 0.5);
+}
+
+.toggle-off {
+  background: radial-gradient(#f10e0e, rgba(125, 7, 9, 0.56)) !important;
+}
+
+.toggle-on {
+  background: radial-gradient(#10b981, rgba(7, 95, 66, 0.65)) !important;
+}
+
+.toggle-on .toggle-handle {
+  background: radial-gradient(#10d795, rgba(49, 104, 56, 0.68)) !important;
+
+}
+
+.toggle-off .toggle-handle {
+  background: radial-gradient(#de0c0c, rgba(57, 4, 5, 0.56)) !important;
+}
