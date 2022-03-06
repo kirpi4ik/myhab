@@ -31,7 +31,7 @@
 <script>
 import { useRoute } from 'vue-router';
 import { defineComponent, ref } from 'vue';
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 import { mapActions } from 'vuex';
 
 export default defineComponent({
@@ -47,7 +47,7 @@ export default defineComponent({
 		...mapActions(['connect']),
 		login() {
 			this.loading = true;
-			authenticationService.login(this.username, this.password).then(
+			authzService.login(this.username, this.password).then(
 				user => {
 					this.connect();
 					this.$router.push(this.returnUrl);

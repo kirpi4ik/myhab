@@ -1,7 +1,8 @@
 import { computed, reactive } from 'vue';
+import { Platform } from 'quasar';
 
 const state = reactive({
-	isSidebarOpen: true,
+	isSidebarOpen: !Platform.is.mobile,
 });
 
 const useUiState = () => {

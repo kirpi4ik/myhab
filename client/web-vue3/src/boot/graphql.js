@@ -5,7 +5,7 @@ import { createApolloProvider } from '@vue/apollo-option';
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 import { Utils } from '@/_helpers';
 
 // Notice the use of the link-error tool from Apollo
@@ -18,9 +18,7 @@ const withAuthToken = setContext(() => {
 	// return the headers to the context so httpLink can read them
 	return {
 		headers: {
-			authorization: `Bearer ${
-				authenticationService.currentUserValue != null ? authenticationService.currentUserValue.access_token : ''
-			}`,
+			authorization: `Bearer ${authzService.currentUserValue != null ? authzService.currentUserValue.access_token : ''}`,
 		},
 	};
 });
@@ -37,7 +35,7 @@ const onErrorLink = onError(({ graphQLErrors, networkError, operation, forward }
 	if (networkError) {
 		let error = { path: '/pages/500', code: 'ERROR_UNKNOW' };
 		if (networkError.statusCode === 401) {
-			authenticationService.logout();
+			authzService.logout();
 			error.path = '/login';
 			error.code = 'ERROR_NOT_AUTHENTICATED';
 			location.replace(error.path);

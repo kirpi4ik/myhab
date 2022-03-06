@@ -1,6 +1,6 @@
 import { Utils } from '@/_helpers';
 import { Client } from '@stomp/stompjs';
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 import SockJS from 'sockjs-client';
 
 const state = {
@@ -26,8 +26,8 @@ const mutations = {
 let wsStompClient = null;
 const actions = {
 	connect(context, handler) {
-		if (authenticationService.currentUserValue) {
-			const wsUri = Utils.host() + '/stomp?access_token=' + authenticationService.currentUserValue.access_token;
+		if (authzService.currentUserValue) {
+			const wsUri = Utils.host() + '/stomp?access_token=' + authzService.currentUserValue.access_token;
 			console.log('STOMP: Attempting connection');
 
 			let message_callback = function (message) {

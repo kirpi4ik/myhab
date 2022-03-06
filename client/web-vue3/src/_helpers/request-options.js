@@ -1,4 +1,4 @@
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 
 export const requestOptions = {
 	get() {
@@ -37,7 +37,7 @@ export const requestOptions = {
 };
 
 function headers() {
-	const currentUser = authenticationService.currentUserValue || {};
+	const currentUser = authzService.currentUserValue || {};
 	const authHeader = currentUser.token ? { Authorization: 'Bearer ' + currentUser.token } : {};
 	return {
 		headers: {
