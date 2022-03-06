@@ -39,7 +39,7 @@
 import EventLogger from 'components/EventLogger.vue';
 import { defineComponent, ref } from 'vue';
 import { PERIPHERAL_GET_BY_ID, PUSH_EVENT } from '@/graphql/queries';
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 import _ from 'lodash';
 
 export default defineComponent({
@@ -75,7 +75,7 @@ export default defineComponent({
 				p3: 'mweb',
 				p4: 'open',
 				p5: "{'unlocked'}",
-				p6: authenticationService.currentUserValue.login,
+				p6: authzService.currentUserValue.login,
 			};
 			this.$apollo
 				.mutate({

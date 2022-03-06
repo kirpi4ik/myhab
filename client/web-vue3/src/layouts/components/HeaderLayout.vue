@@ -48,7 +48,7 @@
 					</q-avatar>
 					<q-menu>
 						<q-list style="min-width: 100px">
-							<q-item style="max-width: 420px" clickable v-ripple @click="authenticationService.logout()">
+							<q-item style="max-width: 420px" clickable v-ripple @click="authzService.logout()">
 								<q-item-section avatar>
 									<q-avatar>
 										<q-icon name="mdi-logout" />
@@ -73,7 +73,7 @@ import { useUiState } from '@/composables';
 import { useQuery } from '@vue/apollo-composable';
 import { CONFIG_GLOBAL_GET_STRING_VAL } from '@/graphql/queries';
 import ClockComponent from 'components/ClockComponent';
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 import BreadCrumbLayout from 'layouts/components/BreadCrumbLayout.vue';
 
 export default defineComponent({
@@ -94,7 +94,7 @@ export default defineComponent({
 		return {
 			toggleSideBar,
 			result,
-			authenticationService,
+			authzService,
 		};
 	},
 	mounted() {

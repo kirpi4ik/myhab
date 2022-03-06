@@ -194,7 +194,5 @@ export default defineComponent({
 	},
 });
 </script>
-<style>
-
-</style>
+<style></style>
 <style src="@vueform/toggle/themes/default.css"></style>

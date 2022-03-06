@@ -1,5 +1,5 @@
 import { PUSH_EVENT } from '@/graphql/queries';
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 import { apolloProvider } from '@/boot/graphql';
 
 export const heatService = {
@@ -13,7 +13,7 @@ function toggle(peripheral) {
 		p2: peripheral.id,
 		p3: 'mweb',
 		p4: peripheral.state === true ? 'off' : 'on',
-		p6: authenticationService.currentUserValue.login,
+		p6: authzService.currentUserValue.login,
 	};
 	apolloProvider.defaultClient
 		.mutate({

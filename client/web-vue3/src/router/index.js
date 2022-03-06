@@ -1,7 +1,7 @@
 import { route } from 'quasar/wrappers';
 import { createMemoryHistory, createRouter, createWebHashHistory, createWebHistory } from 'vue-router';
 import routes from './routes';
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 
 /*
  * If not building with SSR mode, you can
@@ -32,7 +32,7 @@ export default route(function (/* { store, ssrContext } */) {
 	router.beforeEach((to, from, next) => {
 		// redirect to login page if not logged in and trying to access a restricted page
 		const { authorize } = to.meta;
-		const currentUser = authenticationService.currentUserValue;
+		const currentUser = authzService.currentUserValue;
 
 		if (authorize) {
 			if (!currentUser) {

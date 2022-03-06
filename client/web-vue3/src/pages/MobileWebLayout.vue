@@ -42,7 +42,7 @@ import { Pagination } from 'swiper';
 import 'swiper/css';
 
 import 'swiper/css/pagination';
-import { authenticationService } from '@/_services';
+import { authzService } from '@/_services';
 import { heatService, lightService } from '@/_services/controls';
 import InlineSvg from 'vue-inline-svg';
 import { PERIPHERAL_LIST_WUI, PUSH_EVENT } from '@/graphql/queries';
@@ -201,7 +201,7 @@ export default {
 				p3: 'mweb',
 				p4: 'open',
 				p5: `{"unlockCode": "${this.unlockConfirmation.unlockCode}"}`,
-				p6: authenticationService.currentUserValue.login,
+				p6: authzService.currentUserValue.login,
 			};
 			this.$apollo
 				.mutate({
