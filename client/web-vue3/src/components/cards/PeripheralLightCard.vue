@@ -194,6 +194,10 @@
     height: 40px !important;
   }
 
+  .toggle {
+    border: 2px solid #d7dfdc !important;
+  }
+
   .toggle-handle {
     height: 40px !important;
     width: 40px !important;
@@ -201,16 +205,15 @@
 
   .toggle-off {
     background-color: red !important;
+
   }
 
   .toggle-on .toggle-handle {
     background: linear-gradient(rgb(0, 191, 54), rgb(53, 113, 61)) !important;
-    border: 1px solid #386668;
   }
 
   .toggle-off .toggle-handle {
     background: linear-gradient(rgb(191, 0, 0), rgb(255, 190, 98)) !important;
-    border: 1px solid #386668;
   }
 </style>
 <style src="@vueform/toggle/themes/default.css"></style>

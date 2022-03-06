@@ -6,13 +6,9 @@
       <q-item-section @click="router.push({ name: 'zoneById', params: { zoneId: `${zone.id}` }, query: { category: route.query.category } })" v-ripple>
         <q-item-label class="text-weight-bold text-h5">{{ zone.name }}</q-item-label>
       </q-item-section>
-
       <q-item-section side>
         <q-item-label>
-          <heat-scheduler :zone="zone"/>
-        </q-item-label>
-        <q-item-label>
-          <q-btn size="sm" flat round icon="fab fa-twitter" class="bg-info text-blue-grey-1"/>
+          <heat-scheduler :zone="zone" v-if="['HEAT','TEMP'].includes(route.query.category)"/>
         </q-item-label>
       </q-item-section>
     </q-item>
