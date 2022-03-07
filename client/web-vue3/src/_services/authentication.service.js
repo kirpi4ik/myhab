@@ -29,7 +29,7 @@ function logout() {
 	// remove user from local storage to log user out
 	localStorage.removeItem('currentUser');
 	currentUserSubject.next(null);
-	location.replace('/login');
+	location.replace('/nx/login');
 }
 
 function hasAnyRole(roles) {
