@@ -17,7 +17,7 @@ beans = {
         repoURI = System.getenv("CFG_REPO_URI")
         username = System.getenv("CFG_USERNAME")
         password = System.getenv("CFG_PASSWORD")
-        branch = (Environment.current == Environment.PRODUCTION ? "prod" : "dev")
+        branch = (Environment.current == Environment.PRODUCTION ? "prod" : (Environment.DEVELOPMENT ? "dev" : "beta"))
     }
 
     passwordEncoder(BCryptPasswordEncoder)
