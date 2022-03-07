@@ -11,6 +11,8 @@ grails:
 
 server:
   port: 8181
+  max-http-header-size: 40KB
+
 info:
   app:
     name: "@info.app.name@"

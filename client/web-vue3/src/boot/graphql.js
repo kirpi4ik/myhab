@@ -36,7 +36,7 @@ const onErrorLink = onError(({ graphQLErrors, networkError, operation, forward }
 		let error = { path: '/pages/500', code: 'ERROR_UNKNOW' };
 		if (networkError.statusCode === 401) {
 			authzService.logout();
-			error.path = '/login';
+			error.path = '/nx/login';
 			error.code = 'ERROR_NOT_AUTHENTICATED';
 			location.replace(error.path);
 		}
