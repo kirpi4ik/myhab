@@ -67,6 +67,7 @@ grails:
     allowedOrigins:
       - http://localhost:10000
       - http://localhost:10001
+      - http://localhost:10002
       - chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam
     allowedOriginPatterns:
       - https://beta.*.app

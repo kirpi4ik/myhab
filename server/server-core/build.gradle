@@ -58,9 +58,10 @@ dependencies {
 
     implementation "org.springframework.boot:spring-boot-starter-logging"
     implementation "org.springframework.boot:spring-boot-autoconfigure"
-    implementation "org.grails:grails-core"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-tomcat"
+//    implementation "org.springframework.boot:spring-boot-starter-cache"
+    implementation "org.grails:grails-core"
     implementation "org.grails:grails-plugin-url-mappings"
     implementation "org.grails:grails-plugin-rest"
     implementation "org.grails:grails-plugin-codecs"

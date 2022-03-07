@@ -135,7 +135,9 @@ class Configuration {
                 Object get(DataFetchingEnvironment environment) throws Exception {
                     withTransaction(false) {
                         Configuration existingConfig = Configuration.where {
-                            entityId == environment.getArgument('entityId') && entityType == environment.getArgument('entityType') && key == environment.getArgument('key')
+                            entityId == environment.getArgument('entityId')
+                                    && entityType == environment.getArgument('entityType')
+                                    && key == environment.getArgument('key')
                         }.order("name", "desc")[0]
                         if (existingConfig == null) {
                             existingConfig = new Configuration()

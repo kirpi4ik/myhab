@@ -153,10 +153,12 @@
             </template>
         </CModal>
         <CToaster :autohide="3000">
-            <template v-for="toast in fixedToasts">
-                <CToast :key="'toast-' + toast.message" :show="true" :header="toast.header" :color="toast.color" >
-                    {{toast.message}}
-                </CToast>
+            <template>
+                <div  v-for="toast in fixedToasts" v-bind:key="toast.message">
+                    <CToast :key="'toast-' + toast.message" :show="true" :header="toast.header" :color="toast.color" >
+                        {{toast.message}}
+                    </CToast>
+                </div>
             </template>
         </CToaster>
     </div>

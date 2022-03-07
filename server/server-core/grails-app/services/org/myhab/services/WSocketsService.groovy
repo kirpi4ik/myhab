@@ -33,6 +33,11 @@ class WSocketsService implements EventPublisher, WebSocket {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_port_value_persisted", jsonPayload: JsonOutput.toJson(event.data)))
     }
 
+    @Subscriber('evt_cfg_value_changed')
+    def cfgChanged(event) {
+        convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_cfg_value_changed", jsonPayload: JsonOutput.toJson(event.data)))
+    }
+
     @Subscriber('evt_heat')
     def evtHeat() {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_heat"))

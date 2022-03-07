@@ -1,5 +1,3 @@
-import org.joda.time.DateTime;
-
 buildscript {
     repositories {
         mavenCentral()
@@ -28,6 +26,13 @@ buildscript {
 plugins {
     id "com.bmuschko.docker-remote-api" version "7.2.0"
 }
+
+//tag::import[]
+import org.joda.time.DateTime;
+import com.bmuschko.gradle.docker.tasks.image.*
+
+//end::import[]
+
 group "${projectGroup}"
 
 allprojects {
@@ -107,13 +112,17 @@ task versionTxt() {
         writer.flush()
     }
 }
-task copyClientResources(dependsOn: ':web-vue:build') { // <1>
+task copyClientResources(dependsOn: [':web-vue:build', ':web-vue3:build']) { // <1>
     group = 'build'
     description = 'Copy client resources into server'
     doLast {
         copy {
             from project(':web-vue').buildDir.absolutePath
             into "${project(':server-core').buildDir}/resources/main/public"
+        }
+        copy {
+            from project(':web-vue3').buildDir.absolutePath
+            into "${project(':server-core').buildDir}/resources/main/public/nx"
         }
     }
 }
@@ -137,11 +146,12 @@ copyClientResources.doFirst { // <4>
         from "${project(':web-vue').projectDir}/dist"
         into "${project(':server-core').buildDir}/resources/main/public"
     }
+    copy {
+        from "${project(':web-vue3').projectDir}/dist/spa"
+        into "${project(':server-core').buildDir}/resources/main/public/nx"
+    }
 }
-//tag::import[]
-import com.bmuschko.gradle.docker.tasks.image.*
 
-//end::import[]
 
 task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
     description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
@@ -163,9 +173,11 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'openjdk:11'
+    from 'openjdk:14'
 
-    label(['maintainer': 'Dumitru Ciubenco "dumitru.ciubenco@gmail.com"'])
+    label(['project': 'myHAB'])
+    label(['version': "${projectVersion}"])
+    label(['org.opencontainers.image.authors': 'Dumitru Ciubenco "dumitru.ciubenco@gmail.com"'])
 
     exposePort 8181
     environmentVariable 'GRAILS_ENV', 'production'
@@ -190,13 +202,13 @@ task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) { // <6>
     group = dockerBuildGroup
 
     inputDir = file(dockerBuildDir)
-    images.add("kirpi4ik/myhab:${tagId}")
+    images.add("${githubSlug}:${tagId}")
 }
 task tagImage(type: DockerTagImage, dependsOn: buildImage) {
     description "Tag custom docker image."
     group = dockerBuildGroup
     targetImageId buildImage.getImageId()
-    repository = "kirpi4ik/myhab".toString()
+    repository = "${githubSlug}".toString()
     tag = "${tagId}"
 }
 
@@ -204,7 +216,7 @@ task pushImage(type: DockerPushImage, dependsOn: tagImage) {
     group = dockerBuildGroup
     description "Push custom docker image."
 
-    images.add("kirpi4ik/myhab:${tagId}".toString())
+    images.add("${githubSlug}:${tagId}".toString())
 }
 //end::buildImage[]
 task removeImage(type: DockerRemoveImage) {

@@ -6,6 +6,7 @@ import org.myhab.domain.User
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import org.myhab.init.cache.CacheMap
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -45,13 +46,29 @@ class Query {
                 def cacheName = environment.getArgument("cacheName")
                 def cacheKey = environment.getArgument("cacheKey")
                 def cachedValue = hazelcastInstance.getMap(cacheName).get(cacheKey)
-
                 return [cacheName: cacheName, cacheKey: cacheKey, cachedValue: "${cachedValue ? cachedValue["expireOn"] : null}"]
+
             }
-
-
         }
     }
+
+    def cacheAll() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String cacheName = environment.getArgument("cacheName")
+                def result = []
+                CacheMap.values().each { cMap ->
+                    def cName = cacheName ?: cMap.name
+                    hazelcastInstance.getMap(cName).entrySet().each { entry ->
+                        result << [cacheName: cName, cacheKey: entry.key, cachedValue: "${entry.value ? entry.value["expireOn"] : null}"]
+                    }
+                }
+                return result
+            }
+        }
+    }
+
     def config() {
         return new DataFetcher() {
             @Override

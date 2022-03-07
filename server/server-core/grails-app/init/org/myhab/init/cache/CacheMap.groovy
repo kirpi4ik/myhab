@@ -1,6 +1,12 @@
 package org.myhab.init.cache
 
-interface CacheMap {
-    public static final String EXPIRE = "expiring"
-    public static final String TOKENS = "tokens"
+enum CacheMap {
+    EXPIRE("expiring"),
+    TOKENS("tokens")
+
+    String name
+
+    CacheMap(def name) {
+        this.name = name
+    }
 }

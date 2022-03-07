@@ -16,13 +16,8 @@
                 </CHeaderNavLink>
             </CHeaderNavItem>
             <CHeaderNavItem class="px-3">
-                <CHeaderNavLink to="/dashboard">
-                    Dashboard
-                </CHeaderNavLink>
-            </CHeaderNavItem>
-            <CHeaderNavItem class="px-3" v-if="hasRole(['ROLE_ADMIN'])">
-                <CHeaderNavLink to="/users" exact>
-                    Users
+                <CHeaderNavLink href="/nx">
+                    <b>NX</b>
                 </CHeaderNavLink>
             </CHeaderNavItem>
         </CHeaderNav>
