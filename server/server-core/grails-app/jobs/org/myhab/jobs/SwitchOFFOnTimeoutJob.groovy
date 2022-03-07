@@ -36,7 +36,7 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
     void checkOnPeripheralAndSetTimeoutValueIfNeeded(JobExecutionContext jobExecutionContext) {
         DevicePort.findAllByValue("ON").each { port ->
             boolean cached = false
-            hazelcastInstance.getMap(CacheMap.EXPIRE).entrySet().each { candidateForExpiration ->
+            hazelcastInstance.getMap(CacheMap.EXPIRE.name).entrySet().each { candidateForExpiration ->
                 if (candidateForExpiration.key.equals(String.valueOf(port.id))) {
                     cached = true
                     return true
@@ -48,7 +48,7 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
                     def config = peripheral.configurations.find { it.key == ConfigKey.STATE_ON_TIMEOUT }
                     if (config != null) {
                         def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
-                        hazelcastInstance.getMap(CacheMap.EXPIRE).put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
+                        hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
                     }
                 }
             }
@@ -56,7 +56,7 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
     }
 
     def checkCacheAndSwitchOffAfterTimeout(JobExecutionContext context) {
-        hazelcastInstance.getMap(CacheMap.EXPIRE).entrySet().each { candidateForExpiration ->
+        hazelcastInstance.getMap(CacheMap.EXPIRE.name).entrySet().each { candidateForExpiration ->
             def objToExpire = candidateForExpiration?.value
             def now = DateTime.now()
             if (objToExpire?.peripheralId != null && now.isAfter(objToExpire?.expireOn)) {
@@ -68,7 +68,7 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
                         "p4": "off",
                         "p6": "system"
                 ])
-                hazelcastInstance.getMap(CacheMap.EXPIRE).remove(String.valueOf(candidateForExpiration?.key))
+                hazelcastInstance.getMap(CacheMap.EXPIRE.name).remove(String.valueOf(candidateForExpiration?.key))
             }
         }
     }
