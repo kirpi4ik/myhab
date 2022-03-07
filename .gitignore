@@ -6,3 +6,5 @@
 **/*.iml
 **/*.lock
 .gradle
+**/.graphqlconfig
+
