@@ -16,7 +16,7 @@
                 </CHeaderNavLink>
             </CHeaderNavItem>
             <CHeaderNavItem class="px-3">
-                <CHeaderNavLink to="/nx">
+                <CHeaderNavLink href="/nx">
                     <b>NX</b>
                 </CHeaderNavLink>
             </CHeaderNavItem>
