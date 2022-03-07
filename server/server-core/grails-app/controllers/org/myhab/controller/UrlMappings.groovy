@@ -23,6 +23,7 @@ class UrlMappings {
             '/'(uri: '/index.html')
             '/error'(uri: '/index.html')
             '/nx'(uri: '/nx/index.html')
+            '/nx/**'(uri: '/nx/index.html')
             '/nx/error'(uri: '/nx/index.html')
         } else {
             '/'(controller: 'application', action: 'index')
