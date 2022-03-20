@@ -1,12 +1,9 @@
 <template>
-  <transition
-    appear
-    enter-active-class="animated fadeIn"
-    leave-active-class="animated fadeOut"
-    mode="out-in"
-    :duration="200">
-    <router-view :key="$route.fullPath"/>
-  </transition>
+  <router-view v-slot="{ Component }" :key="$route.fullPath">
+    <transition name="route" mode="out-in" appear>
+      <component :is="Component"/>
+    </transition>
+  </router-view>
 </template>
 <script>
   import {defineComponent} from 'vue';
@@ -22,3 +19,17 @@
     },
   });
 </script>
+<style>
+  .route-enter-from {
+    opacity: 0;
+  }
+
+  .route-enter-active,
+  .route-leave-active {
+    transition: all .5s ease-out
+  }
+
+  .route-leave-to {
+    opacity: 0;
+  }
+</style>
