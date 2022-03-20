@@ -90,9 +90,10 @@ export default defineComponent({
 	setup(props) {
 		let visibleNSc = ref(false);
 		const { client } = useApolloClient();
-		const showNSc = () => {
+		const showNSc = (e) => {
 			visibleNSc.value = true;
-		};
+      e.stopPropagation()
+    };
 
 		let heatScheduler = ref({
 			scheduleItems: [],
