@@ -78,7 +78,7 @@
         <div>{{ $t('project.name') }} v{{ prjVersion }}</div>
       </div>
     </q-img>
-    <div class="q-mini-drawer-hide absolute" style="top: 55px; right: -17px">
+    <div class="q-mini-drawer-hide absolute" style="top: 150px; right: -17px">
       <q-btn
         dense
         round

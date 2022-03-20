@@ -8,8 +8,11 @@
         <q-item-label>
           <heat-scheduler
             :zone="zone"
-            v-if="authzService.hasAnyRole([Role.Admin]) && ['HEAT', 'TEMP'].includes(route.query.category)"
+            v-if="authzService.hasAnyRole([Role.User,Role.Admin]) && ['HEAT', 'TEMP'].includes(route.query.category)"
           />
+        </q-item-label>
+        <q-item-label>
+          <temp-display :zone="zone" :name="zone.name" v-if="['HEAT', 'TEMP'].includes(route.query.category)"/>
         </q-item-label>
       </q-item-section>
     </q-item>
@@ -21,6 +24,7 @@
   import {Role} from '@/_helpers';
   import {useRoute, useRouter} from 'vue-router';
   import HeatScheduler from '@/components/HeatScheduler';
+  import TempDisplay from '@/components/TempDisplay';
 
   export default defineComponent({
     name: 'ZoneCard',
@@ -29,6 +33,7 @@
     },
     components: {
       HeatScheduler,
+      TempDisplay
     },
     setup(props) {
       const router = useRouter();
