@@ -11,6 +11,7 @@ import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.EntityDataFetcher
+import org.myhab.domain.device.Device
 import org.myhab.domain.device.DevicePeripheral
 
 @Resource(readOnly = true, formats = ['json', 'xml'])
@@ -20,23 +21,26 @@ class Zone extends BaseEntity implements Configurable<Zone> {
     Set<String> categories
     Zone parent
     Set<Zone> zones
+    Set<DevicePeripheral> devices
     Set<DevicePeripheral> peripherals
     Set<Cable> cables
 
     static belongsTo = [parent: Zone]
     static hasOne = [parent: Zone]
-    static hasMany = [cables: Cable, peripherals: DevicePeripheral, zones: Zone]
+    static hasMany = [cables: Cable, peripherals: DevicePeripheral, devices: Device, zones: Zone]
 
 
     static mapping = {
         table '`zones`'
         sort name: "asc"
         zones sort: "name"
+        devices joinTable: [name: "zones_devices_join", key: 'zone_id']
         peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id']
         cables joinTable: [name: "zones_cables_join", key: 'zone_id']
 
     }
     static constraints = {
+        devices cascade: 'save-update'
         peripherals cascade: 'save-update'
         cables cascade: 'save-update'
         zones cascade: 'save-update'
@@ -80,7 +84,6 @@ class Zone extends BaseEntity implements Configurable<Zone> {
                 @Override
                 protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
                     Zone.where { parent == null }.order("name", "asc")
-
                 }
             })
         }

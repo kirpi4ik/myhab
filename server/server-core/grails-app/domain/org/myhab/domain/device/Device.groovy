@@ -9,6 +9,7 @@ import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
 import org.myhab.domain.device.port.DevicePort
+import org.myhab.domain.infra.Zone
 
 class Device extends BaseEntity implements Configurable<Device> {
     String code
@@ -23,10 +24,10 @@ class Device extends BaseEntity implements Configurable<Device> {
     Set<DeviceAccount> authAccounts
     Rack rack;
     List<DeviceBackup> backups
-
+    Set<Zone> zones
 
     static belongsTo = [rack: Rack, type: DeviceType]
-    static hasMany = [authAccounts: DeviceAccount, ports: DevicePort, backups: DeviceBackup]
+    static hasMany = [authAccounts: DeviceAccount, zones: Zone, ports: DevicePort, backups: DeviceBackup]
 
     static mapping = {
         table '`device_controllers`'
@@ -44,6 +45,7 @@ class Device extends BaseEntity implements Configurable<Device> {
         rack nullable: true
         type nullable: true, cascade: "all"
         status nullable: true
+        zones joinTable: [name: "zones_devices_join", key: 'device_id'], cascade: "all"
     }
     static embedded = ['networkAddress']
     static graphql = GraphQLMapping.lazy {
