@@ -2,18 +2,6 @@ buildscript {
     repositories {
         mavenCentral()
         gradlePluginPortal()
-        maven {
-            url "http://nexus.devexpert.eu/repository/maven"
-            allowInsecureProtocol true
-            credentials {
-                username = 'docker'
-                if (file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").exists()) {
-                    password = file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").text
-                } else {
-                    password = "${System.env.NEXUS_DEVEXPERT_EU_PASSWORD}"
-                }
-            }
-        }
     }
     dependencies {
         classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
@@ -81,20 +69,6 @@ subprojects { project ->
         isGrailsProject = isGrailsApp || isGrailsPlugin
         isBuildSnapshot = version.toString().endsWith("-SNAPSHOT")
 
-    }
-    repositories {
-        maven {
-            url "http://nexus.devexpert.eu/repository/maven"
-            allowInsecureProtocol true
-            credentials {
-                username = 'docker'
-                if (file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").exists()) {
-                    password = file("${System.properties['user.home']}/.docker/nexus.devexpert.eu.password").text
-                } else {
-                    password = "${System.env.NEXUS_DEVEXPERT_EU_PASSWORD}"
-                }
-            }
-        }
     }
 }
 
