@@ -71,6 +71,7 @@
 			"edit": "Editeaza",
 			"create": "Cablaj nou"
 		},
+    "graphiql": "GraphiQL",
 		"configurations": "Configurare"
 	},
 	"peripheral": {
