@@ -102,4 +102,20 @@ enum MQTTTopic {
             return topic(topicTypes)
         }
     }
+    class ONVIF implements DeviceTopic {
+        static String topic(TopicTypes topicType) {
+            switch (topicType) {
+                case TopicTypes.LISTEN:
+                    return 'onvif2mqtt/#'
+                case TopicTypes.READ_SINGLE_VAL:
+                    return 'onvif2mqtt/(\\w+|_+)/motion'
+                default: return null
+            }
+        }
+
+        @Override
+        String topicByType(TopicTypes topicTypes) {
+            return topic(topicTypes)
+        }
+    }
 }

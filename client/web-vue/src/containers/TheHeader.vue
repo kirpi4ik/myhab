@@ -62,8 +62,7 @@
         },
         methods: {
             hasRole: function (roles) {
-                const currentUser = authenticationService.currentUserValue;
-                return currentUser.permissions.filter(function (userRole) {
+                return authenticationService.currentUserValue.permissions.filter(function (userRole) {
                     return roles.includes(userRole);
                 }).length > 0;
             }

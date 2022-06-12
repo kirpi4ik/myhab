@@ -1,15 +1,14 @@
-import org.myhab.config.ConfigProvider
+import grails.util.Environment
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import org.myhab.async.mqtt.handlers.MQTTMessageHandler
+import org.myhab.async.socket.WebSocketConfig
 import org.myhab.auth.ClaimProvider
+import org.myhab.config.ConfigProvider
 import org.myhab.graphql.GQLSchemaFactory
 import org.myhab.graphql.GraphQLGenerator
 import org.myhab.graphql.fetchers.Mutation
-
-import org.myhab.async.socket.WebSocketConfig
 import org.myhab.listener.domain.UserPasswordEncoderListener
 import org.myhab.telegram.TelegramBotHandler
-import grails.util.Environment
-import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 beans = {
