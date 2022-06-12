@@ -28,7 +28,7 @@ class UIMessageService implements EventPublisher {
     @Transactional
     @Subscriber('evt_light')
     def receiveLightEvent(event) {
-        switch (EntityType.byName(event.data.p1)) {
+        switch (byName(event.data.p1)) {
             case PERIPHERAL:
                 def peripheral = DevicePeripheral.findById(event.data.p2)
                 def args = [:]
@@ -165,7 +165,7 @@ class UIMessageService implements EventPublisher {
     }
 
     @Transactional
-    @Subscriber('evt_presence')
+//    @Subscriber('evt_presence')
     def presence(event) {
         if (PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findById(Long.valueOf(event.data.p2))
