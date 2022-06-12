@@ -1,4 +1,5 @@
 <template>
+  <q-ajax-bar color="accent"/>
   <router-view v-slot="{ Component }" :key="$route.fullPath">
     <transition name="route" mode="out-in" appear>
       <component :is="Component"/>

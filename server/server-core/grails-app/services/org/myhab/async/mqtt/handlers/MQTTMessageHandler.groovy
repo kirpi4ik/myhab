@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component
 class MQTTMessageHandler implements MessageHandler, EventPublisher {
     @Autowired
     MqttTopicService mqttTopicService
-    def espStateRegex = "myhab/(\\w+|_+)/status" //online | offline
 
     @Override
     void handleMessage(Message<?> message) throws MessagingException {
@@ -35,7 +34,7 @@ class MQTTMessageHandler implements MessageHandler, EventPublisher {
                     p6 = "mqtt"
                     it
                 })
-//                log.info("device code = ${msg.deviceCode}, port type = ${msg.portType}, port code = ${msg.portCode}, value = ${msg.portStrValue}")
+                log.info("MQTT: device code = ${msg.deviceCode}, port type = ${msg.portType}, port code = ${msg.portCode}, value = ${msg.portStrValue}")
             }
 
 
