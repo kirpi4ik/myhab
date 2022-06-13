@@ -14,10 +14,9 @@
         </q-item-section>
       </q-item>
 
-      <img src="https://cdn.quasar.dev/img/parallax2.jpg">
       <q-card-actions>
-        <q-btn flat color="secondary" type="submit">
-          Save
+        <q-btn flat color="secondary" :to="'/admin/users/'+$route.params.idPrimary+'/edit'">
+          Edit
         </q-btn>
         <q-btn flat color="secondary" :to="$route.matched[$route.matched.length-2]">
           Cancel
