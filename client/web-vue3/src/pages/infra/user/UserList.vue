@@ -55,7 +55,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Delete" color="red" v-close-popup
-                 @click="onDelete(props.row);confirmDelete=false"/>
+                 @click="onDelete();confirmDelete=false"/>
           <q-btn flat label="Cancel" color="positive" v-close-popup/>
         </q-card-actions>
       </q-card>
@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import {USERS_GET_ALL} from '@/graphql/queries';
+import {USER_CREATE, USER_DELETE, USERS_GET_ALL} from '@/graphql/queries';
 import {defineComponent, onMounted, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import _ from 'lodash';
@@ -91,7 +91,7 @@ export default defineComponent({
       page: 1,
       rowsPerPage: 10
     })
-    const fetchData = (pg, f) => {
+    const fetchData = () => {
       loading.value = true;
       client.query({
         query: USERS_GET_ALL,
@@ -113,10 +113,7 @@ export default defineComponent({
       });
     }
     onMounted(() => {
-      fetchData({
-        pagination: pagination.value,
-        filter: undefined
-      })
+      fetchData()
     })
     return {
       rows,
@@ -134,8 +131,13 @@ export default defineComponent({
       onEdit: (row) => {
         router.push({path: `users/${row.id}/edit`})
       },
-      onDelete: (row) => {
-        router.push({path: `users/${row.id}/delete`})
+      onDelete: () => {
+        client.mutate({
+          mutation: USER_DELETE,
+          variables: {id: selectedRow.value.id},
+        }).then(response => {
+          fetchData()
+        });
       },
       addRow: () => {
         router.push({path: `users/new`})
