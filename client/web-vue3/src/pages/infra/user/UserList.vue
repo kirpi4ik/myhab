@@ -16,7 +16,7 @@
         <q-inner-loading showing color="primary"/>
       </template>
       <template v-slot:top>
-        <q-btn color="positive" :disable="loading" label="Add user" @click="addRow"/>
+        <q-btn icon="add" color="positive" :disable="loading" label="Add user" @click="addRow"/>
       </template>
       <template v-slot:body-cell-username="props">
         <q-td :props="props">
@@ -48,13 +48,15 @@
         </q-bar>
         <q-card-section class="row items-center">
           <q-avatar icon="delete" color="red" text-color="white"/>
-          <span class="q-ml-sm">Do you want to remove the user  <b class="text-h6 text-red">{{ selectedRow.username }}</b> ?</span>
+          <span class="q-ml-sm">Do you want to remove the user  <b class="text-h6 text-red">{{
+              selectedRow.username
+            }}</b> ?</span>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="positive" v-close-popup/>
           <q-btn flat label="Delete" color="red" v-close-popup
                  @click="onDelete(props.row);confirmDelete=false"/>
+          <q-btn flat label="Cancel" color="positive" v-close-popup/>
         </q-card-actions>
       </q-card>
     </q-dialog>
