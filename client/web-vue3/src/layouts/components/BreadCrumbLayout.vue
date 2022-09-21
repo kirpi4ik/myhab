@@ -8,11 +8,12 @@
     <template v-slot:separator>
       <q-icon size="1.5em" name="chevron_right" color="text-blue-grey"/>
     </template>
-    <q-breadcrumbs-el :label="$t('navigation.home')" icon="home" to="/"/>
+    <q-breadcrumbs-el :label="$t('navigation.home')" icon="home" to="/" class="text-blue-grey bg-blue-grey-1"/>
     <q-breadcrumbs-el v-for="link in breadcrumb.srvNav"
                       :label="link.name"
                       :to="'/zones/' + link.id + '?category=' + route.query.category"
                       v-bind:key="link.zoneId"
+                      class="text-blue-grey bg-blue-grey-1"
     />
 
   </q-breadcrumbs>
@@ -24,11 +25,12 @@
     <template v-slot:separator>
       <q-icon size="1.5em" name="chevron_right" color="text-blue-grey"/>
     </template>
-    <q-breadcrumbs-el :label="$t('navigation.home')" icon="home" to="/"/>
+    <q-breadcrumbs-el :label="$t('navigation.home')" icon="home" to="/" class="text-blue-grey bg-blue-grey-1"/>
     <q-breadcrumbs-el v-for="link in breadcrumb.nativeNav"
                       :label="link.name"
                       :to="link.url"
                       v-bind:key="link.name"
+                      class="text-blue-grey bg-blue-grey-1"
     />
   </q-breadcrumbs>
 </template>
