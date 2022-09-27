@@ -51,7 +51,7 @@
       <electric-meter/>
     </div>
     <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-      <heat-pump />
+      <heat-pump :deviceId="heatPumpDeviceId"/>
     </div>
     <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
       <water-pump :peripheral="{state: true}"/>
@@ -82,11 +82,13 @@ export default defineComponent({
     const zoneExtId = process.env.VUE_APP_CONF_ZONE_EXT_ID;
     const zoneEtajId = process.env.VUE_APP_CONF_ZONE_ETAJ_ID;
     const zoneParterId = process.env.VUE_APP_CONF_ZONE_PARTER_ID;
+    const heatPumpDeviceId = process.env.HEAT_PUMP_DEVICE_ID;
     return {
       zoneIntId,
       zoneExtId,
       zoneEtajId,
       zoneParterId,
+      heatPumpDeviceId
     };
   },
   mounted() {

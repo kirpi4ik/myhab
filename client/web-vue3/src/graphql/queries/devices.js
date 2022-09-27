@@ -88,6 +88,27 @@ export const DEVICE_GET_BY_ID_MINIMAL = gql`
 		}
 	}
 `;
+export const DEVICE_GET_BY_ID_WITH_PORT_VALUES = gql`
+  query device($id: Long!) {
+    device(id: $id) {
+      id
+      code
+      model
+      uid
+      name
+      description
+      ports {
+        id
+        internalRef
+        name
+        description
+        type
+        state
+        value
+      }
+    }
+  }
+`;
 export const DEVICE_GET_BY_ID_CHILDS = gql`
 	query device($id: Long!) {
 		deviceTypeList {
