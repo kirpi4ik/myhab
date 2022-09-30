@@ -26,6 +26,9 @@ class MqttTopicService {
             case ~/${MQTTTopic.NIBE.topic(STATUS)}/:
                 matcher = topicName =~ MQTTTopic.NIBE.topic(STATUS)
                 return new MQTTMessage(deviceType: DeviceModel.NIBE_F1145_8_EM, deviceCode: matcher[0][1], portStrValue: message.payload, eventType: TopicName.EVT_DEVICE_STATUS.id())
+            case ~/${MQTTTopic.ELECTRIC_METER.topic(READ_SINGLE_VAL)}/:
+                matcher = topicName =~ MQTTTopic.ELECTRIC_METER.topic(READ_SINGLE_VAL)
+                return new MQTTMessage(deviceType: DeviceModel.ELECTRIC_METER_DTS, deviceCode: matcher[0][2], portCode: matcher[0][3], portStrValue: message.payload, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
             case ~/${MQTTTopic.ESP.topic(READ_SINGLE_VAL)}/:
                 matcher = topicName =~ MQTTTopic.ESP.topic(READ_SINGLE_VAL)
                 return new MQTTMessage(deviceType: DeviceModel.ESP8266_1, deviceCode: matcher[0][1], portType: matcher[0][2], portCode: matcher[0][3], portStrValue: message.payload, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())

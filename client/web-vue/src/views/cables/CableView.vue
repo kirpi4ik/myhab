@@ -124,7 +124,6 @@
                     this.cable = response.data.cable;
                     const cableDetailsToMap = cable ? Object.entries(this.cable) : [['id', 'Not found']];
                     this.cableDetails = cableDetailsToMap.map(([key, value]) => {
-                        debugger
                         return {key, value}
                     }).filter(removeReadonly);
                 });
