@@ -108,7 +108,6 @@
             },
 
             periphStateChangeHandler: function () {
-                debugger
                 let event = {
                     "p0": "evt_heat",
                     "p1": "PERIPHERAL",

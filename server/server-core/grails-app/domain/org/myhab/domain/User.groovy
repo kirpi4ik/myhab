@@ -19,6 +19,7 @@ class User extends BaseEntity {
 
     String username
     String password
+    String phoneNr
     Boolean enabled = true
     Boolean accountExpired = false
     Boolean accountLocked = false
@@ -78,6 +79,7 @@ class User extends BaseEntity {
         firstName nullable: true
         lastName nullable: true
         email nullable: true
+        phoneNr nullable: true
     }
 
     static hasMany = [favJobs: Job, peripheralAccessTokens: PeripheralAccessToken]
