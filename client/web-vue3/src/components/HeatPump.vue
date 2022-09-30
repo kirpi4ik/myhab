@@ -17,18 +17,10 @@
       <div class="row text-center">
         <q-card class="col">
           <q-card-section class="bg-light-green-3 text-h6" vertical>
+            <!--outdoor temp.-->
             <q-icon name="mdi-sun-thermometer" size="md" class="text-orange-8" left/>
-            <span class="text-light-green-1" v-if="deviceDetails['40004']">{{deviceDetails['40004']['value'] / 10}} </span><span class="text-h5 text-light-green-7">°C</span>
-          </q-card-section>
-        </q-card>
-      </div>
-      &nbsp;
-      <div class="row text-center">
-        <q-card class="col">
-          <q-card-section class="bg-light-green-4 " vertical>
-            <q-icon name="mdi-water-thermometer" size="md" class="text-blue-8" left/>
-            <span class="text-light-green-1" v-if="deviceDetails['40014']">{{deviceDetails['40014']['value'] / 10}} </span>
-            <span
+            <span class="text-light-green-1"
+                  v-if="deviceDetails['40004']">{{ deviceDetails['40004']['value'] / 10 }} </span><span
             class="text-h5 text-light-green-7">°C</span>
           </q-card-section>
         </q-card>
@@ -36,9 +28,26 @@
       &nbsp;
       <div class="row text-center">
         <q-card class="col">
+          <q-card-section class="bg-light-green-4 " vertical>
+            <!--hot water charging-->
+            <q-icon name="mdi-water-thermometer" size="sm" class="text-blue-8" left/>
+            <span class="text-light-green-1" v-if="deviceDetails['40014']">{{
+                deviceDetails['40014']['value'] / 10
+              }} </span>
+            <span
+              class="text-h5 text-light-green-7">°C</span>
+          </q-card-section>
+        </q-card>
+      </div>
+      &nbsp;
+      <div class="row text-center">
+        <q-card class="col">
           <q-card-section class="bg-light-green-3 text-h6" vertical>
+            <!--room temperature-->
             <q-icon name="mdi-home-thermometer-outline" size="md" class="text-light-blue-4"/>
-            <span class="text-light-green-1">17 </span><span class="text-h5 text-light-green-7">°C</span>
+            <span class="text-light-green-1"
+                  v-if="deviceDetails['40033']">{{ deviceDetails['40033']['value'] / 10 }} </span><span
+            class="text-h5 text-light-green-7">°C</span>
           </q-card-section>
         </q-card>
       </div>
@@ -46,42 +55,49 @@
       <div class="row text-center">
         <q-card class="col">
           <q-card-section class="bg-light-green-7 text-light-green-2 text-h6">
-            <span>
-                <q-icon name="mdi-thermometer-lines" size="md" class="text-light-green-4"/>
-                <span class="text-amber-5">22 °C</span>
+            <span v-if="deviceDetails['43009']">
+                <q-icon name="mdi-heating-coil" class="text-light-green-4"/>
+              <!--Flow temp-->
+                <span class="text-amber-5">{{ deviceDetails['43009']['value'] / 10 }}°C</span>
             </span>
             <q-separator/>
-            <span>
+            <span v-if="deviceDetails['40012']">
+              <!--Return flow temp-->
                 <q-icon name="mdi-alpha-v-circle-outline" size="md" class="text-light-green-4"/>
-                <span class="text-deep-orange-3">220</span>
+                <span class="text-deep-orange-3">{{ deviceDetails['40012']['value'] / 10 }}°C</span>
+            </span>
+          </q-card-section>
+        </q-card>
+        &nbsp;
+        <q-card class="col">
+          <!-- Temperatura antigel-->
+          <q-card-section class="bg-light-green-7 text-light-green-2 text-h6">
+            <span v-if="deviceDetails['40015']">
+              <!--IN-->
+                <q-icon name="mdi-waves-arrow-right" size="md" class="text-light-green-4"/>
+                <span class="text-amber-5"> {{ deviceDetails['40015']['value'] / 10 }}°C</span>
+            </span>
+            <q-separator/>
+            <span v-if="deviceDetails['40016']">
+              <!--OUT-->
+                <q-icon name="mdi-waves-arrow-left" size="md" class="text-light-green-4"/>
+                <span class="text-deep-orange-3"> {{ deviceDetails['40016']['value'] / 10 }}°C</span>
             </span>
           </q-card-section>
         </q-card>
         &nbsp;
         <q-card class="col">
           <q-card-section class="bg-light-green-7 text-light-green-2 text-h6">
-            <span>
-                <q-icon name="mdi-alpha-a-circle-outline" size="md" class="text-light-green-4"/>
-                <span class="text-amber-5">3.0</span>
+            <span v-if="deviceDetails['43084']">
+              <!--electrical addition power-->
+                <span class="text-amber-5">{{ deviceDetails['43084']['value'] / 100 }}KW</span>
+                <span class="text-light-green-4 text-overline">now</span>
             </span>
             <q-separator/>
-            <span>
-                <q-icon name="mdi-alpha-v-circle-outline" size="md" class="text-light-green-4"/>
-                <span class="text-deep-orange-3">220</span>
-            </span>
-          </q-card-section>
-        </q-card>
-        &nbsp;
-        <q-card class="col">
-          <q-card-section class="bg-light-green-7 text-light-green-2 text-h6">
-            <span>
-                <q-icon name="mdi-alpha-a-circle-outline" size="md" class="text-light-green-4"/>
-                <span class="text-amber-5">3.0</span>
-            </span>
-            <q-separator/>
-            <span>
-                <q-icon name="mdi-alpha-v-circle-outline" size="md" class="text-light-green-4"/>
-                <span class="text-deep-orange-3">220</span>
+            <span v-if="deviceDetails['47212']">
+              <!--set max electrical add-->
+                <span class="text-deep-orange-3">{{ deviceDetails['47212']['value'] / 100 }}KW</span>
+                <span class="text-light-green-4 text-overline">max</span>
             </span>
           </q-card-section>
         </q-card>
