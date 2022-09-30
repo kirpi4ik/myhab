@@ -8,5 +8,6 @@ enum DeviceModel {
     ESP8266_1,
     TMEZON_INTERCOM,
     NIBE_F1145_8_EM,
+    ELECTRIC_METER_DTS,
     CAM_ONVIF
 }

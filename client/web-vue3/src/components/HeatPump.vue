@@ -56,14 +56,12 @@
         <q-card class="col">
           <q-card-section class="bg-light-green-7 text-light-green-2 text-h6">
             <span v-if="deviceDetails['43009']">
-                <q-icon name="mdi-heating-coil" class="text-light-green-4"/>
               <!--Flow temp-->
                 <span class="text-amber-5">{{ deviceDetails['43009']['value'] / 10 }}°C</span>
             </span>
             <q-separator/>
             <span v-if="deviceDetails['40012']">
               <!--Return flow temp-->
-                <q-icon name="mdi-alpha-v-circle-outline" size="md" class="text-light-green-4"/>
                 <span class="text-deep-orange-3">{{ deviceDetails['40012']['value'] / 10 }}°C</span>
             </span>
           </q-card-section>
@@ -160,7 +158,6 @@ export default defineComponent({
       function () {
         if (wsMessage.value.eventName == 'evt_port_value_persisted') {
           let payload = JSON.parse(wsMessage.value.jsonPayload);
-          debugger
           if (portIds.value.includes(Number(payload.p2))) {
             loadDetails();
           }

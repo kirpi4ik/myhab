@@ -48,7 +48,7 @@
       <peripheral-lock/>
     </div>
     <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-      <electric-meter/>
+      <electric-meter :device-id="eMeterDeviceId"/>
     </div>
     <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
       <heat-pump :deviceId="heatPumpDeviceId"/>
@@ -83,12 +83,14 @@ export default defineComponent({
     const zoneEtajId = process.env.VUE_APP_CONF_ZONE_ETAJ_ID;
     const zoneParterId = process.env.VUE_APP_CONF_ZONE_PARTER_ID;
     const heatPumpDeviceId = process.env.HEAT_PUMP_DEVICE_ID;
+    const eMeterDeviceId = process.env.ELECTRIC_METER_01_DEVICE_ID;
     return {
       zoneIntId,
       zoneExtId,
       zoneEtajId,
       zoneParterId,
-      heatPumpDeviceId
+      heatPumpDeviceId,
+      eMeterDeviceId
     };
   },
   mounted() {
