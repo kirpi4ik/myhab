@@ -125,7 +125,6 @@
                 this.peripheralToUpdate[key] = value
             },
             save() {
-                debugger
                 this.peripheralToUpdate.category = this.categories.selected;
                 this.peripheralToUpdate.zones = this.zones.selected;
                 this.peripheralToUpdate.connectedTo = this.connectedTo.selected;
