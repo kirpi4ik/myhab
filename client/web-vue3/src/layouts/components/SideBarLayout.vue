@@ -60,6 +60,14 @@
                 <q-item-label>{{ $t('navigation.cables') }}</q-item-label>
               </q-item-section>
             </q-item>
+            <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting" >
+              <q-item-section avatar>
+                <q-icon name="mdi-cable-data"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.graphiql') }}</q-item-label>
+              </q-item-section>
+            </q-item>
             <q-item-label header class="text-weight-bolder text-white">{{ $t('navigation.settings') }}</q-item-label>
             <q-item to="/maintenance" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
@@ -100,10 +108,13 @@
       const miniState = ref(true)
       const {isSidebarOpen} = useUiState();
       const prjVersion = process.env.PRJ_VERSION;
+      const graphiqlUrl = process.env.BCK_SERVER_URL + '/graphql/browser';
+
       return {
         miniState,
         isSidebarOpen,
         prjVersion,
+        graphiqlUrl,
         drawerClick(e) {
           if (miniState.value) {
             miniState.value = false
