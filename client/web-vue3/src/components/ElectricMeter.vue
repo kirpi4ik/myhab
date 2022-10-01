@@ -25,15 +25,20 @@
       <div class="row text-center" v-if="deviceDetails['total_active_power']">
         <q-card class="col">
           <q-card-section class="bg-blue-grey-4 " vertical>
-            <span class="text-grey-3 text-h6">{{ deviceDetails['total_active_power']['value'] }}  KWh </span><span class="text-overline text-grey-5">index</span>
+                <span class="text-grey-3 text-h6">{{
+                    totalIndex
+                  }}</span>
+            <span class="text-grey-4 text-h8"> [ {{
+                deviceDetails['total_active_power']['value']
+              }} ]</span><span class="text-overline text-grey-5">  KWh </span>
           </q-card-section>
         </q-card>
       </div>
       &nbsp;
       <div class="row text-center">
-        <q-card class="col">
+        <q-card class="col bg-grey-7">
           <q-card-section class="bg-grey-7 text-grey-2 text-h6">
-            <span  v-if="deviceDetails['l1_current']">
+            <span v-if="deviceDetails['l1_current']">
                 <q-icon name="mdi-alpha-a-circle-outline" size="md" class="text-grey-6"/>
                 <span class="text-amber-9">{{ deviceDetails['l1_current']['value'] }}</span>
             </span>
@@ -45,9 +50,9 @@
           </q-card-section>
         </q-card>
         &nbsp;
-        <q-card class="col">
+        <q-card class="col bg-grey-7" >
           <q-card-section class="bg-grey-7 text-grey-2 text-h6">
-            <span  v-if="deviceDetails['l2_current']">
+            <span v-if="deviceDetails['l2_current']">
                 <q-icon name="mdi-alpha-a-circle-outline" size="md" class="text-grey-6"/>
                 <span class="text-amber-9">{{ deviceDetails['l2_current']['value'] }}</span>
             </span>
@@ -59,9 +64,9 @@
           </q-card-section>
         </q-card>
         &nbsp;
-        <q-card class="col">
+        <q-card class="col bg-grey-7">
           <q-card-section class="bg-grey-7 text-grey-2 text-h6">
-            <span  v-if="deviceDetails['l3_current']">
+            <span v-if="deviceDetails['l3_current']">
                 <q-icon name="mdi-alpha-a-circle-outline" size="md" class="text-grey-6"/>
                 <span class="text-amber-9">{{ deviceDetails['l3_current']['value'] }}</span>
             </span>
@@ -148,10 +153,11 @@ export default defineComponent({
     return {
       device,
       deviceDetails,
-      loadDetails
+      loadDetails,
+      totalIndex : computed(()=> Number(deviceDetails.value['total_active_power']['value']) + 54541)
     }
 
-  },
+  }
 });
 </script>
 <style>

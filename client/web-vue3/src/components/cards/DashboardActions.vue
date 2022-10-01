@@ -1,6 +1,6 @@
 <template>
   <div class="row q-col-gutter-xs">
-    <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
       <q-card class="q-ma-md-xs" style="background-color: white">
         <q-card-section class="bg-orange-5 text-amber-1 text-h6">
           Iluminat
@@ -15,7 +15,7 @@
         </q-card-actions>
       </q-card>
     </div>
-    <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
       <q-card class="q-ma-md-xs" style="background-color: white">
         <q-card-section class="bg-deep-orange-8 text-amber-1 text-h6">
           Climatizare
@@ -29,7 +29,7 @@
         </q-card-actions>
       </q-card>
     </div>
-    <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
       <q-card class="q-ma-md-xs" style="background-color: white">
         <q-card-section class="bg-blue-5 text-amber-1 text-h6">
           Temperatura
@@ -44,18 +44,18 @@
         </q-card-actions>
       </q-card>
     </div>
-    <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
       <peripheral-lock/>
-    </div>
-    <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-      <electric-meter :device-id="eMeterDeviceId"/>
-    </div>
-    <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-      <heat-pump :deviceId="heatPumpDeviceId"/>
-    </div>
-    <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
+      &nbsp;
       <water-pump :peripheral="{state: true}"/>
     </div>
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+      <electric-meter :device-id="eMeterDeviceId"/>
+    </div>
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+      <heat-pump :deviceId="heatPumpDeviceId"/>
+    </div>
+
     <q-resize-observer @resize="onResize"/>
   </div>
 </template>
