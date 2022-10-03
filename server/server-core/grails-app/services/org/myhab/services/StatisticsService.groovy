@@ -25,12 +25,12 @@ class StatisticsService implements EventPublisher {
                 between('tsCreated', intervalStart, intervalEnd)
             }
             maxResults(1)
-            order('tsCreated', 'desc')
+            order('tsCreated', 'asc')
         }.find()?.value
         if (activePower && portValue) {
             TimeSeriesStatistic previousStat = TimeSeriesStatistic.createCriteria().list {
                 eq('key', "emeters.${activePower.getDevice().getCode()}.${key}")
-                order('tsCreated', 'desc')
+                order('tsCreated', 'asc')
                 maxResults(1)
             }?.find()
             TimeSeriesStatistic tss = new TimeSeriesStatistic()

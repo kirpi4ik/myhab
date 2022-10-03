@@ -22,7 +22,7 @@ class TimeSeriesStatistic extends BaseEntity {
                 Object get(DataFetchingEnvironment environment) {
                     return TimeSeriesStatistic.createCriteria().list {
                         eq('key', environment.getArgument('key'))
-                        order('tsCreated', 'desc')
+                        order('tsCreated', 'asc')
                         maxResults(1)
                     }?.find()
                 }
@@ -41,7 +41,7 @@ class TimeSeriesStatistic extends BaseEntity {
                             and {
                                 between('tsCreated', now.minusHours(3).toDate(), now.toDate())
                             }
-                            order('tsCreated', 'desc')
+                            order('tsCreated', 'asc')
                             maxResults(1)
                         }?.find()
                     }
