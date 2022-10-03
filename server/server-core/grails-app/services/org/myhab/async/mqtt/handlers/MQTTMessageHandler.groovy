@@ -34,7 +34,7 @@ class MQTTMessageHandler implements MessageHandler, EventPublisher {
                     p6 = "mqtt"
                     it
                 })
-                log.info("MQTT: device code = ${msg.deviceCode}, port type = ${msg.portType}, port code = ${msg.portCode}, value = ${msg.portStrValue}")
+                log.trace("MQTT: device code = ${msg.deviceCode}, port type = ${msg.portType}, port code = ${msg.portCode}, value = ${msg.portStrValue}")
             }
 
 
