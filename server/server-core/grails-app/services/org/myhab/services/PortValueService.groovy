@@ -55,7 +55,7 @@ class PortValueService implements EventPublisher {
                         p0 = TopicName.EVT_PORT_VALUE_PERSISTED.id()
                         p1 = EntityType.PORT.name()
                         p2 = "${devicePort.id}"
-                        p3 = "${devicePort.uid}"
+                        p3 = "${devicePort.internalRef}"
                         p4 = "${devicePort.value}"
                         p5 = "mqtt"
                         it
@@ -67,7 +67,7 @@ class PortValueService implements EventPublisher {
                     p0 = TopicName.EVT_PORT_VALUE_PERSISTED.id()
                     p1 = EntityType.PORT.name()
                     p2 = "${devicePort.id}"
-                    p3 = "${devicePort.uid}"
+                    p3 = "${devicePort.internalRef}"
                     p4 = "${devicePort.value}"
                     p5 = "mqtt"
                     it

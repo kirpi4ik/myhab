@@ -53,7 +53,7 @@
       </div>
       &nbsp;
       <div class="row text-center">
-        <q-card class="col">
+        <q-card class="col bg-light-green-7">
           <q-card-section class="bg-light-green-7 text-light-green-2 text-h6">
             <span v-if="deviceDetails['43009']">
               <!--Flow temp-->
@@ -67,24 +67,24 @@
           </q-card-section>
         </q-card>
         &nbsp;
-        <q-card class="col">
+        <q-card class="col bg-light-green-7">
           <!-- Temperatura antigel-->
           <q-card-section class="bg-light-green-7 text-light-green-2 text-h6">
             <span v-if="deviceDetails['40015']">
               <!--IN-->
-                <q-icon name="mdi-waves-arrow-right" size="md" class="text-light-green-4"/>
+                <q-icon name="mdi-waves-arrow-right" size="ms" class="text-light-green-4"/>
                 <span class="text-amber-5"> {{ deviceDetails['40015']['value'] / 10 }}°C</span>
             </span>
             <q-separator/>
             <span v-if="deviceDetails['40016']">
               <!--OUT-->
-                <q-icon name="mdi-waves-arrow-left" size="md" class="text-light-green-4"/>
+                <q-icon name="mdi-waves-arrow-left" size="ms" class="text-light-green-4"/>
                 <span class="text-deep-orange-3"> {{ deviceDetails['40016']['value'] / 10 }}°C</span>
             </span>
           </q-card-section>
         </q-card>
         &nbsp;
-        <q-card class="col">
+        <q-card class="col bg-light-green-7">
           <q-card-section class="bg-light-green-7 text-light-green-2 text-h6">
             <span v-if="deviceDetails['43084']">
               <!--electrical addition power-->
