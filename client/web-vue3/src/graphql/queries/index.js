@@ -7,6 +7,7 @@ export * from './cables';
 export * from './devices';
 export * from './configurations';
 export * from './users';
+export * from './timeseries';
 
 export const NAV_BREADCRUMB = gql`
 	query navigation($type: String!, $id: String!) {
