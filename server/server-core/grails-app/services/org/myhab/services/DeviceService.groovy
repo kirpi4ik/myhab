@@ -61,7 +61,7 @@ class DeviceService {
     @Subscriber('evt_device_status')
     def deviceStatus(event) {
         def device = Device.findByCode(event.data.p2)
-        if (device.status != event.data.p5) {
+        if (device!=null && device.status != event.data.p5) {
             device.status = DeviceStatus.fromValue(event.data.p5)
             device.save(failOnError: false, flush: true)
         }

@@ -1,12 +1,12 @@
 package org.myhab.services
 
-import org.myhab.dto.WSocketEvent
 import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
 import grails.plugin.springwebsocket.WebSocket
 import groovy.json.JsonOutput
 import org.joda.time.DateTime
+import org.myhab.dto.WSocketEvent
 
 @Transactional
 class WSocketsService implements EventPublisher, WebSocket {
@@ -24,6 +24,14 @@ class WSocketsService implements EventPublisher, WebSocket {
     def evtPortChanged() {
         if (DateTime.now().millis - lastEvent > periodMs) {
             convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_port_value_changed"))
+            lastEvent = DateTime.now().millis
+        }
+    }
+
+    @Subscriber('evt_stat_value_changed')
+    def evtStatChanged() {
+        if (DateTime.now().millis - lastEvent > periodMs) {
+            convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_stat_value_changed"))
             lastEvent = DateTime.now().millis
         }
     }
