@@ -28,7 +28,8 @@ enum EntityType {
     PATCH_PANEL(PatchPanel.class),
     PORT(DevicePort.class),
     CONFIG(Configuration.class),
-    PORT_VALUE(PortValue.class);
+    PORT_VALUE(PortValue.class),
+    TS_STATISTIC(TimeSeriesStatistic.class);
 
     static <T extends BaseEntity> EntityType get(T type) {
         return values().find {
