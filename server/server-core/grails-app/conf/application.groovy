@@ -95,6 +95,9 @@ dataSource {
         testOnReturn = false
         jdbcInterceptors = "ConnectionState"
         defaultTransactionIsolation = 2 //# TRANSACTION_READ_COMMITTED
+        removeAbandoned = true
+        removeAbandonedTimeout = 120
+        logAbandoned = false
     }
 }
 environments {
