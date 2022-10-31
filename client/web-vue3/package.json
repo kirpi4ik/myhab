@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@apollo/client": "^3.5.10",
-		"@quasar/extras": "^1.15.3",
+		"@quasar/extras": "^1.15.5",
 		"@stomp/stompjs": "^6.1.2",
 		"@vue/apollo-composable": "^4.0.0-alpha.17",
 		"@vue/apollo-option": "^4.0.0-alpha.17",
@@ -71,5 +71,5 @@
 		"npm": ">= 6.13.4",
 		"yarn": ">= 1.21.1"
 	},
-	"version": "2.5.5"
+	"version": "2.5.6"
 }
