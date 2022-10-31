@@ -1,5 +1,6 @@
 <template>
-  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" show-if-above bordered class="bg-grey-9 text-white">
+  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" show-if-above
+            bordered persistent class="bg-grey-9 text-white">
     <template v-slot:mini>
       <q-scroll-area class="fit mini-slot cursor-pointer">
         <div class="q-py-lg">
@@ -60,7 +61,7 @@
                 <q-item-label>{{ $t('navigation.cables') }}</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting" >
+            <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="mdi-cable-data"/>
               </q-item-section>
@@ -93,57 +94,59 @@
         unelevated
         color="grey-8"
         icon="chevron_left"
-        @click="miniState = true"
+        @click="drawerClick"
       />
     </div>
   </q-drawer>
 </template>
 <script>
-  import {defineComponent, ref} from 'vue';
-  import {useUiState} from '@/composables';
+import {defineComponent, ref} from 'vue';
+import {useUiState} from '@/composables';
 
-  export default defineComponent({
-    name: 'SideBarLayout',
-    setup() {
-      const miniState = ref(true)
-      const {isSidebarOpen} = useUiState();
-      const prjVersion = process.env.PRJ_VERSION;
-      const graphiqlUrl = process.env.BCK_SERVER_URL + '/graphql/browser';
+export default defineComponent({
+  name: 'SideBarLayout',
+  setup() {
+    const miniState = ref(true)
+    const {isSidebarOpen} = useUiState();
+    const prjVersion = process.env.PRJ_VERSION;
+    const graphiqlUrl = process.env.BCK_SERVER_URL + '/graphql/browser';
 
-      return {
-        miniState,
-        isSidebarOpen,
-        prjVersion,
-        graphiqlUrl,
-        drawerClick(e) {
-          if (miniState.value) {
-            miniState.value = false
-            e.stopPropagation()
-          }
+    return {
+      miniState,
+      isSidebarOpen,
+      prjVersion,
+      graphiqlUrl,
+      drawerClick(e) {
+        if (miniState.value) {
+          miniState.value = false
+          e.stopPropagation()
+        } else {
+          miniState.value = true
         }
-      };
+      }
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
     },
-    mounted() {
-      this.init();
+    onResize() {
     },
-    methods: {
-      init() {
-      },
-      onResize() {
-      },
-    },
-  });
+  },
+});
 </script>
 <style lang="sass" scoped>
-  .mini-slot
-    transition: background-color .28s
+.mini-slot
+  transition: background-color .28s
 
-    &:hover
-      background-color: rgba(0, 0, 0, .04)
+  &:hover
+    background-color: rgba(0, 0, 0, .04)
 
-    .mini-icon
-      font-size: 1.718em
+  .mini-icon
+    font-size: 1.718em
 
-      & + &
-        margin-top: 18px
+    & + &
+      margin-top: 18px
 </style>
