@@ -94,7 +94,7 @@
         unelevated
         color="grey-8"
         icon="chevron_left"
-        @click="drawerClick"
+        @click="drawerClick2"
       />
     </div>
   </q-drawer>
@@ -120,7 +120,13 @@ export default defineComponent({
         if (miniState.value) {
           miniState.value = false
           e.stopPropagation()
-        } else {
+        }
+      },
+      drawerClick2(e) {
+        if (miniState.value) {
+          miniState.value = false
+          e.stopPropagation()
+        }else {
           miniState.value = true
         }
       }
