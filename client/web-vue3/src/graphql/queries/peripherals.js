@@ -28,6 +28,7 @@ export const PERIPHERAL_LIST_ALL = gql`
 			id
 			uid
 			name
+      model
 			description
 		}
 	}
