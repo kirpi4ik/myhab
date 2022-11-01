@@ -2,6 +2,29 @@
   <q-page padding>
     <q-card class="my-card" v-if="viewItem">
       <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+      <q-card-section>
+        <div class="text-h4 text-secondary">Port details</div>
+      </q-card-section>
+      <q-expansion-item v-if="viewItem.device" class="bg-grey-1"
+                        expand-separator
+                        icon="computer"
+                        label="Device"
+                        :caption="viewItem.device.code">
+        <q-item-section>
+          <q-item-label class="text-h6 text-grey-6">
+            {{ viewItem.device.code }}
+          </q-item-label>
+          <q-item-label class="text-h6 text-grey-7">
+            {{ viewItem.device.name }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ viewItem.device.description }}
+          </q-item-label>
+          <q-item-label class="text-h5">
+            <q-btn icon="mdi-eye" :to="'/admin/devices/'+viewItem.device.id+'/view'" size="xs" label="Details"/>
+          </q-item-label>
+        </q-item-section>
+      </q-expansion-item>
       <q-item>
         <q-item-section>
           <q-item-label>ID</q-item-label>
@@ -44,22 +67,17 @@
           <q-item-label caption>{{ viewItem.value }}</q-item-label>
         </q-item-section>
       </q-item>
-      <q-item v-if="viewItem.device">
-        <q-item-section>
-          <q-item-label>Device</q-item-label>
-          <q-item-label caption>{{ viewItem.device.code }} | {{ viewItem.device.name }}
-            <q-btn icon="mdi-eye" :to="'/admin/devices/'+viewItem.device.id+'/view'" size="xs"/>
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-table
-        title="Connected cables"
-        :rows="viewItem.cables"
-        :columns="cableColumns"
-        @row-click="onRowClick"
-        row-key="id"
-      >
-      </q-table>
+
+      <div class="q-pa-md">
+        <q-table
+          title="Connected cables"
+          :rows="viewItem.cables"
+          :columns="cableColumns"
+          @row-click="onRowClick"
+          row-key="id"
+        >
+        </q-table>
+      </div>
       <q-card-actions>
         <q-btn flat color="secondary" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           Edit
@@ -76,7 +94,7 @@
 import {defineComponent, onMounted, ref} from "vue";
 import {DEVICE_GET_BY_ID_CHILDS, PORT_GET_BY_ID, USER_GET_BY_ID} from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute} from "vue-router/dist/vue-router";
+import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
 export default defineComponent({
   name: 'PortView',
@@ -85,6 +103,7 @@ export default defineComponent({
     const viewItem = ref()
     const loading = ref(false)
     const {client} = useApolloClient();
+    const router = useRouter();
     const cableColumns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},

@@ -37,6 +37,7 @@ export const PORT_GET_BY_ID = gql`
 				id
         code
         name
+        description
 			}
       cables {
         id
