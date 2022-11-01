@@ -1,5 +1,30 @@
 import { gql } from '@apollo/client/core';
 
+export const PORT_LIST_ALL = gql`
+  query {
+    devicePortList {
+      id
+      uid
+      internalRef
+      name
+      description
+      device {
+        id
+        code
+        name
+      }
+      type
+      state
+      value
+    }
+    deviceList{
+      id
+      name
+      code
+    }
+  }
+`;
+
 export const PORT_GET_BY_ID = gql`
 	query ($id: Long!) {
 		devicePort(id: $id) {
