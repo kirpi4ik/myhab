@@ -90,22 +90,15 @@ export const CABLE_BY_ID = gql`
 				name
 				model
 				description
-				__typename
 			}
 			connectedTo {
 				id
 				name
-				description
-				device {
-					id
-					code
-				}
-				__typename
+        internalRef
 			}
 			zones {
 				id
 				name
-				__typename
 			}
 		}
 	}
