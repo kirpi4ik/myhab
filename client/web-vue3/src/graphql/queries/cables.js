@@ -35,6 +35,7 @@ export const CABLE_LIST_ALL = gql`
 			patchPanel {
 				id
 				name
+        size
 			}
 			category {
 				name

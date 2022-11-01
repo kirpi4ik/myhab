@@ -44,7 +44,22 @@
           <q-item-label caption>{{ viewItem.value }}</q-item-label>
         </q-item-section>
       </q-item>
-
+      <q-item v-if="viewItem.device">
+        <q-item-section>
+          <q-item-label>Device</q-item-label>
+          <q-item-label caption>{{ viewItem.device.code }} | {{ viewItem.device.name }}
+            <q-btn icon="mdi-eye" :to="'/admin/devices/'+viewItem.device.id+'/view'" size="xs"/>
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-table
+        title="Connected cables"
+        :rows="viewItem.cables"
+        :columns="cableColumns"
+        @row-click="onRowClick"
+        row-key="id"
+      >
+      </q-table>
       <q-card-actions>
         <q-btn flat color="secondary" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           Edit
@@ -70,6 +85,11 @@ export default defineComponent({
     const viewItem = ref()
     const loading = ref(false)
     const {client} = useApolloClient();
+    const cableColumns = [
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
+      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+    ]
 
     const fetchData = () => {
       loading.value = true;
@@ -88,7 +108,13 @@ export default defineComponent({
     return {
       uri,
       fetchData,
-      viewItem
+      viewItem,
+      cableColumns,
+      onRowClick: (evt, row) => {
+        if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
+          router.push({path: `/admin/cables/${row.id}/view`})
+        }
+      }
     }
   }
 });

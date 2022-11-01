@@ -1,6 +1,7 @@
 <template>
   <q-page padding>
     <q-card class="my-card" v-if="viewItem">
+      <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
       <q-item>
         <q-item-section>
           <q-item-label>ID</q-item-label>
