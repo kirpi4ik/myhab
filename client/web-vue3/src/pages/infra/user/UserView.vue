@@ -1,6 +1,12 @@
 <template>
   <q-page padding>
     <q-card class="my-card" v-if="viewItem">
+      <q-card-section>
+        <q-avatar size="103px" class="absolute-center shadow-10">
+          <q-icon name="mdi-account-details"/>
+        </q-avatar>
+        <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+      </q-card-section>
       <q-item>
         <q-item-section avatar>
           <q-avatar>
