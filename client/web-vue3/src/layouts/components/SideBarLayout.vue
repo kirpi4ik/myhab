@@ -45,9 +45,17 @@
                 <q-item-label>{{ $t('navigation.devices') }}</q-item-label>
               </q-item-section>
             </q-item>
+            <q-item to="/admin/ports" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-connection"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.ports.list') }}</q-item-label>
+              </q-item-section>
+            </q-item>
             <q-item to="/admin/peripherals" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-light-switch"/>
+                <q-icon name="mdi-power-socket-au"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.peripherals') }}</q-item-label>
@@ -63,7 +71,7 @@
             </q-item>
             <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-cable-data"/>
+                <q-icon name="mdi-graphql"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.graphiql') }}</q-item-label>

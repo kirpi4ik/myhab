@@ -35,6 +35,12 @@
           <q-badge :label="props.value" class="text-weight-bold text-blue-6 text-h6 bg-transparent"/>
         </q-td>
       </template>
+      <template v-slot:body-cell-actions="props">
+        <q-td :props="props">
+          <q-btn icon="mode_edit" @click="onEdit(props.row)"></q-btn>
+          <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
+        </q-td>
+      </template>
     </q-table>
   </q-page>
 </template>
