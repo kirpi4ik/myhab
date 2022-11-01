@@ -18,7 +18,7 @@
       </template>
       <template v-slot:top>
         <q-btn icon="add" color="positive" :disable="loading" label="Add cable" @click="addRow"/>
-        <q-space />
+        <q-space/>
         <q-input dense debounce="300" color="primary" v-model="filter">
           <template v-slot:append>
             <q-icon name="search"/>
@@ -67,6 +67,7 @@ export default defineComponent({
       {name: 'id', label: 'ID', field: 'id', sortable: true},
       {name: 'code', label: 'Code', field: 'code', sortable: true},
       {name: 'description', label: 'Description', field: 'description', sortable: true},
+      {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', sortable: true},
       {name: 'actions', label: 'Actions', field: 'actions'},
     ];
     const pagination = ref({
@@ -88,7 +89,8 @@ export default defineComponent({
             let device = {
               id: value.id,
               code: value.code,
-              description: value.description
+              description: value.description,
+              patchPanel: value.patchPanel != null ? (value.patchPanel.name + '(' + value.patchPanelPort + '/' + value.patchPanel.size + ')') : ''
             }
             result.push(device)
           }
