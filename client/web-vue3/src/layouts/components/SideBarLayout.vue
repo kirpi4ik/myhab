@@ -24,6 +24,7 @@
           </q-item-section>
         </q-item>
         <q-expansion-item
+          v-model="expanded"
           icon="mdi-clipboard-edit-outline"
           :label="$t('navigation.infrastructure')"
           class="text-weight-bolder text-white"
@@ -110,16 +111,19 @@
 <script>
 import {defineComponent, ref} from 'vue';
 import {useUiState} from '@/composables';
+import {Platform} from "quasar";
 
 export default defineComponent({
   name: 'SideBarLayout',
   setup() {
-    const miniState = ref(true)
+    const miniState = ref(Platform.is.mobile)
     const {isSidebarOpen} = useUiState();
     const prjVersion = process.env.PRJ_VERSION;
     const graphiqlUrl = process.env.BCK_SERVER_URL + '/graphql/browser';
 
+    const expanded = ref(true)
     return {
+      expanded,
       miniState,
       isSidebarOpen,
       prjVersion,

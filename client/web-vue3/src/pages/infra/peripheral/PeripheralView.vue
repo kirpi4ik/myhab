@@ -2,6 +2,9 @@
   <q-page padding>
     <q-card class="my-card" v-if="viewItem">
       <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+      <q-card-section>
+        <div class="text-h4 text-secondary">Peripheral details</div>
+      </q-card-section>
       <q-item>
         <q-item-section>
           <q-item-label>ID</q-item-label>
