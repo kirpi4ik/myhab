@@ -1,7 +1,12 @@
 <template>
   <q-page padding>
     <q-card class="my-card" v-if="viewItem">
-      <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+      <q-card-section>
+        <q-avatar size="103px" class="absolute-center shadow-10">
+          <q-icon name="mdi-power-socket-au"/>
+        </q-avatar>
+        <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+      </q-card-section>
       <q-card-section>
         <div class="text-h4 text-secondary">Peripheral details</div>
       </q-card-section>
@@ -38,10 +43,13 @@
       <q-item>
         <q-item-section v-if="viewItem.connectedTo">
           <q-item-label>Port</q-item-label>
-          <q-item-label caption v-for="port in viewItem.connectedTo" v-bind:key="port.id">{{ port.id }} |
-            {{ port.internalRef }} | {{ port.name }}
-            <q-btn icon="mdi-eye" :to="'/admin/ports/'+port.id+'/view'" size="xs"/>
-          </q-item-label>
+          <div>
+            <q-item-label class="text-blue-grey-6 text-weight-bold" v-for="port in viewItem.connectedTo"
+                          v-bind:key="port.id">{{ port.id }} |
+              {{ port.internalRef }} | {{ port.name }} &nbsp;
+              <q-btn icon="mdi-eye" :to="'/admin/ports/'+port.id+'/view'" size="xs"/>
+            </q-item-label>
+          </div>
         </q-item-section>
       </q-item>
       <q-card-actions>
