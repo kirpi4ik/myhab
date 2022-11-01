@@ -1,7 +1,12 @@
 <template>
   <q-page padding>
     <q-card class="my-card" v-if="viewItem">
-      <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+      <q-card-section>
+        <q-avatar size="103px" class="absolute-center shadow-10">
+          <q-icon name="mdi-cable-data"/>
+        </q-avatar>
+        <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+      </q-card-section>
       <q-card-section>
         <div class="text-h4 text-secondary">Cable details</div>
       </q-card-section>
