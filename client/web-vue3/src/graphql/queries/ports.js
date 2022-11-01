@@ -39,24 +39,6 @@ export const PORT_GET_BY_ID = gql`
 			type
 			state
 			value
-			cables {
-				id
-				code
-				description
-			}
-			peripherals {
-				id
-				name
-			}
-		}
-		devicePeripheralList {
-			id
-			name
-			description
-		}
-		cableList {
-			id
-			code
 		}
 		portTypes
 		portStates
