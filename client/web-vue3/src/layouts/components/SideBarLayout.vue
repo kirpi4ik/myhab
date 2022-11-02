@@ -1,5 +1,6 @@
 <template>
-  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" bordered persistent class="bg-grey-9 text-white">
+  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" bordered persistent
+            class="bg-grey-9 text-white">
     <template v-slot:mini>
       <q-scroll-area class="fit mini-slot cursor-pointer">
         <div class="q-py-lg">
@@ -53,14 +54,31 @@
                 <q-item-label>{{ $t('navigation.ports.list') }}</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item to="/admin/peripherals" active-class="q-item-no-link-highlighting">
-              <q-item-section avatar>
-                <q-icon name="mdi-power-socket-au"/>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ $t('navigation.peripherals') }}</q-item-label>
-              </q-item-section>
-            </q-item>
+            <q-expansion-item
+              icon="mdi-power-socket-au"
+              :label="$t('navigation.peripherals')"
+              class="text-weight-bolder text-white"
+            >
+              <q-list class="q-pl-lg text-weight-light">
+                <q-item to="/admin/peripherals" active-class="q-item-no-link-highlighting">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-view-list"/>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ $t('navigation.peripheral.list') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item to="/admin/pcategories" active-class="q-item-no-link-highlighting">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-shape"/>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ $t('navigation.peripheral.categories') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-expansion-item>
+
             <q-item to="/admin/cables" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="mdi-cable-data"/>
@@ -145,7 +163,7 @@ export default defineComponent({
         if (miniState.value) {
           miniState.value = false
           e.stopPropagation()
-        }else {
+        } else {
           miniState.value = true
         }
       }

@@ -18,7 +18,7 @@
       </template>
       <template v-slot:top>
         <q-btn icon="add" color="positive" :disable="loading" label="Add peripheral" @click="addRow"/>
-        <q-space />
+        <q-space/>
         <q-input dense debounce="300" color="primary" v-model="filter">
           <template v-slot:append>
             <q-icon name="search"/>
@@ -64,10 +64,10 @@ export default defineComponent({
     const confirmDelete = ref(false);
     const selectedRow = ref(null);
     const columns = [
-      {name: 'id', label: 'ID', field: 'id', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', sortable: true},
-      {name: 'model', label: 'Model', field: 'model', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', sortable: true},
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+      {name: 'model', label: 'Model', field: 'model', align: 'left', sortable: true},
+      {name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true},
       {name: 'actions', label: 'Actions', field: 'actions'},
     ];
     const pagination = ref({

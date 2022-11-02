@@ -64,9 +64,9 @@ export default defineComponent({
     const confirmDelete = ref(false);
     const selectedRow = ref(null);
     const columns = [
-      {name: 'id', label: 'ID', field: 'id', sortable: true},
-      {name: 'code', label: 'Code', field: 'code', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', sortable: true},
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
+      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
       {name: 'actions', label: 'Actions', field: 'actions'},
     ];
     const pagination = ref({

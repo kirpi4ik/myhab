@@ -17,7 +17,7 @@
         <q-inner-loading showing color="primary"/>
       </template>
       <template v-slot:top>
-        <q-btn icon="add" color="positive" :disable="loading" label="Add cable" @click="addRow"/>
+        <q-btn icon="add" color="positive" :disable="loading" label="Add category" @click="addRow"/>
         <q-space/>
         <q-input dense debounce="300" color="primary" v-model="filter">
           <template v-slot:append>
@@ -49,13 +49,19 @@
 import {defineComponent, onMounted, ref} from "vue";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
-import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
+import {
+  DEVICE_DELETE,
+  DEVICE_LIST_ALL,
+  PERIPHERAL_CATEGORIES,
+  PERIPHERAL_DELETE,
+  PERIPHERAL_LIST_ALL
+} from "@/graphql/queries";
 import _ from "lodash";
 
 export default defineComponent({
-  name: 'CableList',
+  name: 'PCategoryList',
   setup() {
-    const uri = '/admin/cables'
+    const uri = '/admin/pcategories'
     const filter = ref('')
     const {client} = useApolloClient();
     const loading = ref(false)
@@ -65,9 +71,8 @@ export default defineComponent({
     const selectedRow = ref(null);
     const columns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
-      {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', align: 'left', sortable: true},
+      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+      {name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true},
       {name: 'actions', label: 'Actions', field: 'actions'},
     ];
     const pagination = ref({
@@ -79,18 +84,18 @@ export default defineComponent({
     const fetchData = () => {
       loading.value = true;
       client.query({
-        query: CABLE_LIST_ALL,
+        query: PERIPHERAL_CATEGORIES,
         variables: {},
         fetchPolicy: 'network-only',
       }).then(response => {
         rows.value = [];
-        rows.value = _.transform(response.data.cableList,
+        rows.value = _.transform(response.data.peripheralCategoryList,
           function (result, value, key) {
             let device = {
               id: value.id,
-              code: value.code,
-              description: value.description,
-              patchPanel: value.patchPanel != null ? (value.patchPanel.name + '(' + value.patchPanelPort + '/' + value.patchPanel.size + ')') : ''
+              title: value.title,
+              name: value.name,
+              description: value.description
             }
             result.push(device)
           }
@@ -120,7 +125,7 @@ export default defineComponent({
       },
       onDelete: () => {
         client.mutate({
-          mutation: CABLE_DELETE,
+          mutation: PERIPHERAL_DELETE,
           variables: {id: selectedRow.value.id},
         }).then(response => {
           fetchData()
