@@ -37,7 +37,11 @@
       <q-item v-if="viewItem.category">
         <q-item-section>
           <q-item-label>Category</q-item-label>
-          <q-item-label caption>{{ viewItem.category.name }}</q-item-label>
+          <div>
+            <q-item-label class="text-blue-grey-6 text-weight-bold">{{ viewItem.category.name }}
+            <q-btn icon="mdi-eye" :to="'/admin/pcategories/'+viewItem.category.id+'/view'" size="xs"/>
+            </q-item-label>
+          </div>
         </q-item-section>
       </q-item>
       <q-item>
