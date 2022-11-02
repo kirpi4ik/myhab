@@ -1,70 +1,208 @@
-# This file was generated based on ".graphqlconfig". Do not edit manually.
-
-schema {
-  query: Query
-  mutation: Mutation
-}
-
 type BradCrumbLink {
-  id: String
   name: String
   type: String
+  id: String
 }
 
+"""
+Built-in Byte Array
+"""
+scalar ByteArray
+
 type Cable {
+  id: Long
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  rack: Rack
+  patchPanel: PatchPanel
   category: CableCategory
   code: String
   codeNew: String
   codeOld: String
-  connectedTo: [DevicePort]
   description: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  maxAmp: Float
-  nrWires: Int
-  patchPanel: PatchPanel
   patchPanelPort: String
+  nrWires: Int
   peripherals: [DevicePeripheral]
-  rack: Rack
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
+  connectedTo: [DevicePort]
   zones: [Zone]
+  maxAmp: Float
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 type CableCategory {
-  cables: [Cable]
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
   id: Long
-  name: String
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  cables: [Cable]
+  name: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input CableCategoryCreate {
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  cables: [CableCreateNested!]
+  name: String!
+}
+
+input CableCategoryCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  cables: [CableCreateNested]
+  name: String
+}
+
+input CableCategoryUpdate {
   version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  cables: [CableUpdateNested]
+  name: String
+}
+
+input CableCategoryUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  cables: [CableUpdateNested]
+  name: String
+}
+
+input CableCreate {
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  rack: RackCreateNested
+  patchPanel: PatchPanelCreateNested
+  category: CableCategoryCreateNested
+  code: String
+  codeNew: String
+  codeOld: String
+  description: String
+  patchPanelPort: String
+  nrWires: Int!
+  peripherals: [DevicePeripheralCreateNested!]
+  connectedTo: [DevicePortCreateNested!]
+  zones: [ZoneCreateNested!]
+  maxAmp: Float!
+}
+
+input CableCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  code: String
+  codeNew: String
+  codeOld: String
+  description: String
+  patchPanelPort: String
+  nrWires: Int
+  peripherals: [DevicePeripheralCreateNested]
+  maxAmp: Float
+}
+
+input CableUpdate {
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  rack: RackUpdateNested
+  patchPanel: PatchPanelUpdateNested
+  category: CableCategoryUpdateNested
+  code: String
+  codeNew: String
+  codeOld: String
+  description: String
+  patchPanelPort: String
+  nrWires: Int
+  peripherals: [DevicePeripheralUpdateNested]
+  connectedTo: [DevicePortUpdateNested]
+  zones: [ZoneUpdateNested]
+  maxAmp: Float
+}
+
+input CableUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  code: String
+  codeNew: String
+  codeOld: String
+  description: String
+  patchPanelPort: String
+  nrWires: Int
+  peripherals: [DevicePeripheralUpdateNested]
+  maxAmp: Float
 }
 
 type CacheResult {
-  cacheKey: String!
   cacheName: String!
+  cacheKey: String!
   cachedValue: String
 }
 
 type Configuration {
-  description: String
-  entityId: Long
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
   id: Long
-  key: String
-  name: String
-  value: String
   version: Long
+  name: String
+  description: String
+  value: String
+  entityType: EntityType
+  key: String
+  entityId: Long
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input ConfigurationCreate {
+  name: String
+  description: String
+  value: String!
+  entityType: EntityType!
+  key: String!
+  entityId: Long!
+}
+
+input ConfigurationCreateNested {
+  id: Long
+  name: String
+  description: String
+  value: String
+  entityType: EntityType
+  key: String
+  entityId: Long
 }
 
 type ConfigurationDeleteByIdResult {
@@ -77,115 +215,370 @@ type ConfigurationDeleteByKeyResult {
   success: Boolean
 }
 
-type CronTrigger {
+input ConfigurationUpdate {
+  version: Long
+  name: String
+  description: String
+  value: String
   entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  expression: String
+  key: String
+  entityId: Long
+}
+
+input ConfigurationUpdateNested {
   id: Long
-  job: Job
+  name: String
+  description: String
+  value: String
+  entityType: EntityType
+  key: String
+  entityId: Long
+}
+
+type CronTrigger {
+  id: Long
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
+  expression: String
+  job: Job
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
+
+input CronTriggerCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  expression: String
+}
+
+input CronTriggerUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  expression: String
+}
+
+"""
+Built-in Date
+"""
+scalar Date
 
 type DeleteResponseCustom {
   error: String
   success: Boolean
 }
 
-"Whether or not the operation was successful"
+"""
+Whether or not the operation was successful
+"""
 type DeleteResult {
-  error: String
   success: Boolean!
+  error: String
 }
 
 type Device {
-  authAccounts: [DeviceAccount]
-  backups: [DeviceBackup]
-  code: String
-  configurations: [Configuration]
-  description: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
   id: Long
-  model: DeviceModel
-  name: String
-  networkAddress: NetworkAddressEmbedded
-  offlineScenario: String
-  ports: [DevicePort]
-  rack: Rack
-  status: DeviceStatus
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  code: String
+  name: String
+  model: DeviceModel
+  description: String
+  networkAddress: NetworkAddressEmbedded
+  offlineScenario: String
+  rack: Rack
   type: DeviceType
-  uid: String
-  version: Long
+  status: DeviceStatus
+  zones: [Zone]
+  authAccounts: [DeviceAccount]
+  backups: [DeviceBackup]
+  ports: [DevicePort]
+  configurations: [Configuration]
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 type DeviceAccount {
-  device: Device
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
   id: Long
-  isDefault: Boolean
-  password: String
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
   username: String
+  password: String
+  isDefault: Boolean
+  device: Device
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input DeviceAccountCreate {
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  username: String
+  password: String
+  isDefault: Boolean
+  device: DeviceCreateNested!
+}
+
+input DeviceAccountCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  username: String
+  password: String
+  isDefault: Boolean
+}
+
+input DeviceAccountUpdate {
   version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  username: String
+  password: String
+  isDefault: Boolean
+  device: DeviceUpdateNested
+}
+
+input DeviceAccountUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  username: String
+  password: String
+  isDefault: Boolean
 }
 
 type DeviceBackup {
-  configuration: String
-  device: Device
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  firmware: ByteArray
-  frmVersion: String
   id: Long
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  firmware: ByteArray
+  configuration: String
+  device: Device
+  frmVersion: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input DeviceBackupCreateNested {
+  id: Long
   uid: String
-  version: Long
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  firmware: ByteArray
+  configuration: String
+  frmVersion: String
+}
+
+input DeviceBackupUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  firmware: ByteArray
+  configuration: String
+  frmVersion: String
 }
 
 type DeviceCategory {
-  description: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
   id: Long
-  name: String
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  name: String
+  description: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input DeviceCategoryCreate {
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String!
+  description: String!
+}
+
+input DeviceCategoryUpdate {
   version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
+  description: String
+}
+
+input DeviceCreate {
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  code: String!
+  name: String
+  model: DeviceModel
+  description: String
+  networkAddress: NetworkAddressCreateEmbedded
+  offlineScenario: String
+  rack: RackCreateNested
+  type: DeviceTypeCreateNested
+  status: DeviceStatus
+  zones: [ZoneCreateNested!]
+  authAccounts: [DeviceAccountCreateNested!]
+  backups: [DeviceBackupCreateNested!]
+  ports: [DevicePortCreateNested!]
+}
+
+input DeviceCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  code: String
+  name: String
+  model: DeviceModel
+  description: String
+  networkAddress: NetworkAddressCreateEmbedded
+  offlineScenario: String
+  type: DeviceTypeCreateNested
+  status: DeviceStatus
+  authAccounts: [DeviceAccountCreateNested]
+  backups: [DeviceBackupCreateNested]
+  ports: [DevicePortCreateNested]
+}
+
+enum DeviceModel {
+  MEGAD_2561_RTC
+  ESP8266_1
+  TMEZON_INTERCOM
+  NIBE_F1145_8_EM
+  ELECTRIC_METER_DTS
+  CAM_ONVIF
 }
 
 type DevicePeripheral {
-  accessTokens: [PeripheralAccessToken]
-  category: PeripheralCategory
-  configurations: [Configuration]
-  connectedTo: [DevicePort]
-  description: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
   id: Long
-  maxAmp: Float
-  model: String
-  name: String
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
+  name: String
+  model: String
+  description: String
+  maxAmp: Float
+  connectedTo: [DevicePort]
   zones: [Zone]
+  category: PeripheralCategory
+  accessTokens: [PeripheralAccessToken]
+  configurations: [Configuration]
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input DevicePeripheralCreate {
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String!
+  model: String
+  description: String
+  maxAmp: Float
+  connectedTo: [DevicePortCreateNested!]
+  zones: [ZoneCreateNested!]
+  category: PeripheralCategoryCreateNested!
+  accessTokens: [PeripheralAccessTokenCreateNested!]
+}
+
+input DevicePeripheralCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
+  model: String
+  description: String
+  maxAmp: Float
+  accessTokens: [PeripheralAccessTokenCreateNested]
+}
+
+input DevicePeripheralUpdate {
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
+  model: String
+  description: String
+  maxAmp: Float
+  connectedTo: [DevicePortUpdateNested]
+  zones: [ZoneUpdateNested]
+  category: PeripheralCategoryUpdateNested
+  accessTokens: [PeripheralAccessTokenUpdateNested]
+}
+
+input DevicePeripheralUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
+  model: String
+  description: String
+  maxAmp: Float
+  accessTokens: [PeripheralAccessTokenUpdateNested]
 }
 
 type DevicePeripheralUpdateResult {
@@ -194,52 +587,222 @@ type DevicePeripheralUpdateResult {
 }
 
 type DevicePort {
-  cables: [Cable]
-  configurations: [Configuration]
-  description: String
-  device: Device
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
   id: Long
-  internalRef: String
-  name: String
-  peripherals: [DevicePeripheral]
-  scenarios: [Scenario]
-  state: PortState
-  subscriptions: [EventSubscription]
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  internalRef: String
+  name: String
   type: PortType
-  uid: String
+  state: PortState
+  description: String
   value: String
+  peripherals: [DevicePeripheral]
+  cables: [Cable]
+  scenarios: [Scenario]
+  subscriptions: [EventSubscription]
+  device: Device
+  configurations: [Configuration]
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input DevicePortCreate {
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  internalRef: String!
+  name: String
+  type: PortType
+  state: PortState
+  description: String
+  value: String
+  peripherals: [DevicePeripheralCreateNested!]
+  cables: [CableCreateNested!]
+  scenarios: [ScenarioCreateNested!]
+  subscriptions: [EventSubscriptionCreateNested!]
+  device: DeviceCreateNested!
+}
+
+input DevicePortCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  internalRef: String
+  name: String
+  type: PortType
+  state: PortState
+  description: String
+  value: String
+  peripherals: [DevicePeripheralCreateNested]
+  scenarios: [ScenarioCreateNested]
+  subscriptions: [EventSubscriptionCreateNested]
+}
+
+input DevicePortUpdate {
   version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  internalRef: String
+  name: String
+  type: PortType
+  state: PortState
+  description: String
+  value: String
+  peripherals: [DevicePeripheralUpdateNested]
+  cables: [CableUpdateNested]
+  scenarios: [ScenarioUpdateNested]
+  subscriptions: [EventSubscriptionUpdateNested]
+  device: DeviceUpdateNested
+}
+
+input DevicePortUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  internalRef: String
+  name: String
+  type: PortType
+  state: PortState
+  description: String
+  value: String
+  peripherals: [DevicePeripheralUpdateNested]
+  scenarios: [ScenarioUpdateNested]
+  subscriptions: [EventSubscriptionUpdateNested]
+}
+
+enum DeviceStatus {
+  ONLINE
+  OFFLINE
 }
 
 type DeviceType {
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
   id: Long
-  name: String
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
+  name: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
-"Validation Errors"
+input DeviceTypeCreate {
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String!
+}
+
+input DeviceTypeCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
+}
+
+input DeviceTypeUpdate {
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
+}
+
+input DeviceTypeUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
+}
+
+input DeviceUpdate {
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  code: String
+  name: String
+  model: DeviceModel
+  description: String
+  networkAddress: NetworkAddressUpdateEmbedded
+  offlineScenario: String
+  rack: RackUpdateNested
+  type: DeviceTypeUpdateNested
+  status: DeviceStatus
+  zones: [ZoneUpdateNested]
+  authAccounts: [DeviceAccountUpdateNested]
+  backups: [DeviceBackupUpdateNested]
+  ports: [DevicePortUpdateNested]
+}
+
+input DeviceUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  code: String
+  name: String
+  model: DeviceModel
+  description: String
+  networkAddress: NetworkAddressUpdateEmbedded
+  offlineScenario: String
+  type: DeviceTypeUpdateNested
+  status: DeviceStatus
+  authAccounts: [DeviceAccountUpdateNested]
+  backups: [DeviceBackupUpdateNested]
+  ports: [DevicePortUpdateNested]
+}
+
+enum EntityType {
+  CABLE
+  CABLE_CATEGORY
+  DEVICE
+  PERIPHERAL
+  PERIPHERAL_CATEGORY
+  ZONE
+  RACK
+  EVENT_DATA
+  PATCH_PANEL
+  PORT
+  CONFIG
+  PORT_VALUE
+  TS_STATISTIC
+}
+
+"""
+Validation Errors
+"""
 type Error {
   field: String!
   message: String
 }
 
-type EventData {
-  category: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
+input EventDatInput {
   p0: String
   p1: String
   p2: String
@@ -247,9 +810,58 @@ type EventData {
   p4: String
   p5: String
   p6: String
+}
+
+type EventData {
+  id: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  category: String
+  p4: String
+  p5: String
+  p6: String
+  p2: String
+  p3: String
+  p1: String
+  p0: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input EventDataCreate {
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  category: String
+  p4: String
+  p5: String
+  p6: String
+  p2: String!
+  p3: String!
+  p1: String!
+  p0: String!
+}
+
+input EventDataCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  category: String
+  p4: String
+  p5: String
+  p6: String
+  p2: String
+  p3: String
+  p1: String
+  p0: String
 }
 
 type EventDataResponse {
@@ -264,1089 +876,197 @@ type EventDataResponse {
   uid: String
 }
 
-type EventDefinition {
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  hasPublisher: Boolean
-  hasSubscriber: Boolean
-  id: Long
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-type EventSubscription {
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  events: [EventDefinition]
-  id: Long
-  pubPort: DevicePort
-  scenario: Scenario
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-type EventTrigger {
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  events: [EventDefinition]
-  id: Long
-  job: Job
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-type Job {
-  cronTriggers: [CronTrigger]
-  description: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  eventTriggers: [EventTrigger]
-  id: Long
-  name: String
-  scenario: Scenario
-  state: JobState
-  tags: [JobTag]
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-type JobTag {
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  jobs: [Job]
-  name: String
-  version: Long
-}
-
-type Layer {
-  description: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  name: String
-  peripherals: [DevicePeripheral]
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-type Mutation {
-  addListItemProperty(entityId: Long!, entityType: EntityType!, key: String!, value: String!): Configuration
-  cableCategoryCreate(cableCategory: CableCategoryCreate): CableCategory
-  cableCategoryDelete(id: Long!): DeleteResult
-  cableCategoryUpdate(cableCategory: CableCategoryUpdate, id: Long!): CableCategory
-  cableCreate(cable: CableCreate): Cable
-  cableDelete(id: Long!): DeleteResult
-  cableUpdate(cable: CableUpdate, id: Long!): Cable
-  cacheDelete(cacheKey: String!, cacheName: String!): MutationResponse
-  configDeleteByKey(entityId: Long!, entityType: EntityType!, key: String!): ConfigurationDeleteByKeyResult
-  configurationCreate(configuration: ConfigurationCreate): Configuration
-  configurationDelete(id: Long!): DeleteResult
-  configurationUpdate(configuration: ConfigurationUpdate, id: Long!): Configuration
-  deviceAccountCreate(deviceAccount: DeviceAccountCreate): DeviceAccount
-  deviceAccountDelete(id: Long!): DeleteResult
-  deviceAccountUpdate(deviceAccount: DeviceAccountUpdate, id: Long!): DeviceAccount
-  deviceCategoryCreate(deviceCategory: DeviceCategoryCreate): DeviceCategory
-  deviceCategoryDelete(id: Long!): DeleteResult
-  deviceCategoryUpdate(deviceCategory: DeviceCategoryUpdate, id: Long!): DeviceCategory
-  deviceCreate(device: DeviceCreate): Device
-  deviceDelete(id: Long!): DeleteResult
-  devicePeripheralCreate(devicePeripheral: DevicePeripheralCreate): DevicePeripheral
-  devicePeripheralDelete(id: Long!): DeleteResult
-  devicePeripheralUpdate(devicePeripheral: DevicePeripheralUpdate, id: Long!): DevicePeripheral
-  devicePortCreate(devicePort: DevicePortCreate): DevicePort
-  devicePortDelete(id: Long!): DeleteResult
-  devicePortUpdate(devicePort: DevicePortUpdate, id: Long!): DevicePort
-  deviceTypeCreate(deviceType: DeviceTypeCreate): DeviceType
-  deviceTypeDelete(id: Long!): DeleteResult
-  deviceTypeUpdate(deviceType: DeviceTypeUpdate, id: Long!): DeviceType
-  deviceUpdate(device: DeviceUpdate, id: Long!): Device
-  eventDataCreate(eventData: EventDataCreate): EventData
-  eventDataDelete(id: Long!): DeleteResult
-  eventDataUpdate(eventData: EventDataUpdate, id: Long!): EventData
-  layerCreate(layer: LayerCreate): Layer
-  layerDelete(id: Long!): DeleteResult
-  layerUpdate(id: Long!, layer: LayerUpdate): Layer
-  patchPanelCreate(patchPanel: PatchPanelCreate): PatchPanel
-  patchPanelDelete(id: Long!): DeleteResult
-  patchPanelUpdate(id: Long!, patchPanel: PatchPanelUpdate): PatchPanel
-  peripheralCategoryCreate(peripheralCategory: PeripheralCategoryCreate): PeripheralCategory
-  peripheralCategoryDelete(id: Long!): DeleteResult
-  peripheralCategoryUpdate(id: Long!, peripheralCategory: PeripheralCategoryUpdate): PeripheralCategory
-  portValueCreate(portValue: PortValueCreate): PortValue
-  portValueDelete(id: Long!): DeleteResult
-  portValueUpdate(id: Long!, portValue: PortValueUpdate): PortValue
-  pushEvent(input: EventDatInput): EventDataResponse
-  rackCreate(rack: RackCreate): Rack
-  rackDelete(id: Long!): DeleteResult
-  rackUpdate(id: Long!, rack: RackUpdate): Rack
-  removeConfig(id: Long!): ConfigurationDeleteByIdResult
-  roleCreate(role: RoleCreate): Role
-  roleDelete(id: Long!): DeleteResult
-  roleUpdate(id: Long!, role: RoleUpdate): Role
-  savePropertyValue(entityId: Long!, entityType: EntityType!, key: String!, value: String!): Configuration
-  scenarioCreate(scenario: ScenarioCreate): Scenario
-  scenarioDelete(id: Long!): DeleteResult
-  scenarioUpdate(id: Long!, scenario: ScenarioUpdate): Scenario
-  updateCable(cable: CableUpdate!, id: Long!): Cable
-  updatePeripheral(id: Long!, peripheral: DevicePeripheralUpdate!): DevicePeripheralUpdateResult
-  updatePort(id: Long!, port: DevicePortUpdate!): DevicePort
-  userCreate(user: UserCreate): User
-  userDelete(id: Long!): DeleteResult
-  userDeleteCascade(id: Long!): DeleteResponseCustom
-  userRolesSave(input: SaveUserRoles): MutationResponse
-  userUpdate(id: Long!, user: UserUpdate): User
-  zoneCreate(zone: ZoneCreate): Zone
-  zoneDelete(id: Long!): DeleteResult
-  zoneUpdate(id: Long!, zone: ZoneUpdate): Zone
-}
-
-type MutationResponse {
-  error: String
-  success: Boolean
-}
-
-type Navigation {
-  breadcrumb(id: String!, type: String!): [BradCrumbLink]
-}
-
-type NetworkAddressEmbedded {
-  gateway: String
-  ip: String
-  port: String
-}
-
-type PatchPanel {
-  cables: [Cable]
-  description: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  name: String
-  rack: Rack
-  size: Int
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-type PeripheralAccessToken {
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  peripheral: DevicePeripheral
-  token: String
-  tsCreated: Date
-  tsExpiration: Date
-  tsUpdated: Date
-  uid: String
-  user: User
-  version: Long
-}
-
-type PeripheralCategory {
-  cables: [Cable]
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  name: String
-  peripherals: [DevicePeripheral]
-  title: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-type PortValue {
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  event: EventData
-  id: Long
-  portUid: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  value: String
-}
-
-type Query {
-  cable(id: Long!): Cable
-  cableById(id: String!): Cable
-  cableCategory(id: Long!): CableCategory
-  cableCategoryCount: Int
-  cableCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [CableCategory]
-  cableCount: Int
-  cableList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Cable]
-  cache(cacheKey: String!, cacheName: String!): CacheResult
-  cacheAll(cacheName: String!): [CacheResult]
-  config(key: String!): String
-  configKeysByEntity(entityType: EntityType!): [String]
-  configListByKey(entityId: Long!, entityType: EntityType!, key: String!): [Configuration]
-  configPropertyByKey(entityId: Long!, entityType: EntityType!, key: String!): Configuration
-  configuration(id: Long!): Configuration
-  configurationCount: Int
-  configurationList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Configuration]
-  configurationListByEntity(entityId: Long!, entityType: EntityType!): [Configuration]
-  device(id: Long!): Device
-  deviceAccount(id: Long!): DeviceAccount
-  deviceAccountCount: Int
-  deviceAccountList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceAccount]
-  deviceById(id: String!): Device
-  deviceCategory(id: Long!): DeviceCategory
-  deviceCategoryCount: Int
-  deviceCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceCategory]
-  deviceCount: Int
-  deviceList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Device]
-  devicePeripheral(id: Long!): DevicePeripheral
-  devicePeripheralById(id: String!): DevicePeripheral
-  devicePeripheralCount: Int
-  devicePeripheralList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DevicePeripheral]
-  devicePort(id: Long!): DevicePort
-  devicePortCount: Int
-  devicePortList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DevicePort]
-  deviceType(id: Long!): DeviceType
-  deviceTypeCount: Int
-  deviceTypeList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceType]
-  eventData(id: Long!): EventData
-  eventDataCount: Int
-  eventDataList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [EventData]
-  eventsByP2(count: Int!, offset: Int!, p2: String!): [EventData]
-  layer(id: Long!): Layer
-  layerCount: Int
-  layerList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Layer]
-  navigation: Navigation
-  patchPanel(id: Long!): PatchPanel
-  patchPanelCount: Int
-  patchPanelList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PatchPanel]
-  peripheralCategory(id: Long!): PeripheralCategory
-  peripheralCategoryCount: Int
-  peripheralCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PeripheralCategory]
-  portStates: [String]
-  portTypes: [String]
-  portValue(id: Long!): PortValue
-  portValueCount: Int
-  portValueList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [PortValue]
-  rack(id: Long!): Rack
-  rackCount: Int
-  rackList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Rack]
-  role(id: Long!): Role
-  roleCount: Int
-  roleList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Role]
-  scenario(id: Long!): Scenario
-  scenarioCount: Int
-  scenarioList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Scenario]
-  user(id: Long!): User
-  userById(id: String!): User
-  userCount: Int
-  userList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [User]
-  userRolesForUser(userId: String!): [UserRole]
-  zone(id: Long!): Zone
-  zoneById(id: String!): Zone
-  zoneCount: Int
-  zoneList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Zone]
-  zonesByParentId(id: String!): [Zone]
-  zonesRoot: [Zone]
-}
-
-type Rack {
-  cables: [Cable]
-  description: String
-  devices: [Device]
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  name: String
-  patchPanels: [PatchPanel]
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-  zone: Zone
-}
-
-type Role {
-  authority: String
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  version: Long
-}
-
-type Scenario {
-  body: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  name: String
-  ports: [DevicePort]
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-type User {
-  accountExpired: Boolean
-  accountLocked: Boolean
-  email: String
-  enabled: Boolean
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  favJobs: [Job]
-  firstName: String
-  id: Long
-  lastName: String
-  name: String
-  password: String
-  passwordExpired: Boolean
-  peripheralAccessTokens: [PeripheralAccessToken]
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  username: String
-}
-
-type UserRole {
-  roleId: ID!
-  userId: ID!
-}
-
-type Zone {
-  cables: [Cable]
-  categories: [String]
-  configurations: [Configuration]
-  description: String
-  entityType: EntityType
-  "A list of validation errors on the entity"
-  errors: [Error]
-  id: Long
-  name: String
-  parent: Zone
-  peripherals: [DevicePeripheral]
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-  zones: [Zone]
-}
-
-enum DeviceModel {
-  ESP8266_1
-  MEGAD_2561_RTC
-  NIBE_F1145_8_EM
-  ELECTRIC_METER_DTS
-  TMEZON_INTERCOM
-}
-
-enum DeviceStatus {
-  OFFLINE
-  ONLINE
-}
-
-enum EntityType {
-  CABLE
-  CABLE_CATEGORY
-  CONFIG
-  DEVICE
-  EVENT_DATA
-  PATCH_PANEL
-  PERIPHERAL
-  PERIPHERAL_CATEGORY
-  PORT
-  PORT_VALUE
-  RACK
-  ZONE
-}
-
-enum JobState {
-  ACTIVE
-  DISABLED
-  DRAFT
-}
-
-enum PortState {
-  ACTIVE
-  CONFIGURED
-  INACTIVE
-  UNKNOW
-}
-
-enum PortType {
-  ADC
-  BINARY_SENSOR
-  DSEN
-  I2C
-  IN
-  NOT_CONFIGURED
-  OUT
-  SENSOR
-  SWITCH
-  UNKNOW
-}
-
-input CableCategoryCreate {
-  cables: [CableCreateNested!]
-  entityType: EntityType
-  name: String!
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input CableCategoryCreateNested {
-  cables: [CableCreateNested]
-  entityType: EntityType
-  id: Long
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input CableCategoryUpdate {
-  cables: [CableUpdateNested]
-  entityType: EntityType
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-input CableCategoryUpdateNested {
-  cables: [CableUpdateNested]
-  entityType: EntityType
-  id: Long
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input CableCreate {
-  category: CableCategoryCreateNested
-  code: String
-  codeNew: String
-  codeOld: String
-  connectedTo: [DevicePortCreateNested!]
-  description: String
-  entityType: EntityType
-  maxAmp: Float!
-  nrWires: Int!
-  patchPanel: PatchPanelCreateNested
-  patchPanelPort: String
-  peripherals: [DevicePeripheralCreateNested!]
-  rack: RackCreateNested
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  zones: [ZoneCreateNested!]
-}
-
-input CableCreateNested {
-  code: String
-  codeNew: String
-  codeOld: String
-  description: String
-  entityType: EntityType
-  id: Long
-  maxAmp: Float
-  nrWires: Int
-  patchPanelPort: String
-  peripherals: [DevicePeripheralCreateNested]
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input CableUpdate {
-  category: CableCategoryUpdateNested
-  code: String
-  codeNew: String
-  codeOld: String
-  connectedTo: [DevicePortUpdateNested]
-  description: String
-  entityType: EntityType
-  maxAmp: Float
-  nrWires: Int
-  patchPanel: PatchPanelUpdateNested
-  patchPanelPort: String
-  peripherals: [DevicePeripheralUpdateNested]
-  rack: RackUpdateNested
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-  zones: [ZoneUpdateNested]
-}
-
-input CableUpdateNested {
-  code: String
-  codeNew: String
-  codeOld: String
-  description: String
-  entityType: EntityType
-  id: Long
-  maxAmp: Float
-  nrWires: Int
-  patchPanelPort: String
-  peripherals: [DevicePeripheralUpdateNested]
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input ConfigurationCreate {
-  description: String
-  entityId: Long!
-  entityType: EntityType!
-  key: String!
-  name: String
-  value: String!
-}
-
-input ConfigurationCreateNested {
-  description: String
-  entityId: Long
-  entityType: EntityType
-  id: Long
-  key: String
-  name: String
-  value: String
-}
-
-input ConfigurationUpdate {
-  description: String
-  entityId: Long
-  entityType: EntityType
-  key: String
-  name: String
-  value: String
-  version: Long
-}
-
-input ConfigurationUpdateNested {
-  description: String
-  entityId: Long
-  entityType: EntityType
-  id: Long
-  key: String
-  name: String
-  value: String
-}
-
-input CronTriggerCreateNested {
-  entityType: EntityType
-  expression: String
-  id: Long
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input CronTriggerUpdateNested {
-  entityType: EntityType
-  expression: String
-  id: Long
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DeviceAccountCreate {
-  device: DeviceCreateNested!
-  entityType: EntityType
-  isDefault: Boolean
-  password: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  username: String
-}
-
-input DeviceAccountCreateNested {
-  entityType: EntityType
-  id: Long
-  isDefault: Boolean
-  password: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  username: String
-}
-
-input DeviceAccountUpdate {
-  device: DeviceUpdateNested
-  entityType: EntityType
-  isDefault: Boolean
-  password: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  username: String
-  version: Long
-}
-
-input DeviceAccountUpdateNested {
-  entityType: EntityType
-  id: Long
-  isDefault: Boolean
-  password: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  username: String
-}
-
-input DeviceBackupCreateNested {
-  configuration: String
-  entityType: EntityType
-  firmware: ByteArray
-  frmVersion: String
-  id: Long
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DeviceBackupUpdateNested {
-  configuration: String
-  entityType: EntityType
-  firmware: ByteArray
-  frmVersion: String
-  id: Long
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DeviceCategoryCreate {
-  description: String!
-  entityType: EntityType
-  name: String!
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DeviceCategoryUpdate {
-  description: String
-  entityType: EntityType
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-input DeviceCreate {
-  authAccounts: [DeviceAccountCreateNested!]
-  backups: [DeviceBackupCreateNested!]
-  code: String!
-  description: String
-  entityType: EntityType
-  model: DeviceModel
-  name: String
-  networkAddress: NetworkAddressCreateEmbedded
-  offlineScenario: String
-  ports: [DevicePortCreateNested!]
-  rack: RackCreateNested
-  status: DeviceStatus
-  tsCreated: Date
-  tsUpdated: Date
-  type: DeviceTypeCreateNested
-  uid: String
-}
-
-input DeviceCreateNested {
-  authAccounts: [DeviceAccountCreateNested]
-  backups: [DeviceBackupCreateNested]
-  code: String
-  description: String
-  entityType: EntityType
-  id: Long
-  model: DeviceModel
-  name: String
-  networkAddress: NetworkAddressCreateEmbedded
-  offlineScenario: String
-  ports: [DevicePortCreateNested]
-  status: DeviceStatus
-  tsCreated: Date
-  tsUpdated: Date
-  type: DeviceTypeCreateNested
-  uid: String
-}
-
-input DevicePeripheralCreate {
-  accessTokens: [PeripheralAccessTokenCreateNested!]
-  category: PeripheralCategoryCreateNested!
-  connectedTo: [DevicePortCreateNested!]
-  description: String
-  entityType: EntityType
-  maxAmp: Float
-  model: String
-  name: String!
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  zones: [ZoneCreateNested!]
-}
-
-input DevicePeripheralCreateNested {
-  accessTokens: [PeripheralAccessTokenCreateNested]
-  description: String
-  entityType: EntityType
-  id: Long
-  maxAmp: Float
-  model: String
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DevicePeripheralUpdate {
-  accessTokens: [PeripheralAccessTokenUpdateNested]
-  category: PeripheralCategoryUpdateNested
-  connectedTo: [DevicePortUpdateNested]
-  description: String
-  entityType: EntityType
-  maxAmp: Float
-  model: String
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-  zones: [ZoneUpdateNested]
-}
-
-input DevicePeripheralUpdateNested {
-  accessTokens: [PeripheralAccessTokenUpdateNested]
-  description: String
-  entityType: EntityType
-  id: Long
-  maxAmp: Float
-  model: String
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DevicePortCreate {
-  cables: [CableCreateNested!]
-  description: String
-  device: DeviceCreateNested!
-  entityType: EntityType
-  internalRef: String!
-  name: String
-  peripherals: [DevicePeripheralCreateNested!]
-  scenarios: [ScenarioCreateNested!]
-  state: PortState
-  subscriptions: [EventSubscriptionCreateNested!]
-  tsCreated: Date
-  tsUpdated: Date
-  type: PortType
-  uid: String
-  value: String
-}
-
-input DevicePortCreateNested {
-  description: String
-  entityType: EntityType
-  id: Long
-  internalRef: String
-  name: String
-  peripherals: [DevicePeripheralCreateNested]
-  scenarios: [ScenarioCreateNested]
-  state: PortState
-  subscriptions: [EventSubscriptionCreateNested]
-  tsCreated: Date
-  tsUpdated: Date
-  type: PortType
-  uid: String
-  value: String
-}
-
-input DevicePortUpdate {
-  cables: [CableUpdateNested]
-  description: String
-  device: DeviceUpdateNested
-  entityType: EntityType
-  internalRef: String
-  name: String
-  peripherals: [DevicePeripheralUpdateNested]
-  scenarios: [ScenarioUpdateNested]
-  state: PortState
-  subscriptions: [EventSubscriptionUpdateNested]
-  tsCreated: Date
-  tsUpdated: Date
-  type: PortType
-  uid: String
-  value: String
-  version: Long
-}
-
-input DevicePortUpdateNested {
-  description: String
-  entityType: EntityType
-  id: Long
-  internalRef: String
-  name: String
-  peripherals: [DevicePeripheralUpdateNested]
-  scenarios: [ScenarioUpdateNested]
-  state: PortState
-  subscriptions: [EventSubscriptionUpdateNested]
-  tsCreated: Date
-  tsUpdated: Date
-  type: PortType
-  uid: String
-  value: String
-}
-
-input DeviceTypeCreate {
-  entityType: EntityType
-  name: String!
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DeviceTypeCreateNested {
-  entityType: EntityType
-  id: Long
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DeviceTypeUpdate {
-  entityType: EntityType
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-  version: Long
-}
-
-input DeviceTypeUpdateNested {
-  entityType: EntityType
-  id: Long
-  name: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input DeviceUpdate {
-  authAccounts: [DeviceAccountUpdateNested]
-  backups: [DeviceBackupUpdateNested]
-  code: String
-  description: String
-  entityType: EntityType
-  model: DeviceModel
-  name: String
-  networkAddress: NetworkAddressUpdateEmbedded
-  offlineScenario: String
-  ports: [DevicePortUpdateNested]
-  rack: RackUpdateNested
-  status: DeviceStatus
-  tsCreated: Date
-  tsUpdated: Date
-  type: DeviceTypeUpdateNested
-  uid: String
-  version: Long
-}
-
-input DeviceUpdateNested {
-  authAccounts: [DeviceAccountUpdateNested]
-  backups: [DeviceBackupUpdateNested]
-  code: String
-  description: String
-  entityType: EntityType
-  id: Long
-  model: DeviceModel
-  name: String
-  networkAddress: NetworkAddressUpdateEmbedded
-  offlineScenario: String
-  ports: [DevicePortUpdateNested]
-  status: DeviceStatus
-  tsCreated: Date
-  tsUpdated: Date
-  type: DeviceTypeUpdateNested
-  uid: String
-}
-
-input EventDatInput {
-  p0: String
-  p1: String
-  p2: String
-  p3: String
-  p4: String
-  p5: String
-  p6: String
-}
-
-input EventDataCreate {
-  category: String
-  entityType: EntityType
-  p0: String!
-  p1: String!
-  p2: String!
-  p3: String!
-  p4: String
-  p5: String
-  p6: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
-input EventDataCreateNested {
-  category: String
-  entityType: EntityType
-  id: Long
-  p0: String
-  p1: String
-  p2: String
-  p3: String
-  p4: String
-  p5: String
-  p6: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
-}
-
 input EventDataUpdate {
-  category: String
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
   entityType: EntityType
-  p0: String
-  p1: String
-  p2: String
-  p3: String
+  category: String
   p4: String
   p5: String
   p6: String
-  tsCreated: Date
-  tsUpdated: Date
-  uid: String
+  p2: String
+  p3: String
+  p1: String
+  p0: String
 }
 
 input EventDataUpdateNested {
-  category: String
-  entityType: EntityType
   id: Long
-  p0: String
-  p1: String
-  p2: String
-  p3: String
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  category: String
   p4: String
   p5: String
   p6: String
+  p2: String
+  p3: String
+  p1: String
+  p0: String
+}
+
+type EventDefinition {
+  id: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  hasPublisher: Boolean
+  name: String
+  hasSubscriber: Boolean
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input EventDefinitionCreateNested {
-  entityType: EntityType
-  hasPublisher: Boolean
-  hasSubscriber: Boolean
   id: Long
-  name: String
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  hasPublisher: Boolean
+  name: String
+  hasSubscriber: Boolean
 }
 
 input EventDefinitionUpdateNested {
-  entityType: EntityType
-  hasPublisher: Boolean
-  hasSubscriber: Boolean
   id: Long
-  name: String
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  hasPublisher: Boolean
+  name: String
+  hasSubscriber: Boolean
+}
+
+type EventSubscription {
+  id: Long
+  version: Long
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  events: [EventDefinition]
+  scenario: Scenario
+  pubPort: DevicePort
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input EventSubscriptionCreateNested {
-  entityType: EntityType
-  events: [EventDefinitionCreateNested]
   id: Long
-  scenario: ScenarioCreateNested
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  events: [EventDefinitionCreateNested]
+  scenario: ScenarioCreateNested
 }
 
 input EventSubscriptionUpdateNested {
-  entityType: EntityType
-  events: [EventDefinitionUpdateNested]
   id: Long
-  scenario: ScenarioUpdateNested
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  events: [EventDefinitionUpdateNested]
+  scenario: ScenarioUpdateNested
+}
+
+type EventTrigger {
+  id: Long
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  events: [EventDefinition]
+  job: Job
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input EventTriggerCreateNested {
-  entityType: EntityType
-  events: [EventDefinitionCreateNested]
   id: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  events: [EventDefinitionCreateNested]
 }
 
 input EventTriggerUpdateNested {
-  entityType: EntityType
-  events: [EventDefinitionUpdateNested]
   id: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  events: [EventDefinitionUpdateNested]
+}
+
+type Job {
+  id: Long
+  version: Long
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  tags: [JobTag]
+  cronTriggers: [CronTrigger]
+  state: JobState
+  eventTriggers: [EventTrigger]
+  name: String
+  scenario: Scenario
+  description: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input JobCreateNested {
-  cronTriggers: [CronTriggerCreateNested]
-  description: String
-  entityType: EntityType
-  eventTriggers: [EventTriggerCreateNested]
   id: Long
-  name: String
-  scenario: ScenarioCreateNested
-  state: JobState
-  tags: [JobTagCreateNested]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  tags: [JobTagCreateNested]
+  cronTriggers: [CronTriggerCreateNested]
+  state: JobState
+  eventTriggers: [EventTriggerCreateNested]
+  name: String
+  scenario: ScenarioCreateNested
+  description: String
+}
+
+enum JobState {
+  DRAFT
+  ACTIVE
+  DISABLED
+}
+
+type JobTag {
+  id: Long
+  version: Long
+  name: String
+  jobs: [Job]
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input JobTagCreateNested {
@@ -1360,242 +1080,737 @@ input JobTagUpdateNested {
 }
 
 input JobUpdateNested {
-  cronTriggers: [CronTriggerUpdateNested]
-  description: String
-  entityType: EntityType
-  eventTriggers: [EventTriggerUpdateNested]
   id: Long
-  name: String
-  scenario: ScenarioUpdateNested
-  state: JobState
-  tags: [JobTagUpdateNested]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  tags: [JobTagUpdateNested]
+  cronTriggers: [CronTriggerUpdateNested]
+  state: JobState
+  eventTriggers: [EventTriggerUpdateNested]
+  name: String
+  scenario: ScenarioUpdateNested
+  description: String
+}
+
+type Layer {
+  id: Long
+  version: Long
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  peripherals: [DevicePeripheral]
+  name: String
+  description: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input LayerCreate {
-  description: String!
-  entityType: EntityType
-  name: String!
-  peripherals: [DevicePeripheralCreateNested!]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  peripherals: [DevicePeripheralCreateNested!]
+  name: String!
+  description: String!
 }
 
 input LayerUpdate {
-  description: String
-  entityType: EntityType
-  name: String
-  peripherals: [DevicePeripheralUpdateNested]
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
+  peripherals: [DevicePeripheralUpdateNested]
+  name: String
+  description: String
+}
+
+"""
+Long type
+"""
+scalar Long
+
+type Mutation {
+  devicePeripheralCreate(
+    devicePeripheral: DevicePeripheralCreate
+  ): DevicePeripheral
+  devicePeripheralUpdate(
+    id: Long!
+    devicePeripheral: DevicePeripheralUpdate
+  ): DevicePeripheral
+  devicePeripheralDelete(id: Long!): DeleteResult
+  updatePeripheral(
+    id: Long!
+    peripheral: DevicePeripheralUpdate!
+  ): DevicePeripheralUpdateResult
+  cableCreate(cable: CableCreate): Cable
+  cableUpdate(id: Long!, cable: CableUpdate): Cable
+  cableDelete(id: Long!): DeleteResult
+  updateCable(id: Long!, cable: CableUpdate!): Cable
+  patchPanelCreate(patchPanel: PatchPanelCreate): PatchPanel
+  patchPanelUpdate(id: Long!, patchPanel: PatchPanelUpdate): PatchPanel
+  patchPanelDelete(id: Long!): DeleteResult
+  deviceTypeCreate(deviceType: DeviceTypeCreate): DeviceType
+  deviceTypeUpdate(id: Long!, deviceType: DeviceTypeUpdate): DeviceType
+  deviceTypeDelete(id: Long!): DeleteResult
+  portValueCreate(portValue: PortValueCreate): PortValue
+  portValueUpdate(id: Long!, portValue: PortValueUpdate): PortValue
+  portValueDelete(id: Long!): DeleteResult
+  devicePortCreate(devicePort: DevicePortCreate): DevicePort
+  devicePortUpdate(id: Long!, devicePort: DevicePortUpdate): DevicePort
+  devicePortDelete(id: Long!): DeleteResult
+  updatePort(id: Long!, port: DevicePortUpdate!): DevicePort
+  scenarioCreate(scenario: ScenarioCreate): Scenario
+  scenarioUpdate(id: Long!, scenario: ScenarioUpdate): Scenario
+  scenarioDelete(id: Long!): DeleteResult
+  configurationCreate(configuration: ConfigurationCreate): Configuration
+  configurationUpdate(
+    id: Long!
+    configuration: ConfigurationUpdate
+  ): Configuration
+  configurationDelete(id: Long!): DeleteResult
+  removeConfig(id: Long!): ConfigurationDeleteByIdResult
+  configDeleteByKey(
+    key: String!
+    entityId: Long!
+    entityType: EntityType!
+  ): ConfigurationDeleteByKeyResult
+  savePropertyValue(
+    key: String!
+    entityId: Long!
+    entityType: EntityType!
+    value: String!
+  ): Configuration
+  addListItemProperty(
+    key: String!
+    entityId: Long!
+    entityType: EntityType!
+    value: String!
+  ): Configuration
+  peripheralCategoryCreate(
+    peripheralCategory: PeripheralCategoryCreate
+  ): PeripheralCategory
+  peripheralCategoryUpdate(
+    id: Long!
+    peripheralCategory: PeripheralCategoryUpdate
+  ): PeripheralCategory
+  peripheralCategoryDelete(id: Long!): DeleteResult
+  zoneCreate(zone: ZoneCreate): Zone
+  zoneUpdate(id: Long!, zone: ZoneUpdate): Zone
+  zoneDelete(id: Long!): DeleteResult
+  rackCreate(rack: RackCreate): Rack
+  rackUpdate(id: Long!, rack: RackUpdate): Rack
+  rackDelete(id: Long!): DeleteResult
+  userCreate(user: UserCreate): User
+  userUpdate(id: Long!, user: UserUpdate): User
+  userDelete(id: Long!): DeleteResult
+  userDeleteCascade(id: Long!): DeleteResponseCustom
+  cableCategoryCreate(cableCategory: CableCategoryCreate): CableCategory
+  cableCategoryUpdate(
+    id: Long!
+    cableCategory: CableCategoryUpdate
+  ): CableCategory
+  cableCategoryDelete(id: Long!): DeleteResult
+  eventDataCreate(eventData: EventDataCreate): EventData
+  eventDataUpdate(id: Long!, eventData: EventDataUpdate): EventData
+  eventDataDelete(id: Long!): DeleteResult
+  deviceCreate(device: DeviceCreate): Device
+  deviceUpdate(id: Long!, device: DeviceUpdate): Device
+  deviceDelete(id: Long!): DeleteResult
+  roleCreate(role: RoleCreate): Role
+  roleUpdate(id: Long!, role: RoleUpdate): Role
+  roleDelete(id: Long!): DeleteResult
+  timeSeriesStatisticCreate(
+    timeSeriesStatistic: TimeSeriesStatisticCreate
+  ): TimeSeriesStatistic
+  timeSeriesStatisticUpdate(
+    id: Long!
+    timeSeriesStatistic: TimeSeriesStatisticUpdate
+  ): TimeSeriesStatistic
+  timeSeriesStatisticDelete(id: Long!): DeleteResult
+  deviceCategoryCreate(deviceCategory: DeviceCategoryCreate): DeviceCategory
+  deviceCategoryUpdate(
+    id: Long!
+    deviceCategory: DeviceCategoryUpdate
+  ): DeviceCategory
+  deviceCategoryDelete(id: Long!): DeleteResult
+  deviceAccountCreate(deviceAccount: DeviceAccountCreate): DeviceAccount
+  deviceAccountUpdate(
+    id: Long!
+    deviceAccount: DeviceAccountUpdate
+  ): DeviceAccount
+  deviceAccountDelete(id: Long!): DeleteResult
+  layerCreate(layer: LayerCreate): Layer
+  layerUpdate(id: Long!, layer: LayerUpdate): Layer
+  layerDelete(id: Long!): DeleteResult
+  pushEvent(input: EventDatInput): EventDataResponse
+  cacheDelete(cacheName: String!, cacheKey: String!): MutationResponse
+  userRolesSave(input: SaveUserRoles): MutationResponse
+}
+
+type MutationResponse {
+  success: Boolean
+  error: String
+}
+
+type Navigation {
+  breadcrumb(type: String!, id: String!): [BradCrumbLink]
 }
 
 input NetworkAddressCreateEmbedded {
   gateway: String
-  ip: String!
   port: String!
+  ip: String!
+}
+
+type NetworkAddressEmbedded {
+  gateway: String
+  port: String
+  ip: String
 }
 
 input NetworkAddressUpdateEmbedded {
   gateway: String
-  ip: String
   port: String
+  ip: String
+}
+
+type PatchPanel {
+  id: Long
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  size: Int
+  rack: Rack
+  cables: [Cable]
+  name: String
+  description: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input PatchPanelCreate {
-  cables: [CableCreateNested!]
-  description: String!
-  entityType: EntityType
-  name: String!
-  rack: RackCreateNested!
-  size: Int
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  size: Int
+  rack: RackCreateNested!
+  cables: [CableCreateNested!]
+  name: String!
+  description: String!
 }
 
 input PatchPanelCreateNested {
-  cables: [CableCreateNested]
-  description: String
-  entityType: EntityType
   id: Long
-  name: String
-  size: Int
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  size: Int
+  cables: [CableCreateNested]
+  name: String
+  description: String
 }
 
 input PatchPanelUpdate {
-  cables: [CableUpdateNested]
-  description: String
-  entityType: EntityType
-  name: String
-  rack: RackUpdateNested
-  size: Int
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
+  size: Int
+  rack: RackUpdateNested
+  cables: [CableUpdateNested]
+  name: String
+  description: String
 }
 
 input PatchPanelUpdateNested {
-  cables: [CableUpdateNested]
-  description: String
-  entityType: EntityType
   id: Long
-  name: String
-  size: Int
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  size: Int
+  cables: [CableUpdateNested]
+  name: String
+  description: String
+}
+
+type PeripheralAccessToken {
+  id: Long
+  version: Long
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  user: User
+  peripheral: DevicePeripheral
+  token: String
+  tsExpiration: Date
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input PeripheralAccessTokenCreateNested {
-  entityType: EntityType
   id: Long
-  token: String
-  tsCreated: Date
-  tsExpiration: Date
-  tsUpdated: Date
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  token: String
+  tsExpiration: Date
 }
 
 input PeripheralAccessTokenUpdateNested {
-  entityType: EntityType
   id: Long
-  token: String
-  tsCreated: Date
-  tsExpiration: Date
-  tsUpdated: Date
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  token: String
+  tsExpiration: Date
+}
+
+type PeripheralCategory {
+  id: Long
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  title: String
+  cables: [Cable]
+  peripherals: [DevicePeripheral]
+  name: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input PeripheralCategoryCreate {
-  cables: [CableCreateNested!]
-  entityType: EntityType
-  name: String!
-  peripherals: [DevicePeripheralCreateNested!]
-  title: String
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  title: String
+  cables: [CableCreateNested!]
+  peripherals: [DevicePeripheralCreateNested!]
+  name: String!
 }
 
 input PeripheralCategoryCreateNested {
-  cables: [CableCreateNested]
-  entityType: EntityType
   id: Long
-  name: String
-  peripherals: [DevicePeripheralCreateNested]
-  title: String
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  title: String
+  cables: [CableCreateNested]
+  peripherals: [DevicePeripheralCreateNested]
+  name: String
 }
 
 input PeripheralCategoryUpdate {
-  cables: [CableUpdateNested]
-  entityType: EntityType
-  name: String
-  peripherals: [DevicePeripheralUpdateNested]
-  title: String
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
+  title: String
+  cables: [CableUpdateNested]
+  peripherals: [DevicePeripheralUpdateNested]
+  name: String
 }
 
 input PeripheralCategoryUpdateNested {
-  cables: [CableUpdateNested]
-  entityType: EntityType
   id: Long
-  name: String
-  peripherals: [DevicePeripheralUpdateNested]
-  title: String
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  title: String
+  cables: [CableUpdateNested]
+  peripherals: [DevicePeripheralUpdateNested]
+  name: String
+}
+
+enum PortState {
+  UNKNOW
+  CONFIGURED
+  ACTIVE
+  INACTIVE
+}
+
+enum PortType {
+  UNKNOW
+  IN
+  OUT
+  ADC
+  DSEN
+  I2C
+  SWITCH
+  BINARY_SENSOR
+  SENSOR
+  NOT_CONFIGURED
+}
+
+type PortValue {
+  id: Long
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  event: EventData
+  portId: Long
+  portUid: String
+  value: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input PortValueCreate {
-  entityType: EntityType
-  event: EventDataCreateNested
-  portUid: String!
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  event: EventDataCreateNested
+  portId: Long
+  portUid: String!
   value: String!
 }
 
 input PortValueUpdate {
-  entityType: EntityType
-  event: EventDataUpdateNested
-  portUid: String
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  event: EventDataUpdateNested
+  portId: Long
+  portUid: String
   value: String
 }
 
-input RackCreate {
-  cables: [CableCreateNested!]
-  description: String
-  devices: [DeviceCreateNested!]
-  entityType: EntityType
-  name: String
-  patchPanels: [PatchPanelCreateNested!]
+type Query {
+  devicePeripheral(id: Long!): DevicePeripheral
+  devicePeripheralList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [DevicePeripheral]
+  devicePeripheralCount: Int
+  devicePeripheralById(id: String!): DevicePeripheral
+  cable(id: Long!): Cable
+  cableList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Cable]
+  cableCount: Int
+  cableById(id: String!): Cable
+  patchPanel(id: Long!): PatchPanel
+  patchPanelList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [PatchPanel]
+  patchPanelCount: Int
+  deviceType(id: Long!): DeviceType
+  deviceTypeList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [DeviceType]
+  deviceTypeCount: Int
+  portValue(id: Long!): PortValue
+  portValueList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [PortValue]
+  portValueCount: Int
+  devicePort(id: Long!): DevicePort
+  devicePortList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [DevicePort]
+  devicePortCount: Int
+  portTypes: [String]
+  portStates: [String]
+  scenario(id: Long!): Scenario
+  scenarioList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Scenario]
+  scenarioCount: Int
+  configuration(id: Long!): Configuration
+  configurationList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Configuration]
+  configurationCount: Int
+  configurationListByEntity(
+    entityType: EntityType!
+    entityId: Long!
+  ): [Configuration]
+  configPropertyByKey(
+    key: String!
+    entityId: Long!
+    entityType: EntityType!
+  ): Configuration
+  configListByKey(
+    key: String!
+    entityId: Long!
+    entityType: EntityType!
+  ): [Configuration]
+  configKeysByEntity(entityType: EntityType!): [String]
+  peripheralCategory(id: Long!): PeripheralCategory
+  peripheralCategoryList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [PeripheralCategory]
+  peripheralCategoryCount: Int
+  zone(id: Long!): Zone
+  zoneList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Zone]
+  zoneCount: Int
+  zoneById(id: String!): Zone
+  zonesByParentId(id: String!): [Zone]
+  zonesRoot: [Zone]
+  rack(id: Long!): Rack
+  rackList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Rack]
+  rackCount: Int
+  user(id: Long!): User
+  userList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [User]
+  userCount: Int
+  userById(id: String!): User
+  cableCategory(id: Long!): CableCategory
+  cableCategoryList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [CableCategory]
+  cableCategoryCount: Int
+  eventData(id: Long!): EventData
+  eventDataList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [EventData]
+  eventDataCount: Int
+  eventsByP2(p2: String!, count: Int!, offset: Int!): [EventData]
+  device(id: Long!): Device
+  deviceList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Device]
+  deviceCount: Int
+  deviceById(id: String!): Device
+  role(id: Long!): Role
+  roleList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Role]
+  roleCount: Int
+  timeSeriesStatistic(id: Long!): TimeSeriesStatistic
+  timeSeriesStatisticList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [TimeSeriesStatistic]
+  timeSeriesStatisticCount: Int
+  statLatestByKey(key: String!): TimeSeriesStatistic
+  statLatestByKeys(keys: [String!]): [TimeSeriesStatistic]
+  deviceCategory(id: Long!): DeviceCategory
+  deviceCategoryList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [DeviceCategory]
+  deviceCategoryCount: Int
+  deviceAccount(id: Long!): DeviceAccount
+  deviceAccountList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [DeviceAccount]
+  deviceAccountCount: Int
+  layer(id: Long!): Layer
+  layerList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Layer]
+  layerCount: Int
+  navigation: Navigation
+  userRolesForUser(userId: String!): [UserRole]
+  cache(cacheName: String!, cacheKey: String!): CacheResult
+  cacheAll(cacheName: String): [CacheResult]
+  config(key: String!): String
+}
+
+type Rack {
+  id: Long
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  zone: Zone
+  name: String
+  description: String
+  devices: [Device]
+  patchPanels: [PatchPanel]
+  cables: [Cable]
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input RackCreate {
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
   zone: ZoneCreateNested
+  name: String
+  description: String
+  devices: [DeviceCreateNested!]
+  patchPanels: [PatchPanelCreateNested!]
+  cables: [CableCreateNested!]
 }
 
 input RackCreateNested {
-  cables: [CableCreateNested]
-  description: String
-  devices: [DeviceCreateNested]
-  entityType: EntityType
   id: Long
-  name: String
-  patchPanels: [PatchPanelCreateNested]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
   zone: ZoneCreateNested
+  name: String
+  description: String
+  devices: [DeviceCreateNested]
+  patchPanels: [PatchPanelCreateNested]
+  cables: [CableCreateNested]
 }
 
 input RackUpdate {
-  cables: [CableUpdateNested]
-  description: String
-  devices: [DeviceUpdateNested]
-  entityType: EntityType
-  name: String
-  patchPanels: [PatchPanelUpdateNested]
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
   zone: ZoneUpdateNested
+  name: String
+  description: String
+  devices: [DeviceUpdateNested]
+  patchPanels: [PatchPanelUpdateNested]
+  cables: [CableUpdateNested]
 }
 
 input RackUpdateNested {
-  cables: [CableUpdateNested]
-  description: String
-  devices: [DeviceUpdateNested]
-  entityType: EntityType
   id: Long
-  name: String
-  patchPanels: [PatchPanelUpdateNested]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
   zone: ZoneUpdateNested
+  name: String
+  description: String
+  devices: [DeviceUpdateNested]
+  patchPanels: [PatchPanelUpdateNested]
+  cables: [CableUpdateNested]
+}
+
+type Role {
+  id: Long
+  version: Long
+  authority: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input RoleCreate {
@@ -1603,8 +1818,8 @@ input RoleCreate {
 }
 
 input RoleUpdate {
-  authority: String
   version: Long
+  authority: String
 }
 
 input SaveUserRoles {
@@ -1612,153 +1827,256 @@ input SaveUserRoles {
   userRoles: [UserRoleRef]
 }
 
-input ScenarioCreate {
-  body: String!
-  entityType: EntityType
-  name: String
-  ports: [DevicePortCreateNested!]
+type Scenario {
+  id: Long
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  name: String
+  body: String
+  ports: [DevicePort]
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input ScenarioCreate {
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
+  body: String!
+  ports: [DevicePortCreateNested!]
 }
 
 input ScenarioCreateNested {
-  body: String
-  entityType: EntityType
   id: Long
-  name: String
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  name: String
+  body: String
 }
 
 input ScenarioUpdate {
-  body: String
-  entityType: EntityType
-  name: String
-  ports: [DevicePortUpdateNested]
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
+  name: String
+  body: String
+  ports: [DevicePortUpdateNested]
 }
 
 input ScenarioUpdateNested {
-  body: String
-  entityType: EntityType
   id: Long
-  name: String
+  uid: String
   tsCreated: Date
   tsUpdated: Date
+  entityType: EntityType
+  name: String
+  body: String
+}
+
+type TimeSeriesStatistic {
+  id: Long
+  version: Long
   uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  deltaDiff: Float
+  value: Float
+  key: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
+}
+
+input TimeSeriesStatisticCreate {
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  deltaDiff: Float
+  value: Float!
+  key: String!
+}
+
+input TimeSeriesStatisticUpdate {
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  deltaDiff: Float
+  value: Float
+  key: String
+}
+
+type User {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  password: String
+  username: String
+  firstName: String
+  lastName: String
+  email: String
+  phoneNr: String
+  passwordExpired: Boolean
+  peripheralAccessTokens: [PeripheralAccessToken]
+  accountExpired: Boolean
+  favJobs: [Job]
+  accountLocked: Boolean
+  enabled: Boolean
+  name: String
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input UserCreate {
-  accountExpired: Boolean!
-  accountLocked: Boolean!
-  email: String
-  enabled: Boolean!
-  entityType: EntityType
-  favJobs: [JobCreateNested!]
-  firstName: String
-  lastName: String
-  password: String!
-  passwordExpired: Boolean!
-  peripheralAccessTokens: [PeripheralAccessTokenCreateNested!]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  password: String!
   username: String!
+  firstName: String
+  lastName: String
+  email: String
+  phoneNr: String
+  passwordExpired: Boolean!
+  peripheralAccessTokens: [PeripheralAccessTokenCreateNested!]
+  accountExpired: Boolean!
+  favJobs: [JobCreateNested!]
+  accountLocked: Boolean!
+  enabled: Boolean!
+}
+
+type UserRole {
+  userId: ID!
+  roleId: ID!
 }
 
 input UserRoleRef {
-  roleId: ID!
   userId: ID!
+  roleId: ID!
 }
 
 input UserUpdate {
-  accountExpired: Boolean
-  accountLocked: Boolean
-  email: String
-  enabled: Boolean
-  entityType: EntityType
-  favJobs: [JobUpdateNested]
-  firstName: String
-  lastName: String
-  password: String
-  passwordExpired: Boolean
-  peripheralAccessTokens: [PeripheralAccessTokenUpdateNested]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  password: String
   username: String
+  firstName: String
+  lastName: String
+  email: String
+  phoneNr: String
+  passwordExpired: Boolean
+  peripheralAccessTokens: [PeripheralAccessTokenUpdateNested]
+  accountExpired: Boolean
+  favJobs: [JobUpdateNested]
+  accountLocked: Boolean
+  enabled: Boolean
+}
+
+type Zone {
+  id: Long
+  version: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  devices: [Device]
+  peripherals: [DevicePeripheral]
+  cables: [Cable]
+  zones: [Zone]
+  categories: [String]
+  name: String
+  description: String
+  parent: Zone
+  configurations: [Configuration]
+
+  """
+  A list of validation errors on the entity
+  """
+  errors: [Error]
 }
 
 input ZoneCreate {
-  cables: [CableCreateNested!]
-  categories: [String!]
-  configurations: [ConfigurationCreate]
-  description: String!
-  entityType: EntityType
-  name: String!
-  parent: ZoneCreateNested!
-  peripherals: [DevicePeripheralCreateNested!]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  devices: [DeviceCreateNested!]
+  peripherals: [DevicePeripheralCreateNested!]
+  cables: [CableCreateNested!]
   zones: [ZoneCreateNested!]
+  categories: [String!]
+  name: String!
+  description: String!
+  parent: ZoneCreateNested!
+  configurations: [ConfigurationCreate]
 }
 
 input ZoneCreateNested {
-  categories: [String]
-  configurations: [ConfigurationCreateNested]
-  description: String
-  entityType: EntityType
   id: Long
-  name: String
-  peripherals: [DevicePeripheralCreateNested]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  peripherals: [DevicePeripheralCreateNested]
   zones: [ZoneCreateNested]
+  categories: [String]
+  name: String
+  description: String
+  configurations: [ConfigurationCreateNested]
 }
 
 input ZoneUpdate {
-  cables: [CableUpdateNested]
-  categories: [String]
-  configurations: [ConfigurationUpdate]
-  description: String
-  entityType: EntityType
-  name: String
-  parent: ZoneUpdateNested
-  peripherals: [DevicePeripheralUpdateNested]
+  version: Long
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
-  version: Long
+  entityType: EntityType
+  devices: [DeviceUpdateNested]
+  peripherals: [DevicePeripheralUpdateNested]
+  cables: [CableUpdateNested]
   zones: [ZoneUpdateNested]
+  categories: [String]
+  name: String
+  description: String
+  parent: ZoneUpdateNested
+  configurations: [ConfigurationUpdate]
 }
 
 input ZoneUpdateNested {
-  categories: [String]
-  configurations: [ConfigurationUpdateNested]
-  description: String
-  entityType: EntityType
   id: Long
-  name: String
-  peripherals: [DevicePeripheralUpdateNested]
+  uid: String
   tsCreated: Date
   tsUpdated: Date
-  uid: String
+  entityType: EntityType
+  peripherals: [DevicePeripheralUpdateNested]
   zones: [ZoneUpdateNested]
+  categories: [String]
+  name: String
+  description: String
+  configurations: [ConfigurationUpdateNested]
 }
-
-
-"Built-in Byte Array"
-scalar ByteArray
-
-"Built-in Date"
-scalar Date
-
-"Long type"
-scalar Long

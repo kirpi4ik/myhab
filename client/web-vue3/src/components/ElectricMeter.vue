@@ -202,7 +202,7 @@ export default defineComponent({
         deviceDetails.value = _.reduce(
           data.data.device.ports,
           function (hash, value) {
-            hash[value['internalRef'].toString()] = ref(value);
+            hash[value['internalRef'].toString()] = ref(_.cloneDeep(value));
             return hash;
           },
           {},

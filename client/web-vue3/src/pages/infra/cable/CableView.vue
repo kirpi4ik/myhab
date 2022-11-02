@@ -66,6 +66,7 @@
           :rows="viewItem.connectedTo"
           :columns="portColumns"
           @row-click="viewPort"
+          :pagination="pagination"
           row-key="id"
         >
         </q-table>
@@ -76,6 +77,7 @@
           :rows="viewItem.peripherals"
           :columns="peripheralColumns"
           @row-click="viewPeripheral"
+          :pagination="pagination"
           row-key="id"
         >
         </q-table>
@@ -106,6 +108,12 @@ export default defineComponent({
     const loading = ref(false)
     const {client} = useApolloClient();
     const router = useRouter();
+    const pagination = ref({
+      sortBy: 'id',
+      descending: true,
+      page: 1,
+      rowsPerPage: 10
+    })
     const portColumns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
@@ -135,6 +143,7 @@ export default defineComponent({
       uri,
       fetchData,
       viewItem,
+      pagination,
       portColumns,
       peripheralColumns,
       viewPort: (evt, row) => {

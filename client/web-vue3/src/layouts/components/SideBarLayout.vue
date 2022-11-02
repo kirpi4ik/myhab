@@ -1,6 +1,5 @@
 <template>
-  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" show-if-above
-            bordered persistent class="bg-grey-9 text-white">
+  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" bordered persistent class="bg-grey-9 text-white">
     <template v-slot:mini>
       <q-scroll-area class="fit mini-slot cursor-pointer">
         <div class="q-py-lg">
@@ -68,6 +67,14 @@
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.cables') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item to="/admin/zones" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-map-marker-multiple"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.zones') }}</q-item-label>
               </q-item-section>
             </q-item>
             <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting">
