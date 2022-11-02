@@ -10,12 +10,12 @@
       <q-card-section>
         <div class="text-h4 text-secondary">Port details</div>
       </q-card-section>
-      <q-expansion-item v-if="viewItem.device" class="bg-grey-1"
+      <q-expansion-item v-if="viewItem.device" class="bg-green-2"
                         expand-separator
                         icon="computer"
                         label="Device"
                         :caption="viewItem.device.code">
-        <q-item-section>
+        <q-item-section style="padding: 5px" class="bg-green-1">
           <q-item-label class="text-h6 text-grey-6">
             {{ viewItem.device.code }}
           </q-item-label>
@@ -26,7 +26,7 @@
             {{ viewItem.device.description }}
           </q-item-label>
           <q-item-label class="text-h5">
-            <q-btn icon="mdi-eye" :to="'/admin/devices/'+viewItem.device.id+'/view'" size="xs" label="Details"/>
+            <q-btn icon="mdi-eye" :to="'/admin/devices/'+viewItem.device.id+'/view'" size="xs" label="Details" color="blue-4" />
           </q-item-label>
         </q-item-section>
       </q-expansion-item>
@@ -79,6 +79,7 @@
           :rows="viewItem.cables"
           :columns="cableColumns"
           @row-click="onRowClick"
+          :pagination="pagination"
           row-key="id"
         >
         </q-table>

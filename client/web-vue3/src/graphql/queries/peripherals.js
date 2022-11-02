@@ -77,6 +77,11 @@ export const PERIPHERAL_GET_BY_ID = gql`
         key
         value
       }
+      zones {
+        id
+        name
+        description
+      }
     }
   }
 `;
