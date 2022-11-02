@@ -4,7 +4,6 @@ export const CABLE_CREATE = gql`
 	mutation ($cable: CableCreate) {
 		cableCreate(cable: $cable) {
 			id
-			uid
 		}
 	}
 `;
@@ -21,6 +20,15 @@ export const CABLE_DELETE = gql`
 			success
 		}
 	}
+`;
+export const RACK_LIST_ALL = gql`
+  {
+    rackList {
+      id
+      name
+      description
+    }
+  }
 `;
 export const CABLE_LIST_ALL = gql`
 	{

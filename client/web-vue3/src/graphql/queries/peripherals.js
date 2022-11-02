@@ -8,6 +8,13 @@ export const PERIPHERAL_CREATE = gql`
     }
   }
 `;
+export const PERIPHERAL_CATEGORY_CREATE = gql`
+  mutation ($peripheralCategory: PeripheralCategoryCreate) {
+    peripheralCategoryCreate(peripheralCategory: $peripheralCategory ) {
+      id
+    }
+  }
+`;
 export const PERIPHERAL_VALUE_UPDATE = gql`
   mutation ($id: Long!, $devicePeripheralUpdate: DevicePeripheralUpdate!) {
     updatePeripheral(id: $id, peripheral: $devicePeripheralUpdate) {

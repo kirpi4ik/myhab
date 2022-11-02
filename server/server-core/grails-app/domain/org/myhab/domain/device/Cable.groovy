@@ -31,11 +31,12 @@ class Cable extends BaseEntity {
         rack nullable: true
         patchPanel nullable: true
         category nullable: true
-        code nullable: true
+        code nullable: false
         codeNew nullable: true
         codeOld nullable: true
-        description nullable: true
+        description nullable: false
         patchPanelPort nullable: true
+        maxAmp nullable: true
     }
     static mapping = {
         table '`cables`'
