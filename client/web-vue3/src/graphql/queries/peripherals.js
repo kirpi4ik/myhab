@@ -33,6 +33,23 @@ export const PERIPHERAL_LIST_ALL = gql`
     }
   }
 `;
+export const PERIPHERAL_CATEGORIES = gql`
+  {
+    peripheralCategoryList {
+      id
+      name
+      title
+    }
+  }
+`;
+export const PERIPHERAL_CATEGORY_BY_ID = gql`
+  query peripheralCategory($id: Long!) {
+    peripheralCategory(id: $id){
+      id
+      name
+    }
+  }
+`;
 export const PERIPHERAL_META_GET = gql`
   {
     peripheralCategoryList {
