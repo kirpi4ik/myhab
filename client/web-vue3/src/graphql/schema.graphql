@@ -301,7 +301,7 @@ type Device {
   networkAddress: NetworkAddressEmbedded
   offlineScenario: String
   rack: Rack
-  type: DeviceType
+  type: DeviceCategory
   status: DeviceStatus
   zones: [Zone]
   authAccounts: [DeviceAccount]
@@ -426,7 +426,6 @@ type DeviceCategory {
   tsUpdated: Date
   entityType: EntityType
   name: String
-  description: String
 
   """
   A list of validation errors on the entity
@@ -440,7 +439,15 @@ input DeviceCategoryCreate {
   tsUpdated: Date
   entityType: EntityType
   name: String!
-  description: String!
+}
+
+input DeviceCategoryCreateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
 }
 
 input DeviceCategoryUpdate {
@@ -450,7 +457,15 @@ input DeviceCategoryUpdate {
   tsUpdated: Date
   entityType: EntityType
   name: String
-  description: String
+}
+
+input DeviceCategoryUpdateNested {
+  id: Long
+  uid: String
+  tsCreated: Date
+  tsUpdated: Date
+  entityType: EntityType
+  name: String
 }
 
 input DeviceCreate {
@@ -465,7 +480,7 @@ input DeviceCreate {
   networkAddress: NetworkAddressCreateEmbedded
   offlineScenario: String
   rack: RackCreateNested
-  type: DeviceTypeCreateNested
+  type: DeviceCategoryCreateNested
   status: DeviceStatus
   zones: [ZoneCreateNested!]
   authAccounts: [DeviceAccountCreateNested!]
@@ -485,7 +500,7 @@ input DeviceCreateNested {
   description: String
   networkAddress: NetworkAddressCreateEmbedded
   offlineScenario: String
-  type: DeviceTypeCreateNested
+  type: DeviceCategoryCreateNested
   status: DeviceStatus
   authAccounts: [DeviceAccountCreateNested]
   backups: [DeviceBackupCreateNested]
@@ -688,56 +703,6 @@ enum DeviceStatus {
   OFFLINE
 }
 
-type DeviceType {
-  id: Long
-  version: Long
-  uid: String
-  tsCreated: Date
-  tsUpdated: Date
-  entityType: EntityType
-  name: String
-
-  """
-  A list of validation errors on the entity
-  """
-  errors: [Error]
-}
-
-input DeviceTypeCreate {
-  uid: String
-  tsCreated: Date
-  tsUpdated: Date
-  entityType: EntityType
-  name: String!
-}
-
-input DeviceTypeCreateNested {
-  id: Long
-  uid: String
-  tsCreated: Date
-  tsUpdated: Date
-  entityType: EntityType
-  name: String
-}
-
-input DeviceTypeUpdate {
-  version: Long
-  uid: String
-  tsCreated: Date
-  tsUpdated: Date
-  entityType: EntityType
-  name: String
-}
-
-input DeviceTypeUpdateNested {
-  id: Long
-  uid: String
-  tsCreated: Date
-  tsUpdated: Date
-  entityType: EntityType
-  name: String
-}
-
 input DeviceUpdate {
   version: Long
   uid: String
@@ -751,7 +716,7 @@ input DeviceUpdate {
   networkAddress: NetworkAddressUpdateEmbedded
   offlineScenario: String
   rack: RackUpdateNested
-  type: DeviceTypeUpdateNested
+  type: DeviceCategoryUpdateNested
   status: DeviceStatus
   zones: [ZoneUpdateNested]
   authAccounts: [DeviceAccountUpdateNested]
@@ -771,7 +736,7 @@ input DeviceUpdateNested {
   description: String
   networkAddress: NetworkAddressUpdateEmbedded
   offlineScenario: String
-  type: DeviceTypeUpdateNested
+  type: DeviceCategoryUpdateNested
   status: DeviceStatus
   authAccounts: [DeviceAccountUpdateNested]
   backups: [DeviceBackupUpdateNested]
@@ -1138,6 +1103,35 @@ Long type
 scalar Long
 
 type Mutation {
+  roleCreate(role: RoleCreate): Role
+  roleUpdate(id: Long!, role: RoleUpdate): Role
+  roleDelete(id: Long!): DeleteResult
+  peripheralCategoryCreate(
+    peripheralCategory: PeripheralCategoryCreate
+  ): PeripheralCategory
+  peripheralCategoryUpdate(
+    id: Long!
+    peripheralCategory: PeripheralCategoryUpdate
+  ): PeripheralCategory
+  peripheralCategoryDelete(id: Long!): DeleteResult
+  timeSeriesStatisticCreate(
+    timeSeriesStatistic: TimeSeriesStatisticCreate
+  ): TimeSeriesStatistic
+  timeSeriesStatisticUpdate(
+    id: Long!
+    timeSeriesStatistic: TimeSeriesStatisticUpdate
+  ): TimeSeriesStatistic
+  timeSeriesStatisticDelete(id: Long!): DeleteResult
+  portValueCreate(portValue: PortValueCreate): PortValue
+  portValueUpdate(id: Long!, portValue: PortValueUpdate): PortValue
+  portValueDelete(id: Long!): DeleteResult
+  devicePortCreate(devicePort: DevicePortCreate): DevicePort
+  devicePortUpdate(id: Long!, devicePort: DevicePortUpdate): DevicePort
+  devicePortDelete(id: Long!): DeleteResult
+  updatePort(id: Long!, port: DevicePortUpdate!): DevicePort
+  deviceCreate(device: DeviceCreate): Device
+  deviceUpdate(id: Long!, device: DeviceUpdate): Device
+  deviceDelete(id: Long!): DeleteResult
   devicePeripheralCreate(
     devicePeripheral: DevicePeripheralCreate
   ): DevicePeripheral
@@ -1150,26 +1144,46 @@ type Mutation {
     id: Long!
     peripheral: DevicePeripheralUpdate!
   ): DevicePeripheralUpdateResult
-  cableCreate(cable: CableCreate): Cable
-  cableUpdate(id: Long!, cable: CableUpdate): Cable
-  cableDelete(id: Long!): DeleteResult
-  updateCable(id: Long!, cable: CableUpdate!): Cable
+  deviceCategoryCreate(deviceCategory: DeviceCategoryCreate): DeviceCategory
+  deviceCategoryUpdate(
+    id: Long!
+    deviceCategory: DeviceCategoryUpdate
+  ): DeviceCategory
+  deviceCategoryDelete(id: Long!): DeleteResult
   patchPanelCreate(patchPanel: PatchPanelCreate): PatchPanel
   patchPanelUpdate(id: Long!, patchPanel: PatchPanelUpdate): PatchPanel
   patchPanelDelete(id: Long!): DeleteResult
-  deviceTypeCreate(deviceType: DeviceTypeCreate): DeviceType
-  deviceTypeUpdate(id: Long!, deviceType: DeviceTypeUpdate): DeviceType
-  deviceTypeDelete(id: Long!): DeleteResult
-  portValueCreate(portValue: PortValueCreate): PortValue
-  portValueUpdate(id: Long!, portValue: PortValueUpdate): PortValue
-  portValueDelete(id: Long!): DeleteResult
-  devicePortCreate(devicePort: DevicePortCreate): DevicePort
-  devicePortUpdate(id: Long!, devicePort: DevicePortUpdate): DevicePort
-  devicePortDelete(id: Long!): DeleteResult
-  updatePort(id: Long!, port: DevicePortUpdate!): DevicePort
+  layerCreate(layer: LayerCreate): Layer
+  layerUpdate(id: Long!, layer: LayerUpdate): Layer
+  layerDelete(id: Long!): DeleteResult
   scenarioCreate(scenario: ScenarioCreate): Scenario
   scenarioUpdate(id: Long!, scenario: ScenarioUpdate): Scenario
   scenarioDelete(id: Long!): DeleteResult
+  zoneCreate(zone: ZoneCreate): Zone
+  zoneUpdate(id: Long!, zone: ZoneUpdate): Zone
+  zoneDelete(id: Long!): DeleteResult
+  eventDataCreate(eventData: EventDataCreate): EventData
+  eventDataUpdate(id: Long!, eventData: EventDataUpdate): EventData
+  eventDataDelete(id: Long!): DeleteResult
+  deviceAccountCreate(deviceAccount: DeviceAccountCreate): DeviceAccount
+  deviceAccountUpdate(
+    id: Long!
+    deviceAccount: DeviceAccountUpdate
+  ): DeviceAccount
+  deviceAccountDelete(id: Long!): DeleteResult
+  rackCreate(rack: RackCreate): Rack
+  rackUpdate(id: Long!, rack: RackUpdate): Rack
+  rackDelete(id: Long!): DeleteResult
+  userCreate(user: UserCreate): User
+  userUpdate(id: Long!, user: UserUpdate): User
+  userDelete(id: Long!): DeleteResult
+  userDeleteCascade(id: Long!): DeleteResponseCustom
+  cableCategoryCreate(cableCategory: CableCategoryCreate): CableCategory
+  cableCategoryUpdate(
+    id: Long!
+    cableCategory: CableCategoryUpdate
+  ): CableCategory
+  cableCategoryDelete(id: Long!): DeleteResult
   configurationCreate(configuration: ConfigurationCreate): Configuration
   configurationUpdate(
     id: Long!
@@ -1194,62 +1208,10 @@ type Mutation {
     entityType: EntityType!
     value: String!
   ): Configuration
-  peripheralCategoryCreate(
-    peripheralCategory: PeripheralCategoryCreate
-  ): PeripheralCategory
-  peripheralCategoryUpdate(
-    id: Long!
-    peripheralCategory: PeripheralCategoryUpdate
-  ): PeripheralCategory
-  peripheralCategoryDelete(id: Long!): DeleteResult
-  zoneCreate(zone: ZoneCreate): Zone
-  zoneUpdate(id: Long!, zone: ZoneUpdate): Zone
-  zoneDelete(id: Long!): DeleteResult
-  rackCreate(rack: RackCreate): Rack
-  rackUpdate(id: Long!, rack: RackUpdate): Rack
-  rackDelete(id: Long!): DeleteResult
-  userCreate(user: UserCreate): User
-  userUpdate(id: Long!, user: UserUpdate): User
-  userDelete(id: Long!): DeleteResult
-  userDeleteCascade(id: Long!): DeleteResponseCustom
-  cableCategoryCreate(cableCategory: CableCategoryCreate): CableCategory
-  cableCategoryUpdate(
-    id: Long!
-    cableCategory: CableCategoryUpdate
-  ): CableCategory
-  cableCategoryDelete(id: Long!): DeleteResult
-  eventDataCreate(eventData: EventDataCreate): EventData
-  eventDataUpdate(id: Long!, eventData: EventDataUpdate): EventData
-  eventDataDelete(id: Long!): DeleteResult
-  deviceCreate(device: DeviceCreate): Device
-  deviceUpdate(id: Long!, device: DeviceUpdate): Device
-  deviceDelete(id: Long!): DeleteResult
-  roleCreate(role: RoleCreate): Role
-  roleUpdate(id: Long!, role: RoleUpdate): Role
-  roleDelete(id: Long!): DeleteResult
-  timeSeriesStatisticCreate(
-    timeSeriesStatistic: TimeSeriesStatisticCreate
-  ): TimeSeriesStatistic
-  timeSeriesStatisticUpdate(
-    id: Long!
-    timeSeriesStatistic: TimeSeriesStatisticUpdate
-  ): TimeSeriesStatistic
-  timeSeriesStatisticDelete(id: Long!): DeleteResult
-  deviceCategoryCreate(deviceCategory: DeviceCategoryCreate): DeviceCategory
-  deviceCategoryUpdate(
-    id: Long!
-    deviceCategory: DeviceCategoryUpdate
-  ): DeviceCategory
-  deviceCategoryDelete(id: Long!): DeleteResult
-  deviceAccountCreate(deviceAccount: DeviceAccountCreate): DeviceAccount
-  deviceAccountUpdate(
-    id: Long!
-    deviceAccount: DeviceAccountUpdate
-  ): DeviceAccount
-  deviceAccountDelete(id: Long!): DeleteResult
-  layerCreate(layer: LayerCreate): Layer
-  layerUpdate(id: Long!, layer: LayerUpdate): Layer
-  layerDelete(id: Long!): DeleteResult
+  cableCreate(cable: CableCreate): Cable
+  cableUpdate(id: Long!, cable: CableUpdate): Cable
+  cableDelete(id: Long!): DeleteResult
+  updateCable(id: Long!, cable: CableUpdate!): Cable
   pushEvent(input: EventDatInput): EventDataResponse
   cacheDelete(cacheName: String!, cacheKey: String!): MutationResponse
   userRolesSave(input: SaveUserRoles): MutationResponse
@@ -1513,44 +1475,35 @@ input PortValueUpdate {
 }
 
 type Query {
-  devicePeripheral(id: Long!): DevicePeripheral
-  devicePeripheralList(
+  role(id: Long!): Role
+  roleList(
     max: Int
     offset: Int
     sort: String
     order: String
     ignoreCase: Boolean
-  ): [DevicePeripheral]
-  devicePeripheralCount: Int
-  devicePeripheralById(id: String!): DevicePeripheral
-  cable(id: Long!): Cable
-  cableList(
+  ): [Role]
+  roleCount: Int
+  peripheralCategory(id: Long!): PeripheralCategory
+  peripheralCategoryList(
     max: Int
     offset: Int
     sort: String
     order: String
     ignoreCase: Boolean
-  ): [Cable]
-  cableCount: Int
-  cableById(id: String!): Cable
-  patchPanel(id: Long!): PatchPanel
-  patchPanelList(
+  ): [PeripheralCategory]
+  peripheralCategoryCount: Int
+  timeSeriesStatistic(id: Long!): TimeSeriesStatistic
+  timeSeriesStatisticList(
     max: Int
     offset: Int
     sort: String
     order: String
     ignoreCase: Boolean
-  ): [PatchPanel]
-  patchPanelCount: Int
-  deviceType(id: Long!): DeviceType
-  deviceTypeList(
-    max: Int
-    offset: Int
-    sort: String
-    order: String
-    ignoreCase: Boolean
-  ): [DeviceType]
-  deviceTypeCount: Int
+  ): [TimeSeriesStatistic]
+  timeSeriesStatisticCount: Int
+  statLatestByKey(key: String!): TimeSeriesStatistic
+  statLatestByKeys(keys: [String!]): [TimeSeriesStatistic]
   portValue(id: Long!): PortValue
   portValueList(
     max: Int
@@ -1571,6 +1524,53 @@ type Query {
   devicePortCount: Int
   portTypes: [String]
   portStates: [String]
+  device(id: Long!): Device
+  deviceList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Device]
+  deviceCount: Int
+  deviceById(id: String!): Device
+  devicePeripheral(id: Long!): DevicePeripheral
+  devicePeripheralList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [DevicePeripheral]
+  devicePeripheralCount: Int
+  devicePeripheralById(id: String!): DevicePeripheral
+  deviceCategory(id: Long!): DeviceCategory
+  deviceCategoryList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [DeviceCategory]
+  deviceCategoryCount: Int
+  patchPanel(id: Long!): PatchPanel
+  patchPanelList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [PatchPanel]
+  patchPanelCount: Int
+  layer(id: Long!): Layer
+  layerList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [Layer]
+  layerCount: Int
   scenario(id: Long!): Scenario
   scenarioList(
     max: Int
@@ -1580,39 +1580,6 @@ type Query {
     ignoreCase: Boolean
   ): [Scenario]
   scenarioCount: Int
-  configuration(id: Long!): Configuration
-  configurationList(
-    max: Int
-    offset: Int
-    sort: String
-    order: String
-    ignoreCase: Boolean
-  ): [Configuration]
-  configurationCount: Int
-  configurationListByEntity(
-    entityType: EntityType!
-    entityId: Long!
-  ): [Configuration]
-  configPropertyByKey(
-    key: String!
-    entityId: Long!
-    entityType: EntityType!
-  ): Configuration
-  configListByKey(
-    key: String!
-    entityId: Long!
-    entityType: EntityType!
-  ): [Configuration]
-  configKeysByEntity(entityType: EntityType!): [String]
-  peripheralCategory(id: Long!): PeripheralCategory
-  peripheralCategoryList(
-    max: Int
-    offset: Int
-    sort: String
-    order: String
-    ignoreCase: Boolean
-  ): [PeripheralCategory]
-  peripheralCategoryCount: Int
   zone(id: Long!): Zone
   zoneList(
     max: Int
@@ -1625,6 +1592,25 @@ type Query {
   zoneById(id: String!): Zone
   zonesByParentId(id: String!): [Zone]
   zonesRoot: [Zone]
+  eventData(id: Long!): EventData
+  eventDataList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [EventData]
+  eventDataCount: Int
+  eventsByP2(p2: String!, count: Int!, offset: Int!): [EventData]
+  deviceAccount(id: Long!): DeviceAccount
+  deviceAccountList(
+    max: Int
+    offset: Int
+    sort: String
+    order: String
+    ignoreCase: Boolean
+  ): [DeviceAccount]
+  deviceAccountCount: Int
   rack(id: Long!): Rack
   rackList(
     max: Int
@@ -1653,73 +1639,40 @@ type Query {
     ignoreCase: Boolean
   ): [CableCategory]
   cableCategoryCount: Int
-  eventData(id: Long!): EventData
-  eventDataList(
+  configuration(id: Long!): Configuration
+  configurationList(
     max: Int
     offset: Int
     sort: String
     order: String
     ignoreCase: Boolean
-  ): [EventData]
-  eventDataCount: Int
-  eventsByP2(p2: String!, count: Int!, offset: Int!): [EventData]
-  device(id: Long!): Device
-  deviceList(
+  ): [Configuration]
+  configurationCount: Int
+  configurationListByEntity(
+    entityType: EntityType!
+    entityId: Long!
+  ): [Configuration]
+  configPropertyByKey(
+    key: String!
+    entityId: Long!
+    entityType: EntityType!
+  ): Configuration
+  configListByKey(
+    key: String!
+    entityId: Long!
+    entityType: EntityType!
+  ): [Configuration]
+  configKeysByEntity(entityType: EntityType!): [String]
+  cable(id: Long!): Cable
+  cableList(
     max: Int
     offset: Int
     sort: String
     order: String
     ignoreCase: Boolean
-  ): [Device]
-  deviceCount: Int
-  deviceById(id: String!): Device
-  role(id: Long!): Role
-  roleList(
-    max: Int
-    offset: Int
-    sort: String
-    order: String
-    ignoreCase: Boolean
-  ): [Role]
-  roleCount: Int
-  timeSeriesStatistic(id: Long!): TimeSeriesStatistic
-  timeSeriesStatisticList(
-    max: Int
-    offset: Int
-    sort: String
-    order: String
-    ignoreCase: Boolean
-  ): [TimeSeriesStatistic]
-  timeSeriesStatisticCount: Int
-  statLatestByKey(key: String!): TimeSeriesStatistic
-  statLatestByKeys(keys: [String!]): [TimeSeriesStatistic]
-  deviceCategory(id: Long!): DeviceCategory
-  deviceCategoryList(
-    max: Int
-    offset: Int
-    sort: String
-    order: String
-    ignoreCase: Boolean
-  ): [DeviceCategory]
-  deviceCategoryCount: Int
-  deviceAccount(id: Long!): DeviceAccount
-  deviceAccountList(
-    max: Int
-    offset: Int
-    sort: String
-    order: String
-    ignoreCase: Boolean
-  ): [DeviceAccount]
-  deviceAccountCount: Int
-  layer(id: Long!): Layer
-  layerList(
-    max: Int
-    offset: Int
-    sort: String
-    order: String
-    ignoreCase: Boolean
-  ): [Layer]
-  layerCount: Int
+  ): [Cable]
+  cableCount: Int
+  cableById(id: String!): Cable
   navigation: Navigation
   userRolesForUser(userId: String!): [UserRole]
   cache(cacheName: String!, cacheKey: String!): CacheResult

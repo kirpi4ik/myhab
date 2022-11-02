@@ -53,7 +53,7 @@
                     <q-item-label>{{ $t('navigation.devices') }}</q-item-label>
                   </q-item-section>
                 </q-item>
-                <q-item to="/admin/dtype" active-class="q-item-no-link-highlighting">
+                <q-item to="/admin/dcategories" active-class="q-item-no-link-highlighting">
                   <q-item-section avatar>
                     <q-icon name="mdi-shape"/>
                   </q-item-section>
