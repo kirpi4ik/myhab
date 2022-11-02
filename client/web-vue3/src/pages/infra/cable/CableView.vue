@@ -96,7 +96,7 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {CABLE_BY_ID, DEVICE_GET_BY_ID_CHILDS, PORT_GET_BY_ID, USER_GET_BY_ID} from "@/graphql/queries";
+import {CABLE_BY_ID} from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 

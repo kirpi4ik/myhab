@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client/core';
+import {gql} from '@apollo/client/core';
 
 export const CABLE_CREATE = gql`
 	mutation ($cable: CableCreate) {

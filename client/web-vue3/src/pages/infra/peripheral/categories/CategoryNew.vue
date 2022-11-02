@@ -26,12 +26,12 @@
 <script>
 import {useQuasar} from 'quasar'
 import {defineComponent, ref} from 'vue';
-import {DEVICE_CATEGORY_CREATE, PERIPHERAL_CATEGORY_CREATE} from '@/graphql/queries';
+import {PERIPHERAL_CATEGORY_CREATE} from '@/graphql/queries';
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
 
 export default defineComponent({
-  name: 'DCategoryNew',
+  name: 'PCategoryNew',
   setup() {
     const $q = useQuasar()
     const {client} = useApolloClient();

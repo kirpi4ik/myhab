@@ -80,7 +80,7 @@
 <script>
 import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
-import {ROLES_GET_FOR_USER, USER_GET_BY_ID, USER_VALUE_UPDATE, USER_GET_BY_ID_WITH_ROLES} from '@/graphql/queries';
+import {USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE} from '@/graphql/queries';
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute} from "vue-router";
 import _ from "lodash";

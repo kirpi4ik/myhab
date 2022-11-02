@@ -29,10 +29,10 @@
 </template>
 
 <script>
-import { useRoute } from 'vue-router';
-import { defineComponent, ref } from 'vue';
-import { authzService } from '@/_services';
-import { mapActions } from 'vuex';
+import {useRoute} from 'vue-router';
+import {defineComponent, ref} from 'vue';
+import {authzService} from '@/_services';
+import {mapActions} from 'vuex';
 
 export default defineComponent({
 	setup() {

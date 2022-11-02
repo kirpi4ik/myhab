@@ -81,7 +81,7 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {DEVICE_GET_BY_ID_CHILDS, PERIPHERAL_GET_BY_ID, PORT_GET_BY_ID, USER_GET_BY_ID} from "@/graphql/queries";
+import {PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 

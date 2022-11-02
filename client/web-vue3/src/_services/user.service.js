@@ -1,4 +1,4 @@
-import { handleResponse, requestOptions, Utils } from '@/_helpers';
+import {handleResponse, requestOptions, Utils} from '@/_helpers';
 
 export const userService = {
 	getAll,

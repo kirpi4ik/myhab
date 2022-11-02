@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client/core';
+import {gql} from '@apollo/client/core';
 
 export const PORT_LIST_ALL = gql`
   query {
