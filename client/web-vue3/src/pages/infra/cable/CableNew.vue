@@ -34,9 +34,8 @@
 <script>
 import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
-import {CABLE_CREATE, PORT_LIST_ALL, RACK_LIST_ALL, USER_CREATE} from '@/graphql/queries';
+import {CABLE_CREATE, RACK_LIST_ALL} from '@/graphql/queries';
 import {useApolloClient} from "@vue/apollo-composable";
-import _ from "lodash";
 import {useRouter} from "vue-router/dist/vue-router";
 
 export default defineComponent({

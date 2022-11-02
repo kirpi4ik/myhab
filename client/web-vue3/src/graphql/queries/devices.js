@@ -1,5 +1,4 @@
 import {gql} from '@apollo/client/core';
-import {PERIPHERAL_CATEGORY_BY_ID} from "@/graphql/queries/peripherals";
 
 export const DEVICE_CREATE = gql`
   mutation ($device: DeviceCreate) {

@@ -49,7 +49,7 @@
 import {defineComponent, onMounted, ref} from "vue";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
-import {DEVICE_DELETE, DEVICE_LIST_ALL, PERIPHERAL_DELETE, PERIPHERAL_LIST_ALL} from "@/graphql/queries";
+import {PERIPHERAL_DELETE, PERIPHERAL_LIST_ALL} from "@/graphql/queries";
 import _ from "lodash";
 
 export default defineComponent({
