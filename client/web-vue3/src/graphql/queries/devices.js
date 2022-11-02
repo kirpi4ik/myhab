@@ -26,6 +26,13 @@ export const DEVICE_DELETE = gql`
     }
   }
 `;
+export const DEVICE_CATEGORY_CREATE = gql`
+  mutation ($deviceCategory: DeviceCategoryCreate) {
+    deviceCategoryCreate(deviceCategory: $deviceCategory ) {
+      id
+    }
+  }
+`;
 export const DEVICE_LIST_ALL = gql`
   {
     deviceList {
