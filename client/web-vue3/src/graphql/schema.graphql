@@ -108,7 +108,7 @@ input CableCreate {
   peripherals: [DevicePeripheralCreateNested!]
   connectedTo: [DevicePortCreateNested!]
   zones: [ZoneCreateNested!]
-  maxAmp: Float!
+  maxAmp: Float
 }
 
 input CableCreateNested {
