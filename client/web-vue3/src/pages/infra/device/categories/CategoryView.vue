@@ -43,7 +43,7 @@ import {useRoute, useRouter} from "vue-router/dist/vue-router";
 export default defineComponent({
   name: 'PCategoryView',
   setup() {
-    const uri = '/admin/pcategories'
+    const uri = '/admin/dcategories'
     const viewItem = ref()
     const loading = ref(false)
     const {client} = useApolloClient();
