@@ -38,14 +38,32 @@
                 <q-item-label>{{ $t('navigation.users') }}</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item to="/admin/devices" active-class="q-item-no-link-highlighting">
-              <q-item-section avatar>
-                <q-icon name="mdi-devices"/>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ $t('navigation.devices') }}</q-item-label>
-              </q-item-section>
-            </q-item>
+
+            <q-expansion-item
+              icon="mdi-devices"
+              :label="$t('navigation.devices')"
+              class="text-weight-bolder text-white"
+            >
+              <q-list class="q-pl-lg text-weight-light">
+                <q-item to="/admin/devices" active-class="q-item-no-link-highlighting">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-view-list"/>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ $t('navigation.devices') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item to="/admin/dtype" active-class="q-item-no-link-highlighting">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-shape"/>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ $t('navigation.peripheral.categories') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-expansion-item>
+
             <q-item to="/admin/ports" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="mdi-connection"/>
