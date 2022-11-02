@@ -17,7 +17,7 @@
         <q-inner-loading showing color="primary"/>
       </template>
       <template v-slot:top>
-        <q-btn icon="add" color="positive" :disable="loading" label="Add peripheral" @click="addRow"/>
+        <q-btn icon="add" color="positive" :disable="loading" label="Add zone" @click="addRow"/>
         <q-space/>
         <q-input dense debounce="300" color="primary" v-model="filter">
           <template v-slot:append>
