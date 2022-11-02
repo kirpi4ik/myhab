@@ -46,6 +46,7 @@
           :rows="viewItem.ports"
           :columns="portColumns"
           @row-click="onRowClick"
+          :pagination="pagination"
           row-key="id"
         >
         </q-table>

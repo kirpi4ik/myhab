@@ -52,6 +52,17 @@
           </div>
         </q-item-section>
       </q-item>
+      <div class="q-pa-md">
+        <q-table
+          title="Located in zones"
+          :rows="viewItem.zones"
+          :columns="zoneColumns"
+          @row-click="viewZone"
+          :pagination="pagination"
+          row-key="id"
+        >
+        </q-table>
+      </div>
       <q-card-actions>
         <q-btn flat color="secondary" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           Edit
@@ -68,7 +79,7 @@
 import {defineComponent, onMounted, ref} from "vue";
 import {DEVICE_GET_BY_ID_CHILDS, PERIPHERAL_GET_BY_ID, PORT_GET_BY_ID, USER_GET_BY_ID} from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute} from "vue-router/dist/vue-router";
+import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
 export default defineComponent({
   name: 'PeripheralView',
@@ -77,7 +88,19 @@ export default defineComponent({
     const viewItem = ref()
     const loading = ref(false)
     const {client} = useApolloClient();
+    const router = useRouter();
 
+    const pagination = ref({
+      sortBy: 'id',
+      descending: true,
+      page: 1,
+      rowsPerPage: 10
+    })
+    const zoneColumns = [
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+    ]
     const fetchData = () => {
       loading.value = true;
       client.query({
@@ -95,7 +118,14 @@ export default defineComponent({
     return {
       uri,
       fetchData,
-      viewItem
+      viewItem,
+      pagination,
+      zoneColumns,
+      viewZone: (evt, row) => {
+        if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
+          router.push({path: `/admin/zones/${row.id}/view`})
+        }
+      }
     }
   }
 });
