@@ -1,4 +1,4 @@
-import { LocalStorage } from 'quasar';
+import {LocalStorage} from 'quasar';
 
 const state = {
 	settings: {

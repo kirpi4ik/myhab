@@ -67,13 +67,13 @@
 	</q-header>
 </template>
 <script>
-import { defineComponent } from 'vue';
+import {defineComponent} from 'vue';
 import UserMessages from './UserMessages';
-import { useUiState } from '@/composables';
-import { useQuery } from '@vue/apollo-composable';
-import { CONFIG_GLOBAL_GET_STRING_VAL } from '@/graphql/queries';
+import {useUiState} from '@/composables';
+import {useQuery} from '@vue/apollo-composable';
+import {CONFIG_GLOBAL_GET_STRING_VAL} from '@/graphql/queries';
 import ClockComponent from 'components/ClockComponent';
-import { authzService } from '@/_services';
+import {authzService} from '@/_services';
 import BreadCrumbLayout from 'layouts/components/BreadCrumbLayout.vue';
 
 export default defineComponent({

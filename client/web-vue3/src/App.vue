@@ -7,10 +7,10 @@
   </router-view>
 </template>
 <script>
-  import {defineComponent} from 'vue';
-  import {mapActions} from 'vuex';
+import {defineComponent} from 'vue';
+import {mapActions} from 'vuex';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'App',
     methods: {
       ...mapActions(['connect']),

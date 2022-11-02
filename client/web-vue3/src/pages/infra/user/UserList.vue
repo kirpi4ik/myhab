@@ -72,7 +72,7 @@
 </template>
 
 <script>
-import {USER_CREATE, USER_DELETE, USERS_GET_ALL} from '@/graphql/queries';
+import {USER_DELETE, USERS_GET_ALL} from '@/graphql/queries';
 import {defineComponent, onMounted, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import _ from 'lodash';

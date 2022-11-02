@@ -46,11 +46,14 @@
           :rows="viewItem.ports"
           :columns="portColumns"
           @row-click="onRowClick"
-          :pagination="pagination"
           row-key="id"
         >
         </q-table>
+        <br/>
+        <q-btn icon="add" color="positive"  label="Add port" @click="newPort"/>
+
       </div>
+
       <q-card-actions>
         <q-btn flat color="secondary" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           Edit
@@ -65,7 +68,7 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {DEVICE_GET_BY_ID_CHILDS, USER_GET_BY_ID} from "@/graphql/queries";
+import {DEVICE_GET_BY_ID_CHILDS} from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
@@ -77,6 +80,7 @@ export default defineComponent({
     const loading = ref(false)
     const {client} = useApolloClient();
     const router = useRouter();
+    const route = useRoute();
 
     const portColumns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
@@ -90,7 +94,7 @@ export default defineComponent({
       loading.value = true;
       client.query({
         query: DEVICE_GET_BY_ID_CHILDS,
-        variables: {id: useRoute().params.idPrimary},
+        variables: {id: route.params.idPrimary},
         fetchPolicy: 'network-only',
       }).then(response => {
         viewItem.value = response.data.device
@@ -109,6 +113,9 @@ export default defineComponent({
         if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
           router.push({path: `/admin/ports/${row.id}/view`})
         }
+      },
+      newPort: () => {
+        router.push({path: `/admin/ports/new`, query: {deviceId: route.params.idPrimary}})
       }
     }
   }

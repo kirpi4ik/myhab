@@ -1,5 +1,4 @@
 import {computed, reactive, ref} from 'vue';
-import {Platform} from 'quasar';
 
 const state = reactive({
   isSidebarOpen: ref(localStorage.getItem('isSidebarOpen') === 'true') //? !Platform.is.mobile : true,
