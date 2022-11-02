@@ -134,6 +134,40 @@ const routes = [
         ],
       },
       {
+        path: adminPrefix + '/dcategories',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "dcategories"
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/device/categories/CategoryList'),
+          },
+          {
+            path: adminPrefix + '/dcategories/new',
+            component: () => import('pages/infra/device/categories/CategoryNew'),
+            meta: {
+              name: "new"
+            }
+          },
+          {
+            path: adminPrefix + '/dcategories/:idPrimary/view',
+            component: () => import('pages/infra/device/categories/CategoryView'),
+            meta: {
+              name: "details"
+            }
+          },
+          {
+            path: adminPrefix + '/dcategories/:idPrimary/edit',
+            component: () => import('pages/infra/device/categories/CategoryEdit'),
+            meta: {
+              name: "edit"
+            }
+          },
+        ],
+      },
+      {
         path: adminPrefix + '/peripherals',
         component: () => import('layouts/CenterLayout'),
         meta: {
