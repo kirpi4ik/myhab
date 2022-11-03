@@ -4,7 +4,6 @@ export const PERIPHERAL_CREATE = gql`
   mutation ($devicePeripheral: DevicePeripheralCreate) {
     devicePeripheralCreate(devicePeripheral: $devicePeripheral) {
       id
-      uid
     }
   }
 `;

@@ -82,7 +82,6 @@ export default defineComponent({
         variables: {},
         fetchPolicy: 'network-only',
       }).then(response => {
-        rows.value = [];
         rows.value = _.transform(response.data.peripheralCategoryList,
           function (result, value, key) {
             let device = {
