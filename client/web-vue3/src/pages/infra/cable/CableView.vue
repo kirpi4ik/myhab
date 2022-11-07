@@ -18,14 +18,20 @@
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label>Internal Ref</q-item-label>
-          <q-item-label caption>{{ viewItem.internalRef }}</q-item-label>
+          <q-item-label>Code</q-item-label>
+          <q-item-label caption>{{ viewItem.code }}</q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label>Name</q-item-label>
-          <q-item-label caption>{{ viewItem.name }}</q-item-label>
+          <q-item-label>Code old</q-item-label>
+          <q-item-label caption>{{ viewItem.codeOld }}</q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item>
+        <q-item-section>
+          <q-item-label>Code new</q-item-label>
+          <q-item-label caption>{{ viewItem.codeNew }}</q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
@@ -34,24 +40,20 @@
           <q-item-label caption>{{ viewItem.description }}</q-item-label>
         </q-item-section>
       </q-item>
-      <q-item v-if="viewItem">
-        <q-item-section>
-          <q-item-label>Type</q-item-label>
-          <q-item-label caption>{{ viewItem.type }}</q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-item v-if="viewItem">
-        <q-item-section>
-          <q-item-label>State</q-item-label>
-          <q-item-label caption>{{ viewItem.state }}</q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-item v-if="viewItem">
-        <q-item-section>
-          <q-item-label>Value</q-item-label>
-          <q-item-label caption>{{ viewItem.value }}</q-item-label>
-        </q-item-section>
-      </q-item>
+      <q-card-section v-if="viewItem.patchPanel">
+        <q-item>
+          <q-item-section>
+            <q-item-label>Patch panel</q-item-label>
+            <q-item-label caption>{{ viewItem.patchPanel.name }}</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item>
+          <q-item-section>
+            <q-item-label>Port</q-item-label>
+            <q-item-label caption>{{ viewItem.patchPanelPort }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-card-section>
       <q-item v-if="viewItem.device">
         <q-item-section>
           <q-item-label>Device</q-item-label>
