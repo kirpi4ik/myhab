@@ -65,6 +65,11 @@
               @row-click="viewPort"
               row-key="id"
             >
+              <template v-slot:body-cell-actions="props">
+                <q-td :props="props">
+                  <q-btn icon="delete" @click="removePortFromConnected(props.row)"></q-btn>
+                </q-td>
+              </template>
             </q-table>
           </div>
         </q-card-section>
@@ -114,7 +119,8 @@ export default defineComponent({
     const portColumns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'internalRef', label: 'Int Ref', field: 'internalRef', align: 'left', sortable: true}
+      {name: 'internalRef', label: 'Int Ref', field: 'internalRef', align: 'left', sortable: true},
+      {name: 'actions', label: 'Actions', field: 'actions'}
     ]
 
     const fetchData = () => {
@@ -173,6 +179,11 @@ export default defineComponent({
       },
       connectPort: (evt) => {
         cable.value.connectedTo.push(newPort.value)
+      },
+      removePortFromConnected: (row) => {
+        _.remove(cable.value.connectedTo, function(currentObject) {
+          return currentObject.id === row.id;
+        });
       }
     }
   }
