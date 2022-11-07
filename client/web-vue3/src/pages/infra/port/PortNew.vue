@@ -62,7 +62,6 @@ export default defineComponent({
           port.value.device = _.find(response.data.deviceList, function (o) {
             return o.id == route.query.deviceId;
           });
-          debugger
           deviceListDisabled.value = true
         }
       });
