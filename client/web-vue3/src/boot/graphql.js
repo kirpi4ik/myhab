@@ -57,7 +57,7 @@ const onErrorLink = onError(({ graphQLErrors, networkError, operation, forward }
 
 const apolloClient = new ApolloClient({
 	link: onErrorLink.concat(withAuthToken).concat(httpLink),
-	cache: new InMemoryCache(),
+	cache: new InMemoryCache({addTypename: false}),
 	connectToDevTools: true,
 });
 

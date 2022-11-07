@@ -55,9 +55,9 @@ export const CABLE_GET_BY_ID_CHILDS = gql`
 	query cableById($id: String!) {
 		cableById(id: $id) {
 			id
-			uid
 			description
 			code
+
 		}
 	}
 `;
