@@ -40,6 +40,15 @@
           <q-item-label caption>{{ viewItem.description }}</q-item-label>
         </q-item-section>
       </q-item>
+      <q-item v-if="viewItem.rackRowNr != null || viewItem.orderInRow != null">
+        <q-item-section>
+          <q-item-label>Position in rack</q-item-label>
+          <div class="row">
+            <div class="text-grey-6" v-if="viewItem.rackRowNr != null">Row: {{ viewItem.rackRowNr }}</div>
+            <div class="text-grey-6" v-if="viewItem.orderInRow != null"> | Order: {{ viewItem.orderInRow }}</div>
+          </div>
+        </q-item-section>
+      </q-item>
       <q-card-section v-if="viewItem.patchPanel">
         <q-item>
           <q-item-section>
