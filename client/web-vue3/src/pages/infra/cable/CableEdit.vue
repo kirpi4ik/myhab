@@ -35,26 +35,33 @@
           </q-card-section>
           <q-input v-model="cable.codeOld" label="Code old" clearable clear-icon="close" color="green"/>
           <q-input v-model="cable.codeNew" label="Code new" clearable clear-icon="close" color="green"/>
+          <div class="row q-col-gutter-xs">
+            <q-input v-model="cable.rackRowNr" label="Row Nr" clearable clear-icon="close" color="green"/>
+            <q-input v-model="cable.orderInRow" label="Cable order" clearable clear-icon="close" color="green"/>
+          </div>
         </q-card-section>
         <q-card-section>
           <q-item-label>Port connect</q-item-label>
           <div class="row q-col-gutter-xs">
             <q-select v-model="newPortDevice"
-                      :options="deviceList"
+                      :options="options"
                       option-label="name"
-                      label="Device" map-options filled dense color="green" class="col-lg-2 col-md-2"
+                      label="Device" map-options filled dense use-input @filter="filterFn" color="green"
+                      class="col-lg-2 col-md-2"
                       @update:model-value="selectDevice">
               <q-icon name="cancel" @click.stop.prevent="newPortDevice = null" class="cursor-pointer text-blue"/>
             </q-select>
             <q-select v-if="newPortDevice != null"
                       v-model="newPort"
-                      :options="newPortDevice.ports"
+                      :options="portList"
                       option-label="name"
-                      label="Port" map-options filled dense color="green" class="col-lg-2 col-md-2">
-              <q-icon name="cancel" class="cursor-pointer text-blue"
-              />
+                      label="Port" map-options filled dense use-input @filter="portFilterFn" color="green" class="col-lg-2 col-md-2">
+              <q-icon name="cancel" @click.stop.prevent="newPort = null" class="cursor-pointer text-blue"/>
             </q-select>
-            <q-btn icon="mdi-link-variant-plus" @click="connectPort()" color="green" label="Connect"/>
+            <q-btn icon="mdi-link-variant-plus" @click="connectPort()" color="green" label="Connect"
+                   :disable="newPort == null"/>
+            <q-btn icon="mdi-plus" @click="$router.push('/admin/ports/new?deviceId='+newPortDevice.id)" color="orange"
+                   label="New" :disable="newPort != null || newPortDevice == null"/>
           </div>
           <div class="row">
             <q-table
@@ -115,7 +122,10 @@ export default defineComponent({
     const route = useRoute();
     const newPortDevice = ref(null)
     const newPort = ref()
+    const portList = ref()
+    const options = ref()
 
+    options.value = deviceList.value
     const portColumns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
@@ -167,8 +177,10 @@ export default defineComponent({
       patchPanelList,
       portColumns,
       deviceList,
+      options,
       newPort,
       newPortDevice,
+      portList,
       viewPort: (evt, row) => {
         if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
           router.push({path: `/admin/ports/${row.id}/view`})
@@ -176,14 +188,39 @@ export default defineComponent({
       },
       selectDevice: (evt) => {
         newPort.value = null
+        portList.value = deviceList.value.ports
       },
       connectPort: (evt) => {
         cable.value.connectedTo.push(newPort.value)
       },
       removePortFromConnected: (row) => {
-        _.remove(cable.value.connectedTo, function(currentObject) {
+        _.remove(cable.value.connectedTo, function (currentObject) {
           return currentObject.id === row.id;
         });
+      },
+      filterFn: (val, update) => {
+        if (val === '') {
+          update(() => {
+            options.value = deviceList.value
+          })
+          return
+        }
+        update(() => {
+          const needle = val.toLowerCase()
+          options.value = deviceList.value.filter(v => v.name.toLowerCase().indexOf(needle) > -1)
+        })
+      },
+      portFilterFn: (val, update) => {
+        if (val === '') {
+          update(() => {
+            portList.value = newPortDevice.value.ports
+          })
+          return
+        }
+        update(() => {
+          const needle = val.toLowerCase()
+          portList.value = newPortDevice.value.ports.filter(v => v.name.toLowerCase().indexOf(needle) > -1)
+        })
       }
     }
   }

@@ -14,8 +14,7 @@ class Cable extends BaseEntity {
     String codeNew
     String codeOld
     String description
-    double maxAmp
-    int nrWires
+    Double maxAmp
     Rack rack
     CableCategory category
     Set<DevicePeripheral> peripherals
@@ -23,11 +22,17 @@ class Cable extends BaseEntity {
     Set<Zone> zones
     PatchPanel patchPanel
     String patchPanelPort
+    Integer nrWires
+    Integer rackRowNr
+    Integer orderInRow
 
     static belongsTo = [rack: Rack, patchPanel: PatchPanel, category: CableCategory]
     static hasMany = [connectedTo: DevicePort, peripherals: DevicePeripheral, zones: Zone]
 
     static constraints = {
+        orderInRow nullable: true
+        rackRowNr nullable: true
+        nrWires nullable: true
         rack nullable: true
         patchPanel nullable: true
         category nullable: true
