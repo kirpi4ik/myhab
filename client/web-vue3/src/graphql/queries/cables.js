@@ -83,6 +83,8 @@ export const CABLE_BY_ID = gql`
         description
       }
       patchPanelPort
+      rackRowNr
+      orderInRow
       rack {
         id
         name
