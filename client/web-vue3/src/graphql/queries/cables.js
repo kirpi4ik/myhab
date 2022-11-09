@@ -138,6 +138,8 @@ export const CABLE_EDIT_GET_DETAILS = gql`
       description
       patchPanelPort
       nrWires
+      rackRowNr
+      orderInRow
       peripherals {
         id
         name
