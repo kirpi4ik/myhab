@@ -15,10 +15,8 @@
                    :rules="[val => !!val || 'Field is required']"/>
           <q-input v-model="port.name" label="Name" clearable clear-icon="close" color="orange"
                    :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="port.description" label="Description" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="port.value" label="Value" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
+          <q-input v-model="port.description" label="Description" clearable clear-icon="close" color="green"/>
+          <q-input v-model="port.value" label="Value" clearable clear-icon="close" color="green"/>
         </q-card-section>
         <q-separator/>
         <q-card-actions>
