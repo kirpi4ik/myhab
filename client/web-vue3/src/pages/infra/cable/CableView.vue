@@ -12,37 +12,43 @@
       </q-card-section>
       <q-item>
         <q-item-section>
-          <q-item-label>ID</q-item-label>
+          <q-item-label class="text-h6">ID</q-item-label>
           <q-item-label caption>{{ viewItem.id }}</q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label>Code</q-item-label>
+          <q-item-label class="text-h6">Code</q-item-label>
           <q-item-label caption>{{ viewItem.code }}</q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label>Code old</q-item-label>
+          <q-item-label class="text-h6">Code old</q-item-label>
           <q-item-label caption>{{ viewItem.codeOld }}</q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label>Code new</q-item-label>
+          <q-item-label class="text-h6">Code new</q-item-label>
           <q-item-label caption>{{ viewItem.codeNew }}</q-item-label>
         </q-item-section>
       </q-item>
       <q-item>
         <q-item-section>
-          <q-item-label>Description</q-item-label>
+          <q-item-label class="text-h6">Description</q-item-label>
           <q-item-label caption>{{ viewItem.description }}</q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item v-if="viewItem.rack != null">
+        <q-item-section>
+          <q-item-label class="text-h6">Rack</q-item-label>
+          <div class="text-grey-6" v-if="viewItem.rack != null">{{ viewItem.rack.name }}</div>
         </q-item-section>
       </q-item>
       <q-item v-if="viewItem.rackRowNr != null || viewItem.orderInRow != null">
         <q-item-section>
-          <q-item-label>Position in rack</q-item-label>
+          <q-item-label class="text-h6">Position in rack</q-item-label>
           <div class="row">
             <div class="text-grey-6" v-if="viewItem.rackRowNr != null">Row: {{ viewItem.rackRowNr }}</div>
             <div class="text-grey-6" v-if="viewItem.orderInRow != null"> | Order: {{ viewItem.orderInRow }}</div>
@@ -50,18 +56,22 @@
         </q-item-section>
       </q-item>
       <q-card-section v-if="viewItem.patchPanel">
-        <q-item>
-          <q-item-section>
-            <q-item-label>Patch panel</q-item-label>
-            <q-item-label caption>{{ viewItem.patchPanel.name }}</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section>
-            <q-item-label>Port</q-item-label>
-            <q-item-label caption>{{ viewItem.patchPanelPort }}</q-item-label>
-          </q-item-section>
-        </q-item>
+        <q-item-section>
+          <q-item-label class="text-h6">Patch panel</q-item-label>
+          <div class="row q-col-gutter-lg">
+            <div class="row">
+              <div>Name: </div>
+              <div class="text-grey-8"> {{ viewItem.patchPanel.name }}</div>
+            </div>
+            <div class="row">
+              <div>Port: </div>
+              <div class="text-grey-8"> {{ viewItem.patchPanelPort }}/{{ viewItem.patchPanel.size }}</div>
+            </div>
+          </div>
+          <div class="row text-grey-7">
+            {{ viewItem.patchPanel.description }}
+          </div>
+        </q-item-section>
       </q-card-section>
       <q-item v-if="viewItem.device">
         <q-item-section>
