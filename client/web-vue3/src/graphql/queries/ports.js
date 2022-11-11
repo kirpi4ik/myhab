@@ -52,6 +52,37 @@ export const PORT_GET_BY_ID = gql`
 		portStates
 	}
 `;
+export const PORT_EDIT_GET_BY_ID = gql`
+  query ($id: Long!) {
+    devicePort(id: $id) {
+      id
+      uid
+      internalRef
+      name
+      description
+      device {
+        id
+        code
+        name
+        description
+      }
+      cables {
+        id
+        code
+        description
+      }
+      type
+      state
+      value
+    }
+    deviceList{
+      id
+      name
+    }
+    portTypes
+    portStates
+  }
+`;
 export const PORT_DETAILS_TO_CREATE = gql`
 	query ($id: Long!) {
 		device(id: $id) {
