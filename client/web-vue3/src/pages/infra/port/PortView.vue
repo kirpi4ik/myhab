@@ -79,7 +79,6 @@
           :rows="viewItem.cables"
           :columns="cableColumns"
           @row-click="onRowClick"
-          :pagination="pagination"
           row-key="id"
         >
         </q-table>
