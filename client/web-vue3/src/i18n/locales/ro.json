@@ -45,9 +45,11 @@
     "settings": "Setari",
     "maintenance": "Maintenance",
     "peripheral": {
+      "list": "Periferice",
       "details": "Detalii",
       "edit": "Editeaza",
-      "create": "Periferic nou"
+      "create": "Periferic nou",
+      "categories": "Categorii"
     },
     "ports": {
       "list": "Porturi",

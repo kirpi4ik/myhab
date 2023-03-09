@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeTheme } from 'electron';
+import {app, BrowserWindow, nativeTheme} from 'electron';
 import path from 'path';
 import os from 'os';
 

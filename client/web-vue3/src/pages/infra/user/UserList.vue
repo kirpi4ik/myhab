@@ -7,6 +7,7 @@
       :columns="columns"
       :loading="loading"
       :pagination="pagination"
+      :filter="filter"
       row-key="id"
       @row-click="onRowClick"
       @request="fetchData"
@@ -17,6 +18,12 @@
       </template>
       <template v-slot:top>
         <q-btn icon="add" color="positive" :disable="loading" label="Add user" @click="addRow"/>
+        <q-space/>
+        <q-input dense debounce="300" color="primary" v-model="filter">
+          <template v-slot:append>
+            <q-icon name="search"/>
+          </template>
+        </q-input>
       </template>
       <template v-slot:body-cell-username="props">
         <q-td :props="props">
@@ -65,7 +72,7 @@
 </template>
 
 <script>
-import {USER_CREATE, USER_DELETE, USERS_GET_ALL} from '@/graphql/queries';
+import {USER_DELETE, USERS_GET_ALL} from '@/graphql/queries';
 import {defineComponent, onMounted, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import _ from 'lodash';
@@ -74,6 +81,8 @@ import {useRouter} from "vue-router";
 export default defineComponent({
   name: 'UserList',
   setup() {
+    const uri = '/admin/users'
+    const filter = ref('')
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
@@ -81,8 +90,8 @@ export default defineComponent({
     const confirmDelete = ref(false);
     const selectedRow = ref(null);
     const columns = [
-      {name: 'username', label: 'Username', field: 'username', sortable: true},
-      {name: 'status', label: 'Status', field: 'status', sortable: true},
+      {name: 'username', label: 'Username', field: 'username', align: 'left', sortable: true},
+      {name: 'status', label: 'Status', field: 'status', align: 'left', sortable: true},
       {name: 'actions', label: 'Actions', field: 'actions'},
     ];
     const pagination = ref({
@@ -118,6 +127,7 @@ export default defineComponent({
     return {
       rows,
       columns,
+      filter,
       pagination,
       loading,
       fetchData,
@@ -125,11 +135,11 @@ export default defineComponent({
       selectedRow,
       onRowClick: (evt, row) => {
         if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
-          router.push({path: `users/${row.id}/view`})
+          router.push({path: `${uri}/${row.id}/view`})
         }
       },
       onEdit: (row) => {
-        router.push({path: `users/${row.id}/edit`})
+        router.push({path: `${uri}/${row.id}/edit`})
       },
       onDelete: () => {
         client.mutate({
@@ -140,7 +150,7 @@ export default defineComponent({
         });
       },
       addRow: () => {
-        router.push({path: `users/new`})
+        router.push({path: `${uri}/new`})
       },
     }
   }

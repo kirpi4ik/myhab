@@ -13,19 +13,27 @@
       @request="fetchData"
       binary-state-sort
     >
-      <template v-slot:header-cell-device>
-        <q-select v-model="filter" :options="deviceList" label="Device" map-options filled dense>
-          <q-icon name="cancel" @click.stop.prevent="filter = null" class="cursor-pointer text-blue"/>
-        </q-select>
+      <template v-slot:loading>
+        <q-inner-loading showing color="primary"/>
       </template>
       <template v-slot:top>
-        <q-btn icon="add" color="positive" :disable="loading" label="Add port" @click="addRow"/>
+        <q-btn icon="add" color="positive" :disable="loading" label="Add category" @click="addRow"/>
         <q-space/>
         <q-input dense debounce="300" color="primary" v-model="filter">
           <template v-slot:append>
             <q-icon name="search"/>
           </template>
         </q-input>
+      </template>
+      <template v-slot:body-cell-code="props">
+        <q-td :props="props">
+          <q-badge :label="props.value" class="text-weight-bold text-blue-6 text-h6 bg-transparent"/>
+        </q-td>
+      </template>
+      <template v-slot:body-cell-name="props">
+        <q-td :props="props">
+          <q-badge :label="props.value" class="text-weight-bold text-blue-6 text-h6 bg-transparent"/>
+        </q-td>
       </template>
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
@@ -41,61 +49,48 @@
 import {defineComponent, onMounted, ref} from "vue";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
-import {DEVICE_DELETE, PORT_LIST_ALL} from "@/graphql/queries";
+import {PERIPHERAL_CATEGORIES, PERIPHERAL_DELETE} from "@/graphql/queries";
 import _ from "lodash";
 
 export default defineComponent({
-  name: 'PortList',
+  name: 'PCategoryList',
   setup() {
-    const uri = '/admin/ports'
+    const uri = '/admin/pcategories'
+    const filter = ref('')
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
-    const rows = ref([]);
-    const deviceList = ref([]);
+    const rows = ref();
     const confirmDelete = ref(false);
     const selectedRow = ref(null);
-    const filter = ref('')
-    const filterDevice = ref('')
     const columns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'device', label: 'Device', field: 'device', align: 'left', sortable: true, filter_type: 'select'},
-      {name: 'internalRef', label: 'RefId', field: 'internalRef', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
-      {name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true, filter_type: 'select'},
-      {name: 'value', label: 'Val', field: 'value'},
-      {name: 'actions', label: 'Actions', field: 'actions'}
+      {name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true},
+      {name: 'actions', label: 'Actions', field: 'actions'},
     ];
     const pagination = ref({
-      sortBy: 'id',
-      descending: true,
+      sortBy: 'code',
+      descending: false,
       page: 1,
       rowsPerPage: 10
     })
     const fetchData = () => {
       loading.value = true;
       client.query({
-        query: PORT_LIST_ALL,
+        query: PERIPHERAL_CATEGORIES,
         variables: {},
         fetchPolicy: 'network-only',
       }).then(response => {
-        deviceList.value = _.transform(response.data.deviceList,
+        rows.value = _.transform(response.data.peripheralCategoryList,
           function (result, value, key) {
-            result.push(value.code)
-          })
-        rows.value = _.transform(response.data.devicePortList,
-          function (result, value, key) {
-            let port = {
+            let device = {
               id: value.id,
-              internalRef: value.internalRef,
+              title: value.title,
               name: value.name,
-              description: value.description,
-              value: value.value,
-              type: value.type,
-              device: (value.device.id + ' | ' + value.device.code)
+              description: value.description
             }
-            result.push(port)
+            result.push(device)
           }
         );
         loading.value = false;
@@ -106,12 +101,11 @@ export default defineComponent({
     })
     return {
       rows,
-      deviceList,
       columns,
+      filter,
       pagination,
       loading,
       fetchData,
-      filter,
       confirmDelete,
       selectedRow,
       onRowClick: (evt, row) => {
@@ -124,7 +118,7 @@ export default defineComponent({
       },
       onDelete: () => {
         client.mutate({
-          mutation: DEVICE_DELETE,
+          mutation: PERIPHERAL_DELETE,
           variables: {id: selectedRow.value.id},
         }).then(response => {
           fetchData()

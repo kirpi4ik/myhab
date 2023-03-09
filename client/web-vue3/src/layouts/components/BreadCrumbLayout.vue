@@ -36,8 +36,8 @@
 </template>
 <script>
 import {defineComponent, ref} from 'vue';
-import {useApolloClient, useQuery, useQueryLoading} from '@vue/apollo-composable';
-import {NAV_BREADCRUMB, USERS_GET_ALL} from '@/graphql/queries';
+import {useApolloClient} from '@vue/apollo-composable';
+import {NAV_BREADCRUMB} from '@/graphql/queries';
 import {useRoute} from 'vue-router';
 import _ from "lodash";
 

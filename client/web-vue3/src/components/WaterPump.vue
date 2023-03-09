@@ -14,7 +14,7 @@
   </q-card>
 </template>
 <script>
-import {defineComponent, toRefs} from 'vue';
+import {defineComponent} from 'vue';
 import EventLogger from "components/EventLogger";
 import Toggle from "@vueform/toggle";
 

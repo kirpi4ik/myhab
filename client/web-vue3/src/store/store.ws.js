@@ -1,6 +1,6 @@
-import { Utils } from '@/_helpers';
-import { Client } from '@stomp/stompjs';
-import { authzService } from '@/_services';
+import {Utils} from '@/_helpers';
+import {Client} from '@stomp/stompjs';
+import {authzService} from '@/_services';
 import SockJS from 'sockjs-client';
 
 const state = {

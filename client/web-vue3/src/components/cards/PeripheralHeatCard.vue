@@ -36,20 +36,20 @@
 </template>
 <script>
 import _ from 'lodash';
-import { useStore } from 'vuex';
-import { heatService } from '@/_services/controls';
+import {useStore} from 'vuex';
+import {heatService} from '@/_services/controls';
 import EventLogger from 'components/EventLogger.vue';
-import { computed, defineComponent, toRefs, watch } from 'vue';
+import {computed, defineComponent, toRefs, watch} from 'vue';
 import Toggle from '@vueform/toggle';
-import { format } from 'date-fns';
+import {format} from 'date-fns';
 import humanizeDuration from 'humanize-duration';
-import { useApolloClient, useGlobalQueryLoading, useMutation } from '@vue/apollo-composable';
+import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
 import {
-	CACHE_DELETE,
-	CACHE_GET_VALUE,
-	CONFIGURATION_REMOVE_CONFIG_BY_KEY,
-	CONFIGURATION_SET_VALUE,
-	PERIPHERAL_GET_BY_ID,
+  CACHE_DELETE,
+  CACHE_GET_VALUE,
+  CONFIGURATION_REMOVE_CONFIG_BY_KEY,
+  CONFIGURATION_SET_VALUE,
+  PERIPHERAL_GET_BY_ID,
 } from '@/graphql/queries';
 
 export default defineComponent({

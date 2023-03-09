@@ -1,5 +1,6 @@
 <template>
-  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" show-if-above bordered class="bg-grey-9 text-white">
+  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" bordered persistent
+            class="bg-grey-9 text-white">
     <template v-slot:mini>
       <q-scroll-area class="fit mini-slot cursor-pointer">
         <div class="q-py-lg">
@@ -23,6 +24,7 @@
           </q-item-section>
         </q-item>
         <q-expansion-item
+          v-model="expanded"
           icon="mdi-clipboard-edit-outline"
           :label="$t('navigation.infrastructure')"
           class="text-weight-bolder text-white"
@@ -36,22 +38,65 @@
                 <q-item-label>{{ $t('navigation.users') }}</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item to="/admin/devices" active-class="q-item-no-link-highlighting">
+
+            <q-expansion-item
+              icon="mdi-devices"
+              :label="$t('navigation.devices')"
+              class="text-weight-bolder text-white"
+            >
+              <q-list class="q-pl-lg text-weight-light">
+                <q-item to="/admin/devices" active-class="q-item-no-link-highlighting">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-view-list"/>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ $t('navigation.devices') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item to="/admin/dcategories" active-class="q-item-no-link-highlighting">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-shape"/>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ $t('navigation.peripheral.categories') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-expansion-item>
+
+            <q-item to="/admin/ports" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-devices"/>
+                <q-icon name="mdi-connection"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>{{ $t('navigation.devices') }}</q-item-label>
+                <q-item-label>{{ $t('navigation.ports.list') }}</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item to="/admin/peripherals" active-class="q-item-no-link-highlighting">
-              <q-item-section avatar>
-                <q-icon name="mdi-light-switch"/>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ $t('navigation.peripherals') }}</q-item-label>
-              </q-item-section>
-            </q-item>
+            <q-expansion-item
+              icon="mdi-power-socket-au"
+              :label="$t('navigation.peripherals')"
+              class="text-weight-bolder text-white"
+            >
+              <q-list class="q-pl-lg text-weight-light">
+                <q-item to="/admin/peripherals" active-class="q-item-no-link-highlighting">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-view-list"/>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ $t('navigation.peripheral.list') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item to="/admin/pcategories" active-class="q-item-no-link-highlighting">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-shape"/>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ $t('navigation.peripheral.categories') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-expansion-item>
+
             <q-item to="/admin/cables" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="mdi-cable-data"/>
@@ -60,9 +105,17 @@
                 <q-item-label>{{ $t('navigation.cables') }}</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting" >
+            <q-item to="/admin/zones" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-cable-data"/>
+                <q-icon name="mdi-map-marker-multiple"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.zones') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-graphql"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.graphiql') }}</q-item-label>
@@ -93,57 +146,68 @@
         unelevated
         color="grey-8"
         icon="chevron_left"
-        @click="miniState = true"
+        @click="drawerClick2"
       />
     </div>
   </q-drawer>
 </template>
 <script>
-  import {defineComponent, ref} from 'vue';
-  import {useUiState} from '@/composables';
+import {defineComponent, ref} from 'vue';
+import {useUiState} from '@/composables';
+import {Platform} from "quasar";
 
-  export default defineComponent({
-    name: 'SideBarLayout',
-    setup() {
-      const miniState = ref(true)
-      const {isSidebarOpen} = useUiState();
-      const prjVersion = process.env.PRJ_VERSION;
-      const graphiqlUrl = process.env.BCK_SERVER_URL + '/graphql/browser';
+export default defineComponent({
+  name: 'SideBarLayout',
+  setup() {
+    const miniState = ref(Platform.is.mobile)
+    const {isSidebarOpen} = useUiState();
+    const prjVersion = process.env.PRJ_VERSION;
+    const graphiqlUrl = process.env.BCK_SERVER_URL + '/graphql/browser';
 
-      return {
-        miniState,
-        isSidebarOpen,
-        prjVersion,
-        graphiqlUrl,
-        drawerClick(e) {
-          if (miniState.value) {
-            miniState.value = false
-            e.stopPropagation()
-          }
+    const expanded = ref(true)
+    return {
+      expanded,
+      miniState,
+      isSidebarOpen,
+      prjVersion,
+      graphiqlUrl,
+      drawerClick(e) {
+        if (miniState.value) {
+          miniState.value = false
+          e.stopPropagation()
         }
-      };
-    },
-    mounted() {
-      this.init();
-    },
-    methods: {
-      init() {
       },
-      onResize() {
-      },
+      drawerClick2(e) {
+        if (miniState.value) {
+          miniState.value = false
+          e.stopPropagation()
+        } else {
+          miniState.value = true
+        }
+      }
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
     },
-  });
+    onResize() {
+    },
+  },
+});
 </script>
 <style lang="sass" scoped>
-  .mini-slot
-    transition: background-color .28s
+.mini-slot
+  transition: background-color .28s
 
-    &:hover
-      background-color: rgba(0, 0, 0, .04)
+  &:hover
+    background-color: rgba(0, 0, 0, .04)
 
-    .mini-icon
-      font-size: 1.718em
+  .mini-icon
+    font-size: 1.718em
 
-      & + &
-        margin-top: 18px
+    & + &
+      margin-top: 18px
 </style>

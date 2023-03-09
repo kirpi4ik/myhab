@@ -1,6 +1,6 @@
-import { PUSH_EVENT } from '@/graphql/queries';
-import { authzService } from '@/_services';
-import { apolloProvider } from '@/boot/graphql';
+import {PUSH_EVENT} from '@/graphql/queries';
+import {authzService} from '@/_services';
+import {apolloProvider} from '@/boot/graphql';
 
 export const lightService = {
 	toggle,

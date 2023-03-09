@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client/core';
+import {gql} from '@apollo/client/core';
 
 export const CONFIGURATION_SET_VALUE = gql`
 	mutation ($key: String!, $entityId: Long!, $entityType: EntityType!, $value: String!) {

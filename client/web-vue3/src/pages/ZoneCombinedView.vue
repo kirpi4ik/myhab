@@ -13,15 +13,15 @@
 </template>
 
 <script>
-import { peripheralService } from '@/_services/controls';
+import {peripheralService} from '@/_services/controls';
 import ZoneCard from '@/components/cards/ZoneCard';
 import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
 import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
-import { CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID } from '@/graphql/queries';
-import { useApolloClient, useQuery } from '@vue/apollo-composable';
-import { useRoute } from 'vue-router';
+import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID} from '@/graphql/queries';
+import {useApolloClient, useQuery} from '@vue/apollo-composable';
+import {useRoute} from 'vue-router';
 import _ from 'lodash';
-import { ref } from 'vue';
+import {ref} from 'vue';
 
 export default {
 	components: {
