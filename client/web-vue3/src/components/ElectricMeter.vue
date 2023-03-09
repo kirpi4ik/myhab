@@ -141,8 +141,12 @@
 <script>
 
 import {computed, defineComponent, onMounted, ref, toRefs, watch} from 'vue';
-import {CONFIG_GLOBAL_GET_STRING_VAL, DEVICE_GET_BY_ID_WITH_PORT_VALUES, TIMESERIES_GET_LATEST_BY_KEYS} from '@/graphql/queries';
-import {useApolloClient, useQuery} from "@vue/apollo-composable";
+import {
+  CONFIG_GLOBAL_GET_STRING_VAL,
+  DEVICE_GET_BY_ID_WITH_PORT_VALUES,
+  TIMESERIES_GET_LATEST_BY_KEYS
+} from '@/graphql/queries';
+import {useApolloClient} from "@vue/apollo-composable";
 import {useStore} from "vuex";
 import _ from "lodash";
 
@@ -202,7 +206,7 @@ export default defineComponent({
         deviceDetails.value = _.reduce(
           data.data.device.ports,
           function (hash, value) {
-            hash[value['internalRef'].toString()] = ref(value);
+            hash[value['internalRef'].toString()] = ref(_.cloneDeep(value));
             return hash;
           },
           {},

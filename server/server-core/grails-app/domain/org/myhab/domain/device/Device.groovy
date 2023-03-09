@@ -15,7 +15,7 @@ class Device extends BaseEntity implements Configurable<Device> {
     String code
     String name
     DeviceModel model
-    DeviceType type
+    DeviceCategory type
     DeviceStatus status
     String description
     String offlineScenario
@@ -26,7 +26,7 @@ class Device extends BaseEntity implements Configurable<Device> {
     List<DeviceBackup> backups
     Set<Zone> zones
 
-    static belongsTo = [rack: Rack, type: DeviceType]
+    static belongsTo = [rack: Rack, type: DeviceCategory]
     static hasMany = [authAccounts: DeviceAccount, zones: Zone, ports: DevicePort, backups: DeviceBackup]
 
     static mapping = {

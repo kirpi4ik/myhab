@@ -19,14 +19,14 @@
   </q-card>
 </template>
 <script>
-  import {defineComponent} from 'vue';
-  import {authzService} from '@/_services';
-  import {Role} from '@/_helpers';
-  import {useRoute, useRouter} from 'vue-router';
-  import HeatScheduler from '@/components/HeatScheduler';
-  import TempDisplay from '@/components/TempDisplay';
+import {defineComponent} from 'vue';
+import {authzService} from '@/_services';
+import {Role} from '@/_helpers';
+import {useRoute, useRouter} from 'vue-router';
+import HeatScheduler from '@/components/HeatScheduler';
+import TempDisplay from '@/components/TempDisplay';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'ZoneCard',
     props: {
       zone: Object,

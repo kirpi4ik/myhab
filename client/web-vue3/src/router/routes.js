@@ -134,6 +134,40 @@ const routes = [
         ],
       },
       {
+        path: adminPrefix + '/dcategories',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "dcategories"
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/device/categories/CategoryList'),
+          },
+          {
+            path: adminPrefix + '/dcategories/new',
+            component: () => import('pages/infra/device/categories/CategoryNew'),
+            meta: {
+              name: "new"
+            }
+          },
+          {
+            path: adminPrefix + '/dcategories/:idPrimary/view',
+            component: () => import('pages/infra/device/categories/CategoryView'),
+            meta: {
+              name: "details"
+            }
+          },
+          {
+            path: adminPrefix + '/dcategories/:idPrimary/edit',
+            component: () => import('pages/infra/device/categories/CategoryEdit'),
+            meta: {
+              name: "edit"
+            }
+          },
+        ],
+      },
+      {
         path: adminPrefix + '/peripherals',
         component: () => import('layouts/CenterLayout'),
         meta: {
@@ -167,6 +201,41 @@ const routes = [
           },
         ],
       },
+      {
+        path: adminPrefix + '/pcategories',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "peripherals"
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/peripheral/categories/CategoryList'),
+          },
+          {
+            path: adminPrefix + '/pcategories/new',
+            component: () => import('pages/infra/peripheral/categories/CategoryNew'),
+            meta: {
+              name: "new"
+            }
+          },
+          {
+            path: adminPrefix + '/pcategories/:idPrimary/view',
+            component: () => import('pages/infra/peripheral/categories/CategoryView'),
+            meta: {
+              name: "details"
+            }
+          },
+          {
+            path: adminPrefix + '/pcategories/:idPrimary/edit',
+            component: () => import('pages/infra/peripheral/PeripheralEdit'),
+            meta: {
+              name: "edit"
+            }
+          },
+        ],
+      }
+      ,
       {
         path: adminPrefix + '/zones',
         component: () => import('layouts/CenterLayout'),

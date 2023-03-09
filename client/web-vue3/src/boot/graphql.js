@@ -1,12 +1,12 @@
-import { boot } from 'quasar/wrappers';
+import {boot} from 'quasar/wrappers';
 
-import { ApolloClients } from '@vue/apollo-composable';
-import { createApolloProvider } from '@vue/apollo-option';
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
-import { setContext } from '@apollo/client/link/context';
-import { onError } from '@apollo/client/link/error';
-import { authzService } from '@/_services';
-import { Utils } from '@/_helpers';
+import {ApolloClients} from '@vue/apollo-composable';
+import {createApolloProvider} from '@vue/apollo-option';
+import {ApolloClient, HttpLink, InMemoryCache} from '@apollo/client/core';
+import {setContext} from '@apollo/client/link/context';
+import {onError} from '@apollo/client/link/error';
+import {authzService} from '@/_services';
+import {Utils} from '@/_helpers';
 
 // Notice the use of the link-error tool from Apollo
 
@@ -57,7 +57,7 @@ const onErrorLink = onError(({ graphQLErrors, networkError, operation, forward }
 
 const apolloClient = new ApolloClient({
 	link: onErrorLink.concat(withAuthToken).concat(httpLink),
-	cache: new InMemoryCache(),
+	cache: new InMemoryCache({addTypename: false}),
 	connectToDevTools: true,
 });
 
