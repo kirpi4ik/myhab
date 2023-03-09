@@ -1,4 +1,4 @@
-import { authzService } from '@/_services';
+import {authzService} from '@/_services';
 
 export const requestOptions = {
 	get() {

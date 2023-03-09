@@ -73,11 +73,15 @@
 	</q-dialog>
 </template>
 <script>
-import { defineComponent, ref } from 'vue';
+import {defineComponent, ref} from 'vue';
 import slider from 'vue3-slider';
-import { useApolloClient } from '@vue/apollo-composable';
-import { CONFIGURATION_ADDLIST_CONFIG_VALUE, CONFIGURATION_GET_LIST_VALUE, CONFIGURATION_REMOVE_CONFIG } from '@/graphql/queries';
-import { apolloProvider } from 'boot/graphql';
+import {useApolloClient} from '@vue/apollo-composable';
+import {
+  CONFIGURATION_ADDLIST_CONFIG_VALUE,
+  CONFIGURATION_GET_LIST_VALUE,
+  CONFIGURATION_REMOVE_CONFIG
+} from '@/graphql/queries';
+import {apolloProvider} from 'boot/graphql';
 
 export default defineComponent({
 	name: 'HeatScheduler',

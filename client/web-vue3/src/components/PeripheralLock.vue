@@ -37,9 +37,9 @@
 </template>
 <script>
 import EventLogger from 'components/EventLogger.vue';
-import { defineComponent, ref } from 'vue';
-import { PERIPHERAL_GET_BY_ID, PUSH_EVENT } from '@/graphql/queries';
-import { authzService } from '@/_services';
+import {defineComponent, ref} from 'vue';
+import {PERIPHERAL_GET_BY_ID, PUSH_EVENT} from '@/graphql/queries';
+import {authzService} from '@/_services';
 import _ from 'lodash';
 
 export default defineComponent({
