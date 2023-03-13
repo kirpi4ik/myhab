@@ -144,7 +144,6 @@ export default defineComponent({
 					let payload = JSON.parse(wsMessage.value.jsonPayload);
 					if (portId == payload.p2) {
 						asset.value['value'] = payload.p4;
-            debugger
 						asset.value['state'] = payload.p4 === 'ON';
 						loadDetails();
 					}
