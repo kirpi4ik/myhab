@@ -8,7 +8,7 @@ function peripheralInit(cacheMap, peripheral) {
 			let port = peripheral.connectedTo[0];
 			if (port != null && port.device != null) {
 				peripheral['value'] = peripheral.connectedTo[0].value;
-				peripheral['state'] = peripheral.connectedTo[0].value === 'OFF';
+				peripheral['state'] = peripheral.connectedTo[0].value === 'ON';
 				peripheral['deviceState'] = peripheral.connectedTo[0].device.status;
 			} else {
 				peripheral['deviceState'] = 'OFFLINE';
