@@ -49,6 +49,10 @@ export const CABLE_LIST_ALL = gql`
         name
       }
     }
+    cableCategoryList{
+      id
+      name
+    }
   }
 `;
 export const CABLE_GET_BY_ID_CHILDS = gql`
