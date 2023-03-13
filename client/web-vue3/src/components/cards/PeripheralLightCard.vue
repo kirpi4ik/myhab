@@ -2,9 +2,9 @@
 	<q-card class="text-white" style="background: linear-gradient(#156cb8, #60a3c2)">
 		<q-item>
 			<q-item-section avatar>
-				<q-avatar size="60px" :class="asset['state'] ? 'shadow-10 bg-blue' : 'shadow-10 bg-yellow-4'">
-					<q-icon name="mdi-lightbulb-on" color="yellow-10" size="40px" v-if="!asset['state']" />
-					<q-icon name="mdi-lightbulb-off" color="white" size="40px" v-if="asset['state']" />
+				<q-avatar size="60px" :class="!asset['state'] ? 'shadow-10 bg-blue' : 'shadow-10 bg-yellow-4'">
+					<q-icon name="mdi-lightbulb-on" color="yellow-10" size="40px" v-if="asset['state']" />
+					<q-icon name="mdi-lightbulb-off" color="white" size="40px" v-if="!asset['state']" />
 				</q-avatar>
 			</q-item-section>
 
@@ -144,7 +144,8 @@ export default defineComponent({
 					let payload = JSON.parse(wsMessage.value.jsonPayload);
 					if (portId == payload.p2) {
 						asset.value['value'] = payload.p4;
-						asset.value['state'] = payload.p4 === 'OFF';
+            debugger
+						asset.value['state'] = payload.p4 === 'ON';
 						loadDetails();
 					}
 				} else if (wsMessage.value.eventName == 'evt_cfg_value_changed') {

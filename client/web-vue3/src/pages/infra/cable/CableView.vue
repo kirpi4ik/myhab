@@ -7,8 +7,10 @@
         </q-avatar>
         <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
       </q-card-section>
-      <q-card-section>
+      <q-card-section class="row">
         <div class="text-h4 text-secondary">Cable details</div>
+        <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'"
+               style="margin-left: 5px"/>
       </q-card-section>
       <q-item>
         <q-item-section>
@@ -60,11 +62,11 @@
           <q-item-label class="text-h6">Patch panel</q-item-label>
           <div class="row q-col-gutter-lg">
             <div class="row">
-              <div>Name: </div>
+              <div>Name:</div>
               <div class="text-grey-8"> {{ viewItem.patchPanel.name }}</div>
             </div>
             <div class="row">
-              <div>Port: </div>
+              <div>Port:</div>
               <div class="text-grey-8"> {{ viewItem.patchPanelPort }}/{{ viewItem.patchPanel.size }}</div>
             </div>
           </div>

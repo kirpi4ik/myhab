@@ -33,7 +33,7 @@
         >
         </q-btn>
         <q-btn round dense flat color="secondary" icon="notifications">
-          <q-badge color="negative" text-color="primary" floating> 5</q-badge>
+          <q-badge color="negative" text-color="white" floating> 5</q-badge>
           <q-menu>
             <q-list style="min-width: 100px">
               <user-messages></user-messages>

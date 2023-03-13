@@ -25,6 +25,11 @@
           </template>
         </q-input>
       </template>
+      <template v-slot:header-cell-category>
+        <q-select v-model="filter" :options="categoryList" label="Category" map-options filled dense>
+          <q-icon name="cancel" @click.stop.prevent="filter = null" class="cursor-pointer text-blue"/>
+        </q-select>
+      </template>
       <template v-slot:body-cell-code="props">
         <q-td :props="props">
           <q-badge :label="props.value" class="text-weight-bold text-blue-6 text-h6 bg-transparent"/>
@@ -63,8 +68,10 @@ export default defineComponent({
     const rows = ref();
     const confirmDelete = ref(false);
     const selectedRow = ref(null);
+    const categoryList = ref([]);
     const columns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true},
       {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
       {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
       {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', align: 'left', sortable: true},
@@ -83,11 +90,16 @@ export default defineComponent({
         variables: {},
         fetchPolicy: 'network-only',
       }).then(response => {
+        categoryList.value = _.transform(response.data.cableCategoryList,
+          function (result, value, key) {
+            result.push(value.name)
+          })
         rows.value = [];
         rows.value = _.transform(response.data.cableList,
           function (result, value, key) {
             let device = {
               id: value.id,
+              category: value.category != null ? value.category.name : "",
               code: value.code,
               description: value.description,
               patchPanel: value.patchPanel != null ? (value.patchPanel.name + '(' + value.patchPanelPort + '/' + value.patchPanel.size + ')') : ''
@@ -110,6 +122,7 @@ export default defineComponent({
       fetchData,
       confirmDelete,
       selectedRow,
+      categoryList,
       onRowClick: (evt, row) => {
         if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
           router.push({path: `${uri}/${row.id}/view`})
