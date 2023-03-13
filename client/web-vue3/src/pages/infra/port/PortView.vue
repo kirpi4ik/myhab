@@ -7,8 +7,10 @@
         </q-avatar>
         <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
       </q-card-section>
-      <q-card-section>
-        <div class="text-h4 text-secondary">Port details</div>
+      <q-card-section class="row">
+          <div class="text-h4 text-secondary">Port details</div>
+          <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'"
+                 style="margin-left: 5px"/>
       </q-card-section>
       <q-expansion-item v-if="viewItem.device" class="bg-green-2"
                         expand-separator
@@ -26,7 +28,8 @@
             {{ viewItem.device.description }}
           </q-item-label>
           <q-item-label class="text-h5">
-            <q-btn icon="mdi-eye" :to="'/admin/devices/'+viewItem.device.id+'/view'" size="xs" label="Details" color="blue-4" />
+            <q-btn icon="mdi-eye" :to="'/admin/devices/'+viewItem.device.id+'/view'" size="xs" label="Details"
+                   color="blue-4"/>
           </q-item-label>
         </q-item-section>
       </q-expansion-item>
