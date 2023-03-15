@@ -93,8 +93,13 @@ export const PERIPHERAL_GET_BY_ID = gql`
       connectedTo {
         id
         name
+        value
         internalRef
+        device {
+          status
+        }
       }
+
       configurations {
         id
         key
