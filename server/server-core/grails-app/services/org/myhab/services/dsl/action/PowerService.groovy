@@ -29,7 +29,7 @@ class PowerService implements EventPublisher {
             }
 
             ports.each { p ->
-                log.debug("light on ${p}")
+                log.debug("power switch : ${p} - ${params.action}")
                 mqttTopicService.publish(p, [params.action])
             }
         }
