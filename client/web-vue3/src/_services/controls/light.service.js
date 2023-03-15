@@ -12,7 +12,7 @@ function toggle(peripheral) {
 		p1: 'PERIPHERAL',
 		p2: peripheral.id,
 		p3: 'mweb',
-		p4: peripheral.state === true ? 'off' : 'on',
+		p4: peripheral.state === true ? 'on' : 'off',
 		p6: authzService.currentUserValue.login,
 	};
 	apolloProvider.defaultClient
