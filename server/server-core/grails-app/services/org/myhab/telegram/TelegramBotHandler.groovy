@@ -1,6 +1,11 @@
 package org.myhab.telegram
 
+import grails.events.EventPublisher
 import org.myhab.config.ConfigProvider
+import org.myhab.domain.EntityType
+import org.myhab.domain.events.TopicName
+import org.myhab.domain.job.EventData
+import org.myhab.services.UserService
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.methods.ParseMode
@@ -13,12 +18,15 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 
 /**
  * Emoji
- * https://apps.timwhitlock.info/emoji/tables/unicode
- * https://codepoints.net/U+1F680
+ * https://emojipedia.org/
+ * https://www.russellcottrell.com/greek/utilities/SurrogatePairCalculator.htm
  */
 @Component
-class TelegramBotHandler extends TelegramLongPollingBot {
+class TelegramBotHandler extends TelegramLongPollingBot implements EventPublisher {
     ConfigProvider configProvider
+    UserService userService
+
+    def cmdContext = [];
 
     @Override
     public String getBotUsername() {
@@ -30,24 +38,68 @@ class TelegramBotHandler extends TelegramLongPollingBot {
         return configProvider.get(String.class, "telegram.token");
     }
 
-    private final String GATE_OPEN_LABEL = "Deschide poarta";
-    private final String TEMP_WATER_LABEL = "Temperatura apa calda";
-    private final String TEMP_INT_EXT_LABEL = "Informatii temperatura ambient";
-
     private enum COMMANDS {
-        HELP("/help"),
-        TEMP_INT_EXT("/temp all"),
-        GATE("/gate"),
-        TEMP_WATER("/temp water");
+        YES("/yes", "DA"),
+        NO("/no", "NU"),
+        ON("/on", "Aprinde"),
+        OFF("/off", "Stinge"),
+        HELP("/help", "Ajutor", false),
+        GATE("/gate", "Deschide poarta", true),
+        LIGHT("/light", "Iluminat", true),
+        LIGHT_EXT("/light ext", "Iluminat exterior", false),
+        LIGHT_EXT_ALL("/light ext all", "Iluminat Tot", false),
+        LIGHT_EXT_TERRACE("/light ext terrace", "Iluminat terasa", false),
+        LIGHT_EXT_ENTRANCE("/light ext entrance", "Iluminat terasa", false),
+        LIGHT_INT("/light int", "Iluminat interior", false),
+        WATER_EXT("/water", "Apa exterior", true);
 
-        private String command;
+        private final String command
+        private final String label
+        private final boolean selectable
 
-        COMMANDS(String command) {
+        COMMANDS(def command, def label, selectable = false) {
+            this.selectable = selectable
+            this.label = label
             this.command = command;
+        }
+
+        static COMMANDS valueOfString(String cmdText) {
+            return values().find { it.command.equalsIgnoreCase(cmdText) }
         }
 
         public String getCommand() {
             return command;
+        }
+    }
+
+    private SendMessage getCommandResponse(String text, User user, String chatId) throws TelegramApiException {
+        def cmd = COMMANDS.valueOfString(text)
+        if (cmd) {
+            cmdContext << cmd
+        }
+        switch (cmd) {
+            case COMMANDS.GATE: {
+                return handleGateCommand(user)
+            }
+            case [COMMANDS.LIGHT]: {
+                return handleLightLevel1Command(cmd, user)
+            }
+            case [COMMANDS.LIGHT_EXT]: {
+                return handleLightLevel2ExtCommand(cmd, user)
+            }
+            case [COMMANDS.LIGHT_EXT_ALL, COMMANDS.LIGHT_EXT_TERRACE, COMMANDS.LIGHT_EXT_ENTRANCE]: {
+                return handleLightOptionCmd(user)
+            };
+            case COMMANDS.YES: {
+                return handleConfirmYesCommand(user)
+            };
+            case COMMANDS.NO: {
+                return handleConfirmNOCommand(user)
+            };
+            case [COMMANDS.ON, COMMANDS.OFF]: {
+                return handleConfirmONOFFCommand(user)
+            }
+            default: return handleNotFoundCommand();
         }
     }
 
@@ -107,75 +159,205 @@ class TelegramBotHandler extends TelegramLongPollingBot {
         execute(messageSupport);
     }
 
-    private SendMessage getCommandResponse(String text, User user, String chatId) throws TelegramApiException {
-        switch (text) {
-            case COMMANDS.GATE.getCommand(): return handleGateCommand();
-            case COMMANDS.TEMP_WATER.getCommand(): return handleInfoTempCommand();
-            case COMMANDS.HELP.getCommand(): return handleStartCommand();
-            case COMMANDS.TEMP_INT_EXT.getCommand(): return handleStartCommand();
-            default: return handleNotFoundCommand();
-        }
-    }
 
     private SendMessage handleNotFoundCommand() {
         SendMessage message = new SendMessage();
-        message.setText("Comanda invalida");
-        message.setReplyMarkup(getKeyboard());
+        message.setText("⛔ Comanda invalida 😒");
+        message.setReplyMarkup(mainMenuKeyboard());
         return message;
     }
 
-    private SendMessage handleStartCommand() {
+    private SendMessage handleStartCommand(User user) {
         SendMessage message = new SendMessage();
         message.setText("Comenzi disponibile:");
-        message.setReplyMarkup(getKeyboard());
+        message.setReplyMarkup(mainMenuKeyboard());
         return message;
     }
 
-    private SendMessage handleGateCommand() {
+    private SendMessage handleConfirmYesCommand(User user) {
+        def message = new SendMessage()
+        if (cmdContext.size() > 1) {
+            switch (cmdContext[cmdContext.size() - 2]) {
+                case COMMANDS.GATE: {
+                    if (userService.tgUserHasAnyRole(user.userName, ["ROLE_USER", "ROLE_ADMIN"])) {
+                        /*               publish(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), new EventData().with {
+                                           p0 = TopicName.EVT_INTERCOM_DOOR_LOCK.id()
+                                           p1 = PERIPHERAL.name()
+                                           p2 = configProvider.get(Integer.class, "specialDevices.doorLockMain.peripheral.id")
+                                           p3 = "Telegram bot: ${user.userName}"
+                                           p4 = "open"
+                                           p5 = "{\"unlockCode\": \"$user.firstName $user.lastName\"}"
+                                           p6 = myHabUser?.username
+                                           it
+                                       })*/
+                        message.setText("Poarta a fost deschisa 🔓 ")
+                    } else {
+                        message.setText("⛔ Nu aveti suficient drepturi 😒")
+                    }
+                    cmdContext = []
+                    break
+                }
+            }
+        } else {
+            message.setText("⛔ Comanda invalida 😒")
+            message.setReplyMarkup(mainMenuKeyboard());
+        }
+        message
+    }
+
+    private SendMessage handleConfirmNOCommand(User user) {
+        def message = new SendMessage()
+        if (cmdContext.size() > 1) {
+            message.setText("Comanda `<i>${(cmdContext[cmdContext.size() - 2] as COMMANDS).label}</i>` anulata de " + user.userName)
+            cmdContext = []
+        } else {
+            message.setText("⛔ Comanda invalida 😒")
+            message.setReplyMarkup(mainMenuKeyboard());
+            cmdContext = []
+        }
+        return message
+    }
+
+    private SendMessage handleConfirmONOFFCommand(User user) {
+        def actionCmd = (cmdContext[cmdContext.size() - 1] as COMMANDS)
+        def message = new SendMessage()
+        Integer id
+        if (cmdContext.size() > 1) {
+            def previousCmd = cmdContext[cmdContext.size() - 2] as COMMANDS
+            switch (previousCmd) {
+                case COMMANDS.LIGHT_EXT_ALL: {
+                    id = configProvider.get(Integer.class, "specialDevices.light.ext.all.peripheral.id")
+                    break
+                }
+                case COMMANDS.LIGHT_EXT_TERRACE: {
+                    id = configProvider.get(Integer.class, "specialDevices.light.ext.terrace.peripheral.id")
+                    break
+                } case COMMANDS.LIGHT_EXT_ENTRANCE: {
+                    id = configProvider.get(Integer.class, "specialDevices.light.ext.entrance.peripheral.id")
+                    break
+                }
+            }
+
+            if (userService.tgUserHasAnyRole(user.userName, ["ROLE_USER", "ROLE_ADMIN"])) {
+                publish(TopicName.EVT_LIGHT.id(), new EventData().with {
+                    p0 = TopicName.EVT_LIGHT.id()
+                    p1 = EntityType.PERIPHERAL.name()
+                    p2 = id
+                    p3 = "Telegram bot: ${user.userName}"
+                    p4 = actionCmd == COMMANDS.ON ? "on" : actionCmd == COMMANDS.OFF ? "off" : "toggle"
+                    p5 = "{\"user\": \"$user.firstName $user.lastName\"}"
+                    p6 = user.userName
+                    it
+                })
+                if (actionCmd == COMMANDS.ON) {
+                    message.setText("Lumina a fost aprinsa pentru `${(cmdContext[cmdContext.size() - 2] as COMMANDS).label}`")
+                } else {
+                    message.setText("Lumina a fost stinsa pentru `${(cmdContext[cmdContext.size() - 2] as COMMANDS).label}` ")
+                }
+            } else {
+                message.setText("⛔ Nu aveti suficient drepturi 😒")
+            }
+            cmdContext = []
+
+        } else {
+            message.setText("⛔ Comanda invalida 😒")
+            message.setReplyMarkup(mainMenuKeyboard());
+        }
+        message
+    }
+
+    private SendMessage handleGateCommand(User user) {
         SendMessage message = new SendMessage();
-        message.setText("Deschidere poarta !");
-        message.setReplyMarkup(getKeyboard());
+        message.setText("❗ Doriti sa deschideti poarta ❗❓");
+        message.setReplyMarkup(getConfirmationKeyboard());
         return message;
     }
 
-    private SendMessage handleInfoTempCommand() {
+    private static InlineKeyboardMarkup getConfirmationKeyboard() {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton inlineKeyboardButtonYES = new InlineKeyboardButton();
+        inlineKeyboardButtonYES.setText("✅ $COMMANDS.YES.label");
+        inlineKeyboardButtonYES.setCallbackData(COMMANDS.YES.getCommand());
+
+        InlineKeyboardButton inlineKeyboardButtonNO = new InlineKeyboardButton();
+        inlineKeyboardButtonNO.setText("⛔ $COMMANDS.NO.label");
+        inlineKeyboardButtonNO.setCallbackData(COMMANDS.NO.getCommand());
+
+        inlineKeyboardMarkup.setKeyboard([[inlineKeyboardButtonYES, inlineKeyboardButtonNO]]);
+
+        return inlineKeyboardMarkup;
+    }
+
+    private SendMessage handleLightOptionCmd(User user) {
         SendMessage message = new SendMessage();
-        message.setText("Tmperatura interior/exterior : xx C");
-        message.setReplyMarkup(getKeyboard());
+        message.setText("💡 Iluminat `${(cmdContext[cmdContext.size() - 1] as COMMANDS).label}` 💡");
+        message.setReplyMarkup(getOnOfKeyboard());
         return message;
     }
 
-    private InlineKeyboardMarkup getKeyboard() {
+    private static InlineKeyboardMarkup getOnOfKeyboard() {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton inlineKeyboardButtonON = new InlineKeyboardButton();
+        inlineKeyboardButtonON.setText(" ☀️ $COMMANDS.ON.label");
+        inlineKeyboardButtonON.setCallbackData(COMMANDS.ON.getCommand());
+
+        InlineKeyboardButton inlineKeyboardButtonOFF = new InlineKeyboardButton();
+        inlineKeyboardButtonOFF.setText("🌙 $COMMANDS.OFF.label");
+        inlineKeyboardButtonOFF.setCallbackData(COMMANDS.OFF.getCommand());
+
+        inlineKeyboardMarkup.setKeyboard([[inlineKeyboardButtonON, inlineKeyboardButtonOFF]]);
+
+        return inlineKeyboardMarkup;
+    }
+
+    private SendMessage handleLightLevel1Command(cmd, User user) {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton lightExtBtn = new InlineKeyboardButton();
+        lightExtBtn.setText("💡 $COMMANDS.LIGHT_EXT.label");
+        lightExtBtn.setCallbackData(COMMANDS.LIGHT_EXT.command);
+
+        InlineKeyboardButton lightIntBtn = new InlineKeyboardButton();
+        lightIntBtn.setText("💡 $COMMANDS.LIGHT_INT.label");
+        lightIntBtn.setCallbackData(COMMANDS.LIGHT_INT.command);
+
+        inlineKeyboardMarkup.setKeyboard([[lightExtBtn], [lightIntBtn]]);
+        SendMessage message = new SendMessage();
+        message.setText("💡 $COMMANDS.LIGHT.label 💡");
+        message.setReplyMarkup(inlineKeyboardMarkup);
+        return message;
+    }
+
+    private SendMessage handleLightLevel2ExtCommand(cmd, User user) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
+        InlineKeyboardButton allBtn = new InlineKeyboardButton();
+        allBtn.setText("💡 $COMMANDS.LIGHT_EXT_ALL.label");
+        allBtn.setCallbackData(COMMANDS.LIGHT_EXT_ALL.command);
 
-        InlineKeyboardButton inlineKeyboardButtonAccess = new InlineKeyboardButton();
-        inlineKeyboardButtonAccess.setText(GATE_OPEN_LABEL);
-        inlineKeyboardButtonAccess.setCallbackData(COMMANDS.GATE.getCommand());
+        InlineKeyboardButton terraceBtn = new InlineKeyboardButton();
+        terraceBtn.setText("💡 $COMMANDS.LIGHT_EXT_TERRACE.label");
+        terraceBtn.setCallbackData(COMMANDS.LIGHT_EXT_TERRACE.command);
 
-        InlineKeyboardButton inlineKeyboardButtonDemo = new InlineKeyboardButton();
-        inlineKeyboardButtonDemo.setText(TEMP_INT_EXT_LABEL);
-        inlineKeyboardButtonDemo.setCallbackData(COMMANDS.TEMP_INT_EXT.getCommand());
+        InlineKeyboardButton entranceBtn = new InlineKeyboardButton();
+        entranceBtn.setText("💡 $COMMANDS.LIGHT_EXT_ENTRANCE.label");
+        entranceBtn.setCallbackData(COMMANDS.LIGHT_EXT_ENTRANCE.command);
 
-        InlineKeyboardButton inlineKeyboardButtonSuccess = new InlineKeyboardButton();
-        inlineKeyboardButtonSuccess.setText(TEMP_WATER_LABEL);
-        inlineKeyboardButtonSuccess.setCallbackData(COMMANDS.TEMP_WATER.getCommand());
+        inlineKeyboardMarkup.setKeyboard([[terraceBtn], [allBtn], [entranceBtn]]);
+        SendMessage message = new SendMessage();
+        message.setText("💡 $COMMANDS.LIGHT_EXT.label 💡");
+        message.setReplyMarkup(inlineKeyboardMarkup);
+        return message;
+    }
 
-        List<List<InlineKeyboardButton>> keyboardButtons = new ArrayList<>();
-
-        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
-        keyboardButtonsRow1.add(inlineKeyboardButtonAccess);
-
-        List<InlineKeyboardButton> keyboardButtonsRow2 = new ArrayList<>();
-        keyboardButtonsRow2.add(inlineKeyboardButtonSuccess);
-
-        List<InlineKeyboardButton> keyboardButtonsRow3 = new ArrayList<>();
-        keyboardButtonsRow3.add(inlineKeyboardButtonDemo);
-
-        keyboardButtons.add(keyboardButtonsRow1);
-        keyboardButtons.add(keyboardButtonsRow3);
-        keyboardButtons.add(keyboardButtonsRow2);
-
+    private InlineKeyboardMarkup mainMenuKeyboard() {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        def keyboardButtons = []
+        COMMANDS.values().findAll { it.selectable }.each { cmd ->
+            InlineKeyboardButton cmdButton = new InlineKeyboardButton();
+            cmdButton.setText(cmd.label);
+            cmdButton.setCallbackData(cmd.command);
+            keyboardButtons << [cmdButton]
+        }
         inlineKeyboardMarkup.setKeyboard(keyboardButtons);
 
         return inlineKeyboardMarkup;
