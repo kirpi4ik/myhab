@@ -180,16 +180,16 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
             switch (cmdContext[cmdContext.size() - 2]) {
                 case COMMANDS.GATE: {
                     if (userService.tgUserHasAnyRole(user.userName, ["ROLE_USER", "ROLE_ADMIN"])) {
-                        /*               publish(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), new EventData().with {
-                                           p0 = TopicName.EVT_INTERCOM_DOOR_LOCK.id()
-                                           p1 = PERIPHERAL.name()
-                                           p2 = configProvider.get(Integer.class, "specialDevices.doorLockMain.peripheral.id")
-                                           p3 = "Telegram bot: ${user.userName}"
-                                           p4 = "open"
-                                           p5 = "{\"unlockCode\": \"$user.firstName $user.lastName\"}"
-                                           p6 = myHabUser?.username
-                                           it
-                                       })*/
+                        publish(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), new EventData().with {
+                            p0 = TopicName.EVT_INTERCOM_DOOR_LOCK.id()
+                            p1 = EntityType.PERIPHERAL.name()
+                            p2 = configProvider.get(Integer.class, "specialDevices.doorLockMain.peripheral.id")
+                            p3 = "Telegram bot: ${user.userName}"
+                            p4 = "open"
+                            p5 = "{\"unlockCode\": \"$user.firstName $user.lastName\"}"
+                            p6 = user.userName
+                            it
+                        })
                         message.setText("Poarta a fost deschisa 🔓 ")
                     } else {
                         message.setText("⛔ Nu aveti suficient drepturi 😒")
