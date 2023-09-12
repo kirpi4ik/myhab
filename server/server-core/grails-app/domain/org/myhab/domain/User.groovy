@@ -29,6 +29,7 @@ class User extends BaseEntity {
     String firstName
     String lastName
     String name
+    String telegramUsername
     Set<PeripheralAccessToken> peripheralAccessTokens
 
     User(String username, String password) {
@@ -80,6 +81,7 @@ class User extends BaseEntity {
         lastName nullable: true
         email nullable: true
         phoneNr nullable: true
+        telegramUsername nullable: true
     }
 
     static hasMany = [favJobs: Job, peripheralAccessTokens: PeripheralAccessToken]
