@@ -73,6 +73,7 @@ grails:
       - chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam
     allowedOriginPatterns:
       - https://beta.*.app
+      - https://local.*.app
       - https://*.app
 
   mime:

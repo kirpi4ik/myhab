@@ -46,4 +46,14 @@ class UserService extends DefaultDataFetcher {
         }
     }
 
+    def userHasRole(String username, String roleName) {
+        def myHabUser = User.findByUsername(username)
+        return myHabUser != null ? myHabUser.authorities.stream().anyMatch { role -> role.authority.equals(roleName) }.booleanValue() : false
+    }
+
+    def tgUserHasAnyRole(String username, List roleNames) {
+        def myHabUser = User.findByTelegramUsername(username)
+        return myHabUser != null ? roleNames.any { roleName -> myHabUser.authorities.stream().anyMatch { role -> role.authority.equals(roleName) }.booleanValue() } : false
+    }
+
 }
