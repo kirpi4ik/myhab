@@ -43,7 +43,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         NO("/no", "NU"),
         ON("/on", "Aprinde"),
         OFF("/off", "Stinge"),
-        HELP("/help", "Ajutor", false),
+        HELP("/?", "Ajutor", false),
         GATE("/gate", "Deschide poarta", true),
         LIGHT("/light", "Iluminat", true),
         LIGHT_EXT("/light ext", "Iluminat exterior", false),
@@ -51,6 +51,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         LIGHT_EXT_TERRACE("/light ext terrace", "Iluminat terasa", false),
         LIGHT_EXT_ENTRANCE("/light ext entrance", "Iluminat terasa", false),
         LIGHT_INT("/light int", "Iluminat interior", false),
+        LIGHT_INT_CT("/light int ct", "Iluminat camera tehnica", false),
         WATER_EXT("/water", "Apa exterior", true);
 
         private final String command
@@ -73,33 +74,40 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
     }
 
     private SendMessage getCommandResponse(String text, User user, String chatId) throws TelegramApiException {
-        def cmd = COMMANDS.valueOfString(text)
-        if (cmd) {
-            cmdContext << cmd
-        }
-        switch (cmd) {
-            case COMMANDS.GATE: {
-                return handleGateCommand(user)
+        if (text.startsWith('/')) {
+            def cmd = COMMANDS.valueOfString(text)
+            if (cmd) {
+                cmdContext << cmd
+                switch (cmd) {
+                    case COMMANDS.HELP: {
+                        return handleStartCommand(user)
+                    } case COMMANDS.GATE: {
+                        return handleGateCommand(user)
+                    }
+                    case [COMMANDS.LIGHT]: {
+                        return handleLightLevel1Command(cmd, user)
+                    }
+                    case [COMMANDS.LIGHT_INT]: {
+                        return handleLightLevel2IntCommand(cmd, user)
+                    }
+                    case [COMMANDS.LIGHT_EXT]: {
+                        return handleLightLevel2ExtCommand(cmd, user)
+                    }
+                    case [COMMANDS.LIGHT_EXT_ALL, COMMANDS.LIGHT_EXT_TERRACE, COMMANDS.LIGHT_EXT_ENTRANCE, COMMANDS.LIGHT_INT_CT]: {
+                        return handleLightOptionCmd(user)
+                    };
+                    case COMMANDS.YES: {
+                        return handleConfirmYesCommand(user)
+                    };
+                    case COMMANDS.NO: {
+                        return handleConfirmNOCommand(user)
+                    };
+                    case [COMMANDS.ON, COMMANDS.OFF]: {
+                        return handleConfirmONOFFCommand(user)
+                    }
+                    default: return handleNotFoundCommand();
+                }
             }
-            case [COMMANDS.LIGHT]: {
-                return handleLightLevel1Command(cmd, user)
-            }
-            case [COMMANDS.LIGHT_EXT]: {
-                return handleLightLevel2ExtCommand(cmd, user)
-            }
-            case [COMMANDS.LIGHT_EXT_ALL, COMMANDS.LIGHT_EXT_TERRACE, COMMANDS.LIGHT_EXT_ENTRANCE]: {
-                return handleLightOptionCmd(user)
-            };
-            case COMMANDS.YES: {
-                return handleConfirmYesCommand(user)
-            };
-            case COMMANDS.NO: {
-                return handleConfirmNOCommand(user)
-            };
-            case [COMMANDS.ON, COMMANDS.OFF]: {
-                return handleConfirmONOFFCommand(user)
-            }
-            default: return handleNotFoundCommand();
         }
     }
 
@@ -169,7 +177,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
 
     private SendMessage handleStartCommand(User user) {
         SendMessage message = new SendMessage();
-        message.setText("Comenzi disponibile:");
+        message.setText("ℹ️ Comenzi disponibile:");
         message.setReplyMarkup(mainMenuKeyboard());
         return message;
     }
@@ -232,8 +240,13 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                 case COMMANDS.LIGHT_EXT_TERRACE: {
                     id = configProvider.get(Integer.class, "specialDevices.light.ext.terrace.peripheral.id")
                     break
-                } case COMMANDS.LIGHT_EXT_ENTRANCE: {
+                }
+                case COMMANDS.LIGHT_EXT_ENTRANCE: {
                     id = configProvider.get(Integer.class, "specialDevices.light.ext.entrance.peripheral.id")
+                    break
+                }
+                case COMMANDS.LIGHT_INT_CT: {
+                    id = configProvider.get(Integer.class, "specialDevices.light.int.ct.peripheral.id")
                     break
                 }
             }
@@ -345,6 +358,20 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         inlineKeyboardMarkup.setKeyboard([[terraceBtn], [allBtn], [entranceBtn]]);
         SendMessage message = new SendMessage();
         message.setText("💡 $COMMANDS.LIGHT_EXT.label 💡");
+        message.setReplyMarkup(inlineKeyboardMarkup);
+        return message;
+    }
+
+    private SendMessage handleLightLevel2IntCommand(cmd, User user) {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        InlineKeyboardButton ctBtn = new InlineKeyboardButton();
+        ctBtn.setText("💡 $COMMANDS.LIGHT_INT_CT.label");
+        ctBtn.setCallbackData(COMMANDS.LIGHT_INT_CT.command);
+
+        inlineKeyboardMarkup.setKeyboard([[ctBtn]]);
+        SendMessage message = new SendMessage();
+        message.setText("💡 $COMMANDS.LIGHT_INT.label 💡");
         message.setReplyMarkup(inlineKeyboardMarkup);
         return message;
     }
