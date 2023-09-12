@@ -53,5 +53,6 @@ beans = {
 
     telegramBotHandler(TelegramBotHandler) {
         configProvider = ref("configProvider")
+        userService = ref("userService")
     }
 }
