@@ -76,13 +76,13 @@ dependencies {
     //cache
     implementation 'com.hazelcast:hazelcast:5.1.1'
     implementation 'com.hazelcast:hazelcast-spring:5.1.1'
-    implementation 'org.postgresql:postgresql:42.3.4'
+    implementation 'org.postgresql:postgresql:42.2.16'
     implementation 'org.grails.plugins:spring-security-rest:3.0.1'
     implementation 'org.kohsuke:groovy-sandbox:1.19'
-    implementation 'org.jsoup:jsoup:1.14.3'
+    implementation 'org.jsoup:jsoup:1.15.3'
     implementation 'com.konghq:unirest-java:3.13.8'
     //Telegram bot api
-    implementation 'org.telegram:telegrambots-spring-boot-starter:6.0.1'
+    implementation 'org.telegram:telegrambots-spring-boot-starter:6.8.0'
     //ONVIF
     implementation 'be.teletask.onvif:onvif:1.0.2'
     //opsgenie atlassian
