@@ -5,6 +5,7 @@ import org.myhab.config.ConfigProvider
 import org.myhab.domain.EntityType
 import org.myhab.domain.events.TopicName
 import org.myhab.domain.job.EventData
+import org.myhab.services.TelegramService
 import org.myhab.services.UserService
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
@@ -25,6 +26,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 class TelegramBotHandler extends TelegramLongPollingBot implements EventPublisher {
     ConfigProvider configProvider
     UserService userService
+    TelegramService telegramService
 
     def cmdContext = [];
 
@@ -74,40 +76,47 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
     }
 
     private SendMessage getCommandResponse(String text, User user, String chatId) throws TelegramApiException {
-        if (text.startsWith('/')) {
-            def cmd = COMMANDS.valueOfString(text)
-            if (cmd) {
-                cmdContext << cmd
-                switch (cmd) {
-                    case COMMANDS.HELP: {
-                        return handleStartCommand(user)
-                    } case COMMANDS.GATE: {
-                        return handleGateCommand(user)
+        if (telegramService.validTGUser(user.userName)) {
+            if (text.startsWith('/')) {
+                def cmd = COMMANDS.valueOfString(text)
+                if (cmd) {
+                    cmdContext << cmd
+                    switch (cmd) {
+                        case COMMANDS.HELP: {
+                            return handleStartCommand(user)
+                        } case COMMANDS.GATE: {
+                            return handleGateCommand(user)
+                        }
+                        case [COMMANDS.LIGHT]: {
+                            return handleLightLevel1Command(cmd, user)
+                        }
+                        case [COMMANDS.LIGHT_INT]: {
+                            return handleLightLevel2IntCommand(cmd, user)
+                        }
+                        case [COMMANDS.LIGHT_EXT]: {
+                            return handleLightLevel2ExtCommand(cmd, user)
+                        }
+                        case [COMMANDS.LIGHT_EXT_ALL, COMMANDS.LIGHT_EXT_TERRACE, COMMANDS.LIGHT_EXT_ENTRANCE, COMMANDS.LIGHT_INT_CT]: {
+                            return handleLightOptionCmd(user)
+                        };
+                        case COMMANDS.YES: {
+                            return handleConfirmYesCommand(user)
+                        };
+                        case COMMANDS.NO: {
+                            return handleConfirmNOCommand(user)
+                        };
+                        case [COMMANDS.ON, COMMANDS.OFF]: {
+                            return handleConfirmONOFFCommand(user)
+                        }
+                        default: return handleNotFoundCommand();
                     }
-                    case [COMMANDS.LIGHT]: {
-                        return handleLightLevel1Command(cmd, user)
-                    }
-                    case [COMMANDS.LIGHT_INT]: {
-                        return handleLightLevel2IntCommand(cmd, user)
-                    }
-                    case [COMMANDS.LIGHT_EXT]: {
-                        return handleLightLevel2ExtCommand(cmd, user)
-                    }
-                    case [COMMANDS.LIGHT_EXT_ALL, COMMANDS.LIGHT_EXT_TERRACE, COMMANDS.LIGHT_EXT_ENTRANCE, COMMANDS.LIGHT_INT_CT]: {
-                        return handleLightOptionCmd(user)
-                    };
-                    case COMMANDS.YES: {
-                        return handleConfirmYesCommand(user)
-                    };
-                    case COMMANDS.NO: {
-                        return handleConfirmNOCommand(user)
-                    };
-                    case [COMMANDS.ON, COMMANDS.OFF]: {
-                        return handleConfirmONOFFCommand(user)
-                    }
-                    default: return handleNotFoundCommand();
                 }
             }
+        } else {
+            sendMessage("ERROR", "Unauthorized access by user: ${user.userName} in chat ${chatId}")
+            SendMessage message = new SendMessage();
+            message.setText("Unauthorized access");
+            return message
         }
     }
 
