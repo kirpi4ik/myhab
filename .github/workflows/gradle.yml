@@ -41,8 +41,7 @@ jobs:
           check-latest: false
           cache: 'yarn'
           cache-dependency-path: client/web-vue3/yarn.lock
-      - run: npm ci
-      - run: npm test
+      - run: yarn install --immutable --immutable-cache --check-cache
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Cache Gradle packages
