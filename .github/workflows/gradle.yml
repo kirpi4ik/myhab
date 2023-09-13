@@ -33,6 +33,13 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 11
+      - name: Setup node
+      - uses: actions/setup-node@v3
+        with:
+          # 12.x, 10.15.1, >=10.15.0, lts/Hydrogen, 16-nightly, latest, node
+          node-version: '16-nightly'
+          check-latest: false
+          cache: 'yarn'
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Cache Gradle packages
