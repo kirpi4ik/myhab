@@ -46,12 +46,12 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         HELP("/?", "Ajutor", false),
         GATE("/gate", "Deschide poarta", true),
         LIGHT("/light", "Iluminat", true),
-        LIGHT_EXT("/light ext", "Iluminat exterior", false),
-        LIGHT_EXT_ALL("/light ext all", "Iluminat Tot", false),
-        LIGHT_EXT_TERRACE("/light ext terrace", "Iluminat terasa", false),
-        LIGHT_EXT_ENTRANCE("/light ext entrance", "Iluminat terasa", false),
-        LIGHT_INT("/light int", "Iluminat interior", false),
-        LIGHT_INT_CT("/light int ct", "Iluminat camera tehnica", false),
+        LIGHT_EXT("/light_ext", "Iluminat exterior", false),
+        LIGHT_EXT_ALL("/light_ext_all", "Iluminat Tot", false),
+        LIGHT_EXT_TERRACE("/light_ext_terrace", "Iluminat terasa", false),
+        LIGHT_EXT_ENTRANCE("/light_ext_entrance", "Iluminat terasa", false),
+        LIGHT_INT("/light_int", "Iluminat interior", false),
+        LIGHT_INT_CT("/light_int_ct", "Iluminat camera tehnica", false),
         WATER_EXT("/water", "Apa exterior", true);
 
         private final String command
