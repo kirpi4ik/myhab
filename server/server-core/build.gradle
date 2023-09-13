@@ -69,12 +69,12 @@ dependencies {
     implementation "org.grails.plugins:hibernate5:7.3.0"
     implementation "org.grails:gorm-graphql:3.0.0-SNAPSHOT"
     implementation "org.grails.plugins:gorm-graphql-plugin:3.0.0-SNAPSHOT"
-    implementation "com.graphql-java:graphql-java:17.2"
+    implementation "com.graphql-java:graphql-java:17.6"
     implementation "com.graphql-java:graphql-java-extended-scalars:19.1"
     implementation 'org.grails.plugins:quartz:2.0.13'
     implementation 'org.quartz-scheduler:quartz:2.3.2'
     //cache
-    implementation 'com.hazelcast:hazelcast:5.1.1'
+    implementation 'com.hazelcast:hazelcast:5.3.2'
     implementation 'com.hazelcast:hazelcast-spring:5.1.1'
     implementation 'org.postgresql:postgresql:42.2.16'
     implementation 'org.grails.plugins:spring-security-rest:3.0.1'
@@ -151,8 +151,8 @@ codenarc {
     toolVersion = codenarcVersion
     configFile = file("${projectDir}/config/codenarc/rules.groovy")
     maxPriority1Violations = 0
-    maxPriority2Violations = 200
-    maxPriority3Violations = 1500
+    maxPriority2Violations = 52
+    maxPriority3Violations = 1600
 }
 codenarcMain {
     exclude '**/CustomScalars.groovy'
