@@ -8,6 +8,7 @@ import org.myhab.graphql.GQLSchemaFactory
 import org.myhab.graphql.GraphQLGenerator
 import org.myhab.graphql.fetchers.Mutation
 import org.myhab.listener.domain.UserPasswordEncoderListener
+import org.myhab.services.TelegramService
 import org.myhab.telegram.TelegramBotHandler
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
@@ -54,5 +55,6 @@ beans = {
     telegramBotHandler(TelegramBotHandler) {
         configProvider = ref("configProvider")
         userService = ref("userService")
+        telegramService = ref("telegramService")
     }
 }
