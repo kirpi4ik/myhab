@@ -27,21 +27,20 @@ jobs:
         run: echo ${{ steps.buildx.outputs.name }}
       - name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          check-latest: false
+          cache: 'yarn'
+          cache-dependency-path: client/web-vue3/yarn.lock
+      - run: yarn install --immutable --immutable-cache --check-cache
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
           java-version: 11
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          # 12.x, 10.15.1, >=10.15.0, lts/Hydrogen, 16-nightly, latest, node
-          node-version: 18
-          check-latest: false
-          cache: 'yarn'
-      - run: npm ci
-      - run: npm test
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Cache Gradle packages
