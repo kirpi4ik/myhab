@@ -1,5 +1,6 @@
 package org.myhab.telegram
 
+
 import grails.events.EventPublisher
 import org.myhab.config.ConfigProvider
 import org.myhab.domain.EntityType
@@ -17,6 +18,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 
+import static com.vdurmont.emoji.EmojiParser.parseToUnicode
+
 /**
  * Emoji
  * https://emojipedia.org/
@@ -28,6 +31,16 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
     UserService userService
     TelegramService telegramService
 
+    enum MSG_LEVEL {
+        INFO(":warning:"),
+        WARNING(":warning:"),
+        ERROR(":warning:")
+        private final String icon
+
+        MSG_LEVEL(def icon) {
+            this.icon = icon
+        }
+    }
     def cmdContext = [];
 
     @Override
@@ -45,7 +58,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         NO("/no", "NU"),
         ON("/on", "Aprinde"),
         OFF("/off", "Stinge"),
-        HELP("/?", "Ajutor", false),
+        HELP("/help", "Ajutor", false),
         GATE("/gate", "Deschide poarta", true),
         LIGHT("/light", "Iluminat", true),
         LIGHT_EXT("/light_ext", "Iluminat exterior", false),
@@ -79,6 +92,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         if (telegramService.validTGUser(user.userName)) {
             if (text.startsWith('/')) {
                 def cmd = COMMANDS.valueOfString(text)
+                sendMessage(MSG_LEVEL.INFO, "<b>${user.userName}</b> a invocat comanda ${text}")
                 if (cmd) {
                     cmdContext << cmd
                     switch (cmd) {
@@ -110,19 +124,22 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                         }
                         default: return handleNotFoundCommand();
                     }
+                } else {
+                    return handleNotFoundCommand();
                 }
             }
         } else {
-            sendMessage("ERROR", "Unauthorized access by user: ${user.userName} in chat ${chatId}")
+            sendMessage(MSG_LEVEL.ERROR, "Unauthorized access by user: ${user.userName} in chat ${chatId}")
             SendMessage message = new SendMessage();
             message.setText("Unauthorized access");
             return message
         }
     }
 
-    def sendMessage(String level, msg) {
+    def sendMessage(MSG_LEVEL level, msg) {
         SendMessage message = new SendMessage();
-        message.setText("${level} | ${msg}");
+        message.enableHtml(true)
+        message.setText(parseToUnicode "${level.icon} ${msg}");
         message.setChatId(configProvider.get(String.class, "telegram.chanelId"));
         execute(message)
     }
@@ -134,10 +151,12 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
 
             try {
                 SendMessage message = getCommandResponse(text, update.getMessage().getFrom(), String.valueOf(chat_id));
-                message.enableHtml(true);
-                message.setParseMode(ParseMode.HTML);
-                message.setChatId(String.valueOf(chat_id));
-                execute(message);
+                if (message) {
+                    message.enableHtml(true);
+                    message.setParseMode(ParseMode.HTML);
+                    message.setChatId(String.valueOf(chat_id));
+                    execute(message);
+                }
             } catch (TelegramApiException e) {
                 e.printStackTrace();
                 SendMessage message = handleNotFoundCommand();
@@ -208,8 +227,10 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                             it
                         })
                         message.setText("Poarta a fost deschisa 🔓 ")
+                        sendMessage(MSG_LEVEL.INFO, "Poarta a fost deschisa de <b>${user.userName}</b>")
                     } else {
                         message.setText("⛔ Nu aveti suficient drepturi 😒")
+                        sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> a incercat sa deschida usa dar nu are drepturi")
                     }
                     cmdContext = []
                     break
@@ -218,6 +239,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         } else {
             message.setText("⛔ Comanda invalida 😒")
             message.setReplyMarkup(mainMenuKeyboard());
+            sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> | a introdus comanda gresita")
         }
         message
     }
@@ -231,6 +253,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
             message.setText("⛔ Comanda invalida 😒")
             message.setReplyMarkup(mainMenuKeyboard());
             cmdContext = []
+            sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> | a introdus comanda gresita")
         }
         return message
     }
@@ -278,6 +301,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                 }
             } else {
                 message.setText("⛔ Nu aveti suficient drepturi 😒")
+                sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> a incercat sa aprinda lumina dar nu are drepturi")
             }
             cmdContext = []
 

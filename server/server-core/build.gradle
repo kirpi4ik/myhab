@@ -83,6 +83,7 @@ dependencies {
     implementation 'com.konghq:unirest-java:3.13.8'
     //Telegram bot api
     implementation 'org.telegram:telegrambots-spring-boot-starter:6.8.0'
+    implementation 'com.vdurmont:emoji-java:5.1.1'
     //ONVIF
     implementation 'be.teletask.onvif:onvif:1.0.2'
     //opsgenie atlassian
