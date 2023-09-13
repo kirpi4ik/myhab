@@ -67,7 +67,7 @@ class NibeInfoSyncJob implements Job {
                     }
                 }
             }
-            if (device.status.equals(DeviceStatus.OFFLINE)) {
+            if (device.status == DeviceStatus.OFFLINE) {
                 mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
             }
         } else {
