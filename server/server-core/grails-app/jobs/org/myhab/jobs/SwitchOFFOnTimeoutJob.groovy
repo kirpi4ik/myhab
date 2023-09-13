@@ -37,7 +37,7 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
         DevicePort.findAllByValue("ON").each { port ->
             boolean cached = false
             hazelcastInstance.getMap(CacheMap.EXPIRE.name).entrySet().each { candidateForExpiration ->
-                if (candidateForExpiration.key.equals(String.valueOf(port.id))) {
+                if (candidateForExpiration.key == String.valueOf(port.id)) {
                     cached = true
                     return true
                 }

@@ -25,7 +25,7 @@ class DeviceService {
         }
 
         if (devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport")) {
-            if (device.model.equals(DeviceModel.MEGAD_2561_RTC)) {
+            if (device.model == DeviceModel.MEGAD_2561_RTC) {
                 devicePort = megaDriverService.readPortConfigFromController(device.code, portCode, portCode)
                 device.addToPorts(devicePort)
                 device.save(failOnError: false, flush: true)
@@ -41,11 +41,11 @@ class DeviceService {
             maxResults(1)
         }
         if (device == null && configProvider.get(Boolean.class, "admin.devices.autoimport")) {
-            if (deviceModel.equals(DeviceModel.MEGAD_2561_RTC)) {
+            if (deviceModel == DeviceModel.MEGAD_2561_RTC) {
                 device = megaDriverService.readConfig(deviceCode)
                 device?.save(failOnError: false, flush: true)
             }
-            if (deviceModel.equals(DeviceModel.ESP8266_1)) {
+            if (deviceModel == DeviceModel.ESP8266_1) {
                 device = espService.readConfig(deviceCode)
                 device?.save(failOnError: false, flush: true)
             }

@@ -154,7 +154,7 @@ ruleset {
     BracesForIfElse
     BracesForMethod
     BracesForTryCatchFinally
-    'ClassJavadoc' doNotApplyToFilesMatching: '.*Spec.groovy'
+//    'ClassJavadoc' doNotApplyToFilesMatching: '.*Spec.groovy'
     ClosureStatementOnOpeningLineOfMultipleLineClosure
     ConsecutiveBlankLines
     FileEndsWithoutNewline
