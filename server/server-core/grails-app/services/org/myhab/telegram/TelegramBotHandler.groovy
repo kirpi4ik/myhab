@@ -67,7 +67,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         LIGHT_EXT_ENTRANCE("/light_ext_entrance", "Iluminat terasa", false, (User user) -> handleLightOptionCmd(user)),
         LIGHT_INT("/light_int", "Iluminat interior", false, (User user) -> handleLightLevel2IntCommand(user)),
         LIGHT_INT_CT("/light_int_ct", "Iluminat camera tehnica", false, (User user) -> handleLightOptionCmd(user)),
-        WATER_EXT("/water", "Apa exterior", true, (User user) -> handleGateCommand(user));
+        WATER_EXT("/water", "Apa exterior", true, (User user) -> handleWaterOptionCmd(user));
 
         private final String command
         private final String label
@@ -281,6 +281,10 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                         id = configProvider.get(Integer.class, "specialDevices.light.int.ct.peripheral.id")
                         break
                     }
+                    case COMMANDS.WATER_EXT: {
+                        id = configProvider.get(Integer.class, "specialDevices.water.peripheral.id")
+                        break
+                    }
                 }
 
                 if (id != null) {
@@ -296,13 +300,13 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                             it
                         })
                         if (action == "on") {
-                            message.setText("Lumina a fost aprinsa pentru `${targetCmd.label}`")
+                            message.setText("${targetCmd.label} acum este pornit(a)")
                         } else {
-                            message.setText("Lumina a fost stinsa pentru `${targetCmd.label}` ")
+                            message.setText("${targetCmd.label} a fost oprit(a)")
                         }
                     } else {
                         message.setText("⛔ Nu aveti suficient drepturi 😒")
-                        sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> a incercat sa aprinda lumina dar nu are drepturi")
+                        sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> a incercat sa porneasca ${targetCmd.label} dar nu are drepturi")
                     }
                 } else {
                     message.setText("⛔ Nu a putut fi identificata comanda : ${cmd}")
@@ -339,14 +343,36 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         return inlineKeyboardMarkup
     }
 
-    private static SendMessage handleLightOptionCmd(User user) {
+    private static SendMessage handleWaterOptionCmd(User user) {
         SendMessage message = new SendMessage()
-        message.setText("💡 Iluminat `${(cmdContext[user.userName][cmdContext[user.userName].size() - 1] as COMMANDS).label}` 💡")
+        message.setText("💧 ${(cmdContext[user.userName][cmdContext[user.userName].size() - 1] as COMMANDS).label} 💧")
         message.setReplyMarkup(getOnOfKeyboard(user))
         return message
     }
 
     private static InlineKeyboardMarkup getOnOfKeyboard(user) {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup()
+        InlineKeyboardButton inlineKeyboardButtonON = new InlineKeyboardButton()
+        inlineKeyboardButtonON.setText(" 🚰 Porneste")
+        inlineKeyboardButtonON.setCallbackData(cmdContext[user.userName][cmdContext[user.userName].size() - 1].getCommand() + "_" + COMMANDS.ON.getCommand())
+
+        InlineKeyboardButton inlineKeyboardButtonOFF = new InlineKeyboardButton()
+        inlineKeyboardButtonOFF.setText("🚱 Opreste")
+        inlineKeyboardButtonOFF.setCallbackData(cmdContext[user.userName][cmdContext[user.userName].size() - 1].getCommand() + "_" + COMMANDS.OFF.getCommand())
+
+        inlineKeyboardMarkup.setKeyboard([[inlineKeyboardButtonON, inlineKeyboardButtonOFF]])
+
+        return inlineKeyboardMarkup
+    }
+
+    private static SendMessage handleLightOptionCmd(User user) {
+        SendMessage message = new SendMessage()
+        message.setText("💡 Iluminat `${(cmdContext[user.userName][cmdContext[user.userName].size() - 1] as COMMANDS).label}` 💡")
+        message.setReplyMarkup(getLightOnOfKeyboard(user))
+        return message
+    }
+
+    private static InlineKeyboardMarkup getLightOnOfKeyboard(user) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup()
         InlineKeyboardButton inlineKeyboardButtonON = new InlineKeyboardButton()
         inlineKeyboardButtonON.setText(" ☀️ $COMMANDS.ON.label")
