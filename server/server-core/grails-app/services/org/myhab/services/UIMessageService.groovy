@@ -30,7 +30,7 @@ class UIMessageService implements EventPublisher {
     def receiveLightEvent(event) {
         switch (byName(event.data.p1)) {
             case PERIPHERAL:
-                def peripheral = DevicePeripheral.findById(event.data.p2)
+                def peripheral = DevicePeripheral.findById(event.data.p2 as Integer)
                 def args = [:]
                 args.portIds = []
                 peripheral?.getConnectedTo()?.each { port ->
