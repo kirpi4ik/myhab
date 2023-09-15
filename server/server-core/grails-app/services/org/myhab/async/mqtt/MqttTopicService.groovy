@@ -69,7 +69,7 @@ class MqttTopicService {
     }
 
     String payload(DevicePort port, def actions) {
-        if (port.device.model.equals(DeviceModel.MEGAD_2561_RTC)) {
+        if (port.device.model == DeviceModel.MEGAD_2561_RTC) {
             def act = []
             if (!actions.empty) {
                 actions.each {
@@ -83,7 +83,7 @@ class MqttTopicService {
             }
             return act.join(";")
         }
-        if (port.device.model.equals(DeviceModel.ESP8266_1)) {
+        if (port.device.model == DeviceModel.ESP8266_1) {
             if (actions)
                 return actions.first()
             else {
@@ -91,7 +91,7 @@ class MqttTopicService {
             }
         }
 
-        if (port.device.model.equals(DeviceModel.NIBE_F1145_8_EM)) {
+        if (port.device.model == DeviceModel.NIBE_F1145_8_EM) {
             return actions
         }
     }
