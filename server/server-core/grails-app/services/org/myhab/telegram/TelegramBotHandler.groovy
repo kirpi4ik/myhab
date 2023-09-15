@@ -18,7 +18,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 
-import static com.vdurmont.emoji.EmojiParser.parseToUnicode
+import java.util.function.Function
+
+//import static com.vdurmont.emoji.EmojiParser.parseToUnicode
 
 /**
  * Emoji
@@ -32,16 +34,16 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
     TelegramService telegramService
 
     enum MSG_LEVEL {
-        INFO(":warning:"),
-        WARNING(":warning:"),
-        ERROR(":warning:")
+        INFO("ℹ️"),
+        WARNING("⚠️"),
+        ERROR("🛑")
         private final String icon
 
         MSG_LEVEL(def icon) {
             this.icon = icon
         }
     }
-    def cmdContext = [];
+    def static cmdContext = [:];
 
     @Override
     public String getBotUsername() {
@@ -59,32 +61,38 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         ON("/on", "Aprinde"),
         OFF("/off", "Stinge"),
         HELP("/help", "Ajutor", false),
-        GATE("/gate", "Deschide poarta", true),
-        LIGHT("/light", "Iluminat", true),
-        LIGHT_EXT("/light_ext", "Iluminat exterior", false),
-        LIGHT_EXT_ALL("/light_ext_all", "Iluminat Tot", false),
-        LIGHT_EXT_TERRACE("/light_ext_terrace", "Iluminat terasa", false),
-        LIGHT_EXT_ENTRANCE("/light_ext_entrance", "Iluminat terasa", false),
-        LIGHT_INT("/light_int", "Iluminat interior", false),
-        LIGHT_INT_CT("/light_int_ct", "Iluminat camera tehnica", false),
-        WATER_EXT("/water", "Apa exterior", true);
+        GATE("/gate", "Deschide poarta", true, (User user) -> handleGateCommand(user)),
+        LIGHT("/light", "Iluminat", true, (User user) -> handleLightLevel1Command(user)),
+        LIGHT_EXT("/light_ext", "Iluminat exterior", false, (User user) -> handleLightLevel2ExtCommand(user)),
+        LIGHT_EXT_ALL("/light_ext_all", "Iluminat Tot", false, (User user) -> handleLightOptionCmd(user)),
+        LIGHT_EXT_TERRACE("/light_ext_terrace", "Iluminat terasa", false, (User user) -> handleLightOptionCmd(user)),
+        LIGHT_EXT_ENTRANCE("/light_ext_entrance", "Iluminat terasa", false, (User user) -> handleLightOptionCmd(user)),
+        LIGHT_INT("/light_int", "Iluminat interior", false, (User user) -> handleLightLevel2IntCommand(user)),
+        LIGHT_INT_CT("/light_int_ct", "Iluminat camera tehnica", false, (User user) -> handleLightOptionCmd(user)),
+        WATER_EXT("/water", "Apa exterior", true, (User user) -> handleGateCommand(user));
 
         private final String command
         private final String label
         private final boolean selectable
+        private final Function<User, SendMessage> handler
 
-        COMMANDS(def command, def label, selectable = false) {
+        COMMANDS(def command, def label, selectable = false, Function<User, SendMessage> handler = null) {
+            this.handler = handler
             this.selectable = selectable
             this.label = label
             this.command = command;
         }
 
+        SendMessage handle(user) {
+            handler.apply(user)
+        }
+
         static COMMANDS valueOfString(String cmdText) {
-            return values().find { it.command.equalsIgnoreCase(cmdText) }
+            return values().find { cmdText ==~ /^$it.command(@.+)*/ }
         }
 
         public String getCommand() {
-            return command;
+            return "$command";
         }
     }
 
@@ -94,35 +102,28 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                 def cmd = COMMANDS.valueOfString(text)
                 sendMessage(MSG_LEVEL.INFO, "<b>${user.userName}</b> a invocat comanda ${text}")
                 if (cmd) {
-                    cmdContext << cmd
-                    switch (cmd) {
-                        case COMMANDS.HELP: {
-                            return handleStartCommand(user)
-                        } case COMMANDS.GATE: {
-                            return handleGateCommand(user)
+                    if (cmdContext[user.userName] == null) {
+                        cmdContext[user.userName] = []
+                    }
+                    cmdContext[user.userName] << cmd
+                    if (cmd.handler != null) {
+                       return cmd.handle(user)
+                    } else {
+                        switch (cmd) {
+                            case COMMANDS.HELP: {
+                                return handleStartCommand(user)
+                            }
+                            case COMMANDS.YES: {
+                                return handleConfirmYesCommand(user)
+                            };
+                            case COMMANDS.NO: {
+                                return handleConfirmNOCommand(user)
+                            };
+                            case [COMMANDS.ON, COMMANDS.OFF]: {
+                                return handleConfirmONOFFCommand(user)
+                            }
+                            default: return handleNotFoundCommand();
                         }
-                        case [COMMANDS.LIGHT]: {
-                            return handleLightLevel1Command(cmd, user)
-                        }
-                        case [COMMANDS.LIGHT_INT]: {
-                            return handleLightLevel2IntCommand(cmd, user)
-                        }
-                        case [COMMANDS.LIGHT_EXT]: {
-                            return handleLightLevel2ExtCommand(cmd, user)
-                        }
-                        case [COMMANDS.LIGHT_EXT_ALL, COMMANDS.LIGHT_EXT_TERRACE, COMMANDS.LIGHT_EXT_ENTRANCE, COMMANDS.LIGHT_INT_CT]: {
-                            return handleLightOptionCmd(user)
-                        };
-                        case COMMANDS.YES: {
-                            return handleConfirmYesCommand(user)
-                        };
-                        case COMMANDS.NO: {
-                            return handleConfirmNOCommand(user)
-                        };
-                        case [COMMANDS.ON, COMMANDS.OFF]: {
-                            return handleConfirmONOFFCommand(user)
-                        }
-                        default: return handleNotFoundCommand();
                     }
                 } else {
                     return handleNotFoundCommand();
@@ -139,7 +140,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
     def sendMessage(MSG_LEVEL level, msg) {
         SendMessage message = new SendMessage();
         message.enableHtml(true)
-        message.setText(parseToUnicode "${level.icon} ${msg}");
+        message.setText("${level.icon} ${msg}");
         message.setChatId(configProvider.get(String.class, "telegram.chanelId"));
         execute(message)
     }
@@ -212,8 +213,8 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
 
     private SendMessage handleConfirmYesCommand(User user) {
         def message = new SendMessage()
-        if (cmdContext.size() > 1) {
-            switch (cmdContext[cmdContext.size() - 2]) {
+        if (cmdContext[user.userName].size() > 1) {
+            switch (cmdContext[user.userName][cmdContext[user.userName].size() - 2]) {
                 case COMMANDS.GATE: {
                     if (userService.tgUserHasAnyRole(user.userName, ["ROLE_USER", "ROLE_ADMIN"])) {
                         publish(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), new EventData().with {
@@ -232,7 +233,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                         message.setText("⛔ Nu aveti suficient drepturi 😒")
                         sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> a incercat sa deschida usa dar nu are drepturi")
                     }
-                    cmdContext = []
+                    cmdContext[user.userName] = []
                     break
                 }
             }
@@ -246,24 +247,24 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
 
     private SendMessage handleConfirmNOCommand(User user) {
         def message = new SendMessage()
-        if (cmdContext.size() > 1) {
-            message.setText("Comanda `<i>${(cmdContext[cmdContext.size() - 2] as COMMANDS).label}</i>` anulata de " + user.userName)
-            cmdContext = []
+        if (cmdContext[user.userName].size() > 1) {
+            message.setText("Comanda `<i>${(cmdContext[user.userName][cmdContext[user.userName].size() - 2] as COMMANDS).label}</i>` anulata de " + user.userName)
+            cmdContext[user.userName] = []
         } else {
             message.setText("⛔ Comanda invalida 😒")
             message.setReplyMarkup(mainMenuKeyboard());
-            cmdContext = []
+            cmdContext[user.userName] = []
             sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> | a introdus comanda gresita")
         }
         return message
     }
 
     private SendMessage handleConfirmONOFFCommand(User user) {
-        def actionCmd = (cmdContext[cmdContext.size() - 1] as COMMANDS)
+        def actionCmd = (cmdContext[user.userName][cmdContext[user.userName].size() - 1] as COMMANDS)
         def message = new SendMessage()
         Integer id
-        if (cmdContext.size() > 1) {
-            def previousCmd = cmdContext[cmdContext.size() - 2] as COMMANDS
+        if (cmdContext[user.userName].size() > 1) {
+            def previousCmd = cmdContext[user.userName][cmdContext[user.userName].size() - 2] as COMMANDS
             switch (previousCmd) {
                 case COMMANDS.LIGHT_EXT_ALL: {
                     id = configProvider.get(Integer.class, "specialDevices.light.ext.all.peripheral.id")
@@ -295,15 +296,15 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                     it
                 })
                 if (actionCmd == COMMANDS.ON) {
-                    message.setText("Lumina a fost aprinsa pentru `${(cmdContext[cmdContext.size() - 2] as COMMANDS).label}`")
+                    message.setText("Lumina a fost aprinsa pentru `${(cmdContext[user.userName][cmdContext[user.userName].size() - 2] as COMMANDS).label}`")
                 } else {
-                    message.setText("Lumina a fost stinsa pentru `${(cmdContext[cmdContext.size() - 2] as COMMANDS).label}` ")
+                    message.setText("Lumina a fost stinsa pentru `${(cmdContext[user.userName][cmdContext[user.userName].size() - 2] as COMMANDS).label}` ")
                 }
             } else {
                 message.setText("⛔ Nu aveti suficient drepturi 😒")
                 sendMessage(MSG_LEVEL.WARNING, "<b>${user.userName}</b> a incercat sa aprinda lumina dar nu are drepturi")
             }
-            cmdContext = []
+            cmdContext[user.userName] = []
 
         } else {
             message.setText("⛔ Comanda invalida 😒")
@@ -312,7 +313,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         message
     }
 
-    private SendMessage handleGateCommand(User user) {
+    private static SendMessage handleGateCommand(User user) {
         SendMessage message = new SendMessage();
         message.setText("❗ Doriti sa deschideti poarta ❗❓");
         message.setReplyMarkup(getConfirmationKeyboard());
@@ -334,9 +335,9 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         return inlineKeyboardMarkup;
     }
 
-    private SendMessage handleLightOptionCmd(User user) {
+    private static SendMessage handleLightOptionCmd(User user) {
         SendMessage message = new SendMessage();
-        message.setText("💡 Iluminat `${(cmdContext[cmdContext.size() - 1] as COMMANDS).label}` 💡");
+        message.setText("💡 Iluminat `${(cmdContext[user.userName][cmdContext[user.userName].size() - 1] as COMMANDS).label}` 💡");
         message.setReplyMarkup(getOnOfKeyboard());
         return message;
     }
@@ -356,7 +357,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         return inlineKeyboardMarkup;
     }
 
-    private SendMessage handleLightLevel1Command(cmd, User user) {
+    private static SendMessage handleLightLevel1Command(User user) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         InlineKeyboardButton lightExtBtn = new InlineKeyboardButton();
         lightExtBtn.setText("💡 $COMMANDS.LIGHT_EXT.label");
@@ -373,7 +374,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         return message;
     }
 
-    private SendMessage handleLightLevel2ExtCommand(cmd, User user) {
+    private static SendMessage handleLightLevel2ExtCommand(User user) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         InlineKeyboardButton allBtn = new InlineKeyboardButton();
@@ -395,7 +396,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         return message;
     }
 
-    private SendMessage handleLightLevel2IntCommand(cmd, User user) {
+    private static SendMessage handleLightLevel2IntCommand(User user) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         InlineKeyboardButton ctBtn = new InlineKeyboardButton();
