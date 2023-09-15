@@ -14,7 +14,7 @@ class SchedulerService {
 
     def scheduleJob(String jobUid) {
         def job = Job.findByUid(jobUid)
-        if (job.state.equals(JobState.ACTIVE)) {
+        if (job.state == JobState.ACTIVE) {
             job.cronTriggers.each { jobTrigger ->
                 JobDetail jobDetails = JobBuilder.newJob(DSLJob.class)
                         .withIdentity(jobUid)
@@ -54,7 +54,7 @@ class SchedulerService {
 
     def pauseJob(String jobUid) {
         def job = Job.findByUid(jobUid)
-        if (job.state.equals(JobState.ACTIVE)) {
+        if (job.state == JobState.ACTIVE) {
             job.cronTriggers.each { jobTrigger ->
                 quartzScheduler.pauseJob(TriggerKey.triggerKey(jobTrigger.uid, jobUid))
             }
@@ -71,7 +71,7 @@ class SchedulerService {
 
     def interrupt(String jobUid) {
         def job = Job.findByUid(jobUid)
-        if (job.state.equals(JobState.ACTIVE)) {
+        if (job.state == JobState.ACTIVE) {
             job.cronTriggers.each { jobTrigger ->
                 quartzScheduler.interrupt(TriggerKey.triggerKey(jobTrigger.uid, jobUid))
             }
@@ -80,7 +80,7 @@ class SchedulerService {
 
     def triggerJob(String jobUid) {
         def job = Job.findByUid(jobUid)
-        if (job.state.equals(JobState.ACTIVE)) {
+        if (job.state == JobState.ACTIVE) {
             job.cronTriggers.each { jobTrigger ->
                 quartzScheduler.triggerJob(JobKey.jobKey(jobUid))
             }

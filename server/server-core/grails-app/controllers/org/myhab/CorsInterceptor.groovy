@@ -22,7 +22,7 @@ class CorsInterceptor implements GrailsConfigurationAware {
 
     boolean after() {
 //        String origin = request.getHeader("Origin");
-//        boolean options = "OPTIONS".equals(request.getMethod());
+//        boolean options = "OPTIONS" == request.getMethod();
 //        def allowedOrigins = allowedOrigin.split(",")
 //        if (options) {
 //            if (origin == null) return;

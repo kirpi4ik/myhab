@@ -47,7 +47,7 @@ class NibeTokenRefreshJob implements Job {
                 log.warn("There are no tokens configured for device ${device.id}")
                 telegramBotHandler.sendMessage('WARN', "There are no tokens configured for device ${device.id}")
             }
-            if (device.status.equals(DeviceStatus.OFFLINE)) {
+            if (device.status == DeviceStatus.OFFLINE) {
                 mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
             }
         } catch (Exception se) {

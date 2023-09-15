@@ -9,4 +9,7 @@ class TelegramService {
     def userService
 
 
+    boolean validTGUser(String tgUsername) {
+        return User.findByTelegramUsername(tgUsername) != null
+    }
 }
