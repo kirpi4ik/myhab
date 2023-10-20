@@ -63,7 +63,7 @@ class NibeInfoSyncJob implements Job {
                     if (port) {
                         mqttTopicService.publish(device.ports.find { it.internalRef == parameter['name'] } as DevicePort, "${parameter['rawValue']}")
                     } else {
-                        log.debug("Unknow port internal ref=[${parameter['name']}] for deviceId[${device.id}]")
+                        log.debug("Unknow port internal ref=[${parameter['name']}] for deviceId[${device.id}], mqtt publish event will be skipped")
                     }
                 }
             }

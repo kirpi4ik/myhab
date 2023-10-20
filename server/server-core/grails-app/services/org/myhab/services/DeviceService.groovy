@@ -7,6 +7,7 @@ import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.port.DevicePort
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
+import org.myhab.exceptions.UnavailableDeviceException
 
 @Transactional
 class DeviceService {
@@ -15,9 +16,20 @@ class DeviceService {
     def espService
     def configProvider
 
-    DevicePort importPort(Device deviceController, def portType, def portCode) {
+    def readPortValuesFromDevice(Device device) throws UnavailableDeviceException{
+        switch (device.model) {
+            case DeviceModel.MEGAD_2561_RTC: {
+                return megaDriverService.readPortValues(device)
+            } case DeviceModel.ESP8266_1: {
+                return espService.readPortValues(device)
+            }
+        }
+
+    }
+
+    DevicePort importPort(Device deviceController, def portType, def portInternalRef) {
         def devicePort = DevicePort.withCriteria {
-            eq('internalRef', portCode)
+            eq('internalRef', portInternalRef)
             device {
                 eq('code', deviceController.code)
             }
@@ -26,7 +38,7 @@ class DeviceService {
 
         if (devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport")) {
             if (device.model == DeviceModel.MEGAD_2561_RTC) {
-                devicePort = megaDriverService.readPortConfigFromController(device.code, portCode, portCode)
+                devicePort = megaDriverService.readPortConfigFromController(device.code, portInternalRef, portInternalRef)
                 device.addToPorts(devicePort)
                 device.save(failOnError: false, flush: true)
             }
@@ -61,7 +73,7 @@ class DeviceService {
     @Subscriber('evt_device_status')
     def deviceStatus(event) {
         def device = Device.findByCode(event.data.p2)
-        if (device!=null && device.status != event.data.p5) {
+        if (device != null && device.status != event.data.p5) {
             device.status = DeviceStatus.fromValue(event.data.p5)
             device.save(failOnError: false, flush: true)
         }
