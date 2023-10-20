@@ -34,7 +34,15 @@ class MqttTopicService {
                     return new MQTTMessage(deviceType: DeviceModel.ESP8266_1, deviceCode: matcher[0][1], portType: matcher[0][2], portCode: matcher[0][3], portStrValue: message.payload, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
                 case ~/${MQTTTopic.MEGA.topic(READ_SINGLE_VAL)}/:
                     matcher = topicName =~ MQTTTopic.MEGA.topic(READ_SINGLE_VAL)
-                    def payload = new JsonSlurper().parse(message.payload['value'])
+                    def payload = [:]
+                    def strPayload = message.payload['value'] as String
+                    try {
+                        payload = new JsonSlurper().parseText(strPayload)
+                    } catch (ignored) {
+                        if (strPayload.contains("NA")) {
+                            payload = ["value": "NA"]
+                        }
+                    }
                     return new MQTTMessage(deviceType: DeviceModel.MEGAD_2561_RTC, deviceCode: matcher[0][1], portCode: matcher[0][2], portStrValue: payload.value ?: payload.v, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
                 case ~/${MQTTTopic.NIBE.topic(READ_SINGLE_VAL)}/:
                     matcher = topicName =~ MQTTTopic.NIBE.topic(READ_SINGLE_VAL)
@@ -43,8 +51,8 @@ class MqttTopicService {
                     matcher = topicName =~ MQTTTopic.ONVIF.topic(READ_SINGLE_VAL)
                     return new MQTTMessage(deviceType: DeviceModel.CAM_ONVIF, deviceCode: matcher[0][1], portStrValue: message.payload, eventType: TopicName.EVT_PRESENCE.id())
             }
-        } catch (Exception mqttParsingException) {
-            log.warn("Unable to parse the message", mqttParsingException)
+        } catch (mqttParsingException) {
+            log.warn("Unable to parse the message[${message.payload}]", mqttParsingException)
         }
         return null
     }

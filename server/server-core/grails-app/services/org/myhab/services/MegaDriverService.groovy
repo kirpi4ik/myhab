@@ -56,9 +56,8 @@ class MegaDriverService implements EventPublisher {
 
     }
 
-    Map<String, String> readPortValues(deviceUid) throws UnavailableDeviceException {
+    Map<String, String> readPortValues(deviceController) throws UnavailableDeviceException {
         def response = [:]
-        Device deviceController = Device.findByUid(deviceUid)
         try {
             def allStringStatus = new DeviceHttpService(device: deviceController, uri: "?cmd=all").readState()
 
@@ -66,7 +65,7 @@ class MegaDriverService implements EventPublisher {
                 response << ["$index": "$status"]
             }
         } catch (Exception ex) {
-            throw new UnavailableDeviceException("Read port value failed for device[$deviceUid]: [${ex.message}]")
+            throw new UnavailableDeviceException("Read port value failed for device[${deviceController.id}]: [${ex.message}]")
         }
         return response
     }
@@ -92,7 +91,7 @@ class MegaDriverService implements EventPublisher {
 
             port = new DevicePort(internalRef: internalRef, name: portName, type: portType, description: "", device: deviceController)
 
-            port.configurations << new Configuration(entityType: EntityType.PORT, key:"cfg.key.port.portType", portPage.select("form select[name=pty] option")?.attr("value"))
+            port.configurations << new Configuration(entityType: EntityType.PORT, key: "cfg.key.port.portType", portPage.select("form select[name=pty] option")?.attr("value"))
             port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.miscValue", portPage.select("form input[name=misc]")?.attr("value"))
             port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.HystDeviationValue", portPage.select("form input[name=hst]")?.attr("value"))
             port.configurations << new Configuration(entityType: EntityType.PORT, "cfg.key.port.action", portPage.select("form input[name=ecmd]")?.attr("value"))
