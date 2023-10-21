@@ -30,7 +30,7 @@ class MQTTMessageHandler implements MessageHandler, EventPublisher {
                     p2 = "${msg.deviceCode}" // device internal code
                     p3 = "${msg.portType}" // port type (optional)
                     p4 = "${msg.portCode}" // port internal code
-                    p5 = "${msg.portStrValue}" // port internal code
+                    p5 = "${msg.portStrValue}" // port value
                     p6 = "mqtt"
                     it
                 })
