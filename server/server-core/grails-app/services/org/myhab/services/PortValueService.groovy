@@ -25,6 +25,11 @@ class PortValueService implements EventPublisher {
     def deviceService
     def configProvider
 
+    @Subscriber("evt_async_port_value_changed")
+    void updateAsyncPort(event) {
+        updatePort(event)
+    }
+
     @Subscriber('evt_mqtt_port_value_changed')
     def updatePort(event) {
         def device = Device.findByCode(event.data.p2, [lock: true])
@@ -57,7 +62,7 @@ class PortValueService implements EventPublisher {
                         p2 = "${devicePort.id}"
                         p3 = "${devicePort.internalRef}"
                         p4 = "${devicePort.value}"
-                        p5 = "mqtt"
+                        p5 = "${event.id}"
                         it
                     })
                 } catch (Exception ex) {

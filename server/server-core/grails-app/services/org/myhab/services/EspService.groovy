@@ -13,4 +13,8 @@ class EspService {
     Device readConfig(String deviceCode) {
         null
     }
+
+    void readPortValues(Device device) {
+        [:]
+    }
 }
