@@ -17,24 +17,24 @@ class ScenarioService {
         return true
     }
 
-    def lightsOn(args) {
+    def switchOn(args) {
         args.action = PortAction.ON
         powerService.execute(args)
     }
 
-    def lightsOff(args) {
+    def switchOff(args) {
         args.action = PortAction.OFF
         powerService.execute(args)
     }
 
-    def lightsReverse(args) {
+    def switchToggle(args) {
         args.action = PortAction.TOGGLE
         powerService.execute(args)
     }
 
-    def pause(args) {
-        log.debug(args)
-        Thread.sleep(args)
+    def pause(miliseconds) {
+        log.debug(miliseconds)
+        Thread.sleep(miliseconds)
     }
 
     def methodMissing(String methodName, args) {

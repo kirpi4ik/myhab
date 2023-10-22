@@ -35,7 +35,7 @@ class MqttTopicService {
                 case ~/${MQTTTopic.MEGA.topic(READ_SINGLE_VAL)}/:
                     matcher = topicName =~ MQTTTopic.MEGA.topic(READ_SINGLE_VAL)
                     def payload = [:]
-                    def strPayload = message.payload['value'] as String
+                    def strPayload = message.payload as String
                     try {
                         payload = new JsonSlurper().parseText(strPayload)
                     } catch (ignored) {
