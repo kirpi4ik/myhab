@@ -28,7 +28,6 @@ import static org.myhab.ConfigKey.CONFIG_TEMP_ALL_DAY
  */
 @Slf4j
 @DisallowConcurrentExecution
-@Transactional
 class HeatingControlJob implements Job, EventPublisher {
     static triggers = {
         simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(2)

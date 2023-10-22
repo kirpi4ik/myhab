@@ -7,12 +7,10 @@ import grails.gorm.transactions.Transactional
 import groovy.util.logging.Slf4j
 
 @Slf4j
-@Transactional
 class PowerService implements EventPublisher {
 
     def mqttTopicService
 
-    @Transactional
     def execute(params) {
         if (params != null) {
             Collections.emptyList()

@@ -4,6 +4,7 @@ import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
 import kong.unirest.Unirest
 import org.myhab.async.mqtt.MqttTopicService
+import org.myhab.config.CfgKey
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
@@ -31,7 +32,7 @@ class NibeInfoSyncJob implements Job {
     void execute(JobExecutionContext context) throws JobExecutionException {
         def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
         try {
-            def accConfig = device.getConfigurationByKey('cfg.key.device.oauth.access_token')
+            def accConfig = device.getConfigurationByKey(CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN)
             if (accConfig && accConfig.value) {
                 def pumpResponse = Unirest.get("$API_URL/systems/$DEVICE_REF_ID/serviceinfo/categories").header("Authorization", "Bearer ${accConfig.value}").asString();
                 if (pumpResponse.status == 200) {
@@ -63,7 +64,7 @@ class NibeInfoSyncJob implements Job {
                     if (port) {
                         mqttTopicService.publish(device.ports.find { it.internalRef == parameter['name'] } as DevicePort, "${parameter['rawValue']}")
                     } else {
-                        log.debug("Unknow port internal ref=[${parameter['name']}] for deviceId[${device.id}], mqtt publish event will be skipped")
+                       // log.debug("Unknow port internal ref=[${parameter['name']}] for deviceId[${device.id}], mqtt publish event will be skipped")
                     }
                 }
             }

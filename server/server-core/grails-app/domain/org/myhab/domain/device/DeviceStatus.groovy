@@ -2,7 +2,8 @@ package org.myhab.domain.device
 
 enum DeviceStatus {
     ONLINE,
-    OFFLINE
+    OFFLINE,
+    DISABLED
 
     static def DeviceStatus fromValue(def name) {
         values().find { val->

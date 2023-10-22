@@ -1,7 +1,6 @@
 package org.myhab.services
 
 import org.myhab.ConfigKey
-import org.myhab.domain.EntityType
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DevicePeripheral
 import org.myhab.domain.device.port.DevicePort
@@ -38,13 +37,13 @@ class UIMessageService implements EventPublisher {
                 }
                 switch (event.data.p4) {
                     case "on":
-                        scenarioService.lightsOn(args)
+                        scenarioService.switchOn(args)
                         break
                     case "off":
-                        scenarioService.lightsOff(args)
+                        scenarioService.switchOff(args)
                         break
                     case "rev":
-                        scenarioService.lightsReverse(args)
+                        scenarioService.switchToggle(args)
                         break
                 }
                 break
@@ -54,13 +53,13 @@ class UIMessageService implements EventPublisher {
 
                 switch (event.data.p4) {
                     case "on":
-                        scenarioService.lightsOn(args)
+                        scenarioService.switchOn(args)
                         break
                     case "off":
-                        scenarioService.lightsOff(args)
+                        scenarioService.switchOff(args)
                         break
                     case "rev":
-                        scenarioService.lightsReverse(args)
+                        scenarioService.switchToggle(args)
                         break
                 }
                 break
@@ -74,13 +73,13 @@ class UIMessageService implements EventPublisher {
 
                 switch (event.data.p4) {
                     case "on":
-                        scenarioService.lightsOn(eventArg)
+                        scenarioService.switchOn(eventArg)
                         break
                     case "off":
-                        scenarioService.lightsOff(eventArg)
+                        scenarioService.switchOff(eventArg)
                         break
                     case "rev":
-                        scenarioService.lightsReverse(eventArg)
+                        scenarioService.switchToggle(eventArg)
                         break
                 }
                 break

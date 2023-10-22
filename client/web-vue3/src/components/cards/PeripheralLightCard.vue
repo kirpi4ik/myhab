@@ -63,7 +63,7 @@
 		<q-separator></q-separator>
 		<q-card-section>
 			<div class="q-pa-sm text-grey-8">
-				<toggle v-model="asset['state']" @change="lightService.toggle(peripheral)" />
+				<toggle v-model="asset['state']" @change="lightService.toggle(peripheral)" :id="peripheral.id"/>
 			</div>
 		</q-card-section>
 	</q-card>

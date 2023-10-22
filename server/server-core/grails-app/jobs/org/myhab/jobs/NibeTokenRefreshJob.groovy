@@ -1,6 +1,6 @@
 package org.myhab.jobs
 
-
+import org.myhab.config.CfgKey
 import org.myhab.domain.device.Device
 import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
@@ -34,8 +34,8 @@ class NibeTokenRefreshJob implements Job {
     void execute(JobExecutionContext context) throws JobExecutionException {
         def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
         try {
-            Configuration refreshKeyFromCfg = device.getConfigurationByKey('cfg.key.device.oauth.refresh_token') ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.refresh_token')
-            Configuration accKeyFromCfg = device.getConfigurationByKey('cfg.key.device.oauth.access_token') ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.access_token')
+            Configuration refreshKeyFromCfg = device.getConfigurationByKey(CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN) ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.refresh_token')
+            Configuration accKeyFromCfg = device.getConfigurationByKey(CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN) ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.access_token')
             if (refreshKeyFromCfg.value) {
                 def tk = regenerateTokens(device, refreshKeyFromCfg.value)
                 refreshKeyFromCfg.value = tk['refresh_token']

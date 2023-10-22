@@ -1,32 +1,60 @@
 package org.myhab.services
 
-
+import grails.events.EventPublisher
+import grails.events.annotation.Subscriber
+import grails.gorm.transactions.Transactional
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.port.DevicePort
-import grails.events.annotation.Subscriber
-import grails.gorm.transactions.Transactional
+import org.myhab.domain.events.TopicName
+import org.myhab.domain.job.EventData
 import org.myhab.exceptions.UnavailableDeviceException
 
-@Transactional
-class DeviceService {
+class DeviceService implements EventPublisher {
 
     def megaDriverService
     def espService
     def configProvider
 
-    def readPortValuesFromDevice(Device device) throws UnavailableDeviceException{
-        switch (device.model) {
-            case DeviceModel.MEGAD_2561_RTC: {
-                return megaDriverService.readPortValues(device)
-            } case DeviceModel.ESP8266_1: {
-                return espService.readPortValues(device)
+    def readPortValuesFromDevice(Device device) throws UnavailableDeviceException {
+        try {
+            def values = [:]
+            switch (device.model) {
+                case DeviceModel.MEGAD_2561_RTC: {
+                    values = megaDriverService.readPortValues(device)
+                    break
+                } case DeviceModel.ESP8266_1: {
+                    values = espService.readPortValues(device)
+                    break
+                }
             }
+            if (device.status == DeviceStatus.OFFLINE) {
+                publish(TopicName.EVT_DEVICE_STATUS.id(), new EventData().with {
+                    p0 = TopicName.EVT_DEVICE_STATUS.id()
+                    p2 = "${device.code}" // device internal code
+                    p5 = "${DeviceStatus.ONLINE}" // device state
+                    p6 = "http sync port values"
+                    it
+                })
+            }
+            return values
+        } catch (UnavailableDeviceException unavailableDeviceException) {
+            publish(TopicName.EVT_DEVICE_STATUS.id(), new EventData().with {
+                p0 = TopicName.EVT_DEVICE_STATUS.id()
+                p2 = "${device.code}" // device internal code
+                p5 = "${DeviceStatus.OFFLINE}" // device state
+                p6 = "http sync port values"
+                it
+            })
+            throw new UnavailableDeviceException("Device[${device.id}] OFFLINE: [${unavailableDeviceException.message}]")
+        } catch (Exception ex) {
+            throw new UnavailableDeviceException("Read port value failed for device[${device.id}]: [${ex.message}]")
         }
 
     }
 
+    @Transactional
     DevicePort importPort(Device deviceController, def portType, def portInternalRef) {
         def devicePort = DevicePort.withCriteria {
             eq('internalRef', portInternalRef)
