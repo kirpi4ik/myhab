@@ -1,30 +1,29 @@
 package org.myhab.services
 
+import grails.events.EventPublisher
+import grails.events.annotation.Subscriber
+import groovy.util.logging.Slf4j
 import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
 import org.myhab.domain.device.Device
+import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortType
-import org.myhab.utils.DeviceHttpService
-import grails.events.EventPublisher
-import grails.events.annotation.Subscriber
-import grails.gorm.transactions.Transactional
-import groovy.util.logging.Slf4j
+import org.myhab.domain.events.TopicName
+import org.myhab.domain.job.EventData
 import org.myhab.exceptions.UnavailableDeviceException
+import org.myhab.utils.DeviceHttpService
 
 import java.util.regex.Matcher
 
-@Transactional
 @Slf4j
 class MegaDriverService implements EventPublisher {
     def dslService
-
 
     def readConfig(String deviceCode) {
 
     }
 
-    @Transactional
     def readConfig(Device deviceController) {
         def deviceMainPage = new DeviceHttpService(device: deviceController).readState()
 
@@ -58,15 +57,9 @@ class MegaDriverService implements EventPublisher {
 
     Map<String, String> readPortValues(deviceController) throws UnavailableDeviceException {
         def response = [:]
-        try {
             def allStringStatus = new DeviceHttpService(device: deviceController, uri: "?cmd=all").readState()
-
-            allStringStatus.text().split(";").eachWithIndex { status, index ->
-                response << ["$index": "$status"]
+            allStringStatus.text().split(";").eachWithIndex { status, index -> response << ["$index": "$status"]
             }
-        } catch (Exception ex) {
-            throw new UnavailableDeviceException("Read port value failed for device[${deviceController.id}]: [${ex.message}]")
-        }
         return response
     }
 
@@ -85,8 +78,7 @@ class MegaDriverService implements EventPublisher {
             Device deviceController = Device.findByCode(code)
             def portPage = new DeviceHttpService(device: deviceController, uri: "?pt=${internalRef}").readState()
 
-            PortType portType = PortType.fromValue(portPage.select("form select[name=pty] option").find { option ->
-                option != null && option.hasAttr("selected")
+            PortType portType = PortType.fromValue(portPage.select("form select[name=pty] option").find { option -> option != null && option.hasAttr("selected")
             }?.attr("value"))
 
             port = new DevicePort(internalRef: internalRef, name: portName, type: portType, description: "", device: deviceController)
