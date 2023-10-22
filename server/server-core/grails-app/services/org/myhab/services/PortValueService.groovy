@@ -62,7 +62,7 @@ class PortValueService implements EventPublisher {
                         p2 = "${devicePort.id}"
                         p3 = "${devicePort.internalRef}"
                         p4 = "${devicePort.value}"
-                        p5 = "${event.id}"
+                        p6 = "${event.data.p6}"
                         it
                     })
                 } catch (Exception ex) {
@@ -74,7 +74,7 @@ class PortValueService implements EventPublisher {
                     p2 = "${devicePort.id}"
                     p3 = "${devicePort.internalRef}"
                     p4 = "${devicePort.value}"
-                    p5 = "mqtt"
+                    p6 = "${event.data.p6}"
                     it
                 })
             }

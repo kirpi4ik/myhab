@@ -14,7 +14,7 @@ class DslService {
 
     def shell = new GroovyShell(this.class.classLoader, binding, cc)
     shell.evaluate("""
-    import ScenarioService
+    import org.myhab.services.dsl.ScenarioService
     import grails.util.Holders
     import org.springframework.context.ApplicationContext
     
