@@ -1,6 +1,6 @@
 package org.myhab.domain.common
 
-
+import org.myhab.config.CfgKey
 import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
 
@@ -17,6 +17,17 @@ trait Configurable<BaseEntity> {
             eq('entityType', getEntityType())
             eq('entityId', getId())
             eq('key', key)
+        }
+        if (cfgList) {
+            return cfgList.first()
+        } else return null
+    }
+
+    def getConfigurationByKey(CfgKey.Key key) {
+        def cfgList = Configuration.createCriteria().list {
+            eq('entityType', getEntityType())
+            eq('entityId', getId())
+            eq('key', key.key())
         }
         if (cfgList) {
             return cfgList.first()

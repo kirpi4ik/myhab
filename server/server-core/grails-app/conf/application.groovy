@@ -104,7 +104,7 @@ environments {
     development {
         dataSource {
             dbCreate = "update"
-            url = "jdbc:postgresql://localhost:5432/myhab"
+            url = "jdbc:postgresql://localhost:5432/madhouse"
             username = "myhab"
             password = "myhab"
             logSql = false
