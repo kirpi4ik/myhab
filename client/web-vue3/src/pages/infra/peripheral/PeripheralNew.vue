@@ -21,10 +21,9 @@
           </q-select>
           <q-input v-model="peripheral.name" label="Name" clearable clear-icon="close" color="orange"
                    :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="peripheral.model" label="Model" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
           <q-input v-model="peripheral.description" label="Description" clearable clear-icon="close" color="orange"
                    :rules="[val => !!val || 'Field is required']"/>
+          <q-input v-model="peripheral.model" label="Model" clearable clear-icon="close" color="orange"/>
           <q-select v-model="peripheral.category"
                     :options="categoryList"
                     option-label="name"
