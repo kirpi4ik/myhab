@@ -4,7 +4,7 @@ import org.myhab.config.CfgKey
 import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
 
-trait Configurable<BaseEntity> {
+trait Configurable<T extends BaseEntity> {
     Set<Configuration> getConfigurations() {
         return Configuration.withCriteria {
             eq('entityType', getEntityType())
