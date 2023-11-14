@@ -6,6 +6,7 @@ import org.myhab.domain.User
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import org.myhab.domain.device.DeviceModel
 import org.myhab.init.cache.CacheMap
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -76,6 +77,15 @@ class Query {
                 def key = environment.getArgument("key")
                 def config = configProvider.get(String, key)
                 return config
+            }
+        }
+    }
+
+    def deviceModelList() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                return DeviceModel.values()
             }
         }
     }

@@ -508,6 +508,7 @@ type Query {
   deviceCategoryList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [DeviceCategory]
   deviceCount: Int
   deviceList(ignoreCase: Boolean, max: Int, offset: Int, order: String, sort: String): [Device]
+  deviceModelList: [String!]!
   devicePeripheral(id: Long!): DevicePeripheral
   devicePeripheralById(id: String!): DevicePeripheral
   devicePeripheralCount: Int
