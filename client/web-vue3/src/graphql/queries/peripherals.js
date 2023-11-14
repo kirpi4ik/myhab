@@ -7,6 +7,14 @@ export const PERIPHERAL_CREATE = gql`
     }
   }
 `;
+export const PERIPHERAL_UPDATE = gql`
+    mutation ($id: Long!, $devicePeripheral: DevicePeripheralUpdate!) {
+        updatePeripheral(id: $id, peripheral: $devicePeripheral) {
+            success
+            error
+        }
+    }
+`;
 export const PERIPHERAL_CATEGORY_CREATE = gql`
   mutation ($peripheralCategory: PeripheralCategoryCreate) {
     peripheralCategoryCreate(peripheralCategory: $peripheralCategory ) {
@@ -96,6 +104,7 @@ export const PERIPHERAL_GET_BY_ID = gql`
         value
         internalRef
         device {
+          code
           status
         }
       }

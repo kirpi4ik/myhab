@@ -65,7 +65,7 @@ export default defineComponent({
     const selectedRow = ref(null);
     const columns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+      {name: 'name', label: 'Denumire', field: 'name', align: 'left', sortable: true},
       {name: 'model', label: 'Model', field: 'model', align: 'left', sortable: true},
       {name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true},
       {name: 'actions', label: 'Actions', field: 'actions'},
