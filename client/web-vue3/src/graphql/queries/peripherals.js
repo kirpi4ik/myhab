@@ -93,6 +93,7 @@ export const PERIPHERAL_GET_BY_ID = gql`
       id
       name
       model
+      maxAmp
       description
       category {
         id
