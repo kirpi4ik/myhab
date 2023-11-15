@@ -50,6 +50,11 @@
           @row-click="onRowClick"
           row-key="id"
         >
+          <template v-slot:body-cell-actions="props">
+            <q-td :props="props">
+              <q-btn icon="delete"  @click="confirmDelete = true; selectedPort=props.row"></q-btn>
+            </q-td>
+          </template>
         </q-table>
         <br/>
         <q-btn icon="add" color="positive"  label="Add port" @click="newPort"/>
@@ -57,20 +62,42 @@
       </div>
 
       <q-card-actions>
-        <q-btn flat color="secondary" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
+        <q-btn color="accent" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           Edit
         </q-btn>
-        <q-btn flat color="secondary" :to="$route.matched[$route.matched.length-2]">
+        <q-btn color="info" @click="$router.go(-1)">
           Cancel
         </q-btn>
       </q-card-actions>
     </q-card>
+    <q-dialog v-model="confirmDelete" transition-show="jump-up" transition-hide="jump-down">
+      <q-card>
+        <q-bar class="bg-deep-orange-7 text-white">
+          <q-icon name="lock"/>
+          <div>Warning</div>
+          <q-space/>
+          <q-btn dense flat icon="close" v-close-popup>
+            <q-tooltip class="bg-primary">Close</q-tooltip>
+          </q-btn>
+        </q-bar>
+        <q-card-section class="row items-center">
+          <q-avatar icon="delete" color="red" text-color="white"/>
+          <span class="q-ml-sm">Do you want to remove port  <b class="text-h6 text-red">{{ selectedPort.name }}</b> ?</span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Delete" color="red" v-close-popup
+                 @click="onDelete();confirmDelete=false"/>
+          <q-btn flat label="Cancel" color="positive" v-close-popup/>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {DEVICE_GET_BY_ID_CHILDS} from "@/graphql/queries";
+import {DEVICE_GET_BY_ID_CHILDS, PORT_DELETE_BY_ID, USER_DELETE} from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
@@ -83,12 +110,16 @@ export default defineComponent({
     const {client} = useApolloClient();
     const router = useRouter();
     const route = useRoute();
+    const confirmDelete = ref(false);
+    const selectedPort = ref(null);
+
 
     const portColumns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'internalRef', label: 'RefId', field: 'internalRef', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
       {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+      {name: 'actions', label: 'Actions', field: 'actions'}
     ]
 
 
@@ -118,6 +149,16 @@ export default defineComponent({
       },
       newPort: () => {
         router.push({path: `/admin/ports/new`, query: {deviceId: route.params.idPrimary}})
+      },
+      confirmDelete,
+      selectedPort,
+      onDelete: () => {
+        client.mutate({
+          mutation: PORT_DELETE_BY_ID,
+          variables: {id: selectedPort.value.id},
+        }).then(response => {
+          fetchData()
+        });
       }
     }
   }

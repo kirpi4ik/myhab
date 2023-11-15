@@ -53,10 +53,10 @@
         </q-card-section>
         <q-separator/>
         <q-card-actions>
-          <q-btn flat color="secondary" type="submit">
+          <q-btn color="accent" type="submit">
             Save
           </q-btn>
-          <q-btn flat color="secondary" :to="$route.matched[1]">
+          <q-btn color="info" @click="$router.go(-1)">
             Cancel
           </q-btn>
         </q-card-actions>
