@@ -21,10 +21,9 @@
           </q-select>
           <q-input v-model="peripheral.name" label="Name" clearable clear-icon="close" color="orange"
                    :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="peripheral.model" label="Model" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
           <q-input v-model="peripheral.description" label="Description" clearable clear-icon="close" color="orange"
                    :rules="[val => !!val || 'Field is required']"/>
+          <q-input v-model="peripheral.model" label="Model" clearable clear-icon="close" color="orange"/>
           <q-select v-model="peripheral.category"
                     :options="categoryList"
                     option-label="name"
@@ -34,10 +33,10 @@
         </q-card-section>
         <q-separator/>
         <q-card-actions>
-          <q-btn flat color="secondary" type="submit">
+          <q-btn color="accent" type="submit">
             Save
           </q-btn>
-          <q-btn flat color="secondary" :to="$route.matched[1]">
+          <q-btn color="info" @click="$router.go(-1)">
             Cancel
           </q-btn>
         </q-card-actions>

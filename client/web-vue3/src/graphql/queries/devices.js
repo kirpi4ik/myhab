@@ -95,6 +95,11 @@ export const DEVICE_GET_BY_ID_MINIMAL = gql`
     }
   }
 `;
+export const DEVICE_MODEL_LIST = gql`
+  {
+    deviceModelList
+  }
+`;
 export const DEVICE_CATEGORIES_LIST = gql`
   {
     deviceCategoryList{
