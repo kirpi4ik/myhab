@@ -63,7 +63,7 @@
 		<q-separator></q-separator>
 		<q-card-section>
 			<div class="q-pa-sm text-grey-8">
-				<toggle v-model="asset['state']" @change="lightService.toggle(peripheral)" :id="peripheral.id"/>
+				<toggle v-model="asset['data']['state']" @change="lightService.toggle(asset)" :id="peripheral.id"/>
 			</div>
 		</q-card-section>
 	</q-card>
@@ -145,6 +145,7 @@ export default defineComponent({
 					if (portId == payload.p2) {
 						asset.value['value'] = payload.p4;
 						asset.value['state'] = payload.p4 === 'ON';
+						asset.value['data']['state'] = payload.p4 === 'ON';
 						loadDetails();
 					}
 				} else if (wsMessage.value.eventName == 'evt_cfg_value_changed') {
