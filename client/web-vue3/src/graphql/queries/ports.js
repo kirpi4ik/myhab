@@ -52,6 +52,14 @@ export const PORT_GET_BY_ID = gql`
 		portStates
 	}
 `;
+export const PORT_DELETE_BY_ID = gql`
+  mutation ($id: Long!) {
+    devicePortDelete(id: $id) {
+      error
+      success
+    }
+  }
+`;
 export const PORT_EDIT_GET_BY_ID = gql`
   query ($id: Long!) {
     devicePort(id: $id) {

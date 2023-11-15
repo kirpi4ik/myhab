@@ -53,10 +53,10 @@
         </q-table>
       </div>
       <q-card-actions>
-        <q-btn flat color="secondary" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
+        <q-btn color="accent" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           Edit
         </q-btn>
-        <q-btn flat color="secondary" :to="$route.matched[$route.matched.length-2]">
+        <q-btn color="info" @click="$router.go(-1)">
           Cancel
         </q-btn>
       </q-card-actions>
@@ -73,7 +73,7 @@ import {useRoute, useRouter} from "vue-router/dist/vue-router";
 export default defineComponent({
   name: 'ZoneView',
   setup() {
-    const uri = '/admin/peripherals'
+    const uri = '/admin/zones'
     const viewItem = ref()
     const loading = ref(false)
     const {client} = useApolloClient();

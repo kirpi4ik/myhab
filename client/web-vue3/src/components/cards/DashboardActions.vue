@@ -39,7 +39,7 @@
           <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneIntId + '?category=TEMP'">Interior
           </q-btn>
           <q-separator vertical></q-separator>
-          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneIntId + '?category=TEMP'">Exterior
+          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneExtId + '?category=TEMP'">Exterior
           </q-btn>
         </q-card-actions>
       </q-card>
@@ -78,12 +78,12 @@ export default defineComponent({
     PeripheralLock,
   },
   setup() {
-    const zoneIntId = process.env.VUE_APP_CONF_ZONE_INT_ID;
-    const zoneExtId = process.env.VUE_APP_CONF_ZONE_EXT_ID;
-    const zoneEtajId = process.env.VUE_APP_CONF_ZONE_ETAJ_ID;
-    const zoneParterId = process.env.VUE_APP_CONF_ZONE_PARTER_ID;
-    const heatPumpDeviceId = process.env.HEAT_PUMP_DEVICE_ID;
-    const eMeterDeviceId = process.env.ELECTRIC_METER_01_DEVICE_ID;
+    const zoneIntId = parseInt(process.env.VUE_APP_CONF_ZONE_INT_ID);
+    const zoneExtId = parseInt(process.env.VUE_APP_CONF_ZONE_EXT_ID);
+    const zoneEtajId = parseInt(process.env.VUE_APP_CONF_ZONE_ETAJ_ID);
+    const zoneParterId = parseInt(process.env.VUE_APP_CONF_ZONE_PARTER_ID);
+    const heatPumpDeviceId = parseInt(process.env.HEAT_PUMP_DEVICE_ID);
+    const eMeterDeviceId = parseInt(process.env.ELECTRIC_METER_01_DEVICE_ID);
     return {
       zoneIntId,
       zoneExtId,

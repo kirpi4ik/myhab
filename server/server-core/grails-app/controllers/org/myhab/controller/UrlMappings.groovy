@@ -17,6 +17,7 @@ class UrlMappings {
             "/nx/wui"(uri: "/nx/index.html")
             "/nx/ports/**"(uri: "/nx/index.html")
             "/nx/login"(uri: "/nx/index.html")
+            "/nx/admin/**"(uri: "/nx/index.html")
             "/nx/zones/**"(uri: "/nx/index.html")
             "/nx/users/**"(uri: "/nx/index.html")
             "/nx/cables/**"(uri: "/nx/index.html")

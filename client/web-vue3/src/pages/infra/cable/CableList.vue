@@ -19,7 +19,7 @@
       <template v-slot:top>
         <q-btn icon="add" color="positive" :disable="loading" label="Add cable" @click="addRow"/>
         <q-space/>
-        <q-input dense debounce="300" color="primary" v-model="filter">
+        <q-input dense outlined debounce="300" color="primary" v-model="filter">
           <template v-slot:append>
             <q-icon name="search"/>
           </template>
