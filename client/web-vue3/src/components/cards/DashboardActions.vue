@@ -39,7 +39,7 @@
           <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneIntId + '?category=TEMP'">Interior
           </q-btn>
           <q-separator vertical></q-separator>
-          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneIntId + '?category=TEMP'">Exterior
+          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneExtId + '?category=TEMP'">Exterior
           </q-btn>
         </q-card-actions>
       </q-card>
