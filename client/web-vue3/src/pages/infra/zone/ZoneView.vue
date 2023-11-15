@@ -73,7 +73,7 @@ import {useRoute, useRouter} from "vue-router/dist/vue-router";
 export default defineComponent({
   name: 'ZoneView',
   setup() {
-    const uri = '/admin/peripherals'
+    const uri = '/admin/zones'
     const viewItem = ref()
     const loading = ref(false)
     const {client} = useApolloClient();
