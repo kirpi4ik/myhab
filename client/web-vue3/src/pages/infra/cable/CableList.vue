@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <q-grid :data="rows" :columns="columns" :columns_filter="true" :pagination="{rowsPerPage:10}">
+    <q-grid :data="rows" :columns="columns" :columns_filter="true" :pagination="{rowsPerPage:10}" >
       <template v-slot:header="props">
         <q-tr :props="props">
           <q-th
@@ -10,7 +10,7 @@
           </q-th>
         </q-tr>
       </template>
-      <template v-slot:body="props">
+      <template v-slot:body="props" >
         <q-tr :props="props" @click="onRowClick(props.row)">
           <q-td key="name" style="max-width: 50px">
             {{ props.row.id }}
@@ -31,7 +31,7 @@
             {{ props.row.patchPanel }}
           </q-td>
           <q-td key="name">
-            <q-btn icon="mode_edit" @click="onEdit(props.row)"></q-btn>
+            <q-btn icon="mode_edit" @click.stop="onEdit(props.row)"></q-btn>
             <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
           </q-td>
         </q-tr>
@@ -121,7 +121,7 @@ export default defineComponent({
       categoryList,
       columns,
       onRowClick: (row) => {
-        router.push({path: `${uri}/${row.id}/view`})
+          router.push({path: `${uri}/${row.id}/view`})
       },
       onEdit: (row) => {
         router.push({path: `${uri}/${row.id}/edit`})
