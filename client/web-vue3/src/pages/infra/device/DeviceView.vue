@@ -11,6 +11,8 @@
         <div class="text-h4 text-secondary">Device details: {{viewItem.code}}</div>
         <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'"
                style="margin-left: 5px"/>
+        <q-btn outline round color="amber-8" icon="mdi-view-list" :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=DEVICE'"
+               style="margin-left: 5px"/>
       </q-card-section>
       <q-item>
         <q-item-section>
@@ -97,7 +99,7 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {DEVICE_GET_BY_ID_CHILDS, PORT_DELETE_BY_ID, USER_DELETE} from "@/graphql/queries";
+import {DEVICE_GET_BY_ID_CHILDS, PORT_DELETE_BY_ID} from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
