@@ -7,9 +7,12 @@ import {setContext} from '@apollo/client/link/context';
 import {onError} from '@apollo/client/link/error';
 import {authzService} from '@/_services';
 import {Utils} from '@/_helpers';
+import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
+
+loadDevMessages();
+loadErrorMessages();
 
 // Notice the use of the link-error tool from Apollo
-
 const httpLink = new HttpLink({
 	uri: Utils.host() + '/graphql',
 });
