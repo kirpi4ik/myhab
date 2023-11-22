@@ -237,6 +237,19 @@ const routes = [
       }
       ,
       {
+        path: adminPrefix + '/configurations/:idPrimary',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "configurations"
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/config/ConfigurationView'),
+          }
+        ],
+      },
+      {
         path: adminPrefix + '/zones',
         component: () => import('layouts/CenterLayout'),
         meta: {
