@@ -14,6 +14,19 @@ export const CONFIGURATION_SET_VALUE = gql`
 		}
 	}
 `;
+export const CONFIGURATION_UPDATE = gql`
+	mutation ($configuration: ConfigurationUpdate, $id: Long!) {
+    configurationUpdate(configuration: $configuration, id: $id) {
+			id
+			name
+			description
+			value
+			entityType
+			key
+			entityId
+		}
+	}
+`;
 export const CONFIGURATION_LIST = gql`
 	query configurationListByEntity($entityType: EntityType!, $entityId: Long!) {
 		configurationListByEntity(entityType: $entityType, entityId: $entityId) {
@@ -22,6 +35,7 @@ export const CONFIGURATION_LIST = gql`
 			value
 			entityType
 			entityId
+      description
 		}
 	}
 `;
@@ -31,8 +45,8 @@ export const CONFIGURATION_KEY_LIST = gql`
     }
 `;
 export const CONFIGURATION_ADDLIST_CONFIG_VALUE = gql`
-	mutation ($key: String!, $entityId: Long!, $entityType: EntityType!, $value: String!) {
-		addListItemProperty(key: $key, entityId: $entityId, entityType: $entityType, value: $value) {
+	mutation ($key: String!, $entityId: Long!, $entityType: EntityType!, $value: String!, $description: String!) {
+		addListItemProperty(key: $key, entityId: $entityId, entityType: $entityType, value: $value, description: $description) {
 			id
 			version
 			name
