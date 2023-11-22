@@ -118,98 +118,99 @@ export const CABLE_BY_ID = gql`
   }
 `;
 export const CABLE_EDIT_GET_DETAILS = gql`
-  query cableById($id: Long!) {
-    cable(id: $id) {
-      id
-      version
-      uid
-      tsCreated
-      tsUpdated
-      entityType
-      rack {
-        id
-        name
-      }
-      patchPanel {
-        id
-        name
-      }
-      category {
-        id
-        name
-      }
-      code
-      codeNew
-      codeOld
-      description
-      patchPanelPort
-      nrWires
-      rackRowNr
-      orderInRow
-      peripherals {
-        id
-        name
-      }
-      connectedTo {
-        id
-        name
-        internalRef
-        device {
-          code
+    query cableById($id: Long!) {
+        cable(id: $id) {
+            id
+            version
+            uid
+            tsCreated
+            tsUpdated
+            entityType
+            rack {
+                id
+                name
+            }
+            patchPanel {
+                id
+                name
+            }
+            category {
+                id
+                name
+            }
+            code
+            codeNew
+            codeOld
+            description
+            patchPanelPort
+            nrWires
+            rackRowNr
+            orderInRow
+            peripherals {
+                id
+                name
+            }
+            connectedTo {
+                id
+                name
+                internalRef
+                device {
+                    code
+                }
+            }
+            zones {
+                id
+                name
+            }
+            maxAmp
         }
-      }
-      zones {
-        id
-        name
-      }
-      maxAmp
-    }
-    rackList {
-      id
-      name
-      patchPanels {
-        id
-        name
-      }
-    }
-    cableCategoryList {
-      id
-      name
-    }
-    zoneList {
-      id
-      name
-    }
-    patchPanelList {
-      id
-      name
-    }
-    deviceList{
-      id
-      code
-      name
-      ports {
-        id
-        name
-        internalRef
-      }
-    }
-    devicePeripheralList {
-      id
-      name
-    }
+        rackList {
+            id
+            name
+            patchPanels {
+                id
+                name
+            }
+        }
+        cableCategoryList {
+            id
+            name
+        }
+        zoneList {
+            id
+            name
+        }
+        patchPanelList {
+            id
+            name
+            size
+        }
+        deviceList{
+            id
+            code
+            name
+            ports {
+                id
+                name
+                internalRef
+            }
+        }
+        devicePeripheralList {
+            id
+            name
+        }
 
-    devicePortList {
-      id
-      internalRef
-      name
-      description
-      device {
-        code
-        description
-      }
+        devicePortList {
+            id
+            internalRef
+            name
+            description
+            device {
+                code
+                description
+            }
+        }
     }
-  }
 `;
 export const CABLE_CREATE_GET_DETAILS = gql`
   query {
