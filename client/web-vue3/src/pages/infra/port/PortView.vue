@@ -11,6 +11,8 @@
           <div class="text-h4 text-secondary">Port details</div>
           <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'"
                  style="margin-left: 5px"/>
+        <q-btn outline round color="amber-8" icon="mdi-view-list" :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=PORT'"
+               style="margin-left: 5px"/>
       </q-card-section>
       <q-expansion-item v-if="viewItem.device" class="bg-green-2"
                         expand-separator
