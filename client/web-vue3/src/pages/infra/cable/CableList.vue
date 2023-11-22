@@ -1,44 +1,40 @@
 <template>
   <q-page padding>
-    <q-table
-      :dense="$q.screen.lt.md"
-      title="Devices"
-      :rows="rows"
-      :columns="columns"
-      :loading="loading"
-      :filter="filter"
-      :pagination="pagination"
-      row-key="id"
-      @row-click="onRowClick"
-      @request="fetchData"
-      binary-state-sort
-    >
-      <template v-slot:loading>
-        <q-inner-loading showing color="primary"/>
+    <q-grid :data="rows" :columns="columns" :columns_filter="true" :pagination="{rowsPerPage:10}" >
+      <template v-slot:header="props">
+        <q-tr :props="props">
+          <q-th
+            :key="col.name"
+            v-for="col in props.cols">
+            {{ col.label }}
+          </q-th>
+        </q-tr>
       </template>
-      <template v-slot:top>
-        <q-btn icon="add" color="positive" :disable="loading" label="Add cable" @click="addRow"/>
-        <q-space/>
-        <q-input dense outlined debounce="300" color="primary" v-model="filter">
-          <template v-slot:append>
-            <q-icon name="search"/>
-          </template>
-        </q-input>
-      </template>
-      <template v-slot:header-cell-category>
-        <q-select v-model="filter" :options="categoryList" label="Category" map-options filled dense>
-          <q-icon name="cancel" @click.stop.prevent="filter = null" class="cursor-pointer text-blue"/>
-        </q-select>
-      </template>
-      <template v-slot:body-cell-code="props">
-        <q-td :props="props">
-          <q-badge :label="props.value" class="text-weight-bold text-blue-6 text-h6 bg-transparent"/>
-        </q-td>
-      </template>
-      <template v-slot:body-cell-name="props">
-        <q-td :props="props">
-          <q-badge :label="props.value" class="text-weight-bold text-blue-6 text-h6 bg-transparent"/>
-        </q-td>
+      <template v-slot:body="props" >
+        <q-tr :props="props" @click="onRowClick(props.row)">
+          <q-td key="name" style="max-width: 50px">
+            {{ props.row.id }}
+          </q-td>
+          <q-td key="name" >
+            {{ props.row.location }}
+          </q-td>
+          <q-td key="name">
+            {{ props.row.category }}
+          </q-td>
+          <q-td key="name">
+            {{ props.row.code }}
+          </q-td>
+          <q-td key="name">
+            {{ props.row.description }}
+          </q-td>
+          <q-td key="name">
+            {{ props.row.patchPanel }}
+          </q-td>
+          <q-td key="name">
+            <q-btn icon="mode_edit" @click.stop="onEdit(props.row)"></q-btn>
+            <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
+          </q-td>
+        </q-tr>
       </template>
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
@@ -46,7 +42,9 @@
           <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
         </q-td>
       </template>
-    </q-table>
+    </q-grid>
+
+
   </q-page>
 </template>
 
@@ -61,28 +59,28 @@ export default defineComponent({
   name: 'CableList',
   setup() {
     const uri = '/admin/cables'
-    const filter = ref('')
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
-    const rows = ref();
+    const rows = ref([]);
     const confirmDelete = ref(false);
     const selectedRow = ref(null);
     const categoryList = ref([]);
     const columns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true},
-      {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
-      {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', align: 'left', sortable: true},
-      {name: 'actions', label: 'Actions', field: 'actions'},
+      {
+        name: 'id',
+        label: 'ID',
+        field: 'id',
+        sortable: true,
+        align: 'left'
+      },
+      {name: 'location', label: 'Rack', field: 'location', sortable: true, filter_type: 'select'},
+      {name: 'category', label: 'Category', field: 'category', sortable: true, filter_type: 'select'},
+      {name: 'code', label: 'Code', field: 'code', sortable: true},
+      {name: 'description', label: 'Description', field: 'description', sortable: true},
+      {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', sortable: true},
+      {name: 'actions', label: 'Actions', field: 'actions', sortable: false, filter_type: ''}
     ];
-    const pagination = ref({
-      sortBy: 'code',
-      descending: false,
-      page: 1,
-      rowsPerPage: 10
-    })
     const fetchData = () => {
       loading.value = true;
       client.query({
@@ -99,6 +97,7 @@ export default defineComponent({
           function (result, value, key) {
             let device = {
               id: value.id,
+              location: value.rack.name,
               category: value.category != null ? value.category.name : "",
               code: value.code,
               description: value.description,
@@ -115,18 +114,14 @@ export default defineComponent({
     })
     return {
       rows,
-      columns,
-      filter,
-      pagination,
       loading,
       fetchData,
       confirmDelete,
       selectedRow,
       categoryList,
-      onRowClick: (evt, row) => {
-        if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
+      columns,
+      onRowClick: (row) => {
           router.push({path: `${uri}/${row.id}/view`})
-        }
       },
       onEdit: (row) => {
         router.push({path: `${uri}/${row.id}/edit`})

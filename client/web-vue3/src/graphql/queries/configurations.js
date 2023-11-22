@@ -25,6 +25,11 @@ export const CONFIGURATION_LIST = gql`
 		}
 	}
 `;
+export const CONFIGURATION_KEY_LIST = gql`
+    query configKeysByEntity($entityType: EntityType!) {
+        configKeysByEntity(entityType: $entityType)
+    }
+`;
 export const CONFIGURATION_ADDLIST_CONFIG_VALUE = gql`
 	mutation ($key: String!, $entityId: Long!, $entityType: EntityType!, $value: String!) {
 		addListItemProperty(key: $key, entityId: $entityId, entityType: $entityType, value: $value) {

@@ -11,6 +11,8 @@
         <div class="text-h4 text-secondary">Peripheral details</div>
         <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'"
                style="margin-left: 5px"/>
+        <q-btn outline round color="amber-8" icon="mdi-view-list" :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=PERIPHERAL'"
+               style="margin-left: 5px"/>
       </q-card-section>
       <q-item>
         <q-item-section>

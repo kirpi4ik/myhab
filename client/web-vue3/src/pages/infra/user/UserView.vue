@@ -13,11 +13,12 @@
             <img src="https://cdn.quasar.dev/img/avatar2.jpg">
           </q-avatar>
         </q-item-section>
-
         <q-item-section>
           <q-item-label>{{ viewItem.name }}</q-item-label>
           <q-item-label caption>{{ viewItem.username }}</q-item-label>
         </q-item-section>
+        <q-btn outline round color="amber-8" icon="mdi-view-list" :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=USER'"
+               style="margin-left: 5px"/>
       </q-item>
       <q-item>
         <q-item-section>
