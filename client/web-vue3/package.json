@@ -56,6 +56,7 @@
 		"eslint-plugin-vue": "^9.17.0",
 		"eslint-webpack-plugin": "^3.2.0",
 		"prettier": "^3.0.3",
+		"quasar-app-extension-qgrid": "^1.0.11",
 		"quasar-app-extension-qhierarchy": "^1.0.14",
 		"webpack": "^5.88.2"
 	},
@@ -75,5 +76,5 @@
 		"npm": ">= 6.13.4",
 		"yarn": ">= 1.21.1"
 	},
-	"version": "2.5.13"
+	"version": "2.5.14"
 }

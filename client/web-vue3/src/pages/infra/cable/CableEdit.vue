@@ -30,8 +30,9 @@
               <q-icon name="cancel" @click.stop.prevent="cable.patchPanel = null ; cable.patchPanelPort = null"
                       class="cursor-pointer text-blue"/>
             </q-select>
-            <q-input v-model="cable.patchPanelPort" label="Patch panel port" clearable clear-icon="close"
-                     color="green"/>
+            <q-select v-model="cable.patchPanelPort" clearable
+                      :options="cable.patchPanel!=null?Array.from({length: cable.patchPanel.size}, (_, i) => i + 1):[]"
+                      label="Patch panel port"/>
           </q-card-section>
           <q-input v-model="cable.codeOld" label="Code old" clearable clear-icon="close" color="green"/>
           <q-input v-model="cable.codeNew" label="Code new" clearable clear-icon="close" color="green"/>
@@ -55,7 +56,8 @@
                       v-model="newPort"
                       :options="portList"
                       option-label="name"
-                      label="Port" map-options filled dense use-input @filter="portFilterFn" color="green" class="col-lg-2 col-md-2">
+                      label="Port" map-options filled dense use-input @filter="portFilterFn" color="green"
+                      class="col-lg-2 col-md-2">
               <q-icon name="cancel" @click.stop.prevent="newPort = null" class="cursor-pointer text-blue"/>
             </q-select>
             <q-btn icon="mdi-link-variant-plus" @click="connectPort()" color="green" label="Connect"
