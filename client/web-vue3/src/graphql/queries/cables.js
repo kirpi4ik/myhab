@@ -40,6 +40,9 @@ export const CABLE_LIST_ALL = gql`
       codeOld
       description
       patchPanelPort
+      rack {
+        name
+      }
       patchPanel {
         id
         name
