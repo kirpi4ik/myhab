@@ -335,7 +335,7 @@ type Layer {
 }
 
 type Mutation {
-  addListItemProperty(entityId: Long!, entityType: EntityType!, key: String!, value: String!): Configuration
+  addListItemProperty(description: String!, entityId: Long!, entityType: EntityType!, key: String!, value: String!): Configuration
   cableCategoryCreate(cableCategory: CableCategoryCreate): CableCategory
   cableCategoryDelete(id: Long!): DeleteResult
   cableCategoryUpdate(cableCategory: CableCategoryUpdate, id: Long!): CableCategory
@@ -692,6 +692,7 @@ enum EntityType {
   PORT_VALUE
   RACK
   TS_STATISTIC
+  USER
   ZONE
 }
 

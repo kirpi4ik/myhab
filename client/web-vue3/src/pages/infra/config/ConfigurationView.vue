@@ -14,14 +14,15 @@
               <q-card-section class="full-width">
                 <q-input v-model="cfg.value" label="Value" clearable clear-icon="close" color="orange"/>
               </q-card-section>
+              <q-card-section class="full-width">
+                <q-input v-model="cfg.description" label="Description" clearable clear-icon="close" color="orange"/>
+              </q-card-section>
+              <q-btn color="blue" icon="mdi-content-save-edit" @click="onUpdate(cfg)"/>
               <q-btn color="red" icon="mdi-playlist-remove" @click="cfgToRemove=cfg; confirmDelete=true;"/>
             </q-card-section>
           </q-card>
         </q-card-section>
         <q-card-actions>
-          <q-btn color="accent" type="submit">
-            Save
-          </q-btn>
           <q-btn color="info" @click="$router.go(-1)">
             Cancel
           </q-btn>
@@ -70,6 +71,9 @@
             <q-card-section class="full-width">
               <q-input v-model="newCfgValue" label="Value" clearable clear-icon="close" color="orange"/>
             </q-card-section>
+            <q-card-section class="full-width">
+              <q-input v-model="newCfgDescription" label="Description" clearable clear-icon="close" color="orange"/>
+            </q-card-section>
           </q-card-section>
         </q-card-section>
 
@@ -111,14 +115,17 @@ import {
   CONFIGURATION_ADDLIST_CONFIG_VALUE,
   CONFIGURATION_KEY_LIST,
   CONFIGURATION_LIST,
-  CONFIGURATION_REMOVE_CONFIG
+  CONFIGURATION_REMOVE_CONFIG, CONFIGURATION_SET_VALUE, CONFIGURATION_UPDATE
 } from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute} from "vue-router";
+import _ from "lodash";
+import {useQuasar} from "quasar";
 
 export default defineComponent({
   name: 'ConfigurationView',
   setup() {
+    const $q = useQuasar()
     const {client} = useApolloClient();
     const cfgList = ref([])
     const route = useRoute();
@@ -128,6 +135,7 @@ export default defineComponent({
     const cfgToRemove = ref(null)
     const newCfgKey = ref(null)
     const newCfgValue = ref(null)
+    const newCfgDescription = ref('')
     const keyOptions = ref([])
     const keyOptionsFiltered = ref(keyOptions)
 
@@ -163,12 +171,29 @@ export default defineComponent({
           key: newCfgKey.value,
           entityId: route.params.idPrimary,
           entityType: route.query.type.toUpperCase(),
-          value: newCfgValue.value
+          value: newCfgValue.value,
+          description: newCfgDescription.value
         },
         fetchPolicy: 'network-only',
       }).then(response => {
         newCfgKey.value = null
         newCfgValue.value = null
+        newCfgDescription.value = ''
+        fetchData()
+      })
+    }
+    const onUpdate = (cfg) => {
+      let updatable = _.cloneDeep(cfg)
+      delete updatable.id
+      client.mutate({
+        mutation: CONFIGURATION_UPDATE,
+        variables: {id: cfg.id, configuration: updatable},
+        fetchPolicy: 'network-only',
+      }).then(response => {
+        $q.notify({
+          color: 'positive',
+          message: 'Config updated'
+        })
         fetchData()
       })
     }
@@ -193,8 +218,10 @@ export default defineComponent({
       cfgToRemove,
       newCfgKey,
       newCfgValue,
+      newCfgDescription,
       addConfig,
       onAdd,
+      onUpdate,
       onDelete,
       keyOptionsFiltered,
       filterFn,
