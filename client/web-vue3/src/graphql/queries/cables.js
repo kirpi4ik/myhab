@@ -136,6 +136,7 @@ export const CABLE_EDIT_GET_DETAILS = gql`
             patchPanel {
                 id
                 name
+                size
             }
             category {
                 id
