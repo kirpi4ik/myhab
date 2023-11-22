@@ -159,6 +159,7 @@ class Configuration {
             argument('entityId', Long)
             argument('entityType', EntityType)
             argument('value', String)
+            argument('description', String)
             returns Configuration
             dataFetcher(new CreateEntityDataFetcher(Configuration.gormPersistentEntity) {
                 @Override
@@ -169,6 +170,7 @@ class Configuration {
                         existingConfig.setEntityId(environment.getArgument('entityId') as Long)
                         existingConfig.setEntityType(environment.getArgument('entityType') as EntityType)
                         existingConfig.setValue(environment.getArgument('value') as String)
+                        existingConfig.setDescription(environment.getArgument('description') as String)
                         existingConfig.save(flush: true, failOnError: true)
                         return existingConfig
                     }
