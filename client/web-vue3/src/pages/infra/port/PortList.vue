@@ -30,7 +30,7 @@
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
           <q-btn icon="mode_edit" @click="onEdit(props.row)"></q-btn>
-          <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
+          <q-btn icon="delete" @click="removeItem(props.row)"></q-btn>
         </q-td>
       </template>
     </q-table>
@@ -41,22 +41,21 @@
 import {defineComponent, onMounted, ref} from "vue";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
-import {DEVICE_DELETE, PORT_LIST_ALL} from "@/graphql/queries";
+import {PORT_DELETE_BY_ID, PORT_LIST_ALL} from "@/graphql/queries";
 import _ from "lodash";
+import {useQuasar} from "quasar";
 
 export default defineComponent({
   name: 'PortList',
   setup() {
     const uri = '/admin/ports'
+    const $q = useQuasar()
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
     const rows = ref([]);
     const deviceList = ref([]);
-    const confirmDelete = ref(false);
-    const selectedRow = ref(null);
     const filter = ref('')
-    const filterDevice = ref('')
     const columns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'device', label: 'Device', field: 'device', align: 'left', sortable: true, filter_type: 'select'},
@@ -101,6 +100,39 @@ export default defineComponent({
         loading.value = false;
       });
     }
+    const removeItem = (toDelete) => {
+      $q.dialog({
+        title: 'Remove',
+        message: `Doriti sa stergeti port : ${toDelete.name} ?`,
+        ok: {
+          push: true,
+          color: 'negative',
+          label: "Remove"
+        },
+        cancel: {
+          push: true,
+          color: 'green'
+        }
+      }).onOk(() => {
+        client.mutate({
+          mutation: PORT_DELETE_BY_ID,
+          variables: {id: toDelete.id},
+        }).then(response => {
+          fetchData()
+          if (response.data.devicePortDelete.success) {
+            $q.notify({
+              color: 'positive',
+              message: 'Port removed'
+            })
+          } else {
+            $q.notify({
+              color: 'negative',
+              message: 'Failed to remove'
+            })
+          }
+        });
+      })
+    }
     onMounted(() => {
       fetchData()
     })
@@ -112,8 +144,7 @@ export default defineComponent({
       loading,
       fetchData,
       filter,
-      confirmDelete,
-      selectedRow,
+      removeItem,
       onRowClick: (evt, row) => {
         if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
           router.push({path: `${uri}/${row.id}/view`})
@@ -121,14 +152,6 @@ export default defineComponent({
       },
       onEdit: (row) => {
         router.push({path: `${uri}/${row.id}/edit`})
-      },
-      onDelete: () => {
-        client.mutate({
-          mutation: DEVICE_DELETE,
-          variables: {id: selectedRow.value.id},
-        }).then(response => {
-          fetchData()
-        });
       },
       addRow: () => {
         router.push({path: `${uri}/new`})
