@@ -32,7 +32,7 @@
                     label="Category" map-options filled dense>
             <q-icon name="cancel" @click.stop.prevent="peripheral.category = null" class="cursor-pointer text-blue"/>
           </q-select>
-          <q-separator />
+          <q-separator/>
           <br/>
           <q-select v-model="peripheral.zones"
                     :options="zoneListFiltered"
@@ -181,7 +181,11 @@ export default defineComponent({
             mutation: PERIPHERAL_UPDATE,
             variables: {id: route.params.idPrimary, devicePeripheral: peripheral.value},
           }).then(response => {
-            router.push({path: `/admin/peripherals/${route.params.idPrimary}/edit`})
+            fetchData()
+            $q.notify({
+              color: 'positive',
+              message: 'Peripheral updated'
+            })
           });
         }
       }

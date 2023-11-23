@@ -38,36 +38,15 @@
       </template>
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
-          <q-btn icon="mode_edit" @click="onEdit(props.row)"></q-btn>
-          <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
+          <q-btn-group>
+            <q-btn icon="mdi-open-in-new" @click.stop="" :href="uri+'/'+props.row.id+'/view'" target="_blank"
+                   color="blue-6"/>
+            <q-btn icon="mdi-note-edit-outline" color="amber-7" @click.stop="onEdit(props.row)"/>
+            <q-btn icon="delete" color="red-7" @click.stop="removeItem(props.row)"/>
+          </q-btn-group>
         </q-td>
       </template>
     </q-table>
-    <q-dialog v-model="confirmDelete" transition-show="jump-up" transition-hide="jump-down">
-      <q-card>
-        <q-bar class="bg-deep-orange-7 text-white">
-          <q-icon name="lock"/>
-          <div>Warning</div>
-          <q-space/>
-          <q-btn dense flat icon="close" v-close-popup>
-            <q-tooltip class="bg-primary">Close</q-tooltip>
-          </q-btn>
-        </q-bar>
-        <q-card-section class="row items-center">
-          <q-avatar icon="delete" color="red" text-color="white"/>
-          <span class="q-ml-sm">Do you want to remove the user  <b class="text-h6 text-red">{{
-              selectedRow.username
-            }}</b> ?</span>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Delete" color="red" v-close-popup
-                 @click="onDelete();confirmDelete=false"/>
-          <q-btn flat label="Cancel" color="positive" v-close-popup/>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
   </q-page>
 </template>
 
@@ -77,18 +56,18 @@ import {defineComponent, onMounted, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import _ from 'lodash';
 import {useRouter} from "vue-router";
+import {useQuasar} from "quasar";
 
 export default defineComponent({
   name: 'UserList',
   setup() {
     const uri = '/admin/users'
+    const $q = useQuasar()
     const filter = ref('')
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
     const rows = ref();
-    const confirmDelete = ref(false);
-    const selectedRow = ref(null);
     const columns = [
       {name: 'username', label: 'Username', field: 'username', align: 'left', sortable: true},
       {name: 'status', label: 'Status', field: 'status', align: 'left', sortable: true},
@@ -121,6 +100,39 @@ export default defineComponent({
         loading.value = false;
       });
     }
+    const removeItem = (toDelete) => {
+      $q.dialog({
+        title: 'Remove',
+        message: `Doriti sa stergeti utilizatorul : ${toDelete.username} ?`,
+        ok: {
+          push: true,
+          color: 'negative',
+          label: "Remove"
+        },
+        cancel: {
+          push: true,
+          color: 'green'
+        }
+      }).onOk(() => {
+        client.mutate({
+          mutation: USER_DELETE,
+          variables: {id: toDelete.id},
+        }).then(response => {
+          fetchData()
+          if (response.data.userDeleteCascade.success) {
+            $q.notify({
+              color: 'positive',
+              message: 'User removed'
+            })
+          } else {
+            $q.notify({
+              color: 'negative',
+              message: 'Failed to remove'
+            })
+          }
+        });
+      })
+    }
     onMounted(() => {
       fetchData()
     })
@@ -131,8 +143,8 @@ export default defineComponent({
       pagination,
       loading,
       fetchData,
-      confirmDelete,
-      selectedRow,
+      removeItem,
+      uri,
       onRowClick: (evt, row) => {
         if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
           router.push({path: `${uri}/${row.id}/view`})
@@ -140,14 +152,6 @@ export default defineComponent({
       },
       onEdit: (row) => {
         router.push({path: `${uri}/${row.id}/edit`})
-      },
-      onDelete: () => {
-        client.mutate({
-          mutation: USER_DELETE,
-          variables: {id: selectedRow.value.id},
-        }).then(response => {
-          fetchData()
-        });
       },
       addRow: () => {
         router.push({path: `${uri}/new`})

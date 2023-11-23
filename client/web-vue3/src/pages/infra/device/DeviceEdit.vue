@@ -113,9 +113,11 @@ export default defineComponent({
           mutation: DEVICE_UPDATE,
           variables: {id: route.params.idPrimary, device: device.value},
         }).then(response => {
-          // router.go()
           fetchData()
-          // router.push({path: `/admin/devices/${response.data.deviceUpdate.id}/edit`})
+          $q.notify({
+            color: 'positive',
+            message: 'Device updated'
+          })
         });
       }
     }
