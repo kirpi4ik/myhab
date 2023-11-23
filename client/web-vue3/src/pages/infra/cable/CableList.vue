@@ -1,6 +1,8 @@
 <template>
   <q-page padding>
-    <q-grid :data="rows" :columns="columns" :columns_filter="true" :pagination="{rowsPerPage:10}" >
+    <q-btn icon="add" color="positive" :disable="loading" label="Add cable" @click="addRow"/>
+    <q-grid :data="rows" :columns="columns" :columns_filter="true" :pagination="{rowsPerPage:10}"
+            class="myhab-list-qgrid">
       <template v-slot:header="props">
         <q-tr :props="props">
           <q-th
@@ -10,12 +12,12 @@
           </q-th>
         </q-tr>
       </template>
-      <template v-slot:body="props" >
+      <template v-slot:body="props">
         <q-tr :props="props" @click="onRowClick(props.row)">
           <q-td key="name" style="max-width: 50px">
             {{ props.row.id }}
           </q-td>
-          <q-td key="name" >
+          <q-td key="name">
             {{ props.row.location }}
           </q-td>
           <q-td key="name">
@@ -31,20 +33,16 @@
             {{ props.row.patchPanel }}
           </q-td>
           <q-td key="name">
-            <q-btn icon="mode_edit" @click.stop="onEdit(props.row)"></q-btn>
-            <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
+            <q-btn-group>
+              <q-btn icon="mdi-eye-outline" @click.stop="" :href="uri+'/'+props.row.id+'/view'" target="_blank"
+                     color="blue-6"/>
+              <q-btn icon="mdi-note-edit-outline" color="amber-9" @click.stop="onEdit(props.row)"/>
+              <q-btn icon="delete" color="negative" @click.stop="removeItem(props.row)"/>
+            </q-btn-group>
           </q-td>
         </q-tr>
       </template>
-      <template v-slot:body-cell-actions="props">
-        <q-td :props="props">
-          <q-btn icon="mode_edit" @click="onEdit(props.row)"></q-btn>
-          <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
-        </q-td>
-      </template>
     </q-grid>
-
-
   </q-page>
 </template>
 
@@ -54,16 +52,18 @@ import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
 import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
 import _ from "lodash";
+import {useQuasar} from "quasar";
+import {right} from "core-js/internals/array-reduce";
 
 export default defineComponent({
   name: 'CableList',
   setup() {
+    const $q = useQuasar()
     const uri = '/admin/cables'
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
     const rows = ref([]);
-    const confirmDelete = ref(false);
     const selectedRow = ref(null);
     const categoryList = ref([]);
     const columns = [
@@ -79,7 +79,7 @@ export default defineComponent({
       {name: 'code', label: 'Code', field: 'code', sortable: true},
       {name: 'description', label: 'Description', field: 'description', sortable: true},
       {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', sortable: true},
-      {name: 'actions', label: 'Actions', field: 'actions', sortable: false, filter_type: ''}
+      {name: 'actions', label: 'Actions', field: 'actions', sortable: false, filter_type: '', align: 'right'}
     ];
     const fetchData = () => {
       loading.value = true;
@@ -109,6 +109,39 @@ export default defineComponent({
         loading.value = false;
       });
     }
+    const removeItem = (toDelete) => {
+      $q.dialog({
+        title: 'Remove',
+        message: `Doriti sa stergeti port : ${toDelete.code} ?`,
+        ok: {
+          push: true,
+          color: 'negative',
+          label: "Remove"
+        },
+        cancel: {
+          push: true,
+          color: 'green'
+        }
+      }).onOk(() => {
+        client.mutate({
+          mutation: CABLE_DELETE,
+          variables: {id: selectedRow.value.id},
+        }).then(response => {
+          fetchData()
+          if (response.data.cableDelete.success) {
+            $q.notify({
+              color: 'positive',
+              message: 'Port removed'
+            })
+          } else {
+            $q.notify({
+              color: 'negative',
+              message: 'Failed to remove'
+            })
+          }
+        });
+      })
+    }
     onMounted(() => {
       fetchData()
     })
@@ -116,23 +149,15 @@ export default defineComponent({
       rows,
       loading,
       fetchData,
-      confirmDelete,
-      selectedRow,
+      removeItem,
       categoryList,
       columns,
+      uri,
       onRowClick: (row) => {
-          router.push({path: `${uri}/${row.id}/view`})
+        router.push({path: `${uri}/${row.id}/view`})
       },
       onEdit: (row) => {
         router.push({path: `${uri}/${row.id}/edit`})
-      },
-      onDelete: () => {
-        client.mutate({
-          mutation: CABLE_DELETE,
-          variables: {id: selectedRow.value.id},
-        }).then(response => {
-          fetchData()
-        });
       },
       addRow: () => {
         router.push({path: `${uri}/new`})
@@ -141,3 +166,8 @@ export default defineComponent({
   }
 });
 </script>
+<style>
+.myhab-list-qgrid input:first-child {
+  max-width: 40px;
+}
+</style>

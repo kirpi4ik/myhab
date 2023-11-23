@@ -13,6 +13,8 @@
                style="margin-left: 5px"/>
         <q-btn outline round color="amber-8" icon="mdi-view-list" :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=PERIPHERAL'"
                style="margin-left: 5px"/>
+        <q-btn outline round color="amber-8" icon="mdi-delete-outline" :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=PERIPHERAL'"
+               style="margin-left: 5px"/>
       </q-card-section>
       <q-item>
         <q-item-section>
