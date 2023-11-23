@@ -18,7 +18,7 @@
                 <q-input v-model="cfg.description" label="Description" clearable clear-icon="close" color="orange"/>
               </q-card-section>
               <q-btn color="blue" icon="mdi-content-save-edit" @click="onUpdate(cfg)"/>
-              <q-btn color="red" icon="mdi-playlist-remove" @click="cfgToRemove=cfg; confirmDelete=true;"/>
+              <q-btn color="red" icon="mdi-playlist-remove" @click.stop="removeItem(cfg)"/>
             </q-card-section>
           </q-card>
         </q-card-section>
@@ -83,30 +83,6 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-    <q-dialog v-model="confirmDelete" transition-show="jump-up" transition-hide="jump-down">
-      <q-card>
-        <q-bar class="bg-deep-orange-7 text-white">
-          <q-icon name="lock"/>
-          <div>Warning</div>
-          <q-space/>
-          <q-btn dense flat icon="close" v-close-popup>
-            <q-tooltip class="bg-primary">Close</q-tooltip>
-          </q-btn>
-        </q-bar>
-        <q-card-section class="row items-center">
-          <q-avatar icon="delete" color="red" text-color="white"/>
-          <span class="q-ml-sm">Do you want to remove the user  <b class="text-h6 text-red">{{
-              cfgToRemove.key
-            }}</b> ?</span>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Delete" color="red" v-close-popup
-                 @click="onDelete();confirmDelete=false"/>
-          <q-btn flat label="Cancel" color="positive" v-close-popup/>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
   </q-page>
 </template>
 <script>
@@ -115,7 +91,7 @@ import {
   CONFIGURATION_ADDLIST_CONFIG_VALUE,
   CONFIGURATION_KEY_LIST,
   CONFIGURATION_LIST,
-  CONFIGURATION_REMOVE_CONFIG, CONFIGURATION_SET_VALUE, CONFIGURATION_UPDATE
+  CONFIGURATION_REMOVE_CONFIG, CONFIGURATION_SET_VALUE, CONFIGURATION_UPDATE, USER_DELETE
 } from "@/graphql/queries";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute} from "vue-router";
@@ -153,6 +129,39 @@ export default defineComponent({
         fetchPolicy: 'network-only',
       }).then(response => {
         keyOptions.value = [...response.data.configKeysByEntity]
+      })
+    }
+    const removeItem = (toDelete) => {
+      $q.dialog({
+        title: 'Remove',
+        message: `Doriti sa stergeti configurarea : ${toDelete.key} ?`,
+        ok: {
+          push: true,
+          color: 'negative',
+          label: "Remove"
+        },
+        cancel: {
+          push: true,
+          color: 'green'
+        }
+      }).onOk(() => {
+        client.mutate({
+          mutation: CONFIGURATION_REMOVE_CONFIG,
+          variables: {id: toDelete.id},
+        }).then(response => {
+          fetchData()
+          if (response.data.removeConfig.success) {
+            $q.notify({
+              color: 'positive',
+              message: 'Configuration removed'
+            })
+          } else {
+            $q.notify({
+              color: 'negative',
+              message: 'Failed to remove'
+            })
+          }
+        });
       })
     }
     const filterFn = (val, update, abort) => {
@@ -197,17 +206,6 @@ export default defineComponent({
         fetchData()
       })
     }
-    const onDelete = () => {
-      client.mutate({
-        mutation: CONFIGURATION_REMOVE_CONFIG,
-        variables: {
-          id: cfgToRemove.value.id
-        },
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        fetchData()
-      })
-    }
     onMounted(() => {
       fetchData()
     })
@@ -222,7 +220,7 @@ export default defineComponent({
       addConfig,
       onAdd,
       onUpdate,
-      onDelete,
+      removeItem,
       keyOptionsFiltered,
       filterFn,
       maximizedToggle: ref(true),
