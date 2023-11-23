@@ -37,8 +37,12 @@
       </template>
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
-          <q-btn icon="mode_edit" @click="onEdit(props.row)"></q-btn>
-          <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
+          <q-btn-group>
+            <q-btn icon="mdi-open-in-new" @click.stop="" :href="uri+'/'+props.row.id+'/view'" target="_blank"
+                   color="blue-6"/>
+            <q-btn icon="mdi-note-edit-outline" color="amber-7" @click.stop="onEdit(props.row)"/>
+            <q-btn icon="delete" color="red-7" @click.stop="removeItem(props.row)"/>
+          </q-btn-group>
         </q-td>
       </template>
     </q-table>
@@ -47,6 +51,7 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
+import {useQuasar} from 'quasar'
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
 import {PERIPHERAL_DELETE, PERIPHERAL_LIST_ALL} from "@/graphql/queries";
@@ -55,14 +60,13 @@ import _ from "lodash";
 export default defineComponent({
   name: 'PeripheralList',
   setup() {
+    const $q = useQuasar()
     const uri = '/admin/peripherals'
     const filter = ref('')
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
     const rows = ref();
-    const confirmDelete = ref(false);
-    const selectedRow = ref(null);
     const columns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'name', label: 'Denumire', field: 'name', align: 'left', sortable: true},
@@ -98,6 +102,39 @@ export default defineComponent({
         loading.value = false;
       });
     }
+    const removeItem = (toDelete) => {
+      $q.dialog({
+        title: 'Remove',
+        message: `Doriti sa stergeti peripheral: ${toDelete.name} ?`,
+        ok: {
+          push: true,
+          color: 'negative',
+          label: "Remove"
+        },
+        cancel: {
+          push: true,
+          color: 'green'
+        }
+      }).onOk(() => {
+        client.mutate({
+          mutation: PERIPHERAL_DELETE,
+          variables: {id: toDelete.id},
+        }).then(response => {
+          fetchData()
+          if (response.data.devicePeripheralDelete.success) {
+            $q.notify({
+              color: 'positive',
+              message: 'Peripheral deleted'
+            })
+          } else {
+            $q.notify({
+              color: 'negative',
+              message: 'Failed to delete'
+            })
+          }
+        });
+      })
+    }
     onMounted(() => {
       fetchData()
     })
@@ -108,8 +145,8 @@ export default defineComponent({
       pagination,
       loading,
       fetchData,
-      confirmDelete,
-      selectedRow,
+      removeItem,
+      uri,
       onRowClick: (evt, row) => {
         if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
           router.push({path: `${uri}/${row.id}/view`})
@@ -117,14 +154,6 @@ export default defineComponent({
       },
       onEdit: (row) => {
         router.push({path: `${uri}/${row.id}/edit`})
-      },
-      onDelete: () => {
-        client.mutate({
-          mutation: PERIPHERAL_DELETE,
-          variables: {id: selectedRow.value.id},
-        }).then(response => {
-          fetchData()
-        });
       },
       addRow: () => {
         router.push({path: `${uri}/new`})
