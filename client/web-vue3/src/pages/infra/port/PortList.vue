@@ -29,8 +29,12 @@
       </template>
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
-          <q-btn icon="mode_edit" @click="onEdit(props.row)"></q-btn>
-          <q-btn icon="delete" @click="removeItem(props.row)"></q-btn>
+          <q-btn-group>
+            <q-btn icon="mdi-open-in-new" @click.stop="" :href="uri+'/'+props.row.id+'/view'" target="_blank"
+                   color="blue-6"/>
+            <q-btn icon="mdi-note-edit-outline" color="amber-7" @click.stop="onEdit(props.row)"/>
+            <q-btn icon="delete" color="red-7" @click.stop="removeItem(props.row)"/>
+          </q-btn-group>
         </q-td>
       </template>
     </q-table>
@@ -145,6 +149,7 @@ export default defineComponent({
       fetchData,
       filter,
       removeItem,
+      uri,
       onRowClick: (evt, row) => {
         if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
           router.push({path: `${uri}/${row.id}/view`})
