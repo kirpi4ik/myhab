@@ -110,7 +110,10 @@ export default defineComponent({
 			{ value: 10800 },
 			{ value: 18000 },
 		];
-		const portId = asset.value.data.connectedTo[0].id;
+    let portId = -1;
+    if (asset.value.data.connectedTo.length > 0) {
+      portId = asset.value.data.connectedTo[0].id;
+    }
 
 		const loadDetails = () => {
 			client

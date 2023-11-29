@@ -65,7 +65,10 @@ export default defineComponent({
     const store = useStore();
     const {client} = useApolloClient();
     let {peripheral: asset} = toRefs(props);
-    const portId = asset.value.data.connectedTo[0].id;
+    let portId = -1;
+    if (asset.value.data.connectedTo.length > 0) {
+      portId = asset.value.data.connectedTo[0].id;
+    }
 
     const loadDetails = () => {
       client
