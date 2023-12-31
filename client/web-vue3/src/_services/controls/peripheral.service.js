@@ -1,5 +1,9 @@
+import {authzService} from "@/_services";
+import {apolloProvider} from "boot/graphql";
+import {PUSH_EVENT} from "@/graphql/queries";
+
 export const peripheralService = {
-	peripheralInit,
+	peripheralInit,toggle
 };
 
 function peripheralInit(cacheMap, peripheral) {
@@ -36,4 +40,21 @@ function peripheralInit(cacheMap, peripheral) {
 			expiration: expiration,
 		};
 	}
+}
+
+function toggle(peripheral) {
+  let event = {
+    p0: 'evt_light',
+    p1: 'PERIPHERAL',
+    p2: peripheral.id,
+    p3: 'mweb',
+    p4: peripheral.state === true ? 'off' : 'on',
+    p6: authzService.currentUserValue.login,
+  };
+  apolloProvider.defaultClient
+    .mutate({
+      mutation: PUSH_EVENT,
+      variables: { input: event },
+    })
+    .then(response => {});
 }

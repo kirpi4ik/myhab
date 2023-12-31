@@ -22,10 +22,9 @@
           <q-icon name="fas fa-fire" class="float-right" size="40px"/>
         </q-card-section>
         <q-card-actions align="around">
-          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneEtajId + '?category=HEAT'">Etaj</q-btn>
+          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneParterId + '?category=HEAT'">Parter</q-btn>
           <q-separator vertical></q-separator>
-          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneParterId + '?category=HEAT'">Parter
-          </q-btn>
+            <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneEtajId + '?category=HEAT'">Etaj</q-btn>
         </q-card-actions>
       </q-card>
     </div>
