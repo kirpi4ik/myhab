@@ -37,7 +37,7 @@ dependencies {
 //    developmentOnly("org.springframework.boot:spring-boot-devtools")
     compileOnly "io.micronaut:micronaut-inject-groovy"
     console "org.grails:grails-console"
-    profile "org.grails.profiles:vue"
+//    profile "org.grails.profiles:vue"
     implementation project(':server-rules')
     implementation project(':server-config')
 

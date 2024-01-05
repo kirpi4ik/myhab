@@ -101,8 +101,7 @@ export default defineComponent({
       });
     }
     const config = key => {
-      debugger
-      if (asset.value.configurations != null) {
+      if (asset.value != null) {
         _.find(asset.value.configurations, function (cfg) {
           return cfg.key == key;
         });

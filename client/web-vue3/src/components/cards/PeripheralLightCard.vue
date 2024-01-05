@@ -160,9 +160,7 @@ export default defineComponent({
 			},
 		);
 
-    debugger
 		const config = key =>
-
 			_.find(asset.value.data.configurations, function (cfg) {
 				return cfg.key == key;
 			});
