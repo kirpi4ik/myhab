@@ -17,15 +17,15 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.kohsuke:github-api:1.318'
+    implementation 'com.konghq:unirest-java:3.14.5'
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
     implementation 'org.springframework:spring-beans:5.1.18.RELEASE'
-    runtimeOnly 'org.yaml:snakeyaml:1.30'
+    implementation 'org.apache.commons:commons-configuration2:2.9.0'
+    runtimeOnly 'org.yaml:snakeyaml:2.2'
     runtimeOnly 'commons-beanutils:commons-beanutils:1.9.4'
-    implementation 'org.apache.commons:commons-configuration2:2.7'
-    implementation 'org.kohsuke:github-api:1.301'
-    implementation 'com.konghq:unirest-java:3.11.09'
 
-    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.8.0.202311291450-r'
 
 
 }
