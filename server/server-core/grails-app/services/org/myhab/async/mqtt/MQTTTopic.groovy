@@ -113,9 +113,9 @@ enum MQTTTopic {
                 case TopicTypes.WRITE_SINGLE_VAL:
                     return "$MYHAB_PREFIX/\$map.deviceCode/\$map.portType/\$map.portCode/value"
                 case TopicTypes.STAT_IP:
-                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/esp_ip_address/value"
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/ip_address/value"
                 case TopicTypes.STAT_PORT:
-                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/esp_ip_address/value"
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/ip_address/value"
                 case TopicTypes.STATUS:
                     return "$MYHAB_PREFIX/(\\w+|_+)/(\\w+|_+)/status"
                 case TopicTypes.STATUS_WRITE:
