@@ -12,6 +12,7 @@ class CfgKey {
         DEVICE_OAUTH_ACCESS_TOKEN('cfg.key.device.oauth.access_token'),
         DEVICE_OAUTH_REFRESH_TOKEN('cfg.key.device.oauth.refresh_token'),
         DEVICE_MQTT_SYNC_SUPPORTED('cfg.key.device.mqtt.sync.supported'),
+        DEVICE_ADMIN_PORT_AUTO_IMPORT('cfg.key.device.admin.port.autoimport'),
 
 
         def key

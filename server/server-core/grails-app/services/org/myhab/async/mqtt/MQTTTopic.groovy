@@ -87,9 +87,9 @@ enum MQTTTopic {
                 case TopicTypes.WRITE_SINGLE_VAL:
                     return "$MYHAB_PREFIX/\$map.deviceCode/\$map.portType/\$map.portCode/value"
                 case TopicTypes.STAT_IP:
-                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/esp_ip_address/state"
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/ip_address/value"
                 case TopicTypes.STAT_PORT:
-                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/esp_ip_address/state"
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/ip_address/value"
                 case TopicTypes.STATUS:
                     return "$MYHAB_PREFIX/(\\w+|_+)/status"
                 case TopicTypes.STATUS_WRITE:
@@ -103,19 +103,19 @@ enum MQTTTopic {
             return topic(topicTypes)
         }
     }
-    class ELECTRIC_METER implements DeviceTopic {
+    class ELECTRIC_METER_DTS implements DeviceTopic {
         static String topic(TopicTypes topicType) {
             switch (topicType) {
                 case TopicTypes.LISTEN:
                     return "$MYHAB_PREFIX/#"
                 case TopicTypes.READ_SINGLE_VAL:
-                    return "$MYHAB_PREFIX/(\\w+|_+)/emeters/(\\w+|_+)/(\\w+|_+)/state"
+                    return "$MYHAB_PREFIX/(\\w+|_+)/emeters/(\\w+|_+)/(\\w+|_+)/value"
                 case TopicTypes.WRITE_SINGLE_VAL:
-                    return "$MYHAB_PREFIX/\$map.deviceCode/\$map.portType/\$map.portCode/state"
+                    return "$MYHAB_PREFIX/\$map.deviceCode/\$map.portType/\$map.portCode/value"
                 case TopicTypes.STAT_IP:
-                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/esp_ip_address/state"
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/esp_ip_address/value"
                 case TopicTypes.STAT_PORT:
-                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/esp_ip_address/state"
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/esp_ip_address/value"
                 case TopicTypes.STATUS:
                     return "$MYHAB_PREFIX/(\\w+|_+)/(\\w+|_+)/status"
                 case TopicTypes.STATUS_WRITE:
@@ -129,6 +129,33 @@ enum MQTTTopic {
             return topic(topicTypes)
         }
     }
+    class INVERTER implements DeviceTopic {
+        static String topic(TopicTypes topicType) {
+            switch (topicType) {
+                case TopicTypes.LISTEN:
+                    return "$MYHAB_PREFIX/#"
+                case TopicTypes.READ_SINGLE_VAL:
+                    return "$MYHAB_PREFIX/(\\w+|_+)/inverter/(\\w+|_+)/(\\w+|_+)/value"
+                case TopicTypes.WRITE_SINGLE_VAL:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/\$map.portType/\$map.portCode/value"
+                case TopicTypes.STAT_IP:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/ip_address/value"
+                case TopicTypes.STAT_PORT:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/ip_address/value"
+                case TopicTypes.STATUS:
+                    return "$MYHAB_PREFIX/(\\w+|_+)/(\\w+|_+)/status"
+                case TopicTypes.STATUS_WRITE:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/status"
+                default: return null
+            }
+        }
+
+        @Override
+        String topicByType(TopicTypes topicTypes) {
+            return topic(topicTypes)
+        }
+    }
+
     class ONVIF implements DeviceTopic {
         static String topic(TopicTypes topicType) {
             switch (topicType) {
