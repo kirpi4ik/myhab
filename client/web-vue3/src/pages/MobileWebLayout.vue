@@ -245,8 +245,6 @@ export default {
             peripheral['deviceStatus'] = port.device.status;
           } else {
             port = null;
-            state = false;
-            deviceState = null;
           }
         }
       }.bind(this);

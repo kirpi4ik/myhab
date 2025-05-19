@@ -57,6 +57,7 @@ import {
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
 import {useRoute} from "vue-router";
+import _ from "lodash";
 
 export default defineComponent({
   name: 'DeviceEdit',
@@ -97,7 +98,7 @@ export default defineComponent({
         variables: {id: route.params.idPrimary},
         fetchPolicy: 'network-only',
       }).then(response => {
-        device.value = response.data.device
+        device.value = _.cloneDeep(response.data.device)
       })
     }
     const onSave = () => {
