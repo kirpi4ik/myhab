@@ -26,8 +26,8 @@ class MqttTopicService {
                 case ~/${MQTTTopic.NIBE.topic(STATUS)}/:
                     matcher = topicName =~ MQTTTopic.NIBE.topic(STATUS)
                     return new MQTTMessage(deviceType: DeviceModel.NIBE_F1145_8_EM, deviceCode: matcher[0][1], portStrValue: message.payload, eventType: TopicName.EVT_DEVICE_STATUS.id())
-                case ~/${MQTTTopic.ELECTRIC_METER.topic(READ_SINGLE_VAL)}/:
-                    matcher = topicName =~ MQTTTopic.ELECTRIC_METER.topic(READ_SINGLE_VAL)
+                case ~/${MQTTTopic.ELECTRIC_METER_DTS.topic(READ_SINGLE_VAL)}/:
+                    matcher = topicName =~ MQTTTopic.ELECTRIC_METER_DTS.topic(READ_SINGLE_VAL)
                     return new MQTTMessage(deviceType: DeviceModel.ELECTRIC_METER_DTS, deviceCode: matcher[0][2], portCode: matcher[0][3], portStrValue: message.payload, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
                 case ~/${MQTTTopic.ESP.topic(READ_SINGLE_VAL)}/:
                     matcher = topicName =~ MQTTTopic.ESP.topic(READ_SINGLE_VAL)
@@ -58,7 +58,12 @@ class MqttTopicService {
     }
 
     String topic(Device d, MQTTMessage mqttMessage) {
-        new SimpleTemplateEngine().createTemplate(device(d.model).topicByType(WRITE_SINGLE_VAL)).make([map: mqttMessage]).toString()
+        def topic = device(d.model)
+        if (topic != null) {
+            new SimpleTemplateEngine().createTemplate(topic.topicByType(WRITE_SINGLE_VAL)).make([map: mqttMessage]).toString()
+        } else {
+            log.error("Invalid device model: ${d.model}")
+        }
     }
 
     DeviceTopic device(model) {
@@ -71,6 +76,10 @@ class MqttTopicService {
                 return new MQTTTopic.NIBE()
             case DeviceModel.CAM_ONVIF:
                 return new MQTTTopic.ONVIF()
+            case DeviceModel.HUAWEI_SUN2000_12KTL_M2:
+                return new MQTTTopic.INVERTER()
+            case DeviceModel.ELECTRIC_METER_DTS:
+                return new MQTTTopic.ELECTRIC_METER_DTS()
             case DeviceModel.TMEZON_INTERCOM:
                 break
         }
@@ -102,6 +111,13 @@ class MqttTopicService {
         if (port.device.model == DeviceModel.NIBE_F1145_8_EM) {
             return actions
         }
+        return actions
+
+    }
+
+    def publishPortValue(Device device, DevicePort port, String value) {
+        def message = new MQTTMessage(deviceCode: device.code, portCode: port.internalRef, portType: port.type.name().toLowerCase(), portStrValue: payload(port, value))
+        mqttPublishGateway.sendToMqtt(topic(device, message), message.portStrValue)
     }
 
     def publish(DevicePort p, def actions) {

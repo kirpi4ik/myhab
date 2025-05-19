@@ -18,7 +18,15 @@
 
       <q-item-section side>
         <q-item-label>
-          <q-btn size="sm" flat round icon="settings" class="text-white"/>
+          <q-btn-dropdown size="sm" flat round icon="settings" class="text-white">
+            <q-list>
+              <q-item clickable v-close-popup @click="$router.push({ path: '/admin/peripherals/' + peripheral.id + '/view' })">
+                <q-item-section>
+                  <q-item-label>Detalii</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
         </q-item-label>
         <q-item-label>
           <event-logger :peripheral="peripheral"/>
