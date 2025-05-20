@@ -1,8 +1,8 @@
 import {gql} from '@apollo/client/core';
 
 export const PERIPHERAL_CREATE = gql`
-  mutation ($devicePeripheral: DevicePeripheralCreate) {
-    devicePeripheralCreate(devicePeripheral: $devicePeripheral) {
+  mutation ($devicePeripheral: DevicePeripheralUpdate!) {
+    peripheralCreate(devicePeripheral: $devicePeripheral) {
       id
     }
   }
