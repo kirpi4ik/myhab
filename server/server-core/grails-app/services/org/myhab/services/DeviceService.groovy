@@ -25,7 +25,7 @@ class DeviceService implements EventPublisher {
                 case DeviceModel.MEGAD_2561_RTC: {
                     values = megaDriverService.readPortValues(device)
                     break
-                } case DeviceModel.ESP8266_1: {
+                } case DeviceModel.ESP8266_1 | DeviceModel.ESP32: {
                     values = espService.readPortValues(device)
                     break
                 }
@@ -68,7 +68,7 @@ class DeviceService implements EventPublisher {
         if (devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport") && deviceController.getConfigurationByKey(CfgKey.DEVICE.DEVICE_ADMIN_PORT_AUTO_IMPORT).value) {
             if (deviceController.model == DeviceModel.MEGAD_2561_RTC) {
                 devicePort = megaDriverService.readPortConfigFromController(deviceController.code, portInternalRef, portInternalRef)
-            }else {
+            } else {
                 devicePort = new DevicePort()
             }
             devicePort.setType(portType)
@@ -90,7 +90,7 @@ class DeviceService implements EventPublisher {
                 device = megaDriverService.readConfig(deviceCode)
                 device?.save(failOnError: false, flush: true)
             }
-            if (deviceModel == DeviceModel.ESP8266_1) {
+            if (deviceModel == DeviceModel.ESP8266_1 || deviceModel == DeviceModel.ESP32) {
                 device = espService.readConfig(deviceCode)
                 device?.save(failOnError: false, flush: true)
             }
