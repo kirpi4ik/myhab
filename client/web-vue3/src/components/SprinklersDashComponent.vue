@@ -54,10 +54,10 @@
     </q-card-section>
     <q-separator color="white"/>
     <q-card-actions align="around">
-      <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneIntId + '?category=SPRINKLER'">Gazon
+      <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneLanId + '?category=SPRINKLER'">Gazon
       </q-btn>
       <q-separator vertical></q-separator>
-      <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneExtId + '?category=SPRINKLER'">Gradina
+      <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneGardenId + '?category=SPRINKLER'">Gradina
       </q-btn>
     </q-card-actions>
   </q-card>
@@ -79,8 +79,8 @@ export default defineComponent({
     EventLogger
   },
   setup(props, {emit}) {
-    const zoneIntId = parseInt(process.env.VUE_APP_CONF_ZONE_INT_ID);
-    const zoneExtId = parseInt(process.env.VUE_APP_CONF_ZONE_EXT_ID);
+    const zoneLanId = parseInt(process.env.VUE_APP_CONF_ZONE_LAN_ID);
+    const zoneGardenId = parseInt(process.env.VUE_APP_CONF_ZONE_GARDEN_ID);
 
     const store = useStore();
     let asset = ref({})
@@ -92,13 +92,7 @@ export default defineComponent({
       },
     });
     const init = () => {
-      client.query({
-        query: PERIPHERAL_GET_BY_ID,
-        variables: {id: process.env.WATER_PUMP_ID},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        asset.value = peripheralService.peripheralInit(null, _.cloneDeep(response.data.devicePeripheral));
-      });
+
     }
     const config = key => {
       if (asset.value != null) {
@@ -122,12 +116,6 @@ export default defineComponent({
       () => store.getters.ws.message,
       function () {
         if (wsMessage.value.eventName == 'evt_port_value_persisted') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (asset.value.data.connectedTo[0].id == payload.p2) {
-            asset.value['value'] = payload.p4;
-            asset.value['state'] = payload.p4 === 'ON';
-            asset.value['data']['state'] = payload.p4 === 'ON';
-          }
         }
       },
     );
@@ -135,8 +123,8 @@ export default defineComponent({
       init()
     });
     return {
-      zoneIntId,
-      zoneExtId,
+      zoneLanId: zoneLanId,
+      zoneGardenId: zoneGardenId,
       asset,
       humanizeDuration,
       peripheralService,

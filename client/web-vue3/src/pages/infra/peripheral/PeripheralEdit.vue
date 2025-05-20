@@ -106,7 +106,7 @@ export default defineComponent({
           variables: {id: useRoute().params.idPrimary},
           fetchPolicy: 'network-only',
         }).then(response => {
-          peripheral.value = response.data.devicePeripheral
+          peripheral.value = _.cloneDeep(response.data.devicePeripheral)
           loading.value = false;
         });
         client.query({
