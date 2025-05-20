@@ -667,6 +667,7 @@ type Zone {
 enum DeviceModel {
   CAM_ONVIF
   ELECTRIC_METER_DTS
+  ESP32
   ESP8266_1
   MEGAD_2561_RTC
   NIBE_F1145_8_EM

@@ -10,6 +10,8 @@
                                @onUpdate="updatedPeripheral($event)"/>
         <peripheral-heat-card :peripheral="peripheral" v-if="category === 'HEAT'"
                               @onUpdate="updatedPeripheral($event)"/>
+        <peripheral-light-card :peripheral="peripheral" v-if="category === 'SPRINKLER'"
+                               @onUpdate="updatedPeripheral($event)"/>
       </div>
     </div>
     <temp-chart-card v-if="category === 'TEMP'"/>
