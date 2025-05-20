@@ -43,6 +43,21 @@ export const DEVICE_LIST_ALL = gql`
     }
   }
 `;
+export const DEVICE_LIST_ALL_WITH_PORTS = gql`
+  {
+    deviceList {
+      id
+      uid
+      code
+      name
+      description
+      ports {
+        id
+        name
+      }
+    }
+  }
+`;
 export const DEVICE_GET_DETAILS_FOR_EDIT = gql`
   query device($id: Long!) {
     deviceCategoryList {
