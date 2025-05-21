@@ -3,6 +3,7 @@ package org.myhab.services
 import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
+import org.myhab.config.CfgKey
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
@@ -24,7 +25,7 @@ class DeviceService implements EventPublisher {
                 case DeviceModel.MEGAD_2561_RTC: {
                     values = megaDriverService.readPortValues(device)
                     break
-                } case DeviceModel.ESP8266_1: {
+                } case DeviceModel.ESP32: {
                     values = espService.readPortValues(device)
                     break
                 }
@@ -64,12 +65,16 @@ class DeviceService implements EventPublisher {
             maxResults(1)
         }
 
-        if (devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport")) {
-            if (device.model == DeviceModel.MEGAD_2561_RTC) {
-                devicePort = megaDriverService.readPortConfigFromController(device.code, portInternalRef, portInternalRef)
-                device.addToPorts(devicePort)
-                device.save(failOnError: false, flush: true)
+        if (devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport") && deviceController.getConfigurationByKey(CfgKey.DEVICE.DEVICE_ADMIN_PORT_AUTO_IMPORT).value) {
+            if (deviceController.model == DeviceModel.MEGAD_2561_RTC) {
+                devicePort = megaDriverService.readPortConfigFromController(deviceController.code, portInternalRef, portInternalRef)
+            } else {
+                devicePort = new DevicePort()
             }
+            devicePort.setType(portType)
+            devicePort.setInternalRef(portInternalRef)
+            deviceController.addToPorts(devicePort)
+            deviceController.save(failOnError: false, flush: true)
         }
         return devicePort
     }
@@ -85,7 +90,7 @@ class DeviceService implements EventPublisher {
                 device = megaDriverService.readConfig(deviceCode)
                 device?.save(failOnError: false, flush: true)
             }
-            if (deviceModel == DeviceModel.ESP8266_1) {
+            if (deviceModel == DeviceModel.ESP32) {
                 device = espService.readConfig(deviceCode)
                 device?.save(failOnError: false, flush: true)
             }

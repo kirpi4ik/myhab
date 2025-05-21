@@ -18,7 +18,15 @@
 
       <q-item-section side>
         <q-item-label>
-          <q-btn size="sm" flat round icon="settings" class="text-white"/>
+          <q-btn-dropdown size="sm" flat round icon="settings" class="text-white">
+            <q-list>
+              <q-item clickable v-close-popup @click="$router.push({ path: '/admin/peripherals/' + peripheral.id + '/view' })">
+                <q-item-section>
+                  <q-item-label>Detalii</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
         </q-item-label>
         <q-item-label>
           <event-logger :peripheral="peripheral"/>
@@ -65,7 +73,10 @@ export default defineComponent({
     const store = useStore();
     const {client} = useApolloClient();
     let {peripheral: asset} = toRefs(props);
-    const portId = asset.value.data.connectedTo[0].id;
+    let portId = -1;
+    if (asset.value.data.connectedTo.length > 0) {
+      portId = asset.value.data.connectedTo[0].id;
+    }
 
     const loadDetails = () => {
       client
