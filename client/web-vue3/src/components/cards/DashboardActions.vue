@@ -22,10 +22,9 @@
           <q-icon name="fas fa-fire" class="float-right" size="40px"/>
         </q-card-section>
         <q-card-actions align="around">
-          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneEtajId + '?category=HEAT'">Etaj</q-btn>
+          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneParterId + '?category=HEAT'">Parter</q-btn>
           <q-separator vertical></q-separator>
-          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneParterId + '?category=HEAT'">Parter
-          </q-btn>
+          <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneEtajId + '?category=HEAT'">Etaj</q-btn>
         </q-card-actions>
       </q-card>
     </div>
@@ -46,8 +45,8 @@
     </div>
     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" v-if="hasRole(['ROLE_ADMIN','ROLE_USER'])">
       <peripheral-lock/>
-      &nbsp;
       <water-pump :peripheral="{state: true}"/>
+      <sprinklers-dash-component :peripheral="{state: true}"/>
     </div>
     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
       <electric-meter :device-id="eMeterDeviceId"/>
@@ -67,6 +66,7 @@ import {authzService} from '@/_services';
 import ElectricMeter from "components/ElectricMeter";
 import HeatPump from "components/HeatPump";
 import WaterPump from "components/WaterPump";
+import SprinklersDashComponent from "components/SprinklersDashComponent";
 
 
 export default defineComponent({
@@ -76,6 +76,7 @@ export default defineComponent({
     HeatPump,
     ElectricMeter,
     PeripheralLock,
+    SprinklersDashComponent
   },
   setup() {
     const zoneIntId = parseInt(process.env.VUE_APP_CONF_ZONE_INT_ID);

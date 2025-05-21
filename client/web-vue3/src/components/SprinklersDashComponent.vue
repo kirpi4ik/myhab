@@ -1,9 +1,9 @@
 <template>
-  <q-card class="q-ma-md-xs bg-blue-4">
-    <q-card-section class="bg-blue-6 text-blue-1 text-h6 q-ma-md-md">
+  <q-card class="q-ma-md-xs bg-blue-grey-4">
+    <q-card-section class="bg-blue-grey-6 text-blue-1 text-h6 q-ma-md-md">
       <q-item-label class="text-weight-light text-teal-2 text-caption">
         <event-logger :peripheral="asset"/>
-        <label class="text-h6">Pompa apa</label>
+        <label class="text-h6">Sistem udare</label>
         <label v-if="config('key.on.timeout')">[ timer:
           {{ humanizeDuration(Number(config('key.on.timeout').value) * 1000, {largest: 2}) }}
         </label>
@@ -11,7 +11,7 @@
           | off at :{{ format(new Date(Number(asset.expiration)), 'HH:mm') }}
         </label>
         <label v-if="config('key.on.timeout')">]</label>
-        <q-icon name="mdi-water-pump" class="float-right" size="40px">
+        <q-icon name="mdi-sprinkler-variant" class="float-right" size="40px">
           <q-item>
             <q-item-section side>
               <q-item-label>
@@ -53,21 +53,19 @@
 
     </q-card-section>
     <q-separator color="white"/>
-    <q-card-section>
-      <div class="q-pa-sm text-grey-8">
-        <toggle v-model="asset['data']['state']"
-                v-if="asset['data'] != null"
-                :id="asset['id']"
-                @change="peripheralService.toggle(asset)"/>
-      </div>
-    </q-card-section>
+    <q-card-actions align="around">
+      <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneLanId + '?category=SPRINKLER'">Gazon
+      </q-btn>
+      <q-separator vertical></q-separator>
+      <q-btn flat class="text-h6 text-grey-14" no-caps :to="'/zones/' + zoneGardenId + '?category=SPRINKLER'">Gradina
+      </q-btn>
+    </q-card-actions>
   </q-card>
 </template>
 <script>
 import {computed, defineComponent, onMounted, ref, watch} from 'vue';
 import EventLogger from "components/EventLogger";
 import {peripheralService} from '@/_services/controls';
-import Toggle from "@vueform/toggle";
 import {CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
 import _ from "lodash";
 import humanizeDuration from 'humanize-duration';
@@ -76,12 +74,14 @@ import {useApolloClient, useMutation} from "@vue/apollo-composable";
 import {format} from "date-fns";
 
 export default defineComponent({
-  name: 'WaterPump',
+  name: 'SprinklersDashComponent',
   components: {
-    Toggle,
     EventLogger
   },
   setup(props, {emit}) {
+    const zoneLanId = parseInt(process.env.VUE_APP_CONF_ZONE_LAN_ID);
+    const zoneGardenId = parseInt(process.env.VUE_APP_CONF_ZONE_GARDEN_ID);
+
     const store = useStore();
     let asset = ref({})
     const {client} = useApolloClient();
@@ -92,13 +92,7 @@ export default defineComponent({
       },
     });
     const init = () => {
-      client.query({
-        query: PERIPHERAL_GET_BY_ID,
-        variables: {id: process.env.WATER_PUMP_ID},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        asset.value = peripheralService.peripheralInit(null, _.cloneDeep(response.data.devicePeripheral));
-      });
+
     }
     const config = key => {
       if (asset.value != null) {
@@ -122,12 +116,6 @@ export default defineComponent({
       () => store.getters.ws.message,
       function () {
         if (wsMessage.value.eventName == 'evt_port_value_persisted') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (asset.value.data.connectedTo[0].id == payload.p2) {
-            asset.value['value'] = payload.p4;
-            asset.value['state'] = payload.p4 === 'ON';
-            asset.value['data']['state'] = payload.p4 === 'ON';
-          }
         }
       },
     );
@@ -135,6 +123,8 @@ export default defineComponent({
       init()
     });
     return {
+      zoneLanId: zoneLanId,
+      zoneGardenId: zoneGardenId,
       asset,
       humanizeDuration,
       peripheralService,

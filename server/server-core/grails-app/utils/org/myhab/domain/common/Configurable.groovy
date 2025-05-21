@@ -23,7 +23,7 @@ trait Configurable<T extends BaseEntity> {
         } else return null
     }
 
-    def getConfigurationByKey(CfgKey.Key key) {
+    Configuration getConfigurationByKey(CfgKey.Key key) {
         def cfgList = Configuration.createCriteria().list {
             eq('entityType', getEntityType())
             eq('entityId', getId())

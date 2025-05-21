@@ -4,8 +4,16 @@
       <q-card flat bordered>
         <q-card-section class="full-width">
           <div class="text-h5">Create new peripheral</div>
-          <q-select v-model="peripheral.connectedTo"
-                    :options="portList"
+          <q-select v-model="selectedDevice"
+                    :options="deviceList"
+                    :disable="deviceListDisabled"
+                    option-label="name"
+                    label="Devices" map-options emit-value filled dense clearable>
+            <q-icon name="cancel" class="cursor-pointer text-blue"/>
+          </q-select>
+          <q-select v-if="selectedDevice != null"
+                    v-model="peripheral.connectedTo"
+                    :options="selectedDevice.ports"
                     :disable="portListDisabled"
                     input-debounce="0"
                     option-label="name"
@@ -49,9 +57,8 @@
 import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
 import {
-  DEVICE_LIST_ALL,
+  DEVICE_LIST_ALL_WITH_PORTS,
   PERIPHERAL_CATEGORIES,
-  PERIPHERAL_CATEGORY_CREATE,
   PERIPHERAL_CREATE,
   PORT_LIST_ALL
 } from '@/graphql/queries';
@@ -64,6 +71,9 @@ export default defineComponent({
     setup() {
       const $q = useQuasar()
       const {client} = useApolloClient();
+      const deviceList = ref([])
+      const selectedDevice = ref(null)
+      const deviceListDisabled = ref(false)
       const peripheral = ref({connectedTo: []})
       const categoryList = ref([])
       const router = useRouter();
@@ -79,27 +89,22 @@ export default defineComponent({
         }).then(response => {
           categoryList.value = response.data.peripheralCategoryList
         })
-
         client.query({
-          query: PORT_LIST_ALL,
+          query: DEVICE_LIST_ALL_WITH_PORTS,
           variables: {},
           fetchPolicy: 'network-only',
         }).then(response => {
-          portList.value = _.transform(response.data.devicePortList,
-            function (result, value, key) {
-              let port = {
-                id: value.id,
-                name: value.name
-              }
-              result.push(port)
+          deviceList.value = response.data.deviceList
+          if (route.query.deviceId != null) {
+            port.value.device = _.find(response.data.deviceList, function (o) {
+              return o.id == route.query.deviceId;
             });
-          if (route.query.portId != null) {
-            peripheral.value.connectedTo = _.find(portList.value, function (o) {
-              return o.id == route.query.portId;
-            });
-            portListDisabled.value = true
+            deviceListDisabled.value = true
+            if (route.query.portId != null) {
+              portListDisabled.value = true
+            }
           }
-        })
+        });
       }
       const onSave = () => {
         if (peripheral.value.hasError) {
@@ -112,7 +117,7 @@ export default defineComponent({
             mutation: PERIPHERAL_CREATE,
             variables: {devicePeripheral: peripheral.value},
           }).then(response => {
-            router.push({path: `/admin/peripherals/${response.data.devicePeripheralCreate.id}/edit`})
+            router.push({path: `/admin/peripherals/${response.data.peripheralCreate.id}/edit`})
           });
         }
       }
@@ -120,6 +125,9 @@ export default defineComponent({
         fetchData()
       })
       return {
+        selectedDevice,
+        deviceList,
+        deviceListDisabled,
         peripheral,
         categoryList,
         portList,

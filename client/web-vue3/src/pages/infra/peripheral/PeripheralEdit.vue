@@ -103,10 +103,10 @@ export default defineComponent({
         loading.value = true;
         client.query({
           query: PERIPHERAL_GET_BY_ID,
-          variables: {id: useRoute().params.idPrimary},
+          variables: {id: route.params.idPrimary},
           fetchPolicy: 'network-only',
         }).then(response => {
-          peripheral.value = response.data.devicePeripheral
+          peripheral.value = _.cloneDeep(response.data.devicePeripheral)
           loading.value = false;
         });
         client.query({

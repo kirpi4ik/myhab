@@ -38,10 +38,10 @@ public class DeviceHttpService {
             } catch (Exception ce) {
                 throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
             }
-        } else if (device != null && device.model == DeviceModel.ESP8266_1) {
+        } else if (device != null && device.model == DeviceModel.ESP32) {
             try {
                 url = "$PROTOCOL://${device.networkAddress?.ip}:${device.networkAddress?.port}/${uri != null ? uri : ''}"
-                log.trace("READ STAT for [${DeviceModel.ESP8266_1}] from : ${url}")
+                log.trace("READ STAT for [${DeviceModel.ESP32}] from : ${url}")
 
                 return connect(url)
                         .timeout(DEVICE_URL_TIMEOUT_ESP)
@@ -102,7 +102,7 @@ public class DeviceHttpService {
                     throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
                 }
             }
-        } else if (device?.model == DeviceModel.ESP8266_1 || port?.device?.model == DeviceModel.ESP8266_1) {
+        } else if (device?.model == DeviceModel.ESP32 || port?.device?.model == DeviceModel.ESP32) {
             if (port != null && action != null && value != null) {
                 def url
                 try {
