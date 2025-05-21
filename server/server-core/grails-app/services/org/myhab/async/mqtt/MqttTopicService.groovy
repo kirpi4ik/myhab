@@ -22,7 +22,7 @@ class MqttTopicService {
                 case ~/${MQTTTopic.ESP.topic(STATUS)}/:
                     matcher = topicName =~ MQTTTopic.ESP.topic(STATUS)
                     //payload = online | offline
-                    return new MQTTMessage(deviceType: DeviceModel.ESP8266_1, deviceCode: matcher[0][1], portStrValue: message.payload, eventType: TopicName.EVT_DEVICE_STATUS.id())
+                    return new MQTTMessage(deviceType: DeviceModel.ESP32, deviceCode: matcher[0][1], portStrValue: message.payload, eventType: TopicName.EVT_DEVICE_STATUS.id())
                 case ~/${MQTTTopic.NIBE.topic(STATUS)}/:
                     matcher = topicName =~ MQTTTopic.NIBE.topic(STATUS)
                     return new MQTTMessage(deviceType: DeviceModel.NIBE_F1145_8_EM, deviceCode: matcher[0][1], portStrValue: message.payload, eventType: TopicName.EVT_DEVICE_STATUS.id())
@@ -31,7 +31,7 @@ class MqttTopicService {
                     return new MQTTMessage(deviceType: DeviceModel.ELECTRIC_METER_DTS, deviceCode: matcher[0][2], portCode: matcher[0][3], portStrValue: message.payload, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
                 case ~/${MQTTTopic.ESP.topic(READ_SINGLE_VAL)}/:
                     matcher = topicName =~ MQTTTopic.ESP.topic(READ_SINGLE_VAL)
-                    return new MQTTMessage(deviceType: DeviceModel.ESP8266_1, deviceCode: matcher[0][1], portType: matcher[0][2], portCode: matcher[0][3], portStrValue: message.payload, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
+                    return new MQTTMessage(deviceType: DeviceModel.ESP32, deviceCode: matcher[0][1], portType: matcher[0][2], portCode: matcher[0][3], portStrValue: message.payload, eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id())
                 case ~/${MQTTTopic.MEGA.topic(READ_SINGLE_VAL)}/:
                     matcher = topicName =~ MQTTTopic.MEGA.topic(READ_SINGLE_VAL)
                     def payload = [:]
@@ -70,7 +70,7 @@ class MqttTopicService {
         switch (model) {
             case DeviceModel.MEGAD_2561_RTC:
                 return new MQTTTopic.MEGA()
-            case DeviceModel.ESP8266_1:
+            case DeviceModel.ESP32:
                 return new MQTTTopic.ESP()
             case DeviceModel.NIBE_F1145_8_EM:
                 return new MQTTTopic.NIBE()
@@ -100,7 +100,7 @@ class MqttTopicService {
             }
             return act.join(";")
         }
-        if (port.device.model == DeviceModel.ESP8266_1) {
+        if (port.device.model == DeviceModel.ESP32) {
             if (actions)
                 return actions.first()
             else {
