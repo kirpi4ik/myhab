@@ -8,7 +8,7 @@
         <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
       </q-card-section>
       <q-card-section class="row">
-        <div class="text-h4 text-secondary">Peripheral details</div>
+        <div class="text-h4 text-secondary">Details: {{viewItem.name}}</div>
         <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'"
                style="margin-left: 5px"/>
         <q-btn outline round color="amber-8" icon="mdi-view-list" :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=PERIPHERAL'"
@@ -43,7 +43,7 @@
           <q-item-label>Category</q-item-label>
           <div>
             <q-item-label class="text-blue-grey-6 text-weight-bold">{{ viewItem.category.name }}
-            <q-btn icon="mdi-eye" :to="'/admin/pcategories/'+viewItem.category.id+'/view'" size="xs"/>
+              <q-btn icon="mdi-eye" :to="'/admin/pcategories/'+viewItem.category.id+'/view'" size="xs"/>
             </q-item-label>
           </div>
         </q-item-section>

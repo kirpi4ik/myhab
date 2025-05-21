@@ -1,16 +1,17 @@
 package org.myhab.domain.device
 
-import org.myhab.domain.Configuration
-import org.myhab.domain.EntityType
-import org.myhab.domain.common.BaseEntity
-import org.myhab.domain.common.Configurable
-import org.myhab.domain.infra.Zone
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
+import org.grails.gorm.graphql.fetcher.impl.CreateEntityDataFetcher
 import org.grails.gorm.graphql.fetcher.impl.UpdateEntityDataFetcher
+import org.myhab.domain.Configuration
+import org.myhab.domain.EntityType
 import org.myhab.domain.PeripheralAccessToken
+import org.myhab.domain.common.BaseEntity
+import org.myhab.domain.common.Configurable
 import org.myhab.domain.device.port.DevicePort
+import org.myhab.domain.infra.Zone
 
 class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripheral> {
     String name
@@ -23,7 +24,7 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
     Set<PeripheralAccessToken> accessTokens
 
     static belongsTo = [DevicePort, Zone, PeripheralCategory]
-    static hasMany = [connectedTo: DevicePort, zones: Zone, accessTokens : PeripheralAccessToken]
+    static hasMany = [connectedTo: DevicePort, zones: Zone, accessTokens: PeripheralAccessToken]
     static hasOne = [category: PeripheralCategory]
 
     static constraints = {
@@ -56,6 +57,41 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
                 @Override
                 Object get(DataFetchingEnvironment environment) {
                     DevicePeripheral.findById(environment.getArgument('id'))
+                }
+            })
+        }
+        mutation('peripheralCreate', DevicePeripheral) {
+            argument('devicePeripheral', DevicePeripheral.class)
+
+            returns DevicePeripheral
+            dataFetcher(new CreateEntityDataFetcher<DevicePeripheral>(DevicePeripheral.gormPersistentEntity) {
+                @Override
+                DevicePeripheral get(DataFetchingEnvironment environment) throws Exception {
+                    def peripheral = environment.getArgument("devicePeripheral")
+                    DevicePeripheral dbExistingPeripheral = new DevicePeripheral();
+                    withTransaction(false) {
+                        peripheral.entrySet().findAll { entry -> !(entry.value instanceof Collection) }.each { entry ->
+                            if (entry.key == 'category') {
+                                dbExistingPeripheral.category = PeripheralCategory.get(entry.value.id)
+                            } else {
+                                if (DevicePeripheral.metaClass.hasProperty(dbExistingPeripheral, entry.key) && entry.key != 'metaClass' && entry.key != 'class') {
+                                    dbExistingPeripheral.setProperty(entry.key, entry.value)
+                                }
+                            }
+                        }
+                        peripheral.zones.each { mapZone ->
+                            if (dbExistingPeripheral.zones.find { z -> z.id == mapZone.id } == null) {
+                                dbExistingPeripheral.addToZones(Zone.get(mapZone.id))
+                            }
+                        }
+                        peripheral.connectedTo.each { port ->
+                            if (dbExistingPeripheral.connectedTo.find { p -> p.id == port.id } == null) {
+                                dbExistingPeripheral.addToConnectedTo(DevicePort.get(port.id))
+                            }
+                        }
+                        dbExistingPeripheral.save(failOnError: true, flush: true)
+                    }
+                    return dbExistingPeripheral
                 }
             })
         }

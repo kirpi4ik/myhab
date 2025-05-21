@@ -12,6 +12,7 @@ import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
+import org.myhab.telegram.TelegramBotHandler
 import org.quartz.*
 
 import java.util.concurrent.TimeUnit
@@ -45,7 +46,7 @@ class NibeTokenRefreshJob implements Job {
 //                log.debug("Acc token : ${tk['access_token']}")
             } else {
                 log.warn("There are no tokens configured for device ${device.id}")
-                telegramBotHandler.sendMessage('WARN', "There are no tokens configured for device ${device.id}")
+                telegramBotHandler.sendMessage(TelegramBotHandler.MSG_LEVEL.WARNING, "There are no tokens configured for device ${device.id}")
             }
             if (device.status == DeviceStatus.OFFLINE) {
                 mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)

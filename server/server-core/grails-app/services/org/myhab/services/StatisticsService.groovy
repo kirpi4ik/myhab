@@ -20,7 +20,7 @@ class StatisticsService implements EventPublisher {
         def activePower = DevicePort.findByInternalRef('total_active_power')
 
         def portValue = PortValue.createCriteria().list {
-            eq('portUid', activePower.getUid())
+            eq('portId', activePower.getId())
             and {
                 between('tsCreated', intervalStart, intervalEnd)
             }
