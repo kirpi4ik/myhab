@@ -6,7 +6,6 @@ package org.myhab.domain.device
 enum DeviceModel {
     MEGAD_2561_RTC,
     ESP32,
-    ESP8266_1,
     TMEZON_INTERCOM,
     NIBE_F1145_8_EM,
     ELECTRIC_METER_DTS,
