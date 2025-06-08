@@ -1,4 +1,3 @@
-import ch.qos.logback.classic.Level
 import ch.qos.logback.core.util.FileSize
 import grails.util.BuildSettings
 import grails.util.Environment
@@ -176,15 +175,16 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
     root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
 }
 
-logger 'org.myhab', DEBUG, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
-logger 'graphql', WARN, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
+logger('org.myhab', DEBUG, ['STDOUT', 'FULL_STACKTRACE'], additivity = false)
+logger('graphql', WARN, ['STDOUT', 'FULL_STACKTRACE'], additivity = false)
+logger('org.springframework', ERROR, ['STDOUT'], additivity = false)
+logger('org.hibernate.', ERROR, ['STDOUT'], additivity = false)
+logger('org.hibernate.orm.deprecation', ERROR, ['STDOUT'], additivity = false)
 //logger 'org.jsoup', DEBUG, ['STDOUT']
 //logger 'org.springframework.web.socket', DEBUG, ['STDOUT']
 //logger 'org.springframework.messaging', DEBUG, ['STDOUT']
 //logger 'org.springframework.security', DEBUG, ['STDOUT']
 //logger 'grails.plugin.springsecurity', DEBUG, ['STDOUT']
 //logger 'grails.plugin.springsecurity.web.filter.DebugFilter', DEBUG, ['STDOUT']
-logger 'org.springframework', ERROR, ['STDOUT'], additivity = false
-logger 'org.hibernate.', ERROR, ['STDOUT'], additivity = false
 //logger 'org.hibernate.type.descriptor.sql.BasicBinder', DEBUG, ['STDOUT']
 //logger 'org.hibernate.SQL', DEBUG, ['STDOUT']

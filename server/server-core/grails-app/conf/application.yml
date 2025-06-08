@@ -19,6 +19,9 @@ info:
     version: "@info.app.version@"
     grailsVersion: "@info.app.grailsVersion@"
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
   jmx:
     unique-names: true
   main:
@@ -33,7 +36,7 @@ spring:
         - "**/*.gsp"
         - "*.gson"
         - "**/*.gson"
-        - "logback.groovy"
+        - "logback-config.groovy"
         - "*.properties"
   resources:
     cache:

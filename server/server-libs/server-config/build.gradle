@@ -6,26 +6,21 @@ buildscript {
     }
 }
 plugins {
-    id 'groovy'
+    id 'java'
     id 'java-library'
-    id 'idea'
 }
-
-repositories {
-    mavenLocal()
-    maven { url "https://repo.grails.org/grails/core" }
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(19)
+    }
 }
-
 dependencies {
-    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    implementation 'org.springframework:spring-beans:5.1.18.RELEASE'
-    runtimeOnly 'org.yaml:snakeyaml:1.30'
-    runtimeOnly 'commons-beanutils:commons-beanutils:1.9.4'
-    implementation 'org.apache.commons:commons-configuration2:2.7'
-    implementation 'org.kohsuke:github-api:1.301'
-    implementation 'com.konghq:unirest-java:3.11.09'
-
-    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r'
-
-
+    implementation("org.springframework:spring-beans:5.3.39")
+    runtimeOnly("org.yaml:snakeyaml:2.4")
+    runtimeOnly("commons-beanutils:commons-beanutils:1.11.0")
+    implementation("org.apache.commons:commons-configuration2:2.12.0")
+    implementation("org.apache.commons:commons-lang3:3.17.0")
+    implementation("org.kohsuke:github-api:1.327")
+    implementation("com.konghq:unirest-java-core:4.4.7")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.3.0.202506031305-r")
 }

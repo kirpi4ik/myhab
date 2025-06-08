@@ -37,7 +37,7 @@
     <q-separator></q-separator>
     <q-card-section>
       <div class="q-pa-sm text-grey-8">
-        <toggle v-model="asset['data']['state']" @change="heatService.toggle(peripheral)"/>
+        <toggle v-model="asset['data']['state']" @change="heatService.toggle(peripheral)" :id="peripheral.id"/>
       </div>
     </q-card-section>
   </q-card>

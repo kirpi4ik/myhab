@@ -25,12 +25,6 @@ group "${projectGroup}"
 
 allprojects {
     apply plugin: 'idea'
-
-    repositories {
-        mavenLocal()
-        maven { url "https://repo.grails.org/grails/core" }
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
 }
 //tag::extVariables[]
 ext {
@@ -86,14 +80,14 @@ task versionTxt() {
         writer.flush()
     }
 }
-task copyClientResources(dependsOn: [':web-vue:build', ':web-vue3:build']) { // <1>
+task copyClientResources(dependsOn: [/*':web-vue:build',*/ ':web-vue3:build']) { // <1>
     group = 'build'
     description = 'Copy client resources into server'
     doLast {
-        copy {
-            from project(':web-vue').buildDir.absolutePath
-            into "${project(':server-core').buildDir}/resources/main/public"
-        }
+//        copy {
+//            from project(':web-vue').buildDir.absolutePath
+//            into "${project(':server-core').buildDir}/resources/main/public"
+//        }
         copy {
             from project(':web-vue3').buildDir.absolutePath
             into "${project(':server-core').buildDir}/resources/main/public/nx"
@@ -116,10 +110,10 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':
 }
 
 copyClientResources.doFirst { // <4>
-    copy {
-        from "${project(':web-vue').projectDir}/dist"
-        into "${project(':server-core').buildDir}/resources/main/public"
-    }
+//    copy {
+//        from "${project(':web-vue').projectDir}/dist"
+//        into "${project(':server-core').buildDir}/resources/main/public"
+//    }
     copy {
         from "${project(':web-vue3').projectDir}/dist/spa"
         into "${project(':server-core').buildDir}/resources/main/public/nx"
