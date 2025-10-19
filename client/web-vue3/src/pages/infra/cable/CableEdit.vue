@@ -218,7 +218,7 @@ export default defineComponent({
         }
         update(() => {
           const needle = val.toLowerCase()
-          options.value = deviceList.value.filter(v => v.name.toLowerCase().indexOf(needle) > -1)
+          options.value = deviceList.value.filter(v => v.name.toLowerCase().includes(needle))
         })
       },
       portFilterFn: (val, update) => {
@@ -230,7 +230,7 @@ export default defineComponent({
         }
         update(() => {
           const needle = val.toLowerCase()
-          portList.value = newPortDevice.value.ports.filter(v => v.name.toLowerCase().indexOf(needle) > -1)
+          portList.value = newPortDevice.value.ports.filter(v => v.name.toLowerCase().includes(needle))
         })
       }
     }

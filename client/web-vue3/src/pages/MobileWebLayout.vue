@@ -321,7 +321,7 @@ export default {
           case 'TEMP': {
             if (srvAsset && srvAsset.portValue) {
               let degree = srvAsset.portValue
-              if (degree.length == 3 && degree.indexOf(".") == -1) {
+              if (degree.length == 3 && !degree.includes(".")) {
                 degree = degree / 10
               }
               svgEl.firstChild.textContent = degree + '℃';
