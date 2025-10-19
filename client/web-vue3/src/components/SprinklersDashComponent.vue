@@ -79,13 +79,13 @@ export default defineComponent({
     EventLogger
   },
   setup(props, {emit}) {
-    const zoneLanId = parseInt(process.env.VUE_APP_CONF_ZONE_LAN_ID);
-    const zoneGardenId = parseInt(process.env.VUE_APP_CONF_ZONE_GARDEN_ID);
+    const zoneLanId = process.env.VUE_APP_CONF_ZONE_LAN_ID;
+    const zoneGardenId = process.env.VUE_APP_CONF_ZONE_GARDEN_ID;
 
     const store = useStore();
     let asset = ref({})
     const {client} = useApolloClient();
-    const wsMessage = computed(() => store.getters.ws.message);
+    const wsMessage = computed(() => store?.getters?.ws?.message);
     const {mutate: setTimeout} = useMutation(CONFIGURATION_SET_VALUE, {
       update: () => {
         init();
@@ -113,9 +113,9 @@ export default defineComponent({
       {value: 18000},
     ];
     watch(
-      () => store.getters.ws.message,
+      () => store?.getters?.ws?.message,
       function () {
-        if (wsMessage.value.eventName == 'evt_port_value_persisted') {
+        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
         }
       },
     );

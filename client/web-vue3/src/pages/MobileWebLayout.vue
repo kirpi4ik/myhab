@@ -100,7 +100,7 @@ export default {
 
   computed: {
     stompMessage() {
-      return this.$store.state.ws.message;
+      return this.$store?.state?.ws?.message;
     },
   },
   watch: {

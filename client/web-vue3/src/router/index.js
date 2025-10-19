@@ -12,22 +12,17 @@ import {authzService} from '@/_services';
  * with the Router instance.
  */
 
-export default route(function (/* { store, ssrContext } */) {
-  const createHistory =
-    process.env.MODE === 'ssr'
-      ? createMemoryHistory
-      : process.env.VUE_ROUTER_MODE === 'history'
-        ? createWebHistory
-        : createWebHashHistory;
+export default route(function ({ store, ssrContext }) {
+  const createHistory = createWebHistory;
 
   const router = createRouter({
     scrollBehavior: () => ({left: 0, top: 0}),
     routes,
 
-    // Leave this as is and make changes in quasar.conf.js instead!
-    // quasar.conf.js -> build -> vueRouterMode
-    // quasar.conf.js -> build -> publicPath
-    history: createHistory(process.env.MODE === 'ssr' ? void 0 : process.env.VUE_ROUTER_BASE),
+    // Leave this as is and make changes in quasar.config.js instead!
+    // quasar.config.js -> build -> vueRouterMode
+    // quasar.config.js -> build -> publicPath
+    history: createHistory(process.env.VUE_ROUTER_BASE),
   });
   router.beforeEach((to, from, next) => {
     // redirect to login page if not logged in and trying to access a restricted page

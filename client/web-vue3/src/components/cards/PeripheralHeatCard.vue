@@ -102,11 +102,11 @@ export default defineComponent({
         });
     };
 
-    const wsMessage = computed(() => store.getters.ws.message);
+    const wsMessage = computed(() => store?.getters?.ws?.message);
     watch(
-      () => store.getters.ws.message,
+      () => store?.getters?.ws?.message,
       function () {
-        if (wsMessage.value.eventName == 'evt_port_value_persisted') {
+        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
           let payload = JSON.parse(wsMessage.value.jsonPayload);
           if (portId == payload.p2) {
             asset.value['value'] = payload.p4;
@@ -114,7 +114,7 @@ export default defineComponent({
             asset.value['data']['state'] = payload.p4 === 'ON';
             loadDetails();
           }
-        } else if (wsMessage.value.eventName == 'evt_cfg_value_changed') {
+        } else if (wsMessage.value?.eventName == 'evt_cfg_value_changed') {
           let payload = JSON.parse(wsMessage.value.jsonPayload);
           if (asset.value.id == payload.p3 && 'PERIPHERAL' == payload.p2) {
             loadDetails();

@@ -91,7 +91,7 @@ export default defineComponent({
 				.then(response => {
 					let data = _.cloneDeep(response.data);
 					data.eventsByP2.forEach(function (event, index) {
-						event.strDate = format(new Date(event.tsCreated), process.env.DATE_FORMAT_LONG);
+						event.strDate = format(new Date(event.tsCreated), process.env.DATE_FORMAT_LONG || 'dd/MM/yyyy HH:mm:ss');
 					});
 					this.data.items = data.eventsByP2;
 				});

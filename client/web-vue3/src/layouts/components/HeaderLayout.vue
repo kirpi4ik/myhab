@@ -68,7 +68,8 @@
   </q-header>
 </template>
 <script>
-import {defineComponent} from 'vue';
+import {defineComponent, computed} from 'vue';
+import {useStore} from 'vuex';
 import UserMessages from './UserMessages';
 import {useUiState} from '@/composables';
 import {useQuery} from '@vue/apollo-composable';
@@ -84,18 +85,19 @@ export default defineComponent({
     ClockComponent,
     BreadCrumbLayout,
   },
-  computed: {
-    wsConnection() {
-      return this.$store.state.ws.connection;
-    },
-  },
   setup() {
+    const store = useStore();
     const {toggleSideBar} = useUiState();
     const {result} = useQuery(CONFIG_GLOBAL_GET_STRING_VAL, {key: 'surveillance.url'});
+    
+    const wsConnection = computed(() => {
+      return store?.state?.ws?.connection || 'OFFLINE';
+    });
     return {
       toggleSideBar,
       result,
       authzService,
+      wsConnection,
     };
   },
   mounted() {
