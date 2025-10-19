@@ -83,12 +83,12 @@ export default defineComponent({
     SprinklersDashComponent
   },
   setup() {
-    const zoneIntId = process.env.VUE_APP_CONF_ZONE_INT_ID;
-    const zoneExtId = process.env.VUE_APP_CONF_ZONE_EXT_ID;
-    const zoneEtajId = process.env.VUE_APP_CONF_ZONE_ETAJ_ID;
-    const zoneParterId = process.env.VUE_APP_CONF_ZONE_PARTER_ID;
-    const heatPumpDeviceId = process.env.HEAT_PUMP_DEVICE_ID;
-    const eMeterDeviceId = process.env.ELECTRIC_METER_01_DEVICE_ID;
+    const zoneIntId = Number(process.env.VUE_APP_CONF_ZONE_INT_ID);
+    const zoneExtId = Number(process.env.VUE_APP_CONF_ZONE_EXT_ID);
+    const zoneEtajId = Number(process.env.VUE_APP_CONF_ZONE_ETAJ_ID);
+    const zoneParterId = Number(process.env.VUE_APP_CONF_ZONE_PARTER_ID);
+    const heatPumpDeviceId = Number(process.env.HEAT_PUMP_DEVICE_ID);
+    const eMeterDeviceId = Number(process.env.ELECTRIC_METER_01_DEVICE_ID);
     return {
       zoneIntId,
       zoneExtId,
