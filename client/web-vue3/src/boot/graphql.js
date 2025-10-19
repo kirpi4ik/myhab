@@ -1,18 +1,20 @@
 import {boot} from 'quasar/wrappers';
 
 import {ApolloClients} from '@vue/apollo-composable';
-import {createApolloProvider} from '@vue/apollo-option';
 import {ApolloClient, HttpLink, InMemoryCache} from '@apollo/client/core';
 import {setContext} from '@apollo/client/link/context';
 import {onError} from '@apollo/client/link/error';
 import {authzService} from '@/_services';
 import {Utils} from '@/_helpers';
-import {loadErrorMessages, loadDevMessages} from "@apollo/client/dev";
 import { Notify } from 'quasar'
 
-
-loadDevMessages();
-loadErrorMessages();
+// Load Apollo dev tools only in development mode
+if (process.env.DEV) {
+  import("@apollo/client/dev").then(({ loadErrorMessages, loadDevMessages }) => {
+    loadDevMessages();
+    loadErrorMessages();
+  });
+}
 
 // Notice the use of the link-error tool from Apollo
 const httpLink = new HttpLink({
@@ -69,22 +71,15 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
 const apolloClient = new ApolloClient({
   link: onErrorLink.concat(withAuthToken).concat(httpLink),
   cache: new InMemoryCache({addTypename: false}),
-  connectToDevTools: true,
+  connectToDevTools: process.env.DEV,
 });
 
-let apolloProvider = createApolloProvider({
-  defaultClient: apolloClient,
-});
 export default boot(({app}) => {
-  app.use(apolloProvider);
-  const apolloClients = {
+  // Provide Apollo client using Composition API (Vue 3 + @vue/apollo-composable)
+  app.provide(ApolloClients, {
     default: apolloClient,
-    // clientA,
-    // clientB,
-  };
-  app.provide(ApolloClients, apolloClients);
+  });
 });
 
-// "async" is optional;
-// more info on params: https://v2.quasar.dev/quasar-cli/boot-files
-export {apolloProvider, apolloClient};
+// Export the Apollo client for use outside of components
+export {apolloClient};
