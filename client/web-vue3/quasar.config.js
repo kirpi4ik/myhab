@@ -24,10 +24,13 @@ export default configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-webpack/boot-files
-    boot: ['i18n', 'store', 'axios', 'graphql'],
+    boot: ['i18n', 'axios', 'graphql'],
 
-    // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#store
-    store: true,
+    // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#sourcefiles
+    sourceFiles: {
+      router: 'src/router/index',
+      store: 'src/store/index'
+    },
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#css
     css: ['app.css'],

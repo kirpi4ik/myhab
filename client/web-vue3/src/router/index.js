@@ -13,6 +13,7 @@ import {authzService} from '@/_services';
  */
 
 export default route(function ({ store, ssrContext }) {
+  console.log('Router init - creating router, store:', store);
   const createHistory = createWebHistory;
 
   const router = createRouter({
@@ -24,6 +25,7 @@ export default route(function ({ store, ssrContext }) {
     // quasar.config.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
+
   router.beforeEach((to, from, next) => {
     // redirect to login page if not logged in and trying to access a restricted page
     const {authorize} = to.meta;
@@ -48,5 +50,6 @@ export default route(function ({ store, ssrContext }) {
     next();
   });
 
+  console.log('Router created:', router);
   return router;
 });

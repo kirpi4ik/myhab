@@ -16,8 +16,12 @@ export default defineComponent({
       const store = useStore();
       
       onMounted(() => {
+        console.log('App mounted, store:', store);
         if (store && store.dispatch) {
+          console.log('Dispatching connect action...');
           store.dispatch('connect');
+        } else {
+          console.error('Store or dispatch not available');
         }
       });
       
