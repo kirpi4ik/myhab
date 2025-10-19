@@ -1,38 +1,36 @@
 <template>
   <q-page padding>
     <q-btn icon="add" color="positive" :disable="loading" label="Add cable" @click="addRow"/>
-    <q-grid :data="rows" :columns="columns" :columns_filter="true" :pagination="{rowsPerPage:10}"
-            class="myhab-list-qgrid">
-      <template v-slot:header="props">
-        <q-tr :props="props">
-          <q-th
-            :key="col.name"
-            v-for="col in props.cols">
-            {{ col.label }}
-          </q-th>
-        </q-tr>
-      </template>
+    <q-table 
+      :rows="rows" 
+      :columns="columns" 
+      :loading="loading"
+      v-model:pagination="pagination"
+      row-key="id"
+      class="myhab-list-qgrid"
+      flat
+      bordered>
       <template v-slot:body="props">
-        <q-tr :props="props" @click="onRowClick(props.row)">
-          <q-td key="name" style="max-width: 50px">
+        <q-tr :props="props" @click="onRowClick(props.row)" style="cursor: pointer;">
+          <q-td key="id" style="max-width: 50px">
             {{ props.row.id }}
           </q-td>
-          <q-td key="name">
+          <q-td key="location">
             {{ props.row.location }}
           </q-td>
-          <q-td key="name">
+          <q-td key="category">
             {{ props.row.category }}
           </q-td>
-          <q-td key="name">
+          <q-td key="code">
             {{ props.row.code }}
           </q-td>
-          <q-td key="name">
+          <q-td key="description">
             {{ props.row.description }}
           </q-td>
-          <q-td key="name">
+          <q-td key="patchPanel">
             {{ props.row.patchPanel }}
           </q-td>
-          <q-td key="name">
+          <q-td key="actions">
             <q-btn-group>
               <q-btn icon="mdi-open-in-new" @click.stop="" :href="'/nx'+uri+'/'+props.row.id+'/view'" target="_blank"
                      color="blue-6"/>
@@ -42,22 +40,21 @@
           </q-td>
         </q-tr>
       </template>
-    </q-grid>
+    </q-table>
   </q-page>
 </template>
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router/dist/vue-router";
+import {useRouter} from "vue-router";
 
 import {useQuasar} from "quasar";
 
-import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
+import {useApolloClient} from "@vue/apollo-composable";
 
 import _ from "lodash";
-import {right} from "core-js/internals/array-reduce";
+
+import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
 
 
 
@@ -70,8 +67,10 @@ export default defineComponent({
     const loading = ref(false)
     const router = useRouter();
     const rows = ref([]);
-    const selectedRow = ref(null);
     const categoryList = ref([]);
+    const pagination = ref({
+      rowsPerPage: 10
+    });
     const columns = [
       {
         name: 'id',
@@ -80,12 +79,12 @@ export default defineComponent({
         sortable: true,
         align: 'left'
       },
-      {name: 'location', label: 'Rack', field: 'location', sortable: true, filter_type: 'select'},
-      {name: 'category', label: 'Category', field: 'category', sortable: true, filter_type: 'select'},
-      {name: 'code', label: 'Code', field: 'code', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', sortable: true},
-      {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', sortable: true},
-      {name: 'actions', label: 'Actions', field: 'actions', sortable: false, filter_type: '', align: 'right'}
+      {name: 'location', label: 'Rack', field: 'location', sortable: true, align: 'left'},
+      {name: 'category', label: 'Category', field: 'category', sortable: true, align: 'left'},
+      {name: 'code', label: 'Code', field: 'code', sortable: true, align: 'left'},
+      {name: 'description', label: 'Description', field: 'description', sortable: true, align: 'left'},
+      {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', sortable: true, align: 'left'},
+      {name: 'actions', label: 'Actions', field: row => '', sortable: false, align: 'right'}
     ];
     const fetchData = () => {
       loading.value = true;
@@ -131,7 +130,7 @@ export default defineComponent({
       }).onOk(() => {
         client.mutate({
           mutation: CABLE_DELETE,
-          variables: {id: selectedRow.value.id},
+          variables: {id: toDelete.id},
         }).then(response => {
           fetchData()
           if (response.data.cableDelete.success) {
@@ -158,6 +157,7 @@ export default defineComponent({
       removeItem,
       categoryList,
       columns,
+      pagination,
       uri,
       onRowClick: (row) => {
         router.push({path: `${uri}/${row.id}/view`})

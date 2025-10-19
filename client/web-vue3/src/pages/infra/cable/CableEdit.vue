@@ -73,6 +73,8 @@
               :columns="portColumns"
               @row-click="viewPort"
               row-key="id"
+              flat
+              bordered
             >
               <template v-slot:body-cell-actions="props">
                 <q-td :props="props">
@@ -98,11 +100,13 @@
 
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
-
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
+import {useRoute, useRouter} from "vue-router";
 
 import {useQuasar} from 'quasar';
+
+import {useApolloClient} from "@vue/apollo-composable";
+
+import _ from 'lodash';
 
 import {
   CABLE_BY_ID,
@@ -120,7 +124,7 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const {client} = useApolloClient();
-    const cable = ref({})
+    const cable = ref({ connectedTo: [] })
     const rackList = ref([])
     const patchPanelList = ref([])
     const cableCategoryList = ref([])
@@ -128,16 +132,16 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute();
     const newPortDevice = ref(null)
-    const newPort = ref()
-    const portList = ref()
-    const options = ref()
+    const newPort = ref(null)
+    const portList = ref([])
+    const options = ref([])
 
     options.value = deviceList.value
     const portColumns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
       {name: 'internalRef', label: 'Int Ref', field: 'internalRef', align: 'left', sortable: true},
-      {name: 'actions', label: 'Actions', field: 'actions'}
+      {name: 'actions', label: 'Actions', field: row => '', align: 'right', sortable: false}
     ]
 
     const fetchData = () => {
