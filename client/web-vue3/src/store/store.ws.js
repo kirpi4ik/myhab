@@ -26,9 +26,10 @@ const mutations = {
 let wsStompClient = null;
 const actions = {
 	connect(context, handler) {
+		console.log('WS connect action called, currentUser:', authzService.currentUserValue);
 		if (authzService.currentUserValue) {
 			const wsUri = Utils.host() + '/stomp?access_token=' + authzService.currentUserValue.access_token;
-			console.log('STOMP: Attempting connection');
+			console.log('STOMP: Attempting connection to:', wsUri);
 
 			let message_callback = function (message) {
 				if (message.headers['content-type'] === 'application/octet-stream') {
@@ -61,6 +62,8 @@ const actions = {
 			});
 			console.log('Connecting...');
 			this.wsStompClient.activate();
+		} else {
+			console.log('STOMP: User not authenticated, skipping connection');
 		}
 	},
 	stompFailureCallback(error) {
