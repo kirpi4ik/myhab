@@ -23,6 +23,7 @@
 import {defineComponent, ref} from 'vue';
 
 import {PERIPHERAl_EVENT_LOGS} from '@/graphql/queries';
+import {apolloClient} from '@/boot/graphql';
 
 import _ from 'lodash';
 import {format} from 'date-fns';
@@ -82,7 +83,7 @@ export default defineComponent({
 	},
 	methods: {
 		init() {
-			this.$apollo
+			apolloClient
 				.query({
 					query: PERIPHERAl_EVENT_LOGS,
 					variables: {

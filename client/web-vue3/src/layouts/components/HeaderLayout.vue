@@ -71,7 +71,7 @@
 import {computed, defineComponent} from 'vue';
 
 import {useQuery} from '@vue/apollo-composable';
-import {useStore} from 'vuex';
+import {useWebSocketStore} from '@/store/websocket.store';
 
 import {authzService} from '@/_services';
 import {CONFIG_GLOBAL_GET_STRING_VAL} from '@/graphql/queries';
@@ -91,12 +91,12 @@ export default defineComponent({
     BreadCrumbLayout,
   },
   setup() {
-    const store = useStore();
+    const wsStore = useWebSocketStore();
     const {toggleSideBar} = useUiState();
     const {result} = useQuery(CONFIG_GLOBAL_GET_STRING_VAL, {key: 'surveillance.url'});
     
     const wsConnection = computed(() => {
-      return store?.state?.ws?.connection || 'OFFLINE';
+      return wsStore.ws.connection || 'OFFLINE';
     });
     return {
       toggleSideBar,
