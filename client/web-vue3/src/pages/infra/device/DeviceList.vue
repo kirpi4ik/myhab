@@ -51,11 +51,17 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
-import {DEVICE_DELETE, DEVICE_LIST_ALL, PORT_DELETE_BY_ID} from "@/graphql/queries";
-import _ from "lodash";
+
 import {useQuasar} from "quasar";
+
+import {DEVICE_DELETE, DEVICE_LIST_ALL, PORT_DELETE_BY_ID} from "@/graphql/queries";
+
+import _ from "lodash";
+
+
 
 export default defineComponent({
   name: 'DeviceList',
@@ -159,4 +165,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

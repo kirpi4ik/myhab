@@ -21,9 +21,13 @@
 </template>
 <script>
 import {defineComponent, ref} from 'vue';
+
 import {PERIPHERAl_EVENT_LOGS} from '@/graphql/queries';
-import {format} from 'date-fns';
+
 import _ from 'lodash';
+import {format} from 'date-fns';
+
+
 
 export default defineComponent({
 	name: 'EventLogger',
@@ -102,4 +106,5 @@ export default defineComponent({
 		},
 	},
 });
+
 </script>

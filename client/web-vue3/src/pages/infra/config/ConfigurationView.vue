@@ -87,16 +87,22 @@
 </template>
 <script>
 import {defineComponent, onMounted, ref} from "vue";
+
+import {useApolloClient} from "@vue/apollo-composable";
+import {useRoute} from "vue-router";
+
+import {useQuasar} from "quasar";
+
 import {
   CONFIGURATION_ADDLIST_CONFIG_VALUE,
   CONFIGURATION_KEY_LIST,
   CONFIGURATION_LIST,
   CONFIGURATION_REMOVE_CONFIG, CONFIGURATION_SET_VALUE, CONFIGURATION_UPDATE, USER_DELETE
 } from "@/graphql/queries";
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute} from "vue-router";
+
 import _ from "lodash";
-import {useQuasar} from "quasar";
+
+
 
 export default defineComponent({
   name: 'ConfigurationView',
@@ -228,4 +234,5 @@ export default defineComponent({
     }
   }
 })
+
 </script>

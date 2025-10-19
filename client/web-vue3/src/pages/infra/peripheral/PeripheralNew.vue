@@ -54,17 +54,21 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
+
+import {useApolloClient} from "@vue/apollo-composable";
+import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
 import {
   DEVICE_LIST_ALL_WITH_PORTS,
   PERIPHERAL_CATEGORIES,
   PERIPHERAL_CREATE,
   PORT_LIST_ALL
 } from '@/graphql/queries';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
 import _ from "lodash";
+
+
 
 export default defineComponent({
     name: 'PeripheralNew',
@@ -138,4 +142,5 @@ export default defineComponent({
   }
 )
 ;
+
 </script>

@@ -20,11 +20,15 @@
 </template>
 <script>
 import {defineComponent} from 'vue';
+
+import {useRoute, useRouter} from 'vue-router';
+
 import {authzService} from '@/_services';
 import {Role} from '@/_helpers';
-import {useRoute, useRouter} from 'vue-router';
 import HeatScheduler from '@/components/HeatScheduler';
 import TempDisplay from '@/components/TempDisplay';
+
+
 
 export default defineComponent({
     name: 'ZoneCard',
@@ -41,4 +45,5 @@ export default defineComponent({
       return {router, route, authzService, Role};
     },
   });
+
 </script>

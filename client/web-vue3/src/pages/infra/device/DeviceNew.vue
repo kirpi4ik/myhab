@@ -45,11 +45,14 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
-import {DEVICE_CATEGORIES_LIST, DEVICE_CREATE, DEVICE_MODEL_LIST, RACK_LIST_ALL} from '@/graphql/queries';
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
+
+import {DEVICE_CATEGORIES_LIST, DEVICE_CREATE, DEVICE_MODEL_LIST, RACK_LIST_ALL} from '@/graphql/queries';
+
+
 
 export default defineComponent({
   name: 'DeviceNew',
@@ -112,4 +115,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

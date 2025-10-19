@@ -19,16 +19,21 @@
 </template>
 
 <script>
-import {peripheralService} from '@/_services/controls';
-import ZoneCard from '@/components/cards/ZoneCard';
-import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
-import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
-import TempChartCard from '@/components/cards/TempChartCard';
-import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID} from '@/graphql/queries';
+import {ref} from 'vue';
+
 import {useApolloClient, useQuery} from '@vue/apollo-composable';
 import {useRoute} from 'vue-router';
+
+import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID} from '@/graphql/queries';
+import {peripheralService} from '@/_services/controls';
+import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
+import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
+import TempChartCard from '@/components/cards/TempChartCard';
+import ZoneCard from '@/components/cards/ZoneCard';
+
 import _ from 'lodash';
-import {ref} from 'vue';
+
+
 
 export default {
   components: {
@@ -108,4 +113,5 @@ export default {
     };
   },
 };
+
 </script>

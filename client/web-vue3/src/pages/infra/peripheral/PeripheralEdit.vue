@@ -66,8 +66,11 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
+
+import {useApolloClient} from "@vue/apollo-composable";
+import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
 import {
   PERIPHERAL_CATEGORIES,
   PERIPHERAL_GET_BY_ID,
@@ -75,9 +78,10 @@ import {
   PORT_LIST_ALL,
   ZONES_GET_ALL
 } from '@/graphql/queries';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
 import _ from "lodash";
+
+
 
 export default defineComponent({
     name: 'PeripheralEdit',
@@ -208,4 +212,5 @@ export default defineComponent({
   }
 )
 ;
+
 </script>

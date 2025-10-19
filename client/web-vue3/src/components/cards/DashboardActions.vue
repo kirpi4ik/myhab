@@ -61,12 +61,16 @@
 
 <script>
 import {defineComponent} from 'vue';
-import PeripheralLock from 'components/PeripheralLock.vue';
+
 import {authzService} from '@/_services';
+
 import ElectricMeter from "components/ElectricMeter";
 import HeatPump from "components/HeatPump";
-import WaterPump from "components/WaterPump";
+import PeripheralLock from 'components/PeripheralLock.vue';
 import SprinklersDashComponent from "components/SprinklersDashComponent";
+import WaterPump from "components/WaterPump";
+
+
 
 
 export default defineComponent({
@@ -109,4 +113,5 @@ export default defineComponent({
     }
   },
 });
+
 </script>

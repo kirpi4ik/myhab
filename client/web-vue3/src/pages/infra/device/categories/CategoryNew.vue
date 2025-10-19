@@ -22,11 +22,14 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, ref} from 'vue';
-import {DEVICE_CATEGORY_CREATE} from '@/graphql/queries';
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
+
+import {DEVICE_CATEGORY_CREATE} from '@/graphql/queries';
+
+
 
 export default defineComponent({
   name: 'DCategoryNew',
@@ -58,4 +61,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

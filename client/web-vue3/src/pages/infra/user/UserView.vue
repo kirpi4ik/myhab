@@ -78,9 +78,13 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {USER_GET_BY_ID} from "@/graphql/queries";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute} from "vue-router/dist/vue-router";
+
+import {USER_GET_BY_ID} from "@/graphql/queries";
+
+
 
 export default defineComponent({
   name: 'UserView',
@@ -111,4 +115,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

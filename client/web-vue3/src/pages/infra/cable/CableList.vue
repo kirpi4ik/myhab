@@ -48,12 +48,18 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
-import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
-import _ from "lodash";
+
 import {useQuasar} from "quasar";
+
+import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
+
+import _ from "lodash";
 import {right} from "core-js/internals/array-reduce";
+
+
 
 export default defineComponent({
   name: 'CableList',
@@ -165,6 +171,7 @@ export default defineComponent({
     }
   }
 });
+
 </script>
 <style>
 .myhab-list-qgrid input:first-child {

@@ -121,9 +121,13 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {CABLE_BY_ID} from "@/graphql/queries";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
+import {CABLE_BY_ID} from "@/graphql/queries";
+
+
 
 export default defineComponent({
   name: 'CableView',
@@ -184,4 +188,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

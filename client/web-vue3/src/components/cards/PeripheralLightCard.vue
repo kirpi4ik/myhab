@@ -69,15 +69,11 @@
   </q-card>
 </template>
 <script>
-import _ from 'lodash';
-import {useStore} from 'vuex';
-import {lightService} from '@/_services/controls';
-import EventLogger from 'components/EventLogger.vue';
 import {computed, defineComponent, toRefs, watch} from 'vue';
-import Toggle from '@vueform/toggle';
-import {format} from 'date-fns';
-import humanizeDuration from 'humanize-duration';
+
 import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
+import {useStore} from 'vuex';
+
 import {
   CACHE_DELETE,
   CACHE_GET_VALUE,
@@ -85,6 +81,15 @@ import {
   CONFIGURATION_SET_VALUE,
   PERIPHERAL_GET_BY_ID,
 } from '@/graphql/queries';
+import {lightService} from '@/_services/controls';
+
+import _ from 'lodash';
+import {format} from 'date-fns';
+import EventLogger from 'components/EventLogger.vue';
+import humanizeDuration from 'humanize-duration';
+import Toggle from '@vueform/toggle';
+
+
 
 export default defineComponent({
   name: 'PeripheralLightCard',
@@ -197,6 +202,7 @@ export default defineComponent({
     };
   },
 });
+
 </script>
 <style></style>
 <style src="@vueform/toggle/themes/default.css"></style>

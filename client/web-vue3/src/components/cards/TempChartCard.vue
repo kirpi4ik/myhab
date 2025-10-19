@@ -9,6 +9,8 @@
 <script>
 import {defineComponent} from "vue";
 
+
+
 export default defineComponent({
   name: 'TempChartCard',
   setup() {
@@ -18,4 +20,5 @@ export default defineComponent({
     }
   }
 })
+
 </script>
