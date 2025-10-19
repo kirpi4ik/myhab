@@ -78,10 +78,15 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {CONFIGURATION_REMOVE_CONFIG, DEVICE_GET_BY_ID_CHILDS, PORT_DELETE_BY_ID} from "@/graphql/queries";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
 import {useQuasar} from "quasar";
+
+import {CONFIGURATION_REMOVE_CONFIG, DEVICE_GET_BY_ID_CHILDS, PORT_DELETE_BY_ID} from "@/graphql/queries";
+
+
 
 export default defineComponent({
   name: 'DeviceView',
@@ -167,4 +172,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

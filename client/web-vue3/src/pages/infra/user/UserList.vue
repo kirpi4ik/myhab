@@ -51,12 +51,18 @@
 </template>
 
 <script>
-import {USER_DELETE, USERS_GET_ALL} from '@/graphql/queries';
 import {defineComponent, onMounted, ref} from 'vue';
+
 import {useApolloClient} from "@vue/apollo-composable";
-import _ from 'lodash';
 import {useRouter} from "vue-router";
+
 import {useQuasar} from "quasar";
+
+import {USER_DELETE, USERS_GET_ALL} from '@/graphql/queries';
+
+import _ from 'lodash';
+
+
 
 export default defineComponent({
   name: 'UserList',
@@ -159,4 +165,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

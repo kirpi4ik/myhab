@@ -45,8 +45,12 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
+
+import {useApolloClient} from "@vue/apollo-composable";
+import {useRoute} from "vue-router";
+import {useRouter} from "vue-router/dist/vue-router";
+
 import {
   DEVICE_CATEGORIES_LIST,
   DEVICE_CREATE,
@@ -54,10 +58,10 @@ import {
   DEVICE_MODEL_LIST, DEVICE_UPDATE,
   RACK_LIST_ALL
 } from '@/graphql/queries';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router/dist/vue-router";
-import {useRoute} from "vue-router";
+
 import _ from "lodash";
+
+
 
 export default defineComponent({
   name: 'DeviceEdit',
@@ -134,4 +138,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

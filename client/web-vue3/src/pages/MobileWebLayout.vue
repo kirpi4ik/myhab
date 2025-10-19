@@ -37,16 +37,16 @@
   </div>
 </template>
 <script>
-import {Swiper, SwiperSlide} from 'swiper/vue';
-import { Navigation, Pagination } from 'swiper/modules';
-import 'swiper/css';
-
-import 'swiper/css/pagination';
 import {authzService} from '@/_services';
 import {heatService, lightService} from '@/_services/controls';
-import InlineSvg from 'vue-inline-svg';
 import {PERIPHERAL_LIST_WUI, PUSH_EVENT} from '@/graphql/queries';
+
 import _ from 'lodash';
+import { Navigation, Pagination } from 'swiper/modules';
+import {Swiper, SwiperSlide} from 'swiper/vue';
+import InlineSvg from 'vue-inline-svg';
+
+
 
 export default {
   name: 'MobileWebLayout',
@@ -402,6 +402,7 @@ export default {
     },
   },
 };
+
 </script>
 <style>
 .hidden {

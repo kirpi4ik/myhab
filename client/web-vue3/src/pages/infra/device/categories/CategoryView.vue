@@ -36,9 +36,13 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {DEVICE_CATEGORY_BY_ID} from "@/graphql/queries";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
+import {DEVICE_CATEGORY_BY_ID} from "@/graphql/queries";
+
+
 
 export default defineComponent({
   name: 'PCategoryView',
@@ -70,4 +74,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

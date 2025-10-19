@@ -102,9 +102,13 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {PORT_GET_BY_ID} from "@/graphql/queries";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
+import {PORT_GET_BY_ID} from "@/graphql/queries";
+
+
 
 export default defineComponent({
   name: 'PortView',
@@ -147,4 +151,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

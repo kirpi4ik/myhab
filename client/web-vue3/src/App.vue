@@ -8,7 +8,10 @@
 </template>
 <script>
 import {defineComponent, onMounted} from 'vue';
+
 import {useStore} from 'vuex';
+
+
 
 export default defineComponent({
     name: 'App',
@@ -28,6 +31,7 @@ export default defineComponent({
       return {};
     },
   });
+
 </script>
 <style>
   .route-enter-from {

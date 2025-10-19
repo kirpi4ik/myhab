@@ -7,6 +7,8 @@
 <script>
 import {defineAsyncComponent, defineComponent} from 'vue';
 
+
+
 export default defineComponent({
 	name: 'PageIndex',
 	components: {
@@ -14,4 +16,5 @@ export default defineComponent({
 	},
 	setup() {},
 });
+
 </script>

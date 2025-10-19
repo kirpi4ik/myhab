@@ -33,11 +33,14 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
-import {DEVICE_LIST_ALL, PORT_CREATE} from '@/graphql/queries';
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
+import {DEVICE_LIST_ALL, PORT_CREATE} from '@/graphql/queries';
+
+
 
 export default defineComponent({
   name: 'PortNew',
@@ -91,4 +94,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

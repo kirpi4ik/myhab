@@ -97,8 +97,11 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
+
+import {useApolloClient} from "@vue/apollo-composable";
+import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
 import {
   CABLE_BY_ID,
   CABLE_CREATE,
@@ -107,8 +110,8 @@ import {
   CABLE_VALUE_UPDATE,
   RACK_LIST_ALL
 } from '@/graphql/queries';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
+
 
 export default defineComponent({
   name: 'CableEdit',
@@ -227,4 +230,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

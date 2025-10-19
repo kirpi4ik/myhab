@@ -36,11 +36,15 @@
 	</q-dialog>
 </template>
 <script>
-import EventLogger from 'components/EventLogger.vue';
 import {defineComponent, ref} from 'vue';
-import {PERIPHERAL_GET_BY_ID, PUSH_EVENT} from '@/graphql/queries';
+
 import {authzService} from '@/_services';
+import {PERIPHERAL_GET_BY_ID, PUSH_EVENT} from '@/graphql/queries';
+
 import _ from 'lodash';
+import EventLogger from 'components/EventLogger.vue';
+
+
 
 export default defineComponent({
 	name: 'PeripheralLock',
@@ -89,4 +93,5 @@ export default defineComponent({
 		},
 	},
 });
+
 </script>

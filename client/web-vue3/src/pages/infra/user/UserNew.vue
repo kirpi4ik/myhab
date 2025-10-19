@@ -53,10 +53,13 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, ref} from 'vue';
-import {USER_CREATE} from '@/graphql/queries';
+
 import {useApolloClient} from "@vue/apollo-composable";
+
+import {USER_CREATE} from '@/graphql/queries';
+
+
 
 export default defineComponent({
   name: 'UserNew',
@@ -101,4 +104,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

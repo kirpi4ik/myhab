@@ -153,8 +153,12 @@
 </template>
 <script>
 import {defineComponent, ref} from 'vue';
-import {useUiState} from '@/composables';
+
 import {Platform} from "quasar";
+
+import {useUiState} from '@/composables';
+
+
 
 export default defineComponent({
   name: 'SideBarLayout',
@@ -197,6 +201,7 @@ export default defineComponent({
     },
   },
 });
+
 </script>
 <style lang="sass" scoped>
 .mini-slot

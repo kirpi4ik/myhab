@@ -65,15 +65,20 @@
 </template>
 <script>
 import {computed, defineComponent, onMounted, ref, watch} from 'vue';
-import EventLogger from "components/EventLogger";
-import {peripheralService} from '@/_services/controls';
-import Toggle from "@vueform/toggle";
-import {CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
-import _ from "lodash";
-import humanizeDuration from 'humanize-duration';
-import {useStore} from "vuex";
+
 import {useApolloClient, useMutation} from "@vue/apollo-composable";
+import {useStore} from "vuex";
+
+import {CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
+import {peripheralService} from '@/_services/controls';
+
+import _ from "lodash";
 import {format} from "date-fns";
+import EventLogger from "components/EventLogger";
+import humanizeDuration from 'humanize-duration';
+import Toggle from "@vueform/toggle";
+
+
 
 export default defineComponent({
   name: 'WaterPump',
@@ -153,5 +158,6 @@ export default defineComponent({
     };
   }
 });
+
 </script>
 <style src="@vueform/toggle/themes/default.css"></style>

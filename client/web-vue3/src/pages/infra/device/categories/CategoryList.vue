@@ -47,10 +47,15 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
+
 import {DEVICE_CATEGORIES_LIST, PERIPHERAL_DELETE} from "@/graphql/queries";
+
 import _ from "lodash";
+
+
 
 export default defineComponent({
   name: 'DCategoryList',
@@ -131,4 +136,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

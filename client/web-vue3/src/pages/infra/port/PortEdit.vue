@@ -45,11 +45,14 @@
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
-import {PORT_EDIT_GET_BY_ID, PORT_UPDATE} from '@/graphql/queries';
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
+import {PORT_EDIT_GET_BY_ID, PORT_UPDATE} from '@/graphql/queries';
+
+
 
 export default defineComponent({
   name: 'PortEdit',
@@ -103,4 +106,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

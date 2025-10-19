@@ -47,12 +47,16 @@
 </template>
 
 <script>
-import { useQuasar } from 'quasar'
-import { defineComponent, onMounted, ref } from 'vue';
-import { USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE } from '@/graphql/queries';
+import {defineComponent, onMounted, ref} from 'vue';
+
 import { useApolloClient } from "@vue/apollo-composable";
 import { useRoute } from "vue-router";
+
+import { USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE } from '@/graphql/queries';
+
 import _ from "lodash";
+
+
 
 export default defineComponent({
   name: 'UserEdit',
@@ -119,4 +123,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

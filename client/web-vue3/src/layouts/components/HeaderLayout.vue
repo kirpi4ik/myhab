@@ -68,15 +68,20 @@
   </q-header>
 </template>
 <script>
-import {defineComponent, computed} from 'vue';
-import {useStore} from 'vuex';
-import UserMessages from './UserMessages';
-import {useUiState} from '@/composables';
+import {computed, defineComponent} from 'vue';
+
 import {useQuery} from '@vue/apollo-composable';
-import {CONFIG_GLOBAL_GET_STRING_VAL} from '@/graphql/queries';
-import ClockComponent from 'components/ClockComponent';
+import {useStore} from 'vuex';
+
 import {authzService} from '@/_services';
+import {CONFIG_GLOBAL_GET_STRING_VAL} from '@/graphql/queries';
+import {useUiState} from '@/composables';
+import UserMessages from './UserMessages';
+
 import BreadCrumbLayout from 'layouts/components/BreadCrumbLayout.vue';
+import ClockComponent from 'components/ClockComponent';
+
+
 
 export default defineComponent({
   name: 'HeaderLayout',
@@ -110,6 +115,7 @@ export default defineComponent({
     },
   },
 });
+
 </script>
 <style lang="scss">
 div.q-toolbar {

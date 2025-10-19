@@ -105,10 +105,15 @@
 </template>
 <script>
 import {computed, defineComponent, onMounted, ref, toRefs, watch} from 'vue';
-import {DEVICE_GET_BY_ID_WITH_PORT_VALUES} from '@/graphql/queries';
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useStore} from "vuex";
+
+import {DEVICE_GET_BY_ID_WITH_PORT_VALUES} from '@/graphql/queries';
+
 import _ from "lodash";
+
+
 
 export default defineComponent({
   name: 'HeatPump',
@@ -171,6 +176,7 @@ export default defineComponent({
 
   },
 });
+
 </script>
 <style>
 

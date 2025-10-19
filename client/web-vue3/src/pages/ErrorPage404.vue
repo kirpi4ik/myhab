@@ -13,7 +13,10 @@
 <script>
 import {defineComponent} from 'vue';
 
+
+
 export default defineComponent({
 	name: 'ErrorPage404',
 });
+
 </script>
