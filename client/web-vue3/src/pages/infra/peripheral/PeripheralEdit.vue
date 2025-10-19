@@ -9,7 +9,7 @@
                     :disable="portListDisabled"
                     input-debounce="0"
                     @filter="searchPortFn"
-                    :option-label="opt => opt.name+(opt.device != null?'['+opt.device.code+']':'')"
+                    :option-label="opt => opt && opt.name ? (opt.name + (opt.device ? '[' + opt.device.code + ']' : '')) : ''"
                     map-options
                     stack-label
                     use-chips
@@ -18,7 +18,7 @@
                     dense
                     multiple
                     label="Port">
-            <q-icon name="cancel" @click.stop.prevent="peripheral.connectedTo = null" class="cursor-pointer text-blue"/>
+            <q-icon name="cancel" @click.stop.prevent="peripheral.connectedTo = []" class="cursor-pointer text-blue"/>
           </q-select>
           <q-input v-model="peripheral.name" label="Name" clearable clear-icon="close" color="orange"
                    :rules="[val => !!val || 'Field is required']"/>
@@ -39,7 +39,7 @@
                     :disable="zoneListDisabled"
                     input-debounce="0"
                     @filter="searchPortFn"
-                    :option-label="opt => opt.name"
+                    :option-label="opt => opt && opt.name ? opt.name : ''"
                     map-options
                     stack-label
                     use-chips
@@ -48,7 +48,7 @@
                     dense
                     multiple
                     label="Localizare">
-            <q-icon name="cancel" @click.stop.prevent="peripheral.connectedTo = null" class="cursor-pointer text-blue"/>
+            <q-icon name="cancel" @click.stop.prevent="peripheral.zones = []" class="cursor-pointer text-blue"/>
           </q-select>
         </q-card-section>
         <q-separator/>
@@ -67,11 +67,13 @@
 
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
-
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
+import {useRoute, useRouter} from "vue-router";
 
 import {useQuasar} from 'quasar';
+
+import {useApolloClient} from "@vue/apollo-composable";
+
+import _ from "lodash";
 
 import {
   PERIPHERAL_CATEGORIES,
@@ -81,8 +83,6 @@ import {
   ZONES_GET_ALL
 } from '@/graphql/queries';
 
-import _ from "lodash";
-
 
 
 export default defineComponent({
@@ -90,7 +90,7 @@ export default defineComponent({
     setup() {
       const $q = useQuasar()
       const {client} = useApolloClient();
-      const peripheral = ref({connectedTo: [], zones: []})
+      const peripheral = ref({connectedTo: [], zones: [], category: null})
       const categoryList = ref([])
       const router = useRouter();
       const route = useRoute();
@@ -137,9 +137,12 @@ export default defineComponent({
               result.push(port)
             });
           if (route.query.portId != null) {
-            peripheral.value.connectedTo = _.find(portList.value, function (o) {
+            const foundPort = _.find(portList.value, function (o) {
               return o.id == route.query.portId;
             });
+            if (foundPort) {
+              peripheral.value.connectedTo = [foundPort];
+            }
             portListDisabled.value = true
           }
           portListFiltered.value = [...portList.value]
@@ -179,9 +182,11 @@ export default defineComponent({
         } else {
           delete peripheral.value.id
           delete peripheral.value.configurations
-          peripheral.value.connectedTo.forEach(function (port) {
-            delete port.device
-          })
+          if (peripheral.value.connectedTo && Array.isArray(peripheral.value.connectedTo)) {
+            peripheral.value.connectedTo.forEach(function (port) {
+              delete port.device
+            })
+          }
 
           client.mutate({
             mutation: PERIPHERAL_UPDATE,
