@@ -40,6 +40,9 @@
 import {authzService} from '@/_services';
 import {heatService, lightService} from '@/_services/controls';
 import {PERIPHERAL_LIST_WUI, PUSH_EVENT} from '@/graphql/queries';
+import {mapState} from 'pinia';
+import {useWebSocketStore} from '@/store/websocket.store';
+import {apolloClient} from '@/boot/graphql';
 
 import _ from 'lodash';
 import { Navigation, Pagination } from 'swiper/modules';
@@ -99,9 +102,9 @@ export default {
   },
 
   computed: {
-    stompMessage() {
-      return this.$store?.state?.ws?.message;
-    },
+    ...mapState(useWebSocketStore, {
+      stompMessage: (store) => store.ws.message,
+    }),
   },
   watch: {
     '$route.path': 'init',
@@ -204,7 +207,7 @@ export default {
         p5: `{"unlockCode": "${this.unlockConfirmation.unlockCode}"}`,
         p6: authzService.currentUserValue.login,
       };
-      this.$apollo
+      apolloClient
         .mutate({
           mutation: PUSH_EVENT,
           variables: {input: event},
@@ -249,7 +252,7 @@ export default {
         }
       }.bind(this);
 
-      this.$apollo
+      apolloClient
         .query({
           query: PERIPHERAL_LIST_WUI,
           variables: {},

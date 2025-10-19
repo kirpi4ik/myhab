@@ -40,6 +40,7 @@ import {defineComponent, ref} from 'vue';
 
 import {authzService} from '@/_services';
 import {PERIPHERAL_GET_BY_ID, PUSH_EVENT} from '@/graphql/queries';
+import {apolloClient} from '@/boot/graphql';
 
 import _ from 'lodash';
 import EventLogger from 'components/EventLogger.vue';
@@ -59,7 +60,7 @@ export default defineComponent({
 	},
 	methods: {
 		init() {
-			this.$apollo
+			apolloClient
 				.query({
 					query: PERIPHERAL_GET_BY_ID,
 					variables: { id: process.env.DOOR_LOCK_ID },
@@ -81,7 +82,7 @@ export default defineComponent({
 				p5: "{'unlocked'}",
 				p6: authzService.currentUserValue.login,
 			};
-			this.$apollo
+			apolloClient
 				.mutate({
 					mutation: PUSH_EVENT,
 					variables: { input: event },

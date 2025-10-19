@@ -9,23 +9,18 @@
 <script>
 import {defineComponent, onMounted} from 'vue';
 
-import {useStore} from 'vuex';
+import {useWebSocketStore} from '@/store/websocket.store';
 
 
 
 export default defineComponent({
     name: 'App',
     setup() {
-      const store = useStore();
+      const wsStore = useWebSocketStore();
       
       onMounted(() => {
-        console.log('App mounted, store:', store);
-        if (store && store.dispatch) {
-          console.log('Dispatching connect action...');
-          store.dispatch('connect');
-        } else {
-          console.error('Store or dispatch not available');
-        }
+        console.log('App mounted, connecting WebSocket...');
+        wsStore.connect();
       });
       
       return {};

@@ -31,37 +31,47 @@
 <script>
 import {defineComponent, ref} from 'vue';
 
-import {mapActions} from 'vuex';
-import {useRoute} from 'vue-router';
+import {useRoute, useRouter} from 'vue-router';
 
 import {authzService} from '@/_services';
+import {useWebSocketStore} from '@/store/websocket.store';
 
 
 
 export default defineComponent({
 	setup() {
-		let returnUrl = ref(useRoute().query.returnUrl || '/');
-		return {
-			username: ref(''),
-			password: ref(''),
-			returnUrl,
-		};
-	},
-	methods: {
-		...mapActions(['connect']),
-		login() {
-			this.loading = true;
-			authzService.login(this.username, this.password).then(
+		const wsStore = useWebSocketStore();
+		const route = useRoute();
+		const router = useRouter();
+
+		const username = ref('');
+		const password = ref('');
+		const returnUrl = ref(route.query.returnUrl || '/');
+		const loading = ref(false);
+		const error = ref(null);
+
+		const login = () => {
+			loading.value = true;
+			authzService.login(username.value, password.value).then(
 				user => {
-					this.connect();
-					this.$router.push(this.returnUrl);
+					wsStore.connect();
+					router.push(returnUrl.value);
 				},
-				error => {
-					this.error = error;
-					this.loading = false;
+				err => {
+					error.value = err;
+					loading.value = false;
 				},
 			);
-		},
+		};
+
+		return {
+			username,
+			password,
+			returnUrl,
+			loading,
+			error,
+			login,
+		};
 	},
 });
 

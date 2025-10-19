@@ -72,7 +72,7 @@
 import {computed, defineComponent, toRefs, watch} from 'vue';
 
 import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
-import {useStore} from 'vuex';
+import {useWebSocketStore} from '@/store/websocket.store';
 
 import {
   CACHE_DELETE,
@@ -101,7 +101,7 @@ export default defineComponent({
     peripheral: Object,
   },
   setup(props, { emit }) {
-    const store = useStore();
+    const wsStore = useWebSocketStore();
     const { client } = useApolloClient();
     let { peripheral: asset } = toRefs(props);
     const stItems = [
@@ -144,9 +144,9 @@ export default defineComponent({
         });
     };
 
-    const wsMessage = computed(() => store?.getters?.ws?.message);
+    const wsMessage = computed(() => wsStore.ws.message);
     watch(
-      () => store?.getters?.ws?.message,
+      () => wsStore.ws.message,
       function () {
         if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
           let payload = JSON.parse(wsMessage.value.jsonPayload);
