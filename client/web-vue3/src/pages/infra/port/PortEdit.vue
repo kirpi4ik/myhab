@@ -50,6 +50,8 @@ import {defineComponent, onMounted, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
+import {useQuasar} from 'quasar';
+
 import {PORT_EDIT_GET_BY_ID, PORT_UPDATE} from '@/graphql/queries';
 
 

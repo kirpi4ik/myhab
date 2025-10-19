@@ -57,6 +57,8 @@ import {defineComponent, ref} from 'vue';
 
 import {useApolloClient} from "@vue/apollo-composable";
 
+import {useQuasar} from 'quasar';
+
 import {USER_CREATE} from '@/graphql/queries';
 
 

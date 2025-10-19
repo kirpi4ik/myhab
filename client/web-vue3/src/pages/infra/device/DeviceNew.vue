@@ -50,6 +50,8 @@ import {defineComponent, onMounted, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
 
+import {useQuasar} from 'quasar';
+
 import {DEVICE_CATEGORIES_LIST, DEVICE_CREATE, DEVICE_MODEL_LIST, RACK_LIST_ALL} from '@/graphql/queries';
 
 

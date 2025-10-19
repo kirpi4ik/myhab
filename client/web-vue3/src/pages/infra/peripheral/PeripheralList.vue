@@ -55,6 +55,8 @@ import {defineComponent, onMounted, ref} from "vue";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
 
+import {useQuasar} from 'quasar';
+
 import {PERIPHERAL_DELETE, PERIPHERAL_LIST_ALL} from "@/graphql/queries";
 
 import _ from "lodash";

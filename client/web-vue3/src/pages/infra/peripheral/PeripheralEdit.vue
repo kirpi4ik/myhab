@@ -71,6 +71,8 @@ import {defineComponent, onMounted, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
+import {useQuasar} from 'quasar';
+
 import {
   PERIPHERAL_CATEGORIES,
   PERIPHERAL_GET_BY_ID,

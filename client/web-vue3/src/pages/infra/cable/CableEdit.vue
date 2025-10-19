@@ -102,6 +102,8 @@ import {defineComponent, onMounted, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
+import {useQuasar} from 'quasar';
+
 import {
   CABLE_BY_ID,
   CABLE_CREATE,

@@ -51,6 +51,8 @@ import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute} from "vue-router";
 import {useRouter} from "vue-router/dist/vue-router";
 
+import {useQuasar} from 'quasar';
+
 import {
   DEVICE_CATEGORIES_LIST,
   DEVICE_CREATE,
