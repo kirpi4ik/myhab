@@ -65,7 +65,7 @@ export default defineComponent({
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
-    const rows = ref();
+    const rows = ref([]);
     const confirmDelete = ref(false);
     const selectedRow = ref(null);
     const columns = [

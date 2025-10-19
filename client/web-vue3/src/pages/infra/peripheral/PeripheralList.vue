@@ -72,7 +72,7 @@ export default defineComponent({
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
-    const rows = ref();
+    const rows = ref([]);
     const columns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'name', label: 'Denumire', field: 'name', align: 'left', sortable: true},
