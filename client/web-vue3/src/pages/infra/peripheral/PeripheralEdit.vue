@@ -153,7 +153,7 @@ export default defineComponent({
         update(() => {
           const needle = val.toLowerCase()
           portListFiltered.value = portList.value.filter(option => {
-            return option.name.toLowerCase().indexOf(needle) > -1
+            return option.name.toLowerCase().includes(needle)
           })
         })
       }

@@ -173,7 +173,7 @@ export default defineComponent({
     const filterFn = (val, update, abort) => {
       update(() => {
         const needle = val.toLocaleLowerCase()
-        keyOptionsFiltered.value = keyOptions.value.filter(v => v.toLocaleLowerCase().indexOf(needle) > -1)
+        keyOptionsFiltered.value = keyOptions.value.filter(v => v.toLocaleLowerCase().includes(needle))
       })
     }
     const setNewKfgKey = (val) => {
