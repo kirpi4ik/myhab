@@ -27,6 +27,8 @@ import {defineComponent, ref} from 'vue';
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
 
+import {useQuasar} from 'quasar';
+
 import {DEVICE_CATEGORY_CREATE} from '@/graphql/queries';
 
 

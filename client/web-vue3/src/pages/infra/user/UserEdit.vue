@@ -52,6 +52,8 @@ import {defineComponent, onMounted, ref} from 'vue';
 import { useApolloClient } from "@vue/apollo-composable";
 import { useRoute } from "vue-router";
 
+import {useQuasar} from 'quasar';
+
 import { USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE } from '@/graphql/queries';
 
 import _ from "lodash";
