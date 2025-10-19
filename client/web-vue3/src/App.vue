@@ -7,16 +7,21 @@
   </router-view>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {mapActions} from 'vuex';
+import {defineComponent, onMounted} from 'vue';
+import {useStore} from 'vuex';
 
 export default defineComponent({
     name: 'App',
-    methods: {
-      ...mapActions(['connect']),
-    },
-    mounted() {
-      this.connect();
+    setup() {
+      const store = useStore();
+      
+      onMounted(() => {
+        if (store && store.dispatch) {
+          store.dispatch('connect');
+        }
+      });
+      
+      return {};
     },
   });
 </script>

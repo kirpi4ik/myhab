@@ -4,26 +4,32 @@
  */
 
 // Configuration for your app
-// https://quasar.dev/quasar-cli/quasar-conf-js
+// https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js
 
-const ESLintPlugin = require('eslint-webpack-plugin');
-const {configure} = require('quasar/wrappers');
-const path = require('path');
+import ESLintPlugin from 'eslint-webpack-plugin';
+import {configure} from 'quasar/wrappers';
+import path from 'path';
+import {fileURLToPath} from 'url';
 
-module.exports = configure(function (ctx) {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default configure(function (ctx) {
   return {
-    // https://quasar.dev/quasar-cli/supporting-ts
+    // https://v2.quasar.dev/quasar-cli-webpack/supporting-ts
     supportTS: false,
 
-    // https://quasar.dev/quasar-cli/prefetch-feature
+    // https://v2.quasar.dev/quasar-cli-webpack/prefetch-feature
     // preFetch: true,
 
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
-    // https://quasar.dev/quasar-cli/boot-files
-    boot: ['i18n', 'axios', 'graphql'],
+    // https://v2.quasar.dev/quasar-cli-webpack/boot-files
+    boot: ['i18n', 'store', 'axios', 'graphql'],
 
-    // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
+    // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#store
+    store: true,
+
+    // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#css
     css: ['app.css'],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
@@ -40,18 +46,19 @@ module.exports = configure(function (ctx) {
       'material-icons', // optional, you are not bound to it
     ],
 
-    // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#build
     build: {
       vueRouterMode: 'history', // available values: 'hash', 'history'
       publicPath: 'nx',
       // transpile: false,
+      // publicPath: '/',
 
       // Add dependencies for transpiling with Babel (Array of string/regex)
       // (from node_modules, which are by default not transpiled).
       // Applies only if "transpile" is set to true.
       // transpileDependencies: [],
 
-      // rtl: false, // https://quasar.dev/options/rtl-support
+      // rtl: false, // https://v2.quasar.dev/options/rtl-support
       // preloadChunks: true,
       showProgress: true,
       // gzip: true,
@@ -60,47 +67,53 @@ module.exports = configure(function (ctx) {
       // Options below are automatically set depending on the env, set them if you want to override
       // extractCSS: false,
 
-      // https://quasar.dev/quasar-cli/handling-webpack
+      // Quasar CLI v4 automatically loads .env files
+      // All variables from .env will be available via process.env
+
+      // https://v2.quasar.dev/quasar-cli-webpack/handling-webpack
       // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
-      chainWebpack(chain, {isServer, isClient}) {
-        chain.resolve.alias.set('@', path.resolve(__dirname, './src'));
-        chain.module
-          .rule('graphql')
-          .test(/\.(graphql|gql)$/)
-          .use('graphql-tag/loader')
-          .loader('graphql-tag/loader')
-          .end();
+      extendWebpack(cfg) {
+        cfg.resolve.alias = {
+          ...cfg.resolve.alias,
+          '@': path.resolve(__dirname, './src'),
+        };
+        cfg.module.rules.push({
+          test: /\.(graphql|gql)$/,
+          use: 'graphql-tag/loader',
+        });
+      },
+      chainWebpack(chain) {
         chain.plugin('eslint-webpack-plugin').use(ESLintPlugin, [{extensions: ['js', 'vue']}]);
       },
     },
 
-    // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#devServer
     devServer: {
-      https: false,
+      // https: true,
       port: 10002,
       open: true, // opens browser window automatically
     },
 
-    // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
+    // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#framework
     framework: {
       config: {
         brand: {
           primary: '#7a98ad',
           secondary: '#353e5a',
           // secondary: '#26a69a'
-          $accent: '#9C27B0',
-          $dark: '#1D1D1D',
-          $positive: '#21BA45',
-          $negative: '#C10015',
-          $info: '#31CCEC',
-          $warning: '#F2C037'
+          accent: '#9C27B0',
+          dark: '#1D1D1D',
+          positive: '#21BA45',
+          negative: '#C10015',
+          info: '#31CCEC',
+          warning: '#F2C037'
         },
       },
 
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
 
-      // For special cases outside of where the auto-import stategy can have an impact
+      // For special cases outside of where the auto-import strategy can have an impact
       // (like functional components as one of the examples),
       // you can manually specify Quasar components/directives to be available everywhere:
       //
@@ -112,18 +125,48 @@ module.exports = configure(function (ctx) {
     },
 
     // animations: 'all', // --- includes all animations
-    // https://quasar.dev/options/animations
+    // https://v2.quasar.dev/options/animations
     animations: 'all',
 
-    // https://quasar.dev/quasar-cli/developing-ssr/configuring-ssr
+    // https://v2.quasar.dev/quasar-cli-webpack/developing-ssr/configuring-ssr
     ssr: {
       pwa: false,
+
+      // manualStoreHydration: true,
+      // manualPostHydrationTrigger: true,
+
+      prodPort: 3000, // The default port that the production server should use
+                      // (gets superseded if process.env.PORT is specified at runtime)
+
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+        // Tell browser when a file from the server should expire from cache (in ms)
+
+
+      chainWebpackWebserver (chain) {
+        chain.plugin('eslint-webpack-plugin')
+          .use(ESLintPlugin, [{ extensions: [ 'js' ] }])
+      },
+
+
+      middlewares: [
+        ctx.prod ? 'compression' : '',
+        'render' // keep this as last one
+      ]
     },
 
-    // https://quasar.dev/quasar-cli/developing-pwa/configuring-pwa
+    // https://v2.quasar.dev/quasar-cli-webpack/developing-pwa/configuring-pwa
     pwa: {
-      workboxPluginMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-      workboxOptions: {}, // only for GenerateSW
+      workboxMode: 'generateSW', // or 'injectManifest'
+      injectPwaMetaTags: true,
+      swFilename: 'sw.js',
+      manifestFilename: 'manifest.json',
+      useCredentialsForManifestTag: false,
+      // useFilenameHashes: true,
+      // extendGenerateSWOptions (cfg) {}
+      // extendInjectManifestOptions (cfg) {},
+      // extendManifestJson (json) {}
+      // extendPWACustomSWConf (esbuildConf) {}
+
       manifest: {
         name: `Quasar App`,
         short_name: `Quasar App`,
@@ -162,17 +205,17 @@ module.exports = configure(function (ctx) {
       },
     },
 
-    // Full list of options: https://quasar.dev/quasar-cli/developing-cordova-apps/configuring-cordova
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/developing-cordova-apps/configuring-cordova
     cordova: {
       // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
     },
 
-    // Full list of options: https://quasar.dev/quasar-cli/developing-capacitor-apps/configuring-capacitor
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/developing-capacitor-apps/configuring-capacitor
     capacitor: {
       hideSplashscreen: true,
     },
 
-    // Full list of options: https://quasar.dev/quasar-cli/developing-electron-apps/configuring-electron
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/developing-electron-apps/configuring-electron
     electron: {
       bundler: 'packager', // 'packager' or 'builder'
 
@@ -193,9 +236,6 @@ module.exports = configure(function (ctx) {
         appId: 'myHAB',
       },
 
-      // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
-      nodeIntegration: true,
-
       // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
       chainWebpackMain(chain) {
         chain.plugin('eslint-webpack-plugin').use(ESLintPlugin, [{extensions: ['js']}]);
@@ -208,3 +248,4 @@ module.exports = configure(function (ctx) {
     },
   };
 });
+

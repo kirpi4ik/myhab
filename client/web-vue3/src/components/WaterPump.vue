@@ -7,7 +7,7 @@
         <label v-if="config('key.on.timeout')">[ timer:
           {{ humanizeDuration(Number(config('key.on.timeout').value) * 1000, {largest: 2}) }}
         </label>
-        <label v-if="asset['data']!=null && asset.expiration" class="text-weight-light text-blue-grey-3">
+        <label v-if="asset && asset['data'] && asset.expiration" class="text-weight-light text-blue-grey-3">
           | off at :{{ format(new Date(Number(asset.expiration)), 'HH:mm') }}
         </label>
         <label v-if="config('key.on.timeout')">]</label>
@@ -38,7 +38,7 @@
                       </q-item-section>
                     </q-item>
                     <q-item clickable v-close-popup
-                            @click="$router.push({ path: '/admin/peripherals/' + peripheral.id + '/view' })">
+                            @click="$router.push({ path: '/admin/peripherals/' + asset.id + '/view' })">
                       <q-item-section>
                         <q-item-label>Detalii</q-item-label>
                       </q-item-section>
@@ -55,8 +55,8 @@
     <q-separator color="white"/>
     <q-card-section>
       <div class="q-pa-sm text-grey-8">
-        <toggle v-model="asset['data']['state']"
-                v-if="asset['data'] != null"
+        <toggle v-if="asset && asset['data'] && asset['data']['state'] !== undefined"
+                v-model="asset['data']['state']"
                 :id="asset['id']"
                 @change="peripheralService.toggle(asset)"/>
       </div>
@@ -85,12 +85,16 @@ export default defineComponent({
     const store = useStore();
     let asset = ref({})
     const {client} = useApolloClient();
-    const wsMessage = computed(() => store.getters.ws.message);
+    const wsMessage = computed(() => store?.getters?.ws?.message);
     const {mutate: setTimeout} = useMutation(CONFIGURATION_SET_VALUE, {
       update: () => {
         init();
       },
     });
+    const deleteTimeout = (variables) => {
+      // Implementation for deleting timeout configuration
+      setTimeout({ ...variables, value: null });
+    };
     const init = () => {
       client.query({
         query: PERIPHERAL_GET_BY_ID,
@@ -102,7 +106,7 @@ export default defineComponent({
     }
     const config = key => {
       if (asset.value != null) {
-        _.find(asset.value.configurations, function (cfg) {
+        return _.find(asset.value.configurations, function (cfg) {
           return cfg.key == key;
         });
       }
@@ -119,11 +123,11 @@ export default defineComponent({
       {value: 18000},
     ];
     watch(
-      () => store.getters.ws.message,
+      () => store?.getters?.ws?.message,
       function () {
-        if (wsMessage.value.eventName == 'evt_port_value_persisted') {
+        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
           let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (asset.value.data.connectedTo[0].id == payload.p2) {
+          if (asset.value?.data?.connectedTo?.[0]?.id == payload.p2) {
             asset.value['value'] = payload.p4;
             asset.value['state'] = payload.p4 === 'ON';
             asset.value['data']['state'] = payload.p4 === 'ON';
@@ -142,6 +146,7 @@ export default defineComponent({
       peripheral: {id: process.env.WATER_PUMP_ID},
       stItems,
       setTimeout,
+      deleteTimeout,
       config,
       format,
 

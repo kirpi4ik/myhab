@@ -226,16 +226,16 @@ export default defineComponent({
     onMounted(() => {
       loadDetails()
     })
-    const wsMessage = computed(() => store.getters.ws.message);
+    const wsMessage = computed(() => store?.getters?.ws?.message);
     watch(
-      () => store.getters.ws.message,
+      () => store?.getters?.ws?.message,
       function () {
-        if (wsMessage.value.eventName == 'evt_port_value_persisted') {
+        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
           let payload = JSON.parse(wsMessage.value.jsonPayload);
           if (portIds.value.includes(Number(payload.p2))) {
             deviceDetails.value[payload.p3].value = payload.p4
           }
-        } else if (wsMessage.value.eventName == 'evt_stat_value_changed') {
+        } else if (wsMessage.value?.eventName == 'evt_stat_value_changed') {
 
           loadStatistics();
         }
