@@ -1,6 +1,6 @@
 import {PUSH_EVENT} from '@/graphql/queries';
 import {authzService} from '@/_services';
-import {apolloProvider} from '@/boot/graphql';
+import {apolloClient} from '@/boot/graphql';
 
 export const lightService = {
 	toggle,
@@ -15,7 +15,7 @@ function toggle(peripheral) {
 		p4: peripheral.state === true ? 'off' : 'on',
 		p6: authzService.currentUserValue.login,
 	};
-	apolloProvider.defaultClient
+	apolloClient
 		.mutate({
 			mutation: PUSH_EVENT,
 			variables: { input: event },

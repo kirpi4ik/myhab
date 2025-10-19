@@ -83,7 +83,7 @@ import {
   CONFIGURATION_REMOVE_CONFIG
 } from '@/graphql/queries';
 
-import {apolloProvider} from 'boot/graphql';
+import {apolloClient} from 'boot/graphql';
 import slider from 'vue3-slider';
 
 
@@ -133,7 +133,7 @@ export default defineComponent({
     const addListItemConfig = (zoneId, key, time, temp) => {
       let jsonValue = JSON.stringify({time: time, temp: temp});
       if (jsonValue != null) {
-        apolloProvider.defaultClient
+        apolloClient
           .mutate({
             mutation: CONFIGURATION_ADDLIST_CONFIG_VALUE,
             variables: {key: key, value: jsonValue, entityId: zoneId, entityType: 'ZONE', description: ''},
@@ -146,7 +146,7 @@ export default defineComponent({
     };
 
     const onDelete = row => {
-      apolloProvider.defaultClient
+      apolloClient
         .mutate({
           mutation: CONFIGURATION_REMOVE_CONFIG,
           variables: {id: row.id},
