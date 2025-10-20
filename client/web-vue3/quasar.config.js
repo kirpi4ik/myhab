@@ -52,7 +52,7 @@ export default configure(function (ctx) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#build
     build: {
       vueRouterMode: 'history', // available values: 'hash', 'history'
-      publicPath: 'nx',
+      publicPath: '/',
       // transpile: false,
       // publicPath: '/',
 

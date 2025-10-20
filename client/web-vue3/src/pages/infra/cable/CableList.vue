@@ -32,7 +32,7 @@
           </q-td>
           <q-td key="actions">
             <q-btn-group>
-              <q-btn icon="mdi-open-in-new" @click.stop="" :href="'/nx'+uri+'/'+props.row.id+'/view'" target="_blank"
+              <q-btn icon="mdi-open-in-new" @click.stop="" :href="'/'+uri+'/'+props.row.id+'/view'" target="_blank"
                      color="blue-6"/>
               <q-btn icon="mdi-note-edit-outline" color="amber-7" @click.stop="onEdit(props.row)"/>
               <q-btn icon="delete" color="red-7" @click.stop="removeItem(props.row)"/>
