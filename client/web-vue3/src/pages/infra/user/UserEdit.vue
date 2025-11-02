@@ -50,6 +50,7 @@
 import {defineComponent, onMounted, ref} from 'vue';
 
 import { useApolloClient } from "@vue/apollo-composable";
+import {prepareForMutation} from '@/_helpers';
 import { useRoute } from "vue-router";
 
 import {useQuasar} from 'quasar';
@@ -98,11 +99,12 @@ export default defineComponent({
           message: 'Failed submission'
         })
       } else {
-        delete user.value.id;
-        delete user.value.name;
+        // Create a clean copy for mutation, removing Apollo-specific fields
+        const cleanUser = prepareForMutation(user.value, ['__typename', 'id', 'name']);
+        
         client.mutate({
           mutation: USER_VALUE_UPDATE,
-          variables: { id: route.params.idPrimary, user: user.value },
+          variables: { id: route.params.idPrimary, user: cleanUser },
         }).then(response => {
         });
       }

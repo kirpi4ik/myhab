@@ -63,10 +63,10 @@
   </q-card>
 </template>
 <script>
-import {computed, defineComponent, onMounted, ref, watch} from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 
 import {useApolloClient, useMutation} from "@vue/apollo-composable";
-import {useWebSocketStore} from "@/store/websocket.store";
+import {useWebSocketListener} from "@/composables";
 
 import {CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
 import {peripheralService} from '@/_services/controls';
@@ -87,10 +87,8 @@ export default defineComponent({
     const zoneLanId = process.env.VUE_APP_CONF_ZONE_LAN_ID;
     const zoneGardenId = process.env.VUE_APP_CONF_ZONE_GARDEN_ID;
 
-    const wsStore = useWebSocketStore();
     let asset = ref({})
     const {client} = useApolloClient();
-    const wsMessage = computed(() => wsStore.ws.message);
     const {mutate: setTimeout} = useMutation(CONFIGURATION_SET_VALUE, {
       update: () => {
         init();
@@ -117,13 +115,9 @@ export default defineComponent({
       {value: 10800},
       {value: 18000},
     ];
-    watch(
-      () => wsStore.ws.message,
-      function () {
-        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
-        }
-      },
-    );
+    
+    // WebSocket listener removed - was empty and not being used
+    
     onMounted(() => {
       init()
     });

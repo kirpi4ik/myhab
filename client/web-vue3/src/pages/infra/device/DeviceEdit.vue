@@ -48,6 +48,7 @@
 import {defineComponent, onMounted, ref} from 'vue';
 
 import {useApolloClient} from "@vue/apollo-composable";
+import {prepareForMutation} from '@/_helpers';
 import {useRoute} from "vue-router";
 import {useRouter} from "vue-router/dist/vue-router";
 
@@ -114,11 +115,12 @@ export default defineComponent({
           message: 'Failed submission'
         })
       } else {
-        delete device.value.id
+        // Create a clean copy for mutation, removing Apollo-specific fields
+        const cleanDevice = prepareForMutation(device.value, ['__typename', 'id']);
 
         client.mutate({
           mutation: DEVICE_UPDATE,
-          variables: {id: route.params.idPrimary, device: device.value},
+          variables: {id: route.params.idPrimary, device: cleanDevice},
         }).then(response => {
           fetchData()
           $q.notify({

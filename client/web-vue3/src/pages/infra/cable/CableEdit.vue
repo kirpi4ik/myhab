@@ -105,8 +105,7 @@ import {useRoute, useRouter} from "vue-router";
 import {useQuasar} from 'quasar';
 
 import {useApolloClient} from "@vue/apollo-composable";
-
-import _ from 'lodash';
+import {prepareForMutation} from '@/_helpers';
 
 import {
   CABLE_BY_ID,
@@ -164,14 +163,15 @@ export default defineComponent({
           message: 'Failed submission'
         })
       } else {
-        delete cable.value.id
         cable.value.connectedTo.forEach(function (port) {
           delete port.device
         })
+        // Create a clean copy for mutation, removing Apollo-specific fields
+        const cleanCable = prepareForMutation(cable.value, ['__typename', 'id', 'device']);
 
         client.mutate({
           mutation: CABLE_VALUE_UPDATE,
-          variables: {id: route.params.idPrimary, cable: cable.value},
+          variables: {id: route.params.idPrimary, cable: cleanCable},
         }).then(response => {
           router.push({path: `/admin/cables/${response.data.updateCable.id}/view`})
         });

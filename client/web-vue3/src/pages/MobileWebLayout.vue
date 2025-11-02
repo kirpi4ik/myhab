@@ -40,9 +40,8 @@
 import {authzService} from '@/_services';
 import {heatService, lightService} from '@/_services/controls';
 import {PERIPHERAL_LIST_WUI, PUSH_EVENT} from '@/graphql/queries';
-import {mapState} from 'pinia';
-import {useWebSocketStore} from '@/store/websocket.store';
 import {apolloClient} from '@/boot/graphql';
+import {useWebSocketStore} from '@/store/websocket.store';
 
 import _ from 'lodash';
 import { Navigation, Pagination } from 'swiper/modules';
@@ -102,14 +101,15 @@ export default {
   },
 
   computed: {
-    ...mapState(useWebSocketStore, {
-      stompMessage: (store) => store.ws.message,
-    }),
+    stompMessage() {
+      const wsStore = useWebSocketStore();
+      return wsStore.ws.message;
+    }
   },
   watch: {
     '$route.path': 'init',
-    stompMessage: function (newVal) {
-      if (newVal.eventName === 'evt_port_value_persisted') {
+    stompMessage(newVal) {
+      if (newVal?.eventName === 'evt_port_value_persisted') {
         this.updatePeripheralUI(newVal.jsonPayload);
       }
     },
@@ -174,7 +174,9 @@ export default {
               }
             }
           } else {
-            console.log('null id');
+            if (process.env.DEV) {
+              console.log('null id');
+            }
           }
         }
       }

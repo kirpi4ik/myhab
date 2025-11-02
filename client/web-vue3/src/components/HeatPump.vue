@@ -104,10 +104,10 @@
   </q-card>
 </template>
 <script>
-import {computed, defineComponent, onMounted, ref, toRefs, watch} from 'vue';
+import {defineComponent, onMounted, ref, toRefs} from 'vue';
 
 import {useApolloClient} from "@vue/apollo-composable";
-import {useWebSocketStore} from "@/store/websocket.store";
+import {useWebSocketListener} from "@/composables";
 
 import {DEVICE_GET_BY_ID_WITH_PORT_VALUES} from '@/graphql/queries';
 
@@ -123,7 +123,6 @@ export default defineComponent({
   components: {},
   setup(props, {emit}) {
     const {client} = useApolloClient();
-    const wsStore = useWebSocketStore();
     let {deviceId: deviceId} = toRefs(props);
     let device = ref({})
     let deviceDetails = ref({})
@@ -157,17 +156,14 @@ export default defineComponent({
     onMounted(() => {
       loadDetails()
     })
-    const wsMessage = computed(() => wsStore.ws.message);
-    watch(
-      () => wsStore.ws.message,
-      function () {
-        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (portIds.value.includes(Number(payload.p2))) {
-            loadDetails();
-          }
-        }
-      });
+    
+    // Listen for port value updates
+    useWebSocketListener('evt_port_value_persisted', (payload) => {
+      if (portIds.value.includes(Number(payload.p2))) {
+        loadDetails();
+      }
+    });
+    
     return {
       device,
       deviceDetails,
