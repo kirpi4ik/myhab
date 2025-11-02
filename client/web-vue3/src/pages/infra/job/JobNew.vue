@@ -90,18 +90,29 @@
 
           <div class="text-subtitle2 text-weight-medium q-mt-md q-mb-sm">Tags</div>
           <q-select v-model="selectedTags"
-                    :options="tagList"
+                    :options="tagListFiltered"
                     option-label="name"
                     option-value="id"
                     label="Tags"
-                    hint="Select tags for organization"
+                    hint="Select existing tags or type to create new ones"
                     multiple
                     clearable
                     use-chips
+                    use-input
+                    @filter="filterTagFn"
+                    @new-value="createNewTag"
                     filled
                     dense>
             <template v-slot:prepend>
               <q-icon name="mdi-tag-multiple"/>
+            </template>
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey">
+                  <q-item-label>No matching tags</q-item-label>
+                  <q-item-label caption>Press Enter to create a new tag</q-item-label>
+                </q-item-section>
+              </q-item>
             </template>
           </q-select>
         </q-card-section>
@@ -145,6 +156,7 @@ export default defineComponent({
     const scenarioList = ref([]);
     const selectedScenario = ref(null);
     const tagList = ref([]);
+    const tagListFiltered = ref([]);
     const selectedTags = ref([]);
     const cronTriggers = ref([]);
     const jobStates = ['ACTIVE', 'INACTIVE', 'PAUSED', 'DISABLED'];
@@ -157,6 +169,60 @@ export default defineComponent({
       cronTriggers.value.splice(index, 1);
     };
 
+    /**
+     * Filter tags based on user input
+     */
+    const filterTagFn = (val, update) => {
+      update(() => {
+        if (val === '') {
+          tagListFiltered.value = tagList.value;
+        } else {
+          const needle = val.toLowerCase();
+          tagListFiltered.value = tagList.value.filter(
+            tag => tag.name.toLowerCase().includes(needle)
+          );
+        }
+      });
+    };
+
+    /**
+     * Create a new tag on the fly
+     */
+    const createNewTag = (val, done) => {
+      if (val.length > 0) {
+        // Check if tag already exists
+        const existingTag = tagList.value.find(
+          tag => tag.name.toLowerCase() === val.toLowerCase()
+        );
+        
+        if (existingTag) {
+          // Tag exists, just add it
+          done(existingTag, 'add-unique');
+        } else {
+          // Create new tag object (will be created on server when job is saved)
+          const newTag = {
+            name: val,
+            id: null // Will be created on server
+          };
+          
+          // Add to local list - create new array to avoid readonly issues
+          tagList.value = [...tagList.value, newTag];
+          tagListFiltered.value = [...tagList.value];
+          
+          // Add to selection
+          done(newTag, 'add-unique');
+          
+          $q.notify({
+            color: 'info',
+            message: `New tag "${val}" will be created`,
+            icon: 'mdi-tag-plus',
+            position: 'top',
+            timeout: 2000
+          });
+        }
+      }
+    };
+
     const fetchData = () => {
       client.query({
         query: JOB_LIST_ALL,
@@ -164,6 +230,9 @@ export default defineComponent({
         fetchPolicy: 'network-only',
       }).then(response => {
         scenarioList.value = response.data.scenarioList || [];
+        // Initialize tag list as mutable copies to allow adding new tags
+        tagList.value = [...(response.data.jobTagList || [])];
+        tagListFiltered.value = [...(response.data.jobTagList || [])];
       }).catch(error => {
         $q.notify({
           color: 'negative',
@@ -204,7 +273,15 @@ export default defineComponent({
         state: job.value.state,
         scenario: { id: selectedScenario.value.id },
         cronTriggers: cronTriggers.value.map(t => ({ expression: t.expression })),
-        tags: selectedTags.value.map(tag => ({ id: tag.id }))
+        // Handle tags: existing tags have IDs, new tags only have names
+        tags: selectedTags.value.map(tag => {
+          if (tag.id) {
+            return { id: tag.id };
+          } else {
+            // New tag - send only the name, server will create it
+            return { name: tag.name };
+          }
+        })
       };
 
       client.mutate({
@@ -242,11 +319,14 @@ export default defineComponent({
       scenarioList,
       selectedScenario,
       tagList,
+      tagListFiltered,
       selectedTags,
       cronTriggers,
       jobStates,
       addCronTrigger,
       removeCronTrigger,
+      filterTagFn,
+      createNewTag,
       onSave
     };
   }

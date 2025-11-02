@@ -18,6 +18,10 @@ export const JOB_LIST_ALL = gql`
       id
       name
     }
+    jobTagList {
+      id
+      name
+    }
   }
 `;
 
@@ -108,8 +112,8 @@ export const JOB_CREATE = gql`
 `;
 
 export const JOB_UPDATE = gql`
-  mutation updateJob($id: Long!, $job: JobUpdate!) {
-    updateJob(id: $id, job: $job) {
+  mutation jobUpdate($id: Long!, $job: JobUpdate!) {
+    jobUpdate(id: $id, job: $job) {
       id
     }
   }
