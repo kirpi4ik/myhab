@@ -24,7 +24,7 @@ export default configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-webpack/boot-files
-    boot: ['i18n', 'axios', 'graphql'],
+    boot: ['error-handler', 'i18n', 'axios', 'graphql'],
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#sourcefiles
     sourceFiles: {
@@ -95,6 +95,22 @@ export default configure(function (ctx) {
       // https: true,
       port: 10002,
       open: true, // opens browser window automatically
+      client: {
+        overlay: {
+          warnings: false,
+          errors: true,
+          runtimeErrors: (error) => {
+            const ignoreErrors = [
+              'ResizeObserver loop completed with undelivered notifications',
+              'ResizeObserver loop limit exceeded',
+            ];
+            if (ignoreErrors.some((e) => error.message.includes(e))) {
+              return false;
+            }
+            return true;
+          },
+        },
+      },
     },
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#framework
