@@ -84,8 +84,9 @@ class Scenario extends BaseEntity {
               }
             }
             
-            // Copy properties
-            existingScenario.properties = scenario
+            // Update only specific properties (exclude uid, id, timestamps)
+            if (scenario.name != null) existingScenario.name = scenario.name
+            if (scenario.body != null) existingScenario.body = scenario.body
             
             // Add new ports
             scenario.ports?.each { port ->

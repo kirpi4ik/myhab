@@ -25,5 +25,12 @@ class Job extends BaseEntity {
 
     static constraints = {
         tags nullable: true
+        scenario nullable: true
+        description nullable: true
+        state nullable: true
+        cronTriggers nullable: true
+        eventTriggers nullable: true
     }
+
+    static graphql = true
 }

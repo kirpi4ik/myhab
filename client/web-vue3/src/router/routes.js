@@ -342,6 +342,31 @@ const routes = [
           name: "edit"
         }
       },
+      {
+        path: adminPrefix + '/jobs',
+        component: () => import('pages/infra/job/JobList'),
+      },
+      {
+        path: adminPrefix + '/jobs/new',
+        component: () => import('pages/infra/job/JobNew'),
+        meta: {
+          name: "new"
+        }
+      },
+      {
+        path: adminPrefix + '/jobs/:idPrimary/view',
+        component: () => import('pages/infra/job/JobView'),
+        meta: {
+          name: "details"
+        }
+      },
+      {
+        path: adminPrefix + '/jobs/:idPrimary/edit',
+        component: () => import('pages/infra/job/JobEdit'),
+        meta: {
+          name: "edit"
+        }
+      },
     ],
     meta: {authorize: [Role.Admin, Role.User]},
   },
