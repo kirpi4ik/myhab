@@ -79,7 +79,7 @@ const apolloClient = new ApolloClient({
       // Prevent Apollo from warning about data loss for simplified nested objects
       Query: {
         fields: {
-          // Merge strategy for queries
+          // Merge strategy for queries - allow any data
           cable: {
             merge: true,
           },
@@ -88,9 +88,22 @@ const apolloClient = new ApolloClient({
           },
           devicePeripheral: {
             merge: true,
+          },
+          zoneById: {
+            merge: true,
           }
         }
       }
+    },
+    // Don't warn about missing fields or data loss
+    possibleTypes: {},
+    dataIdFromObject: (object) => {
+      // Custom cache key generation to avoid normalization issues
+      // Return null to disable normalization for objects without proper IDs
+      if (object.id) {
+        return `${object.__typename}:${object.id}`;
+      }
+      return null;
     }
   }),
   connectToDevTools: process.env.DEV,
@@ -98,9 +111,11 @@ const apolloClient = new ApolloClient({
   defaultOptions: {
     watchQuery: {
       errorPolicy: 'all',
+      fetchPolicy: 'network-only', // Always fetch fresh data
     },
     query: {
       errorPolicy: 'all',
+      fetchPolicy: 'network-only', // Always fetch fresh data
     },
     mutate: {
       errorPolicy: 'all',
