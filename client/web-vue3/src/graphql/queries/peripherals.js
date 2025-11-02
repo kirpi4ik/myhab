@@ -121,6 +121,16 @@ export const PERIPHERAL_GET_BY_ID = gql`
         description
       }
     }
+    deviceList {
+      id
+      code
+      name
+      ports {
+        id
+        name
+        internalRef
+      }
+    }
   }
 `;
 export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
