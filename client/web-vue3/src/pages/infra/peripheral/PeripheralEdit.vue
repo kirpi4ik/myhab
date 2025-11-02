@@ -181,8 +181,25 @@ export default defineComponent({
             message: 'Failed submission'
           })
         } else {
-          // Create a clean copy for mutation, removing Apollo-specific fields
-          const cleanPeripheral = prepareForMutation(peripheral.value, ['__typename', 'id', 'device', 'configurations']);
+          // Create a clean copy for mutation
+          const cleanPeripheral = prepareForMutation(peripheral.value, ['__typename', 'device', 'configurations']);
+          
+          // Remove id only from top-level peripheral object, but keep ids in nested arrays
+          delete cleanPeripheral.id;
+          
+          // Clean connectedTo array - keep only id field
+          if (cleanPeripheral.connectedTo && Array.isArray(cleanPeripheral.connectedTo)) {
+            cleanPeripheral.connectedTo = cleanPeripheral.connectedTo.map(port => ({
+              id: port.id
+            }));
+          }
+          
+          // Clean zones array - keep only id field
+          if (cleanPeripheral.zones && Array.isArray(cleanPeripheral.zones)) {
+            cleanPeripheral.zones = cleanPeripheral.zones.map(zone => ({
+              id: zone.id
+            }));
+          }
 
           client.mutate({
             mutation: PERIPHERAL_UPDATE,
