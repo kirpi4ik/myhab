@@ -1,7 +1,7 @@
-# Spring Security Core 5.3.0 & REST 5.0.1 Upgrade - Complete ✅
+# Spring Security Core 5.3.0 Upgrade - Complete ✅
 
 ## Overview
-Successfully upgraded from Spring Security Core (default version) to **5.3.0** and Spring Security REST from **3.0.1** to **5.0.1** for the Grails 5.3.1 application.
+Successfully upgraded Spring Security Core from default version to **5.3.0** for the Grails 5.3.1 application. Spring Security REST remains at **3.0.1** due to Gradle 6.9.2 compatibility issues with version 5.0.1.
 
 ## Changes Made
 
@@ -9,14 +9,10 @@ Successfully upgraded from Spring Security Core (default version) to **5.3.0** a
 
 **Added:**
 ```gradle
-// Spring Security Core 5.3.0 and REST plugin (upgraded to 5.0.1)
+// Spring Security Core 5.3.0 and REST plugin
+// Note: REST plugin kept at 3.0.1 due to Guava dependency conflicts with 5.0.1 on Gradle 6.9.2
 implementation "org.grails.plugins:spring-security-core:5.3.0"
-implementation("org.grails.plugins:spring-security-rest:5.0.1") {
-    exclude group: 'org.pac4j', module: 'pac4j-cas'
-    exclude group: 'org.pac4j', module: 'pac4j-saml'
-    exclude group: 'org.pac4j', module: 'pac4j-oauth'
-    exclude group: 'org.pac4j', module: 'pac4j-oidc'
-}
+implementation "org.grails.plugins:spring-security-rest:3.0.1"
 
 // Explicitly specify the main class for Spring Boot
 springBoot {
@@ -24,7 +20,7 @@ springBoot {
 }
 ```
 
-**Note:** The pac4j modules are excluded because they cause Guava dependency conflicts with Gradle 6.9.2. These modules are only needed if you're using CAS, SAML, OAuth, or OIDC authentication. Your application uses JWT tokens directly, so these are not required.
+**Note:** Spring Security REST was kept at version 3.0.1 because version 5.0.1 introduces Guava 33.0.0-jre dependency conflicts that Gradle 6.9.2 cannot resolve (ambiguity between androidRuntimeElements and jreRuntimeElements variants). Version 3.0.1 is fully compatible with Spring Security Core 5.3.0 and provides all required JWT token functionality.
 
 ### 2. Application Configuration (`server/server-core/grails-app/conf/application.groovy`)
 
@@ -91,7 +87,7 @@ curl -X POST http://localhost:8181/graphql
 | Grails | 5.3.1 | 5.3.1 | ✅ Same |
 | Spring Boot | 2.7.x | 2.7.x | ✅ Same |
 | Spring Security Core | ~3.x | 5.3.0 | ✅ **Upgraded** |
-| Spring Security REST | 3.0.1 | 5.0.1 | ✅ **Upgraded** |
+| Spring Security REST | 3.0.1 | 3.0.1 | ✅ Same (5.0.1 incompatible) |
 | Groovy | 3.0.7 | 3.0.7 | ✅ Same |
 | GORM | 7.3.4 | 7.3.4 | ✅ Same |
 
@@ -104,22 +100,22 @@ curl -X POST http://localhost:8181/graphql
 3. **Password Encoding**: Explicit algorithm configuration recommended (BCrypt)
 4. **Debugging**: Improved logging capabilities with structured loggers
 
-### What Changed in Spring Security REST 5.0.1
+### Why Spring Security REST Remains at 3.0.1
 
-1. **pac4j Integration**: Updated pac4j support (excluded in this setup due to dependency conflicts)
-2. **JWT Improvements**: Enhanced JWT token handling
-3. **Security Enhancements**: Latest security patches and improvements
-4. **API Changes**: Minor API refinements (backward compatible with 3.0.1 configuration)
+**Attempted Upgrade to 5.0.1:** We attempted to upgrade `spring-security-rest` to version 5.0.1 to match the Spring Security Core 5.3.0 upgrade.
 
-### Dependency Exclusions
+**Issue Encountered:** Version 5.0.1 introduces a dependency on Guava 33.0.0-jre, which has multiple variants (androidRuntimeElements and jreRuntimeElements). Gradle 6.9.2 cannot automatically resolve which variant to use, causing build failures.
 
-The following pac4j modules were excluded to resolve Guava dependency conflicts with Gradle 6.9.2:
-- `pac4j-cas` - CAS authentication (not used in this application)
-- `pac4j-saml` - SAML authentication (not used in this application)  
-- `pac4j-oauth` - OAuth 1.0/2.0 providers (not used; application uses JWT directly)
-- `pac4j-oidc` - OpenID Connect (not used in this application)
+**Resolution:** Keep `spring-security-rest` at version 3.0.1, which:
+- ✅ Is fully compatible with Spring Security Core 5.3.0
+- ✅ Provides all required JWT token functionality
+- ✅ Works with the existing Gradle 6.9.2 build system
+- ✅ Has no dependency conflicts
 
-**Impact**: None, as the application uses JWT token authentication directly via `/api/login` endpoint.
+**Future Upgrade Path:** To upgrade to `spring-security-rest` 5.0.1+, you would need to:
+1. Upgrade Gradle to version 7.x or higher (which handles variant selection better)
+2. Update the Gradle wrapper: `./gradlew wrapper --gradle-version 7.6`
+3. Test all build scripts for Gradle 7 compatibility
 
 ### Backward Compatibility
 
