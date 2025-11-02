@@ -182,7 +182,9 @@ logger 'graphql', WARN, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
 //logger 'org.springframework.web.socket', DEBUG, ['STDOUT']
 //logger 'org.springframework.messaging', DEBUG, ['STDOUT']
 //logger 'org.springframework.security', DEBUG, ['STDOUT']
+//Uncomment these lines for Spring Security debugging if needed:
 //logger 'grails.plugin.springsecurity', DEBUG, ['STDOUT']
+//logger 'org.springframework.security', DEBUG, ['STDOUT']
 //logger 'grails.plugin.springsecurity.web.filter.DebugFilter', DEBUG, ['STDOUT']
 logger 'org.springframework', ERROR, ['STDOUT'], additivity = false
 logger 'org.hibernate.', ERROR, ['STDOUT'], additivity = false
