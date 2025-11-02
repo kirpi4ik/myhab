@@ -186,8 +186,19 @@ export default defineComponent({
         client.mutate({
           mutation: CABLE_VALUE_UPDATE,
           variables: {id: route.params.idPrimary, cable: cleanCable},
+          // Prevent Apollo cache issues by not updating the cache automatically
+          fetchPolicy: 'no-cache',
+          // Provide empty update function to prevent cache normalization
+          update: () => {
+            // Skip cache update to avoid normalization issues with simplified nested objects
+          }
         }).then(response => {
           router.push({path: `/admin/cables/${response.data.updateCable.id}/view`})
+        }).catch(error => {
+          $q.notify({
+            color: 'negative',
+            message: error.message || 'Update failed'
+          })
         });
       }
     }
