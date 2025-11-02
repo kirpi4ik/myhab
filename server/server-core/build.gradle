@@ -62,14 +62,10 @@ dependencies {
     implementation "org.grails.plugins:cache"
     implementation "org.grails.plugins:async"
     
-    // Spring Security Core 5.3.0 and REST plugin (upgraded to 5.0.1)
+    // Spring Security Core 5.3.0 and REST plugin
+    // Note: REST plugin kept at 3.0.1 due to Guava dependency conflicts with 5.0.1 on Gradle 6.9.2
     implementation "org.grails.plugins:spring-security-core:5.3.0"
-    implementation("org.grails.plugins:spring-security-rest:5.0.1") {
-        exclude group: 'org.pac4j', module: 'pac4j-cas'
-        exclude group: 'org.pac4j', module: 'pac4j-saml'
-        exclude group: 'org.pac4j', module: 'pac4j-oauth'
-        exclude group: 'org.pac4j', module: 'pac4j-oidc'
-    }
+    implementation "org.grails.plugins:spring-security-rest:3.0.1"
     
     implementation "org.grails.plugins:views-json"
     implementation "org.grails.plugins:views-json-templates"
