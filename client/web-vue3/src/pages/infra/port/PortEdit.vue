@@ -48,6 +48,7 @@
 import {defineComponent, onMounted, ref} from 'vue';
 
 import {useApolloClient} from "@vue/apollo-composable";
+import {prepareForMutation} from '@/_helpers';
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
 import {useQuasar} from 'quasar';
@@ -87,10 +88,12 @@ export default defineComponent({
           message: 'Failed submission'
         })
       } else {
-        delete port.value.id
+        // Create a clean copy for mutation, removing Apollo-specific fields
+        const cleanPort = prepareForMutation(port.value, ['__typename', 'id']);
+        
         client.mutate({
           mutation: PORT_UPDATE,
-          variables: {id: route.params.idPrimary, port: port.value},
+          variables: {id: route.params.idPrimary, port: cleanPort},
         }).then(response => {
           router.push({path: `/admin/ports/${response.data.updatePort.id}/view`})
         });

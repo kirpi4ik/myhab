@@ -69,10 +69,10 @@
   </q-card>
 </template>
 <script>
-import {computed, defineComponent, toRefs, watch} from 'vue';
+import {computed, defineComponent, toRefs} from 'vue';
 
 import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
-import {useWebSocketStore} from '@/store/websocket.store';
+import {useWebSocketListeners} from '@/composables';
 
 import {
   CACHE_DELETE,
@@ -101,7 +101,6 @@ export default defineComponent({
     peripheral: Object,
   },
   setup(props, { emit }) {
-    const wsStore = useWebSocketStore();
     const { client } = useApolloClient();
     let { peripheral: asset } = toRefs(props);
     const stItems = [
@@ -144,26 +143,24 @@ export default defineComponent({
         });
     };
 
-    const wsMessage = computed(() => wsStore.ws.message);
-    watch(
-      () => wsStore.ws.message,
-      function () {
-        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (portId == payload.p2) {
-            asset.value['value'] = payload.p4;
-            asset.value['state'] = payload.p4 === 'ON';
-            asset.value['data']['state'] = payload.p4 === 'ON';
-            loadDetails();
-          }
-        } else if (wsMessage.value?.eventName == 'evt_cfg_value_changed') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (asset.value.id == payload.p3 && 'PERIPHERAL' == payload.p2) {
-            loadDetails();
-          }
-        }
+    // Listen for WebSocket events
+    useWebSocketListeners([
+      {
+        eventName: 'evt_port_value_persisted',
+        callback: (payload) => {
+          asset.value['value'] = payload.p4;
+          asset.value['state'] = payload.p4 === 'ON';
+          asset.value['data']['state'] = payload.p4 === 'ON';
+          loadDetails();
+        },
+        filter: (payload) => portId == payload.p2
       },
-    );
+      {
+        eventName: 'evt_cfg_value_changed',
+        callback: () => loadDetails(),
+        filter: (payload) => asset.value.id == payload.p3 && 'PERIPHERAL' == payload.p2
+      }
+    ]);
 
     const config = key =>
       _.find(asset.value.data.configurations, function (cfg) {

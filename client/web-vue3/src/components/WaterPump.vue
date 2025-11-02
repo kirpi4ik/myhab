@@ -64,10 +64,10 @@
   </q-card>
 </template>
 <script>
-import {computed, defineComponent, onMounted, ref, watch} from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 
 import {useApolloClient, useMutation} from "@vue/apollo-composable";
-import {useWebSocketStore} from "@/store/websocket.store";
+import {useWebSocketListener} from "@/composables";
 
 import {CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
 import {peripheralService} from '@/_services/controls';
@@ -87,10 +87,8 @@ export default defineComponent({
     EventLogger
   },
   setup(props, {emit}) {
-    const wsStore = useWebSocketStore();
     let asset = ref({})
     const {client} = useApolloClient();
-    const wsMessage = computed(() => wsStore.ws.message);
     const {mutate: setTimeout} = useMutation(CONFIGURATION_SET_VALUE, {
       update: () => {
         init();
@@ -127,19 +125,16 @@ export default defineComponent({
       {value: 10800},
       {value: 18000},
     ];
-    watch(
-      () => wsStore.ws.message,
-      function () {
-        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (asset.value?.data?.connectedTo?.[0]?.id == payload.p2) {
-            asset.value['value'] = payload.p4;
-            asset.value['state'] = payload.p4 === 'ON';
-            asset.value['data']['state'] = payload.p4 === 'ON';
-          }
-        }
-      },
-    );
+    
+    // Listen for port value updates
+    useWebSocketListener('evt_port_value_persisted', (payload) => {
+      if (asset.value?.data?.connectedTo?.[0]?.id == payload.p2) {
+        asset.value['value'] = payload.p4;
+        asset.value['state'] = payload.p4 === 'ON';
+        asset.value['data']['state'] = payload.p4 === 'ON';
+      }
+    });
+    
     onMounted(() => {
       init()
     });

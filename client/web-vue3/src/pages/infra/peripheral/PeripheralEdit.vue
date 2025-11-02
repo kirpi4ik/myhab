@@ -72,6 +72,7 @@ import {useRoute, useRouter} from "vue-router";
 import {useQuasar} from 'quasar';
 
 import {useApolloClient} from "@vue/apollo-composable";
+import {prepareForMutation} from '@/_helpers';
 
 import _ from "lodash";
 
@@ -180,17 +181,12 @@ export default defineComponent({
             message: 'Failed submission'
           })
         } else {
-          delete peripheral.value.id
-          delete peripheral.value.configurations
-          if (peripheral.value.connectedTo && Array.isArray(peripheral.value.connectedTo)) {
-            peripheral.value.connectedTo.forEach(function (port) {
-              delete port.device
-            })
-          }
+          // Create a clean copy for mutation, removing Apollo-specific fields
+          const cleanPeripheral = prepareForMutation(peripheral.value, ['__typename', 'id', 'device', 'configurations']);
 
           client.mutate({
             mutation: PERIPHERAL_UPDATE,
-            variables: {id: route.params.idPrimary, devicePeripheral: peripheral.value},
+            variables: {id: route.params.idPrimary, devicePeripheral: cleanPeripheral},
           }).then(response => {
             fetchData()
             $q.notify({

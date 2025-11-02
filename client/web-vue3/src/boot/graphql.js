@@ -56,7 +56,9 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
     if (networkError.message === 'Failed to fetch') {
       error.code = 'ERROR_SERVER_DOWN';
     }
-    console.log(`[Network error]: ${networkError}`);
+    if (process.env.DEV) {
+      console.log(`[Network error]: ${networkError}`);
+    }
     // router.push({ path: error.path, query: { error: error.code } });
   }
   if (operation.variables) {

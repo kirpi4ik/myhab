@@ -28,10 +28,14 @@ export const useWebSocketStore = defineStore('websocket', {
 		},
 
 		connect(handler) {
-			console.log('WS connect action called, currentUser:', authzService.currentUserValue);
+			if (process.env.DEV) {
+				console.log('WS connect action called, currentUser:', authzService.currentUserValue);
+			}
 			if (authzService.currentUserValue) {
 				const wsUri = Utils.host() + '/stomp?access_token=' + authzService.currentUserValue.access_token;
-				console.log('STOMP: Attempting connection to:', wsUri);
+				if (process.env.DEV) {
+					console.log('STOMP: Attempting connection to:', wsUri);
+				}
 
 				const message_callback = (message) => {
 					if (message.headers['content-type'] === 'application/octet-stream') {
@@ -44,7 +48,9 @@ export const useWebSocketStore = defineStore('websocket', {
 				this.wsStompClient = new Client({
 					brokerURL: wsUri,
 					debug: function (str) {
-						console.log(str);
+						if (process.env.DEV) {
+							console.log(str);
+						}
 					},
 					heartbeatIncoming: 4000,
 					heartbeatOutgoing: 4000,
@@ -52,7 +58,9 @@ export const useWebSocketStore = defineStore('websocket', {
 						return new SockJS(wsUri);
 					},
 					onConnect: () => {
-						console.log('CONNECTED');
+						if (process.env.DEV) {
+							console.log('CONNECTED');
+						}
 						this.setConnection('ONLINE');
 						this.wsStompClient.subscribe('/topic/events', message_callback, {});
 						if (handler != null) {
@@ -62,18 +70,26 @@ export const useWebSocketStore = defineStore('websocket', {
 					onStompError: (error) => this.stompFailureCallback(error),
 					onWebSocketError: (error) => this.stompFailureCallback(error),
 				});
-				console.log('Connecting...');
+				if (process.env.DEV) {
+					console.log('Connecting...');
+				}
 				this.wsStompClient.activate();
 			} else {
-				console.log('STOMP: User not authenticated, skipping connection');
+				if (process.env.DEV) {
+					console.log('STOMP: User not authenticated, skipping connection');
+				}
 			}
 		},
 
 		stompFailureCallback(error) {
 			this.setConnection('OFFLINE');
-			console.log('STOMP error: ' + error);
+			if (process.env.DEV) {
+				console.log('STOMP error: ' + error);
+			}
 			setTimeout(() => this.connect(), 5000);
-			console.log('STOMP: Reconnecting in 5 seconds');
+			if (process.env.DEV) {
+				console.log('STOMP: Reconnecting in 5 seconds');
+			}
 		},
 	},
 });

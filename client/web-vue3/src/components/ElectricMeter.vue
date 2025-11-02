@@ -139,10 +139,10 @@
   </q-card>
 </template>
 <script>
-import {computed, defineComponent, onMounted, ref, toRefs, watch} from 'vue';
+import {computed, defineComponent, onMounted, ref, toRefs} from 'vue';
 
 import {useApolloClient} from "@vue/apollo-composable";
-import {useWebSocketStore} from "@/store/websocket.store";
+import {useWebSocketListener} from "@/composables";
 
 import {
   CONFIG_GLOBAL_GET_STRING_VAL,
@@ -163,7 +163,6 @@ export default defineComponent({
   components: {},
   setup(props, {emit}) {
     const {client} = useApolloClient();
-    const wsStore = useWebSocketStore();
     let {deviceId: deviceId} = toRefs(props);
     let device = ref({})
     let deviceDetails = ref({})
@@ -231,20 +230,18 @@ export default defineComponent({
     onMounted(() => {
       loadDetails()
     })
-    const wsMessage = computed(() => wsStore.ws.message);
-    watch(
-      () => wsStore.ws.message,
-      function () {
-        if (wsMessage.value?.eventName == 'evt_port_value_persisted') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (portIds.value.includes(Number(payload.p2))) {
-            deviceDetails.value[payload.p3].value = payload.p4
-          }
-        } else if (wsMessage.value?.eventName == 'evt_stat_value_changed') {
-
-          loadStatistics();
-        }
-      });
+    
+    // Listen for WebSocket events
+    useWebSocketListener('evt_port_value_persisted', (payload) => {
+      if (portIds.value.includes(Number(payload.p2))) {
+        deviceDetails.value[payload.p3].value = payload.p4
+      }
+    });
+    
+    useWebSocketListener('evt_stat_value_changed', () => {
+      loadStatistics();
+    });
+    
     return {
       device,
       deviceDetails,
