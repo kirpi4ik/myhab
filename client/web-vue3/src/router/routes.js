@@ -228,7 +228,7 @@ const routes = [
           },
           {
             path: adminPrefix + '/pcategories/:idPrimary/edit',
-            component: () => import('pages/infra/peripheral/PeripheralEdit'),
+            component: () => import('pages/infra/peripheral/categories/CategoryEdit'),
             meta: {
               name: "edit"
             }

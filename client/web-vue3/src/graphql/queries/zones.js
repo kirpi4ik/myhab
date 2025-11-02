@@ -150,3 +150,32 @@ export const ZONES_GET_ROOT = gql`
     }
   }
 `;
+
+export const ZONE_VALUE_UPDATE = gql`
+  mutation ($id: Long!, $zone: ZoneUpdate!) {
+    zoneUpdate(id: $id, zone: $zone) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const ZONE_CREATE = gql`
+  mutation ($zone: ZoneCreate!) {
+    zoneCreate(zone: $zone) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const ZONE_DELETE = gql`
+  mutation ($id: Long!) {
+    zoneDelete(id: $id) {
+      success
+      error
+    }
+  }
+`;
