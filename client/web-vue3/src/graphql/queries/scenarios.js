@@ -1,0 +1,101 @@
+import {gql} from '@apollo/client/core';
+
+export const SCENARIO_LIST_ALL = gql`
+  query {
+    scenarioList {
+      id
+      name
+      body
+      tsCreated
+      tsUpdated
+    }
+    devicePortList {
+      id
+      name
+      internalRef
+      device {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const SCENARIO_GET_BY_ID = gql`
+  query ($id: Long!) {
+    scenario(id: $id) {
+      id
+      uid
+      name
+      body
+      tsCreated
+      tsUpdated
+      ports {
+        id
+        name
+        internalRef
+        device {
+          id
+          name
+          code
+        }
+      }
+    }
+  }
+`;
+
+export const SCENARIO_EDIT_GET_BY_ID = gql`
+  query ($id: Long!) {
+    scenario(id: $id) {
+      id
+      uid
+      name
+      body
+      ports {
+        id
+        name
+        internalRef
+        device {
+          id
+          name
+        }
+      }
+    }
+    devicePortList {
+      id
+      name
+      internalRef
+      device {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const SCENARIO_CREATE = gql`
+  mutation ($scenario: ScenarioCreate) {
+    scenarioCreate(scenario: $scenario) {
+      id
+      uid
+    }
+  }
+`;
+
+export const SCENARIO_UPDATE = gql`
+  mutation ($id: Long!, $scenario: ScenarioUpdate!) {
+    updateScenario(id: $id, scenario: $scenario) {
+      id
+    }
+  }
+`;
+
+export const SCENARIO_DELETE_BY_ID = gql`
+  mutation ($id: Long!) {
+    scenarioDelete(id: $id) {
+      error
+      success
+    }
+  }
+`;
+

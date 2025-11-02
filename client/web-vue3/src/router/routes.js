@@ -317,6 +317,31 @@ const routes = [
           },
         ],
       },
+      {
+        path: adminPrefix + '/scenarios',
+        component: () => import('pages/infra/scenario/ScenarioList'),
+      },
+      {
+        path: adminPrefix + '/scenarios/new',
+        component: () => import('pages/infra/scenario/ScenarioNew'),
+        meta: {
+          name: "new"
+        }
+      },
+      {
+        path: adminPrefix + '/scenarios/:idPrimary/view',
+        component: () => import('pages/infra/scenario/ScenarioView'),
+        meta: {
+          name: "details"
+        }
+      },
+      {
+        path: adminPrefix + '/scenarios/:idPrimary/edit',
+        component: () => import('pages/infra/scenario/ScenarioEdit'),
+        meta: {
+          name: "edit"
+        }
+      },
     ],
     meta: {authorize: [Role.Admin, Role.User]},
   },
