@@ -31,9 +31,24 @@ const withAuthToken = setContext(() => {
 });
 
 // we use a usefull error handling tool provided by Apollo in order to execute some code when errors occur.
+let backendUnavailableCount = 0;
+const MAX_BACKEND_ERRORS = 5; // Redirect after 5 consecutive failures
+let lastErrorTime = 0;
+const ERROR_RESET_TIMEOUT = 10000; // Reset counter if 10 seconds pass between errors
+
 const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) => {
+  // Reset counter if errors are not consecutive (more than 10 seconds apart)
+  const now = Date.now();
+  if (now - lastErrorTime > ERROR_RESET_TIMEOUT) {
+    backendUnavailableCount = 0;
+  }
+  lastErrorTime = now;
+  
   // We log every GraphQL errors
   if (graphQLErrors) {
+    // GraphQL errors mean the backend IS responding, so reset counter
+    backendUnavailableCount = 0;
+    
     graphQLErrors.map(({message, locations, path}) =>
       // console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`),
       Notify.create({
@@ -44,28 +59,101 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
       }),
     );
   }
-  // When a 401 error occur, we log-out the user.
+  
+  // When a network error occurs
   if (networkError) {
     let error = {path: '/pages/500', code: 'ERROR_UNKNOW'};
+    
+    // Handle authentication errors first
     if (networkError.statusCode === 401) {
+      backendUnavailableCount = 0; // Reset counter, this is auth issue not backend down
       authzService.logout();
       error.path = '/login';
       error.code = 'ERROR_NOT_AUTHENTICATED';
       location.replace(error.path);
+      return;
     }
-    if (networkError.message === 'Failed to fetch') {
+    
+    // Check if this is a cache error (not backend unavailability)
+    const isCacheError = networkError.message?.includes('cache') ||
+                         networkError.message?.includes('Cache') ||
+                         networkError.message?.includes('disk_cache');
+    
+    if (isCacheError) {
+      // Cache errors don't count as backend unavailability
+      if (process.env.DEV) {
+        console.log('[Apollo]: Cache error (ignoring):', networkError.message);
+      }
+      backendUnavailableCount = 0;
+      return forward(operation);
+    }
+    
+    // Check for actual backend unavailability (connection refused, timeout, etc.)
+    const isBackendDown = (networkError.message === 'Failed to fetch' || 
+                          networkError.message?.toLowerCase().includes('network') ||
+                          networkError.message?.toLowerCase().includes('connection') ||
+                          networkError.statusCode === 503 ||
+                          networkError.statusCode === 504 ||
+                          networkError.statusCode === 0) && // Status 0 often means network failure
+                          !isCacheError; // Make sure it's not a cache error
+    
+    if (isBackendDown) {
+      backendUnavailableCount++;
       error.code = 'ERROR_SERVER_DOWN';
+      
+      if (process.env.DEV) {
+        console.log(`[Apollo]: Backend unavailable (${backendUnavailableCount}/${MAX_BACKEND_ERRORS}):`, networkError.message);
+      }
+      
+      // If we've had multiple consecutive failures, redirect to maintenance page
+      if (backendUnavailableCount >= MAX_BACKEND_ERRORS) {
+        const currentPath = window.location.pathname;
+        // Don't redirect if already on maintenance page
+        if (!currentPath.includes('/maintenance')) {
+          console.error('[Apollo]: Backend server is unavailable after multiple attempts. Redirecting to maintenance page.');
+          window.location.href = '/maintenance?title=Backend Unavailable&message=Unable to connect to the backend server. Please check if the server is running on port 8181.&retry=true';
+        }
+        return;
+      }
+      
+      // Show notification for first few errors
+      Notify.create({
+        color: 'warning',
+        message: `Connection issue detected. Retrying... (${backendUnavailableCount}/${MAX_BACKEND_ERRORS})`,
+        icon: 'warning',
+        timeout: 3000,
+      });
+    } else {
+      // Reset counter on different type of error
+      backendUnavailableCount = 0;
     }
+    
     if (process.env.DEV) {
       console.log(`[Network error]: ${networkError}`);
     }
-    // router.push({ path: error.path, query: { error: error.code } });
+  } else {
+    // Reset counter on successful response (no network error)
+    if (backendUnavailableCount > 0) {
+      console.log('[Apollo]: Backend connection restored!');
+      Notify.create({
+        color: 'positive',
+        message: 'Connection restored!',
+        icon: 'check_circle',
+        timeout: 2000,
+      });
+    }
+    backendUnavailableCount = 0;
   }
+  
   if (operation.variables) {
     const omitTypename = (key, value) => (key === '__typename' ? undefined : value);
     operation.variables = JSON.parse(JSON.stringify(operation.variables), omitTypename);
   }
   return forward(operation).map(data => {
+    // Also reset counter on successful data
+    if (backendUnavailableCount > 0) {
+      backendUnavailableCount = 0;
+    }
     return data;
   });
 });
