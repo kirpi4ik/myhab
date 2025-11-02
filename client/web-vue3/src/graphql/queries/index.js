@@ -9,6 +9,7 @@ export * from './configurations';
 export * from './users';
 export * from './timeseries';
 export * from './scenarios';
+export * from './jobs';
 
 export const NAV_BREADCRUMB = gql`
 	query navigation($type: String!, $id: String!) {
