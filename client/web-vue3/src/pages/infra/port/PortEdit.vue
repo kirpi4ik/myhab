@@ -111,8 +111,19 @@ export default defineComponent({
         client.mutate({
           mutation: PORT_UPDATE,
           variables: {id: route.params.idPrimary, port: cleanPort},
+          // Prevent Apollo cache issues by not updating the cache automatically
+          fetchPolicy: 'no-cache',
+          // Provide empty update function to prevent cache normalization
+          update: () => {
+            // Skip cache update to avoid normalization issues with simplified nested objects
+          }
         }).then(response => {
           router.push({path: `/admin/ports/${response.data.updatePort.id}/view`})
+        }).catch(error => {
+          $q.notify({
+            color: 'negative',
+            message: error.message || 'Update failed'
+          })
         });
       }
     }

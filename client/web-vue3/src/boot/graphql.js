@@ -72,8 +72,40 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
 
 const apolloClient = new ApolloClient({
   link: onErrorLink.concat(withAuthToken).concat(httpLink),
-  cache: new InMemoryCache({addTypename: false}),
+  cache: new InMemoryCache({
+    addTypename: false,
+    // Customize type policies to prevent normalization warnings
+    typePolicies: {
+      // Prevent Apollo from warning about data loss for simplified nested objects
+      Query: {
+        fields: {
+          // Merge strategy for queries
+          cable: {
+            merge: true,
+          },
+          devicePort: {
+            merge: true,
+          },
+          devicePeripheral: {
+            merge: true,
+          }
+        }
+      }
+    }
+  }),
   connectToDevTools: process.env.DEV,
+  // Suppress warnings about data loss during normalization
+  defaultOptions: {
+    watchQuery: {
+      errorPolicy: 'all',
+    },
+    query: {
+      errorPolicy: 'all',
+    },
+    mutate: {
+      errorPolicy: 'all',
+    },
+  },
 });
 
 export default boot(({app}) => {
