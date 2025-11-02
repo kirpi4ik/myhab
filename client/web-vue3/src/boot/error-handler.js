@@ -33,16 +33,35 @@ export default boot(() => {
   // Override console.warn to suppress Apollo data loss warnings
   const originalWarn = console.warn;
   console.warn = function(...args) {
-    // Check if this is an Apollo data loss warning
-    const message = args.join(' ');
-    if (message.includes('writeToStore') || 
-        message.includes('warnAboutDataLoss') ||
-        message.includes('Missing field')) {
-      // Silently ignore Apollo cache warnings
-      return;
+    try {
+      // Safely check if this is an Apollo data loss warning
+      // without trying to convert objects to strings
+      const hasApolloWarning = args.some(arg => {
+        if (typeof arg === 'string') {
+          return arg.includes('writeToStore') || 
+                 arg.includes('warnAboutDataLoss') ||
+                 arg.includes('Missing field');
+        }
+        return false;
+      });
+      
+      if (hasApolloWarning) {
+        // Silently ignore Apollo cache warnings
+        return;
+      }
+      
+      // Call the original console.warn for other warnings
+      // Wrap in try-catch in case args contain non-convertible objects
+      try {
+        originalWarn.apply(console, args);
+      } catch (e) {
+        // If we can't log the warning, just silently ignore it
+        // This prevents "Cannot convert object to primitive value" errors
+      }
+    } catch (e) {
+      // If there's any error in our error handler, suppress everything
+      // Better to miss a warning than break the app
     }
-    // Call the original console.warn for other warnings
-    originalWarn.apply(console, args);
   };
 });
 
