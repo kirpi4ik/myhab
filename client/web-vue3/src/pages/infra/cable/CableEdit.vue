@@ -41,49 +41,12 @@
             <q-input v-model="cable.orderInRow" label="Cable order" clearable clear-icon="close" color="green"/>
           </div>
         </q-card-section>
-        <q-card-section>
-          <q-item-label>Port connect</q-item-label>
-          <div class="row q-col-gutter-xs">
-            <q-select v-model="newPortDevice"
-                      :options="options"
-                      option-label="name"
-                      label="Device" map-options filled dense use-input @filter="filterFn" color="green"
-                      class="col-lg-2 col-md-2"
-                      @update:model-value="selectDevice">
-              <q-icon name="cancel" @click.stop.prevent="newPortDevice = null" class="cursor-pointer text-blue"/>
-            </q-select>
-            <q-select v-if="newPortDevice != null"
-                      v-model="newPort"
-                      :options="portList"
-                      option-label="name"
-                      label="Port" map-options filled dense use-input @filter="portFilterFn" color="green"
-                      class="col-lg-2 col-md-2">
-              <q-icon name="cancel" @click.stop.prevent="newPort = null" class="cursor-pointer text-blue"/>
-            </q-select>
-            <q-btn icon="mdi-link-variant-plus" @click="connectPort()" color="green" label="Connect"
-                   :disable="newPort == null"/>
-            <q-btn icon="mdi-plus" @click="$router.push('/admin/ports/new?deviceId='+newPortDevice.id)" color="orange"
-                   label="New" :disable="newPort != null || newPortDevice == null"/>
-          </div>
-          <div class="row">
-            <q-table
-              class="col"
-              title="Connected to ports"
-              :rows="cable.connectedTo"
-              :columns="portColumns"
-              @row-click="viewPort"
-              row-key="id"
-              flat
-              bordered
-            >
-              <template v-slot:body-cell-actions="props">
-                <q-td :props="props">
-                  <q-btn icon="delete" @click="removePortFromConnected(props.row)"></q-btn>
-                </q-td>
-              </template>
-            </q-table>
-          </div>
-        </q-card-section>
+        <PortConnectCard
+          v-model="cable.connectedTo"
+          :device-list="deviceList"
+          title="Port connect"
+          table-title="Connected to ports"
+        />
         <q-separator/>
         <q-card-actions>
           <q-btn color="accent" type="submit">
@@ -116,10 +79,15 @@ import {
   RACK_LIST_ALL
 } from '@/graphql/queries';
 
+import PortConnectCard from '@/components/cards/PortConnectCard.vue';
+
 
 
 export default defineComponent({
   name: 'CableEdit',
+  components: {
+    PortConnectCard
+  },
   setup() {
     const $q = useQuasar()
     const {client} = useApolloClient();
@@ -130,18 +98,6 @@ export default defineComponent({
     const deviceList = ref([])
     const router = useRouter();
     const route = useRoute();
-    const newPortDevice = ref(null)
-    const newPort = ref(null)
-    const portList = ref([])
-    const options = ref([])
-
-    options.value = deviceList.value
-    const portColumns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'internalRef', label: 'Int Ref', field: 'internalRef', align: 'left', sortable: true},
-      {name: 'actions', label: 'Actions', field: row => '', align: 'right', sortable: false}
-    ]
 
     const fetchData = () => {
       client.query({
@@ -211,53 +167,7 @@ export default defineComponent({
       rackList,
       cableCategoryList,
       patchPanelList,
-      portColumns,
-      deviceList,
-      options,
-      newPort,
-      newPortDevice,
-      portList,
-      viewPort: (evt, row) => {
-        if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
-          router.push({path: `/admin/ports/${row.id}/view`})
-        }
-      },
-      selectDevice: (evt) => {
-        newPort.value = null
-        portList.value = deviceList.value.ports
-      },
-      connectPort: (evt) => {
-        cable.value.connectedTo.push(newPort.value)
-      },
-      removePortFromConnected: (row) => {
-        _.remove(cable.value.connectedTo, function (currentObject) {
-          return currentObject.id === row.id;
-        });
-      },
-      filterFn: (val, update) => {
-        if (val === '') {
-          update(() => {
-            options.value = deviceList.value
-          })
-          return
-        }
-        update(() => {
-          const needle = val.toLowerCase()
-          options.value = deviceList.value.filter(v => v.name.toLowerCase().includes(needle))
-        })
-      },
-      portFilterFn: (val, update) => {
-        if (val === '') {
-          update(() => {
-            portList.value = newPortDevice.value.ports
-          })
-          return
-        }
-        update(() => {
-          const needle = val.toLowerCase()
-          portList.value = newPortDevice.value.ports.filter(v => v.name.toLowerCase().includes(needle))
-        })
-      }
+      deviceList
     }
   }
 });

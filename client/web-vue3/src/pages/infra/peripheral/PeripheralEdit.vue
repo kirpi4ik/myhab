@@ -4,22 +4,6 @@
       <q-card flat bordered>
         <q-card-section class="full-width">
           <div class="text-h5">Editare : {{ peripheral.name }}</div>
-          <q-select v-model="peripheral.connectedTo"
-                    :options="portListFiltered"
-                    :disable="portListDisabled"
-                    input-debounce="0"
-                    @filter="searchPortFn"
-                    :option-label="opt => opt && opt.name ? (opt.name + (opt.device ? '[' + opt.device.code + ']' : '')) : ''"
-                    map-options
-                    stack-label
-                    use-chips
-                    use-input
-                    filled
-                    dense
-                    multiple
-                    label="Port">
-            <q-icon name="cancel" @click.stop.prevent="peripheral.connectedTo = []" class="cursor-pointer text-blue"/>
-          </q-select>
           <q-input v-model="peripheral.name" label="Name" clearable clear-icon="close" color="orange"
                    :rules="[val => !!val || 'Field is required']"/>
           <q-input v-model="peripheral.description" label="Description" clearable clear-icon="close" color="orange"
@@ -51,6 +35,14 @@
             <q-icon name="cancel" @click.stop.prevent="peripheral.zones = []" class="cursor-pointer text-blue"/>
           </q-select>
         </q-card-section>
+        
+        <PortConnectCard
+          v-model="peripheral.connectedTo"
+          :device-list="deviceList"
+          title="Port Connections"
+          table-title="Connected Ports"
+        />
+        
         <q-separator/>
         <q-card-actions>
           <q-btn color="accent" type="submit">
@@ -80,14 +72,18 @@ import {
   PERIPHERAL_CATEGORIES,
   PERIPHERAL_GET_BY_ID,
   PERIPHERAL_UPDATE,
-  PORT_LIST_ALL,
   ZONES_GET_ALL
 } from '@/graphql/queries';
+
+import PortConnectCard from '@/components/cards/PortConnectCard.vue';
 
 
 
 export default defineComponent({
     name: 'PeripheralEdit',
+    components: {
+      PortConnectCard
+    },
     setup() {
       const $q = useQuasar()
       const {client} = useApolloClient();
@@ -95,14 +91,11 @@ export default defineComponent({
       const categoryList = ref([])
       const router = useRouter();
       const route = useRoute();
-      const portList = ref([])
-      const portListFiltered = ref([])
-      const portListDisabled = ref(false)
+      const deviceList = ref([])
 
       const zoneList = ref([])
       const zoneListFiltered = ref([])
       const zoneListDisabled = ref(false)
-
 
       const loading = ref(false)
 
@@ -114,48 +107,29 @@ export default defineComponent({
           fetchPolicy: 'network-only',
         }).then(response => {
           peripheral.value = _.cloneDeep(response.data.devicePeripheral)
+          deviceList.value = response.data.deviceList || []
+          
+          // Handle portId from query parameter
+          if (route.query.portId != null) {
+            // Find the port in the device list
+            for (const device of deviceList.value) {
+              const foundPort = device.ports.find(port => port.id == route.query.portId);
+              if (foundPort) {
+                peripheral.value.connectedTo = [foundPort];
+                break;
+              }
+            }
+          }
+          
           loading.value = false;
         });
+        
         client.query({
           query: PERIPHERAL_CATEGORIES,
           variables: {},
           fetchPolicy: 'network-only',
         }).then(response => {
           categoryList.value = response.data.peripheralCategoryList
-        })
-
-        client.query({
-          query: PORT_LIST_ALL,
-          variables: {},
-          fetchPolicy: 'network-only',
-        }).then(response => {
-          portList.value = _.transform(response.data.devicePortList,
-            function (result, value, key) {
-              let port = {
-                id: value.id,
-                name: value.name + '[' + value.device.code + ']'
-              }
-              result.push(port)
-            });
-          if (route.query.portId != null) {
-            const foundPort = _.find(portList.value, function (o) {
-              return o.id == route.query.portId;
-            });
-            if (foundPort) {
-              peripheral.value.connectedTo = [foundPort];
-            }
-            portListDisabled.value = true
-          }
-          portListFiltered.value = [...portList.value]
-        })
-      }
-      const searchPortFn = (val, update) => {
-
-        update(() => {
-          const needle = val.toLowerCase()
-          portListFiltered.value = portList.value.filter(option => {
-            return option.name.toLowerCase().includes(needle)
-          })
         })
       }
       client.query({
@@ -230,14 +204,11 @@ export default defineComponent({
       return {
         peripheral,
         categoryList,
-        portList,
-        portListFiltered,
-        portListDisabled,
+        deviceList,
         zoneList,
         zoneListFiltered,
         zoneListDisabled,
-        onSave,
-        searchPortFn
+        onSave
       }
     }
   }
