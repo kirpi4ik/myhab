@@ -55,7 +55,7 @@ import { useRoute } from "vue-router";
 
 import {useQuasar} from 'quasar';
 
-import { USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE } from '@/graphql/queries';
+import { USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE, ROLES_SAVE } from '@/graphql/queries';
 
 import _ from "lodash";
 
@@ -102,10 +102,39 @@ export default defineComponent({
         // Create a clean copy for mutation, removing Apollo-specific fields
         const cleanUser = prepareForMutation(user.value, ['__typename', 'id', 'name']);
         
+        // First, update the user details
         client.mutate({
           mutation: USER_VALUE_UPDATE,
           variables: { id: route.params.idPrimary, user: cleanUser },
+          fetchPolicy: 'no-cache',
         }).then(response => {
+          // After user update succeeds, update the roles
+          const userRoles = selectedRoles.value.map(role => ({
+            userId: route.params.idPrimary,
+            roleId: role.id
+          }));
+          
+          return client.mutate({
+            mutation: ROLES_SAVE,
+            variables: { 
+              input: {
+                userId: route.params.idPrimary,
+                userRoles: userRoles
+              }
+            },
+            fetchPolicy: 'no-cache',
+          });
+        }).then(response => {
+          $q.notify({
+            color: 'positive',
+            message: 'User and roles updated successfully'
+          });
+          fetchData(); // Refresh the data
+        }).catch(error => {
+          $q.notify({
+            color: 'negative',
+            message: error.message || 'Update failed'
+          });
         });
       }
     }
