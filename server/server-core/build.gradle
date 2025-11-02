@@ -61,7 +61,16 @@ dependencies {
     implementation "org.grails:grails-logging"
     implementation "org.grails.plugins:cache"
     implementation "org.grails.plugins:async"
-    implementation "org.grails.plugins:spring-security-rest:3.0.1"
+    
+    // Spring Security Core 5.3.0 and REST plugin (upgraded to 5.0.1)
+    implementation "org.grails.plugins:spring-security-core:5.3.0"
+    implementation("org.grails.plugins:spring-security-rest:5.0.1") {
+        exclude group: 'org.pac4j', module: 'pac4j-cas'
+        exclude group: 'org.pac4j', module: 'pac4j-saml'
+        exclude group: 'org.pac4j', module: 'pac4j-oauth'
+        exclude group: 'org.pac4j', module: 'pac4j-oidc'
+    }
+    
     implementation "org.grails.plugins:views-json"
     implementation "org.grails.plugins:views-json-templates"
     implementation "org.grails.plugins:events"
@@ -77,7 +86,6 @@ dependencies {
     implementation 'com.hazelcast:hazelcast:5.3.2'
     implementation 'com.hazelcast:hazelcast-spring:5.1.1'
     implementation 'org.postgresql:postgresql:42.6.0'
-    implementation 'org.grails.plugins:spring-security-rest:3.0.1'
     implementation 'org.kohsuke:groovy-sandbox:1.19'
     implementation 'org.jsoup:jsoup:1.15.3'
     implementation 'com.konghq:unirest-java:3.13.8'
@@ -117,6 +125,11 @@ dependencies {
     testImplementation "org.grails:views-json-testing-support"
     testImplementation 'org.hibernate.validator:hibernate-validator:7.0.4.Final'
 }
+// Explicitly specify the main class for Spring Boot
+springBoot {
+    mainClass = 'org.myhab.init.Application'
+}
+
 bootRun {
     jvmArgs(
             '-Dspring.output.ansi.enabled=always',

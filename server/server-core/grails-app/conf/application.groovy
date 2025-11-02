@@ -20,6 +20,11 @@ grails.plugin.springsecurity.userLookup.passwordExpiredPropertyName = 'passwordE
 grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'org.myhab.domain.UserRole'
 grails.plugin.springsecurity.authority.className = 'org.myhab.domain.Role'
 
+// Password encoding configuration for Spring Security 5.3.0
+grails.plugin.springsecurity.password.algorithm = 'bcrypt'
+grails.plugin.springsecurity.password.bcrypt.logrounds = 10
+
+
 grails.plugin.springsecurity.rest.login.active = true
 grails.plugin.springsecurity.rest.login.endpointUrl = "/api/login"
 grails.plugin.springsecurity.rest.login.failureStatusCode = 401
