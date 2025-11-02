@@ -26,20 +26,16 @@
             </template>
           </q-input>
 
-          <q-input v-model="scenario.body"
-                   label="Body / Script"
-                   hint="Scenario script or body content"
-                   type="textarea"
-                   rows="10"
-                   clearable
-                   clear-icon="close"
-                   color="green"
-                   filled
-                   dense>
-            <template v-slot:prepend>
-              <q-icon name="mdi-script-text"/>
-            </template>
-          </q-input>
+          <CodeEditor
+            v-model="scenario.body"
+            label="Body / Script"
+            hint="Scenario script or body content (Groovy syntax)"
+            icon="mdi-script-text"
+            height="500px"
+            language="groovy"
+            theme="dark"
+            :custom-completions="groovyCompletions"
+          />
 
           <q-select v-model="selectedPorts"
                     :options="portList"
@@ -82,9 +78,13 @@ import {useRouter} from "vue-router/dist/vue-router";
 import {useQuasar} from 'quasar';
 
 import {SCENARIO_LIST_ALL, SCENARIO_CREATE} from '@/graphql/queries';
+import CodeEditor from '@/components/CodeEditor.vue';
 
 export default defineComponent({
   name: 'ScenarioNew',
+  components: {
+    CodeEditor
+  },
   setup() {
     const $q = useQuasar();
     const {client} = useApolloClient();
@@ -103,6 +103,18 @@ export default defineComponent({
         value: port
       }));
     });
+
+    // Custom Groovy completions for code editor
+    const groovyCompletions = [
+      { label: 'DevicePort', type: 'class', info: 'Device port class' },
+      { label: 'Device', type: 'class', info: 'Device class' },
+      { label: 'Scenario', type: 'class', info: 'Scenario class' },
+      { label: 'log', type: 'variable', info: 'Logger instance' },
+      { label: 'log.info', type: 'function', info: 'Log info message' },
+      { label: 'log.debug', type: 'function', info: 'Log debug message' },
+      { label: 'log.error', type: 'function', info: 'Log error message' },
+      { label: 'log.warn', type: 'function', info: 'Log warning message' },
+    ];
 
     const fetchData = () => {
       client.query({
@@ -164,6 +176,7 @@ export default defineComponent({
       scenario,
       portList,
       selectedPorts,
+      groovyCompletions,
       onSave
     };
   }
