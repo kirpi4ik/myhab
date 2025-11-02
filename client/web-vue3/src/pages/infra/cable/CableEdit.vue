@@ -163,11 +163,25 @@ export default defineComponent({
           message: 'Failed submission'
         })
       } else {
-        cable.value.connectedTo.forEach(function (port) {
-          delete port.device
-        })
-        // Create a clean copy for mutation, removing Apollo-specific fields
-        const cleanCable = prepareForMutation(cable.value, ['__typename', 'id', 'device']);
+        // Create a clean copy for mutation
+        const cleanCable = prepareForMutation(cable.value, ['__typename', 'device']);
+        
+        // Remove id only from top-level cable object, but keep ids in nested arrays
+        delete cleanCable.id;
+        
+        // Clean connectedTo array - remove __typename and device, but keep id
+        if (cleanCable.connectedTo && Array.isArray(cleanCable.connectedTo)) {
+          cleanCable.connectedTo = cleanCable.connectedTo.map(port => ({
+            id: port.id
+          }));
+        }
+        
+        // Clean zones array - remove __typename but keep id
+        if (cleanCable.zones && Array.isArray(cleanCable.zones)) {
+          cleanCable.zones = cleanCable.zones.map(zone => ({
+            id: zone.id
+          }));
+        }
 
         client.mutate({
           mutation: CABLE_VALUE_UPDATE,

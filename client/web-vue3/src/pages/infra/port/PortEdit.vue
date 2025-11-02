@@ -88,8 +88,25 @@ export default defineComponent({
           message: 'Failed submission'
         })
       } else {
-        // Create a clean copy for mutation, removing Apollo-specific fields
-        const cleanPort = prepareForMutation(port.value, ['__typename', 'id']);
+        // Create a clean copy for mutation
+        const cleanPort = prepareForMutation(port.value, ['__typename']);
+        
+        // Remove id only from top-level port object, but keep ids in nested arrays
+        delete cleanPort.id;
+        
+        // Clean cables array - keep only id field (backend expects this for relationship management)
+        if (cleanPort.cables && Array.isArray(cleanPort.cables)) {
+          cleanPort.cables = cleanPort.cables.map(cable => ({
+            id: cable.id
+          }));
+        }
+        
+        // Clean peripherals array - keep only id field (backend expects this for relationship management)
+        if (cleanPort.peripherals && Array.isArray(cleanPort.peripherals)) {
+          cleanPort.peripherals = cleanPort.peripherals.map(peripheral => ({
+            id: peripheral.id
+          }));
+        }
         
         client.mutate({
           mutation: PORT_UPDATE,
