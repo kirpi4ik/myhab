@@ -1,26 +1,69 @@
 <template>
+  <q-btn-toggle></q-btn-toggle>
   <q-page class="q-pa-sm">
-    <div class="row q-col-gutter-lg">
-      <div class="col-lg-4 col-md-4 col-xs-12 col-sm-12" v-for="zone in childZones" v-bind:key="zone.id">
-        <zone-card :zone="zone"/>
+    <!-- Loading State -->
+    <div v-if="loading" class="row justify-center q-pa-xl">
+      <q-spinner color="primary" size="50px" />
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="row justify-center q-pa-xl">
+      <q-banner class="bg-negative text-white" rounded>
+        <template v-slot:avatar>
+          <q-icon name="mdi-alert-circle" />
+        </template>
+        Failed to load zone data: {{ error }}
+      </q-banner>
+    </div>
+
+    <!-- Content -->
+    <div v-else>
+      <div class="row q-col-gutter-lg">
+        <!-- Child Zones -->
+        <div 
+          v-for="zone in childZones" 
+          :key="zone.id"
+          class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
+        >
+          <zone-card :zone="zone" />
+        </div>
+
+        <!-- Peripherals -->
+        <div 
+          v-for="peripheral in peripheralList"
+          :key="peripheral.id"
+          class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
+        >
+          <component 
+            :is="getPeripheralComponent(peripheral)"
+            :peripheral="peripheral"
+            @onUpdate="handlePeripheralUpdate"
+          />
+        </div>
       </div>
-      <div class="col-lg-4 col-md-4 col-xs-12 col-sm-12" v-for="peripheral in peripheralList"
-           v-bind:key="peripheral.id">
-        <peripheral-light-card :peripheral="peripheral" v-if="category === 'LIGHT'"
-                               @onUpdate="updatedPeripheral($event)"/>
-        <peripheral-heat-card :peripheral="peripheral" v-if="category === 'HEAT'"
-                              @onUpdate="updatedPeripheral($event)"/>
-        <peripheral-light-card :peripheral="peripheral" v-if="category === 'SPRINKLER'"
-                               @onUpdate="updatedPeripheral($event)"/>
+
+      <!-- Temperature Chart (for TEMP category) -->
+      <div v-if="showTempChart" class="row q-mt-lg">
+        <div class="col-12">
+          <temp-chart-card />
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="isEmpty" class="row justify-center q-pa-xl">
+        <q-banner class="bg-info text-white" rounded>
+          <template v-slot:avatar>
+            <q-icon name="mdi-information" />
+          </template>
+          No {{ categoryLabel }} found in this zone
+        </q-banner>
       </div>
     </div>
-    <temp-chart-card v-if="category === 'TEMP'"/>
   </q-page>
 </template>
 
 <script>
-import {ref} from 'vue';
-
+import {computed, defineComponent, ref, onMounted} from 'vue';
 import {useApolloClient, useQuery} from '@vue/apollo-composable';
 import {useRoute} from 'vue-router';
 
@@ -33,9 +76,30 @@ import ZoneCard from '@/components/cards/ZoneCard';
 
 import _ from 'lodash';
 
+/**
+ * Category configuration mapping
+ */
+const CATEGORY_CONFIG = {
+  LIGHT: {
+    component: 'PeripheralLightCard',
+    label: 'lights'
+  },
+  HEAT: {
+    component: 'PeripheralHeatCard',
+    label: 'heating devices'
+  },
+  SPRINKLER: {
+    component: 'PeripheralLightCard', // Uses light card for sprinklers
+    label: 'sprinklers'
+  },
+  TEMP: {
+    component: null,
+    label: 'temperature sensors'
+  }
+};
 
-
-export default {
+export default defineComponent({
+  name: 'ZoneCombinedView',
   components: {
     ZoneCard,
     PeripheralLightCard,
@@ -45,73 +109,184 @@ export default {
   setup() {
     const {client} = useApolloClient();
     const route = useRoute();
-    const category = route.query.category;
-    let currentZone = {};
-    let childZones = ref([]);
-    let peripheralList = ref([]);
-    let cacheMap = ref({});
+    
+    // Reactive state
+    const category = ref(route.query.category);
+    const currentZone = ref(null);
+    const childZones = ref([]);
+    const peripheralList = ref([]);
+    const cacheMap = ref({});
+    const loading = ref(true);
+    const error = ref(null);
 
-    const {onResult: onCacheResult} = useQuery(CACHE_GET_ALL_VALUES, {}, {fetchPolicy: 'no-cache'});
-    onCacheResult(queryResult => {
-      cacheMap.value = _.reduce(
-        queryResult.data.cacheAll,
-        function (hash, value) {
-          const key = value['cacheKey'];
-          const cacheName = value['cacheName'];
-          hash[key] = {[cacheName]: value};
-          return hash;
-        },
-        {},
-      );
+    /**
+     * Get human-readable category label
+     */
+    const categoryLabel = computed(() => {
+      return CATEGORY_CONFIG[category.value]?.label || 'items';
     });
 
-    const peripheralFilter = peripheral => {
-      return peripheral.category.name === category;
-    };
-    const peripheralInitCallback = peripheral => {
-      peripheralList.value.push(peripheralService.peripheralInit(cacheMap, peripheral));
+    /**
+     * Check if temperature chart should be shown
+     */
+    const showTempChart = computed(() => {
+      return category.value === 'TEMP';
+    });
+
+    /**
+     * Check if the view is empty (no zones and no peripherals)
+     */
+    const isEmpty = computed(() => {
+      return !loading.value && 
+             childZones.value.length === 0 && 
+             peripheralList.value.length === 0;
+    });
+
+    /**
+     * Get the appropriate component for a peripheral based on category
+     */
+    const getPeripheralComponent = (peripheral) => {
+      const config = CATEGORY_CONFIG[category.value];
+      return config?.component || 'PeripheralLightCard';
     };
 
-    const loadZones = () => {
-      client
-        .query({
+    /**
+     * Load cache data for peripheral state management
+     */
+    const {onResult: onCacheResult} = useQuery(
+      CACHE_GET_ALL_VALUES, 
+      {}, 
+      {fetchPolicy: 'no-cache'}
+    );
+
+    onCacheResult(queryResult => {
+      if (queryResult.data?.cacheAll) {
+        cacheMap.value = _.reduce(
+          queryResult.data.cacheAll,
+          (hash, value) => {
+            const key = value.cacheKey;
+            const cacheName = value.cacheName;
+            hash[key] = {[cacheName]: value};
+            return hash;
+          },
+          {}
+        );
+      }
+    });
+
+    /**
+     * Filter peripherals by current category
+     */
+    const peripheralFilter = (peripheral) => {
+      return peripheral?.category?.name === category.value;
+    };
+
+    /**
+     * Initialize a peripheral with cache data
+     */
+    const peripheralInitCallback = (peripheral) => {
+      try {
+        const initialized = peripheralService.peripheralInit(cacheMap, peripheral);
+        peripheralList.value.push(initialized);
+      } catch (err) {
+        console.error('Failed to initialize peripheral:', peripheral.id, err);
+      }
+    };
+
+    /**
+     * Load zone data and peripherals
+     */
+    const loadZones = async () => {
+      if (!route.params.zoneId) {
+        error.value = 'Zone ID is missing';
+        loading.value = false;
+        return;
+      }
+
+      try {
+        loading.value = true;
+        error.value = null;
+
+        const queryResult = await client.query({
           query: ZONE_GET_BY_ID,
           variables: {id: route.params.zoneId},
           fetchPolicy: 'network-only',
-        })
-        .then(queryResult => {
-          let localPList;
-          if (route.params.zoneId) {
-            let data = _.cloneDeep(queryResult.data);
-            peripheralList.value = [];
-            currentZone = data.zoneById;
-            if (currentZone.peripherals) {
-              localPList = currentZone.peripherals.filter(peripheralFilter);
-              localPList.sort((a, b) => (a.name > b.name ? 1 : -1));
-              localPList.forEach(peripheralInitCallback);
-            }
-            childZones.value = currentZone.zones;
-          }
         });
+
+        if (queryResult.data?.zoneById) {
+          const data = _.cloneDeep(queryResult.data);
+          currentZone.value = data.zoneById;
+          peripheralList.value = [];
+
+          // Load peripherals
+          if (currentZone.value.peripherals) {
+            const filteredPeripherals = currentZone.value.peripherals
+              .filter(peripheralFilter)
+              .sort((a, b) => a.name.localeCompare(b.name));
+            
+            filteredPeripherals.forEach(peripheralInitCallback);
+          }
+
+          // Load child zones
+          childZones.value = currentZone.value.zones || [];
+        } else {
+          error.value = 'Zone not found';
+        }
+      } catch (err) {
+        console.error('Failed to load zone:', err);
+        error.value = err.message || 'Failed to load zone data';
+      } finally {
+        loading.value = false;
+      }
     };
 
-    loadZones();
+    /**
+     * Handle peripheral update event
+     */
+    const handlePeripheralUpdate = (updatedPeripheral) => {
+      try {
+        const index = _.findIndex(peripheralList.value, item => {
+          return item.id === updatedPeripheral.id;
+        });
 
-    const updatedPeripheral = peripheral => {
-      let index = _.findIndex(peripheralList.value, item => {
-        return item.id == peripheral.id;
-      });
-      peripheralList.value[index] = peripheralService.peripheralInit(null, peripheral);
+        if (index !== -1) {
+          peripheralList.value[index] = peripheralService.peripheralInit(
+            null, 
+            updatedPeripheral
+          );
+        } else {
+          console.warn('Peripheral not found for update:', updatedPeripheral.id);
+        }
+      } catch (err) {
+        console.error('Failed to update peripheral:', err);
+      }
     };
+
+    // Load data on mount
+    onMounted(() => {
+      loadZones();
+    });
 
     return {
+      // State
       childZones,
       peripheralList,
       category,
       cacheMap,
-      updatedPeripheral,
+      loading,
+      error,
+      currentZone,
+      
+      // Computed
+      categoryLabel,
+      showTempChart,
+      isEmpty,
+      
+      // Methods
+      getPeripheralComponent,
+      handlePeripheralUpdate,
     };
   },
-};
+});
 
 </script>
