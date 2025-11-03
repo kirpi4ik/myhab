@@ -1,6 +1,35 @@
 <template>
-  <q-btn-toggle></q-btn-toggle>
+  
   <q-page class="q-pa-sm">
+    <!-- Filter Toggle -->
+    <div class="row q-mb-md justify-right">
+      <q-btn-toggle
+        v-model="stateFilter"
+        toggle-color="primary"
+        :options="[
+          { value: 'ALL', slot: 'all' },
+          { value: 'ON', slot: 'on' },
+          { value: 'OFF', slot: 'off' }
+        ]"
+        unelevated
+        spread
+        class="filter-toggle"
+      >
+        <template v-slot:all>
+          <q-icon name="mdi-filter-variant" size="sm" class="q-mr-xs" />
+          <span>ALL</span>
+        </template>
+        <template v-slot:on>
+          <q-icon name="mdi-lightbulb-on" size="sm" class="q-mr-xs" color="yellow-9" />
+          <span>ON</span>
+        </template>
+        <template v-slot:off>
+          <q-icon name="mdi-lightbulb-off-outline" size="sm" class="q-mr-xs" />
+          <span>OFF</span>
+        </template>
+      </q-btn-toggle>
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading" class="row justify-center q-pa-xl">
       <q-spinner color="primary" size="50px" />
@@ -30,7 +59,7 @@
 
         <!-- Peripherals -->
         <div 
-          v-for="peripheral in peripheralList"
+          v-for="peripheral in filteredPeripheralList"
           :key="peripheral.id"
           class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
         >
@@ -118,6 +147,7 @@ export default defineComponent({
     const cacheMap = ref({});
     const loading = ref(true);
     const error = ref(null);
+    const stateFilter = ref('ALL');
 
     /**
      * Get human-readable category label
@@ -134,12 +164,33 @@ export default defineComponent({
     });
 
     /**
+     * Filter peripherals by state (ALL, ON, OFF)
+     */
+    const filteredPeripheralList = computed(() => {
+      if (stateFilter.value === 'ALL') {
+        return peripheralList.value;
+      }
+      
+      return peripheralList.value.filter(peripheral => {
+        const isOn = peripheral.state === true || peripheral.data?.state === true;
+        
+        if (stateFilter.value === 'ON') {
+          return isOn;
+        } else if (stateFilter.value === 'OFF') {
+          return !isOn;
+        }
+        
+        return true;
+      });
+    });
+
+    /**
      * Check if the view is empty (no zones and no peripherals)
      */
     const isEmpty = computed(() => {
       return !loading.value && 
              childZones.value.length === 0 && 
-             peripheralList.value.length === 0;
+             filteredPeripheralList.value.length === 0;
     });
 
     /**
@@ -276,11 +327,13 @@ export default defineComponent({
       loading,
       error,
       currentZone,
+      stateFilter,
       
       // Computed
       categoryLabel,
       showTempChart,
       isEmpty,
+      filteredPeripheralList,
       
       // Methods
       getPeripheralComponent,
@@ -290,3 +343,10 @@ export default defineComponent({
 });
 
 </script>
+
+<style scoped>
+.filter-toggle {
+  min-width: 300px;
+  max-width: 400px;
+}
+</style>
