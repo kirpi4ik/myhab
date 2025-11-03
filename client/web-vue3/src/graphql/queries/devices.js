@@ -32,6 +32,22 @@ export const DEVICE_CATEGORY_CREATE = gql`
     }
   }
 `;
+export const DEVICE_CATEGORY_UPDATE = gql`
+  mutation ($id: Long!, $deviceCategory: DeviceCategoryUpdate) {
+    deviceCategoryUpdate(id: $id, deviceCategory: $deviceCategory) {
+      id
+      name
+    }
+  }
+`;
+export const DEVICE_CATEGORY_DELETE = gql`
+  mutation ($id: Long!) {
+    deviceCategoryDelete(id: $id) {
+      success
+      error
+    }
+  }
+`;
 export const DEVICE_LIST_ALL = gql`
   {
     deviceList {
@@ -127,7 +143,10 @@ export const DEVICE_CATEGORY_BY_ID = gql`
   query categoryById($id: Long!) {
     deviceCategory(id: $id){
       id
+      uid
       name
+      tsCreated
+      tsUpdated
     }
   }
 `;
