@@ -81,6 +81,18 @@
       "edit": "Editeaza",
       "create": "Cablaj nou"
     },
+    "scenarios": "Scenarii",
+    "scenario": {
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Scenariu nou"
+    },
+    "jobs": "Sarcini",
+    "job": {
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Sarcina noua"
+    },
     "graphiql": "GraphiQL",
     "configurations": "Configurare"
   },
