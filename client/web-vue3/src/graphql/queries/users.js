@@ -55,6 +55,7 @@ export const USER_GET_BY_ID_WITH_ROLES = gql`
 			email
 			firstName
 			lastName
+			phoneNr
 		}
 		userRolesForUser(userId: $id) {
 			userId

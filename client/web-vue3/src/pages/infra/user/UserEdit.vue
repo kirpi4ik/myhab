@@ -238,55 +238,23 @@
         <q-separator/>
 
         <!-- Information Panel -->
-        <q-card-section class="bg-blue-grey-1">
-          <div class="text-subtitle2 text-weight-medium q-mb-sm">Information</div>
-          <div class="row q-gutter-md">
-            <div class="col">
-              <q-icon name="mdi-identifier" class="q-mr-xs"/>
-              <strong>ID:</strong> {{ user.id }}
-            </div>
-            <div class="col" v-if="user.uid">
-              <q-icon name="mdi-key" class="q-mr-xs"/>
-              <strong>UID:</strong> {{ user.uid }}
-            </div>
-            <div class="col">
-              <q-icon name="mdi-shield-account" class="q-mr-xs"/>
-              <strong>Roles:</strong> {{ selectedRoles.length }}
-            </div>
-          </div>
-        </q-card-section>
+        <EntityInfoPanel
+          :entity="user"
+          icon="mdi-account"
+          :extra-info="[
+            { icon: 'mdi-shield-account', label: 'Roles', value: selectedRoles.length }
+          ]"
+        />
 
         <q-separator/>
 
         <!-- Actions -->
-        <q-card-actions>
-          <q-btn 
-            color="primary" 
-            type="submit" 
-            icon="mdi-content-save"
-            :loading="saving"
-          >
-            Save
-          </q-btn>
-          <q-btn 
-            color="grey" 
-            @click="$router.go(-1)" 
-            icon="mdi-cancel"
-            :disable="saving"
-          >
-            Cancel
-          </q-btn>
-          <q-space/>
-          <q-btn 
-            color="info" 
-            :to="`/admin/users/${$route.params.idPrimary}/view`" 
-            icon="mdi-eye" 
-            outline
-            :disable="saving"
-          >
-            View
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/users/${$route.params.idPrimary}/view`"
+          save-label="Save User"
+        />
       </q-card>
     </form>
 
@@ -299,33 +267,58 @@
 
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
-
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router";
-
+import {useRoute} from "vue-router";
 import {useQuasar} from 'quasar';
-
-import {prepareForMutation} from '@/_helpers';
+import {useEntityCRUD} from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE, ROLES_SAVE} from '@/graphql/queries';
-
 import _ from "lodash";
 
 export default defineComponent({
   name: 'UserEdit',
+  components: {
+    EntityInfoPanel,
+    EntityFormActions
+  },
   setup() {
     const $q = useQuasar();
     const {client} = useApolloClient();
-    const router = useRouter();
     const route = useRoute();
     
-    const user = ref(null);
-    const loading = ref(false);
-    const saving = ref(false);
     const confirmPwd = ref(null);
     const confirmPwdRef = ref(null);
     const pwdRef = ref(null);
     const roles = ref([]);
     const selectedRoles = ref([]);
+
+    // Use CRUD composable
+    const {
+      entity: user,
+      loading,
+      saving,
+      fetchEntity,
+      updateEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'User',
+      entityPath: '/admin/users',
+      getQuery: USER_GET_BY_ID_WITH_ROLES,
+      getQueryKey: 'userById',
+      updateMutation: USER_VALUE_UPDATE,
+      updateMutationKey: 'userUpdate',
+      updateVariableName: 'user',
+      excludeFields: ['__typename', 'id', 'name', 'uid', 'tsCreated', 'tsUpdated', 'roles'],
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Remove password if empty (keep existing password)
+        if (!transformed.password || transformed.password.trim() === '') {
+          delete transformed.password;
+        }
+        return transformed;
+      }
+    });
 
     /**
      * Validate email format
@@ -381,21 +374,17 @@ export default defineComponent({
     /**
      * Fetch user data and roles
      */
-    const fetchData = () => {
-      loading.value = true;
-      client.query({
-        query: USER_GET_BY_ID_WITH_ROLES,
-        variables: {id: route.params.idPrimary},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        user.value = _.cloneDeep(response.data.userById);
-        roles.value = response.data.roleList || [];
+    const fetchData = async () => {
+      const response = await fetchEntity();
+      
+      if (response) {
+        roles.value = response.roleList || [];
         
         // Map user roles to selected roles
         selectedRoles.value = _.transform(
-          response.data.userRolesForUser, 
+          response.userRolesForUser, 
           (result, value) => {
-            const role = _.find(response.data.roleList, (item) => {
+            const role = _.find(response.roleList, (item) => {
               // Use loose equality to handle type mismatches
               return item.id == value.roleId;
             });
@@ -405,24 +394,32 @@ export default defineComponent({
           }, 
           []
         );
-        
-        loading.value = false;
-      }).catch(error => {
-        loading.value = false;
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load user data',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error fetching user:', error);
-      });
+      }
     };
 
     /**
      * Update user and roles
      */
-    const onUpdate = () => {
+    const onUpdate = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) return;
+      
+      // Validate required fields
+      if (!validateRequired(user.value, ['username', 'email'])) {
+        return;
+      }
+      
+      // Validate email format
+      if (!isValidEmail(user.value.email)) {
+        $q.notify({
+          color: 'negative',
+          message: 'Invalid email format',
+          icon: 'mdi-alert-circle',
+          position: 'top'
+        });
+        return;
+      }
+      
       // Validate password confirmation
       if (confirmPwdRef.value) {
         confirmPwdRef.value.validate();
@@ -437,69 +434,54 @@ export default defineComponent({
         }
       }
 
-      saving.value = true;
-
-      // Create a clean copy for mutation, removing Apollo-specific fields
-      const cleanUser = prepareForMutation(user.value, ['__typename', 'id', 'name', 'uid', 'tsCreated', 'tsUpdated', 'roles']);
+      // Update user details using composable
+      const userUpdated = await updateEntity();
       
-      // Remove password if empty (keep existing password)
-      if (!cleanUser.password || cleanUser.password.trim() === '') {
-        delete cleanUser.password;
-      }
-
-      // First, update the user details
-      client.mutate({
-        mutation: USER_VALUE_UPDATE,
-        variables: {id: route.params.idPrimary, user: cleanUser},
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Prevent Apollo from processing the mutation result
-        }
-      }).then(response => {
+      if (userUpdated) {
         // After user update succeeds, update the roles
         const userRoles = selectedRoles.value.map(role => ({
           userId: route.params.idPrimary,
           roleId: role.id
         }));
         
-        return client.mutate({
-          mutation: ROLES_SAVE,
-          variables: { 
-            input: {
-              userId: route.params.idPrimary,
-              userRoles: userRoles
+        try {
+          await client.mutate({
+            mutation: ROLES_SAVE,
+            variables: { 
+              input: {
+                userId: route.params.idPrimary,
+                userRoles: userRoles
+              }
+            },
+            fetchPolicy: 'no-cache',
+            update: () => {
+              // Prevent Apollo from processing the mutation result
             }
-          },
-          fetchPolicy: 'no-cache',
-          update: () => {
-            // Prevent Apollo from processing the mutation result
-          }
-        });
-      }).then(response => {
-        saving.value = false;
-        $q.notify({
-          color: 'positive',
-          message: 'User and roles updated successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        
-        // Clear password fields
-        user.value.password = null;
-        confirmPwd.value = null;
-        
-        // Refresh the data
-        fetchData();
-      }).catch(error => {
-        saving.value = false;
-        $q.notify({
-          color: 'negative',
-          message: error.message || 'Update failed',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error updating user:', error);
-      });
+          });
+          
+          $q.notify({
+            color: 'positive',
+            message: 'User and roles updated successfully',
+            icon: 'mdi-check-circle',
+            position: 'top'
+          });
+          
+          // Clear password fields
+          user.value.password = null;
+          confirmPwd.value = null;
+          
+          // Refresh the data
+          fetchData();
+        } catch (error) {
+          $q.notify({
+            color: 'negative',
+            message: error.message || 'Failed to update roles',
+            icon: 'mdi-alert-circle',
+            position: 'top'
+          });
+          console.error('Error updating roles:', error);
+        }
+      }
     };
 
     onMounted(() => {
