@@ -271,55 +271,23 @@
         <q-separator/>
 
         <!-- Information Panel -->
-        <q-card-section class="bg-blue-grey-1">
-          <div class="text-subtitle2 text-weight-medium q-mb-sm">Information</div>
-          <div class="row q-gutter-md">
-            <div class="col">
-              <q-icon name="mdi-identifier" class="q-mr-xs"/>
-              <strong>ID:</strong> {{ cable.id }}
-            </div>
-            <div class="col" v-if="cable.uid">
-              <q-icon name="mdi-key" class="q-mr-xs"/>
-              <strong>UID:</strong> {{ cable.uid }}
-            </div>
-            <div class="col">
-              <q-icon name="mdi-ethernet" class="q-mr-xs"/>
-              <strong>Ports:</strong> {{ cable.connectedTo?.length || 0 }}
-            </div>
-          </div>
-        </q-card-section>
+        <EntityInfoPanel
+          :entity="cable"
+          icon="mdi-cable-data"
+          :extra-info="[
+            { icon: 'mdi-ethernet', label: 'Ports', value: cable.connectedTo?.length || 0 }
+          ]"
+        />
 
         <q-separator/>
 
         <!-- Actions -->
-        <q-card-actions>
-          <q-btn 
-            color="primary" 
-            type="submit" 
-            icon="mdi-content-save"
-            :loading="saving"
-          >
-            Save
-          </q-btn>
-          <q-btn 
-            color="grey" 
-            @click="$router.go(-1)" 
-            icon="mdi-cancel"
-            :disable="saving"
-          >
-            Cancel
-          </q-btn>
-          <q-space/>
-          <q-btn 
-            color="info" 
-            :to="`/admin/cables/${$route.params.idPrimary}/view`" 
-            icon="mdi-eye" 
-            outline
-            :disable="saving"
-          >
-            View
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/cables/${$route.params.idPrimary}/view`"
+          save-label="Save Cable"
+        />
       </q-card>
     </form>
 
@@ -331,132 +299,106 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from 'vue';
-import {useRoute, useRouter} from "vue-router";
-
-import {useQuasar} from 'quasar';
-
-import {useApolloClient} from "@vue/apollo-composable";
-import {prepareForMutation} from '@/_helpers';
+import { defineComponent, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useEntityCRUD } from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
+import PortConnectCard from '@/components/cards/PortConnectCard.vue';
 
 import {
   CABLE_EDIT_GET_DETAILS,
   CABLE_VALUE_UPDATE
 } from '@/graphql/queries';
 
-import PortConnectCard from '@/components/cards/PortConnectCard.vue';
-
-import _ from 'lodash';
-
 export default defineComponent({
   name: 'CableEdit',
   components: {
+    EntityInfoPanel,
+    EntityFormActions,
     PortConnectCard
   },
   setup() {
-    const $q = useQuasar();
-    const {client} = useApolloClient();
-    const cable = ref({ connectedTo: [] });
+    const route = useRoute();
     const rackList = ref([]);
     const patchPanelList = ref([]);
     const cableCategoryList = ref([]);
     const deviceList = ref([]);
-    const router = useRouter();
-    const route = useRoute();
-    const loading = ref(false);
-    const saving = ref(false);
+
+    const {
+      entity: cable,
+      loading,
+      saving,
+      fetchEntity,
+      updateEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Cable',
+      entityPath: '/admin/cables',
+      getQuery: CABLE_EDIT_GET_DETAILS,
+      getQueryKey: 'cable',
+      updateMutation: CABLE_VALUE_UPDATE,
+      updateMutationKey: 'updateCable',
+      excludeFields: ['__typename', 'device', 'tsCreated', 'tsUpdated'],
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        
+        // Clean connectedTo array - keep only id
+        if (transformed.connectedTo && Array.isArray(transformed.connectedTo)) {
+          transformed.connectedTo = transformed.connectedTo.map(port => ({ id: port.id }));
+        }
+        
+        // Clean zones array - keep only id
+        if (transformed.zones && Array.isArray(transformed.zones)) {
+          transformed.zones = transformed.zones.map(zone => ({ id: zone.id }));
+        }
+        
+        // Clean rack - keep only id
+        if (transformed.rack) {
+          transformed.rack = { id: transformed.rack.id };
+        }
+        
+        // Clean category - keep only id
+        if (transformed.category) {
+          transformed.category = { id: transformed.category.id };
+        }
+        
+        // Clean patchPanel - keep only id
+        if (transformed.patchPanel) {
+          transformed.patchPanel = { id: transformed.patchPanel.id };
+        }
+        
+        return transformed;
+      }
+    });
 
     /**
-     * Fetch cable data and related lists
+     * Custom fetch to load additional data (racks, categories, devices, etc.)
      */
-    const fetchData = () => {
-      loading.value = true;
-      client.query({
-        query: CABLE_EDIT_GET_DETAILS,
-        variables: {id: route.params.idPrimary},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        cable.value = _.cloneDeep(response.data.cable);
-        patchPanelList.value = response.data.patchPanelList || [];
-        rackList.value = response.data.rackList || [];
-        cableCategoryList.value = response.data.cableCategoryList || [];
-        deviceList.value = response.data.deviceList || [];
-        loading.value = false;
-      }).catch(error => {
-        loading.value = false;
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load cable data',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error fetching cable:', error);
-      });
+    const fetchData = async () => {
+      const response = await fetchEntity();
+      if (response) {
+        patchPanelList.value = response.patchPanelList || [];
+        rackList.value = response.rackList || [];
+        cableCategoryList.value = response.cableCategoryList || [];
+        deviceList.value = response.deviceList || [];
+      }
     };
 
     /**
-     * Update cable
+     * Save cable
      */
-    const onSave = () => {
-      // Validate required fields
-      if (!cable.value.code || !cable.value.description) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please fill in all required fields',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
+    const onSave = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) {
         return;
       }
 
-      saving.value = true;
-
-      // Create a clean copy for mutation
-      const cleanCable = prepareForMutation(cable.value, ['__typename', 'device']);
-      
-      // Remove id only from top-level cable object, but keep ids in nested arrays
-      delete cleanCable.id;
-      
-      // Clean connectedTo array - remove __typename and device, but keep id
-      if (cleanCable.connectedTo && Array.isArray(cleanCable.connectedTo)) {
-        cleanCable.connectedTo = cleanCable.connectedTo.map(port => ({
-          id: port.id
-        }));
-      }
-      
-      // Clean zones array - remove __typename but keep id
-      if (cleanCable.zones && Array.isArray(cleanCable.zones)) {
-        cleanCable.zones = cleanCable.zones.map(zone => ({
-          id: zone.id
-        }));
+      if (!validateRequired(cable.value, ['code', 'description'])) {
+        return;
       }
 
-      client.mutate({
-        mutation: CABLE_VALUE_UPDATE,
-        variables: {id: route.params.idPrimary, cable: cleanCable},
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Skip cache update to avoid normalization issues with simplified nested objects
-        }
-      }).then(response => {
-        saving.value = false;
-        $q.notify({
-          color: 'positive',
-          message: 'Cable updated successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/cables/${response.data.updateCable.id}/view`});
-      }).catch(error => {
-        saving.value = false;
-        $q.notify({
-          color: 'negative',
-          message: error.message || 'Update failed',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error updating cable:', error);
-      });
+      await updateEntity();
     };
 
     onMounted(() => {
@@ -475,5 +417,4 @@ export default defineComponent({
     };
   }
 });
-
 </script>
