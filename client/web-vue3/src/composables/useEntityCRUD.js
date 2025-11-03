@@ -233,7 +233,13 @@ export function useEntityCRUD(options) {
       const mutationKey = updateMutationKey || Object.keys(response.data)[0];
       const updatedEntity = response.data[mutationKey];
 
-      if (updatedEntity && (updatedEntity.id || updatedEntity.success)) {
+      // Check for success - either has id or explicit success flag
+      const isSuccess = updatedEntity && (
+        updatedEntity.id || 
+        (updatedEntity.success === true)
+      );
+
+      if (isSuccess) {
         notifySuccess(`${entityName} updated successfully`);
         
         // Refresh data if we're on the same page
@@ -243,7 +249,9 @@ export function useEntityCRUD(options) {
         
         return updatedEntity;
       } else {
-        notifyError(updatedEntity?.error || `Failed to update ${entityName.toLowerCase()}`);
+        // Show error message if provided, otherwise generic message
+        const errorMsg = updatedEntity?.error || `Failed to update ${entityName.toLowerCase()}`;
+        notifyError(errorMsg);
         return null;
       }
     } catch (error) {

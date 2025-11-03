@@ -1,72 +1,183 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="!loading && peripheral">
       <q-card flat bordered>
-        <q-card-section class="full-width">
-          <div class="text-h5">Editare : {{ peripheral.name }}</div>
-          <q-input v-model="peripheral.name" label="Name" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="peripheral.description" label="Description" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="peripheral.model" label="Model" clearable clear-icon="close" color="orange"/>
-          <q-input v-model="peripheral.maxAmp" label="Max amp" clearable clear-icon="close" color="orange"/>
-          <q-select v-model="peripheral.category"
-                    :options="categoryList"
-                    option-label="name"
-                    label="Category" map-options filled dense>
-            <q-icon name="cancel" @click.stop.prevent="peripheral.category = null" class="cursor-pointer text-blue"/>
-          </q-select>
-          <q-separator/>
-          <br/>
-          <q-select v-model="peripheral.zones"
-                    :options="zoneListFiltered"
-                    :disable="zoneListDisabled"
-                    input-debounce="0"
-                    @filter="searchPortFn"
-                    :option-label="opt => opt && opt.name ? opt.name : ''"
-                    map-options
-                    stack-label
-                    use-chips
-                    use-input
-                    filled
-                    dense
-                    multiple
-                    label="Localizare">
-            <q-icon name="cancel" @click.stop.prevent="peripheral.zones = []" class="cursor-pointer text-blue"/>
+        <q-card-section>
+          <div class="text-h5 q-mb-md">
+            <q-icon name="mdi-pencil" color="primary" size="sm" class="q-mr-sm"/>
+            Edit Peripheral
+          </div>
+          <div class="text-subtitle2 text-weight-medium">
+            {{ peripheral.name }}
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Basic Information -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">Basic Information</div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <q-input 
+            v-model="peripheral.name" 
+            label="Name" 
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            filled
+            dense
+            :rules="[val => !!val || 'Name is required']"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-label"/>
+            </template>
+          </q-input>
+
+          <q-input 
+            v-model="peripheral.description" 
+            label="Description" 
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            filled
+            dense
+            type="textarea"
+            rows="2"
+            :rules="[val => !!val || 'Description is required']"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-text"/>
+            </template>
+          </q-input>
+
+          <q-input 
+            v-model="peripheral.model" 
+            label="Model" 
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            filled
+            dense
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-chip"/>
+            </template>
+          </q-input>
+
+          <q-input 
+            v-model.number="peripheral.maxAmp" 
+            label="Max Amperage" 
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            type="number"
+            min="0"
+            step="0.1"
+            filled
+            dense
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-lightning-bolt"/>
+            </template>
+          </q-input>
+
+          <q-select 
+            v-model="peripheral.category"
+            :options="categoryList"
+            option-label="name"
+            label="Category" 
+            map-options 
+            filled 
+            dense
+            clearable
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-shape"/>
+            </template>
           </q-select>
         </q-card-section>
-        
+
+        <q-separator/>
+
+        <!-- Location -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">Location</div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <q-select 
+            v-model="peripheral.zones"
+            :options="zoneListFiltered"
+            :disable="zoneListDisabled"
+            input-debounce="0"
+            @filter="filterZones"
+            :option-label="opt => opt && opt.name ? opt.name : ''"
+            map-options
+            stack-label
+            use-chips
+            use-input
+            filled
+            dense
+            multiple
+            label="Zones"
+            clearable
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-map-marker"/>
+            </template>
+          </q-select>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Port Connections -->
         <PortConnectCard
           v-model="peripheral.connectedTo"
           :device-list="deviceList"
           title="Port Connections"
           table-title="Connected Ports"
         />
-        
+
         <q-separator/>
-        <q-card-actions>
-          <q-btn color="accent" type="submit">
-            Save
-          </q-btn>
-          <q-btn color="info" @click="$router.go(-1)">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+
+        <!-- Information Panel -->
+        <EntityInfoPanel
+          :entity="peripheral"
+          icon="mdi-devices"
+          :extra-info="[
+            { icon: 'mdi-ethernet', label: 'Ports', value: peripheral.connectedTo?.length || 0 },
+            { icon: 'mdi-map-marker', label: 'Zones', value: peripheral.zones?.length || 0 }
+          ]"
+        />
+
+        <q-separator/>
+
+        <!-- Actions -->
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/peripherals/${$route.params.idPrimary}/view`"
+          save-label="Save Peripheral"
+        />
       </q-card>
     </form>
+
+    <!-- Loading State -->
+    <q-inner-loading :showing="loading">
+      <q-spinner-gears size="50px" color="primary"/>
+    </q-inner-loading>
   </q-page>
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from 'vue';
-import {useRoute, useRouter} from "vue-router";
-
-import {useQuasar} from 'quasar';
-
-import {useApolloClient} from "@vue/apollo-composable";
-import {prepareForMutation} from '@/_helpers';
-
-import _ from "lodash";
+import { defineComponent, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useEntityCRUD } from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
+import PortConnectCard from '@/components/cards/PortConnectCard.vue';
 
 import {
   PERIPHERAL_CATEGORIES,
@@ -75,144 +186,160 @@ import {
   ZONES_GET_ALL
 } from '@/graphql/queries';
 
-import PortConnectCard from '@/components/cards/PortConnectCard.vue';
-
-
+import { useApolloClient } from '@vue/apollo-composable';
+import _ from 'lodash';
 
 export default defineComponent({
-    name: 'PeripheralEdit',
-    components: {
-      PortConnectCard
-    },
-    setup() {
-      const $q = useQuasar()
-      const {client} = useApolloClient();
-      const peripheral = ref({connectedTo: [], zones: [], category: null})
-      const categoryList = ref([])
-      const router = useRouter();
-      const route = useRoute();
-      const deviceList = ref([])
+  name: 'PeripheralEdit',
+  components: {
+    EntityInfoPanel,
+    EntityFormActions,
+    PortConnectCard
+  },
+  setup() {
+    const route = useRoute();
+    const { client } = useApolloClient();
+    const categoryList = ref([]);
+    const deviceList = ref([]);
+    const zoneList = ref([]);
+    const zoneListFiltered = ref([]);
+    const zoneListDisabled = ref(false);
 
-      const zoneList = ref([])
-      const zoneListFiltered = ref([])
-      const zoneListDisabled = ref(false)
+    const {
+      entity: peripheral,
+      loading,
+      saving,
+      fetchEntity,
+      updateEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Peripheral',
+      entityPath: '/admin/peripherals',
+      getQuery: PERIPHERAL_GET_BY_ID,
+      getQueryKey: 'devicePeripheral',
+      updateMutation: PERIPHERAL_UPDATE,
+      updateMutationKey: 'updatePeripheral',
+      updateVariableName: 'devicePeripheral',
+      excludeFields: ['__typename', 'device', 'configurations', 'tsCreated', 'tsUpdated'],
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        
+        // Clean connectedTo array - keep only id
+        if (transformed.connectedTo && Array.isArray(transformed.connectedTo)) {
+          transformed.connectedTo = transformed.connectedTo.map(port => ({ id: port.id }));
+        }
+        
+        // Clean zones array - keep only id
+        if (transformed.zones && Array.isArray(transformed.zones)) {
+          transformed.zones = transformed.zones.map(zone => ({ id: zone.id }));
+        }
+        
+        // Clean category - keep only id
+        if (transformed.category) {
+          transformed.category = { id: transformed.category.id };
+        }
+        
+        return transformed;
+      }
+    });
 
-      const loading = ref(false)
+    /**
+     * Filter zones for search
+     */
+    const filterZones = (val, update) => {
+      if (val === '') {
+        update(() => {
+          zoneListFiltered.value = zoneList.value;
+        });
+        return;
+      }
 
-      const fetchData = () => {
-        loading.value = true;
-        client.query({
-          query: PERIPHERAL_GET_BY_ID,
-          variables: {id: route.params.idPrimary},
-          fetchPolicy: 'network-only',
-        }).then(response => {
-          peripheral.value = _.cloneDeep(response.data.devicePeripheral)
-          deviceList.value = response.data.deviceList || []
-          
-          // Handle portId from query parameter
-          if (route.query.portId != null) {
-            // Find the port in the device list
-            for (const device of deviceList.value) {
-              const foundPort = device.ports.find(port => port.id == route.query.portId);
-              if (foundPort) {
-                peripheral.value.connectedTo = [foundPort];
-                break;
-              }
+      update(() => {
+        const needle = val.toLowerCase();
+        zoneListFiltered.value = zoneList.value.filter(
+          v => v.name.toLowerCase().indexOf(needle) > -1
+        );
+      });
+    };
+
+    /**
+     * Custom fetch to load additional data
+     */
+    const fetchData = async () => {
+      const response = await fetchEntity();
+      if (response) {
+        deviceList.value = response.deviceList || [];
+        
+        // Handle portId from query parameter
+        if (route.query.portId != null) {
+          for (const device of deviceList.value) {
+            const foundPort = device.ports.find(port => port.id == route.query.portId);
+            if (foundPort) {
+              peripheral.value.connectedTo = [foundPort];
+              break;
             }
           }
-          
-          loading.value = false;
-        });
-        
-        client.query({
-          query: PERIPHERAL_CATEGORIES,
-          variables: {},
-          fetchPolicy: 'network-only',
-        }).then(response => {
-          categoryList.value = response.data.peripheralCategoryList
-        })
+        }
       }
+
+      // Fetch categories
+      client.query({
+        query: PERIPHERAL_CATEGORIES,
+        variables: {},
+        fetchPolicy: 'network-only',
+      }).then(response => {
+        categoryList.value = response.data.peripheralCategoryList;
+      });
+
+      // Fetch zones
       client.query({
         query: ZONES_GET_ALL,
         variables: {},
         fetchPolicy: 'network-only',
       }).then(response => {
         zoneList.value = _.transform(response.data.zoneList,
-          function (result, value, key) {
-            let zone = {
+          function (result, value) {
+            result.push({
               id: value.id,
               name: value.name
-            }
-            result.push(zone)
+            });
           });
-        zoneListFiltered.value = [...zoneList.value]
-      })
+        zoneListFiltered.value = [...zoneList.value];
+      });
+    };
 
-      const onSave = () => {
-        if (peripheral.value.hasError) {
-          $q.notify({
-            color: 'negative',
-            message: 'Failed submission'
-          })
-        } else {
-          // Create a clean copy for mutation
-          const cleanPeripheral = prepareForMutation(peripheral.value, ['__typename', 'device', 'configurations']);
-          
-          // Remove id only from top-level peripheral object, but keep ids in nested arrays
-          delete cleanPeripheral.id;
-          
-          // Clean connectedTo array - keep only id field
-          if (cleanPeripheral.connectedTo && Array.isArray(cleanPeripheral.connectedTo)) {
-            cleanPeripheral.connectedTo = cleanPeripheral.connectedTo.map(port => ({
-              id: port.id
-            }));
-          }
-          
-          // Clean zones array - keep only id field
-          if (cleanPeripheral.zones && Array.isArray(cleanPeripheral.zones)) {
-            cleanPeripheral.zones = cleanPeripheral.zones.map(zone => ({
-              id: zone.id
-            }));
-          }
+    /**
+     * Save peripheral
+     */
+    const onSave = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) {
+        return;
+      }
 
-          client.mutate({
-            mutation: PERIPHERAL_UPDATE,
-            variables: {id: route.params.idPrimary, devicePeripheral: cleanPeripheral},
-            // Prevent Apollo cache issues by not updating the cache automatically
-            fetchPolicy: 'no-cache',
-            // Provide empty update function to prevent cache normalization
-            update: () => {
-              // Skip cache update to avoid normalization issues with simplified nested objects
-            }
-          }).then(response => {
-            fetchData()
-            $q.notify({
-              color: 'positive',
-              message: 'Peripheral updated'
-            })
-          }).catch(error => {
-            $q.notify({
-              color: 'negative',
-              message: error.message || 'Update failed'
-            })
-          });
-        }
+      if (!validateRequired(peripheral.value, ['name', 'description'])) {
+        return;
       }
-      onMounted(() => {
-        fetchData()
-      })
-      return {
-        peripheral,
-        categoryList,
-        deviceList,
-        zoneList,
-        zoneListFiltered,
-        zoneListDisabled,
-        onSave
-      }
-    }
+
+      await updateEntity();
+    };
+
+    onMounted(() => {
+      fetchData();
+    });
+
+    return {
+      peripheral,
+      categoryList,
+      deviceList,
+      zoneList,
+      zoneListFiltered,
+      zoneListDisabled,
+      loading,
+      saving,
+      onSave,
+      filterZones
+    };
   }
-)
-;
-
+});
 </script>
