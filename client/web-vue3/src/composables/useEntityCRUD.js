@@ -17,8 +17,10 @@ import _ from 'lodash';
  * @property {string} getQueryKey - Key to extract entity from query response (optional)
  * @property {Object} createMutation - GraphQL mutation for creating entity
  * @property {string} createMutationKey - Key to extract result from create mutation (optional)
+ * @property {string} createVariableName - Variable name for create mutation (optional, auto-derived if not provided)
  * @property {Object} updateMutation - GraphQL mutation for updating entity
  * @property {string} updateMutationKey - Key to extract result from update mutation (optional)
+ * @property {string} updateVariableName - Variable name for update mutation (optional, auto-derived if not provided)
  * @property {Object} deleteMutation - GraphQL mutation for deleting entity
  * @property {string} deleteMutationKey - Key to extract result from delete mutation (optional)
  * @property {Array<string>} excludeFields - Fields to exclude from mutations (default: common fields)
@@ -34,8 +36,10 @@ export function useEntityCRUD(options) {
     getQueryKey,
     createMutation,
     createMutationKey,
+    createVariableName,
     updateMutation,
     updateMutationKey,
+    updateVariableName,
     deleteMutation,
     deleteMutationKey,
     excludeFields = ['__typename', 'entityType', 'uid', 'tsCreated', 'tsUpdated', 'version'],
@@ -114,8 +118,16 @@ export function useEntityCRUD(options) {
       // Clean data for mutation
       cleanData = prepareForMutation(cleanData, excludeFields);
 
-      // Determine the variable name for the mutation (e.g., 'deviceCategoryCreate' -> 'deviceCategory')
-      const variableName = createMutationKey ? createMutationKey.replace(/Create$/, '') : entityName;
+      // Determine the variable name for the mutation
+      // Priority: explicit createVariableName > derive from createMutationKey > use entityName
+      let variableName = createVariableName;
+      if (!variableName && createMutationKey) {
+        // Try to derive: 'deviceCategoryCreate' -> 'deviceCategory'
+        variableName = createMutationKey.replace(/Create$/, '');
+      }
+      if (!variableName) {
+        variableName = entityName;
+      }
 
       const response = await client.mutate({
         mutation: createMutation,
@@ -169,16 +181,40 @@ export function useEntityCRUD(options) {
       return null;
     }
 
+    // Prevent duplicate calls
+    if (saving.value) {
+      return null;
+    }
+
     saving.value = true;
     try {
-      // Apply transformation if provided
-      let cleanData = transformBeforeSave ? transformBeforeSave(entityData) : entityData;
+      // Clean data for mutation FIRST (remove Apollo fields and excluded fields)
+      let cleanData = prepareForMutation(entityData, excludeFields);
       
-      // Clean data for mutation
-      cleanData = prepareForMutation(cleanData, [...excludeFields, 'id']);
+      // Apply transformation AFTER cleaning (so transform can add back necessary IDs)
+      if (transformBeforeSave) {
+        cleanData = transformBeforeSave(cleanData);
+      }
       
-      // Determine the variable name for the mutation (e.g., 'deviceCategoryUpdate' -> 'deviceCategory')
-      const variableName = updateMutationKey ? updateMutationKey.replace(/Update$/, '') : entityName;
+      // Remove top-level id (but keep nested IDs that transform may have added)
+      delete cleanData.id;
+      
+      // Determine the variable name for the mutation
+      // Priority: explicit updateVariableName > derive from updateMutationKey > use entityName
+      let variableName = updateVariableName;
+      if (!variableName && updateMutationKey) {
+        // Try to derive: 'deviceCategoryUpdate' -> 'deviceCategory', 'updatePort' -> 'port'
+        variableName = updateMutationKey
+          .replace(/Update$/, '')  // Remove trailing 'Update'
+          .replace(/^update/, '');  // Remove leading 'update'
+        // Lowercase first character if needed
+        if (variableName) {
+          variableName = variableName.charAt(0).toLowerCase() + variableName.slice(1);
+        }
+      }
+      if (!variableName) {
+        variableName = entityName;
+      }
 
       const response = await client.mutate({
         mutation: updateMutation,
