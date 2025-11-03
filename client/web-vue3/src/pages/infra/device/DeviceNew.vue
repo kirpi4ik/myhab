@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="device">
       <q-card flat bordered>
         <q-card-section>
           <div class="text-h5 q-mb-md">
@@ -142,24 +142,11 @@
         <q-separator/>
 
         <!-- Actions -->
-        <q-card-actions>
-          <q-btn 
-            color="primary" 
-            type="submit" 
-            icon="mdi-content-save"
-            :loading="saving"
-          >
-            Create Device
-          </q-btn>
-          <q-btn 
-            color="grey" 
-            @click="$router.go(-1)" 
-            icon="mdi-cancel"
-            :disable="saving"
-          >
-            Cancel
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create Device"
+        />
       </q-card>
     </form>
   </q-page>
@@ -167,32 +154,64 @@
 
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
-
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router";
-
-import {useQuasar} from 'quasar';
-
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {DEVICE_CATEGORIES_LIST, DEVICE_CREATE, DEVICE_MODEL_LIST, RACK_LIST_ALL} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'DeviceNew',
+  components: {
+    EntityFormActions
+  },
   setup() {
-    const $q = useQuasar();
     const {client} = useApolloClient();
-    const device = ref({
-      code: '',
-      name: '',
-      description: '',
-      type: null,
-      model: null,
-      rack: null
-    });
+    
     const rackList = ref([]);
     const typeList = ref([]);
     const modelList = ref([]);
-    const router = useRouter();
-    const saving = ref(false);
+
+    // Use CRUD composable for create
+    const {
+      entity: device,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Device',
+      entityPath: '/admin/devices',
+      createMutation: DEVICE_CREATE,
+      createMutationKey: 'deviceCreate',
+      createVariableName: 'device',
+      excludeFields: ['__typename'],
+      initialData: {
+        code: '',
+        name: '',
+        description: '',
+        type: null,
+        model: null,
+        rack: null
+      },
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Clean nested objects - only send IDs if they exist
+        if (transformed.rack) {
+          if (transformed.rack.id) {
+            transformed.rack = { id: transformed.rack.id };
+          } else {
+            delete transformed.rack;
+          }
+        }
+        if (transformed.type) {
+          if (transformed.type.id) {
+            transformed.type = { id: transformed.type.id };
+          } else {
+            delete transformed.type;
+          }
+        }
+        return transformed;
+      }
+    });
 
     /**
      * Fetch all required lists from server
@@ -235,43 +254,16 @@ export default defineComponent({
     /**
      * Create new device
      */
-    const onSave = () => {
+    const onSave = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) return;
+      
       // Validate required fields
-      if (!device.value.code || !device.value.name || !device.value.description) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please fill in all required fields',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
+      if (!validateRequired(device.value, ['code', 'name', 'description'])) {
         return;
       }
 
-      saving.value = true;
-
-      client.mutate({
-        mutation: DEVICE_CREATE,
-        variables: {device: device.value},
-        fetchPolicy: 'no-cache',
-      }).then(response => {
-        saving.value = false;
-        $q.notify({
-          color: 'positive',
-          message: 'Device created successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/devices/${response.data.deviceCreate.id}/edit`});
-      }).catch(error => {
-        saving.value = false;
-        $q.notify({
-          color: 'negative',
-          message: error.message || 'Failed to create device',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error creating device:', error);
-      });
+      await createEntity();
     };
 
     onMounted(() => {

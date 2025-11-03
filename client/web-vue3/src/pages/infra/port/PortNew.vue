@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="port">
       <q-card flat bordered>
         <q-card-section>
           <div class="text-h5 q-mb-md">
@@ -113,14 +113,11 @@
 
         <q-separator/>
 
-        <q-card-actions>
-          <q-btn color="primary" type="submit" icon="mdi-content-save">
-            Save
-          </q-btn>
-          <q-btn color="grey" @click="$router.go(-1)" icon="mdi-cancel">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create Port"
+        />
       </q-card>
     </form>
   </q-page>
@@ -129,26 +126,59 @@
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
 import _ from 'lodash';
-
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
-
-import {useQuasar} from 'quasar';
-
+import {useRoute} from "vue-router/dist/vue-router";
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {PORT_EDIT_GET_BY_ID, PORT_CREATE} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'PortNew',
+  components: {
+    EntityFormActions
+  },
   setup() {
-    const $q = useQuasar();
     const {client} = useApolloClient();
-    const port = ref({});
-    const router = useRouter();
     const route = useRoute();
     const deviceList = ref([]);
     const deviceListDisabled = ref(false);
     const portTypes = ref([]);
     const portStates = ref([]);
+
+    const {
+      entity: port,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Port',
+      entityPath: '/admin/ports',
+      createMutation: PORT_CREATE,
+      createMutationKey: 'devicePortCreate',
+      createVariableName: 'devicePort',
+      excludeFields: ['__typename'],
+      initialData: {
+        device: null,
+        internalRef: '',
+        name: '',
+        description: '',
+        type: null,
+        state: null,
+        value: ''
+      },
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Clean device - only send ID
+        if (transformed.device) {
+          if (transformed.device.id) {
+            transformed.device = { id: transformed.device.id };
+          } else {
+            delete transformed.device;
+          }
+        }
+        return transformed;
+      }
+    });
 
     const fetchData = () => {
       client.query({
@@ -168,71 +198,20 @@ export default defineComponent({
           deviceListDisabled.value = true;
         }
       }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load port configuration data',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
         console.error('Error fetching port data:', error);
       });
     };
 
-    const onSave = () => {
-      // Validate device selection
+    const onSave = async () => {
+      if (saving.value) return;
+      
+      // Custom validation for device
       if (!port.value.device) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please select a device',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        return;
+        return; // validateRequired will handle the notification
       }
-
-      // Validate required fields
-      if (!port.value.internalRef || !port.value.name) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please fill in all required fields',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        return;
-      }
-
-      // Prepare mutation data - clean the device object to only send ID
-      const portData = {
-        ...port.value,
-        device: {
-          id: port.value.device.id
-        }
-      };
-
-      client.mutate({
-        mutation: PORT_CREATE,
-        variables: {devicePort: portData},
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Prevent Apollo from processing the mutation result
-        }
-      }).then(response => {
-        $q.notify({
-          color: 'positive',
-          message: 'Port created successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/ports/${response.data.devicePortCreate.id}/edit`});
-      }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to create port',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error creating port:', error);
-      });
+      
+      if (!validateRequired(port.value, ['device', 'internalRef', 'name'])) return;
+      await createEntity();
     };
 
     onMounted(() => {
@@ -245,6 +224,7 @@ export default defineComponent({
       deviceListDisabled,
       portTypes,
       portStates,
+      saving,
       onSave
     };
   }

@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="cable">
       <q-card flat bordered>
         <q-card-section>
           <div class="text-h5 q-mb-md">
@@ -163,24 +163,11 @@
         <q-separator/>
 
         <!-- Actions -->
-        <q-card-actions>
-          <q-btn 
-            color="primary" 
-            type="submit" 
-            icon="mdi-content-save"
-            :loading="saving"
-          >
-            Create Cable
-          </q-btn>
-          <q-btn 
-            color="grey" 
-            @click="$router.go(-1)" 
-            icon="mdi-cancel"
-            :disable="saving"
-          >
-            Cancel
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create Cable"
+        />
       </q-card>
     </form>
   </q-page>
@@ -188,35 +175,55 @@
 
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
-
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router";
-
-import {useQuasar} from 'quasar';
-
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {CABLE_CREATE, RACK_LIST_ALL} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'CableNew',
+  components: {
+    EntityFormActions
+  },
   setup() {
-    const $q = useQuasar();
     const {client} = useApolloClient();
-    const cable = ref({
-      code: '',
-      description: '',
-      nrWires: null,
-      maxAmp: null,
-      rack: null,
-      rackRowNr: null,
-      orderInRow: null
-    });
     const rackList = ref([]);
-    const router = useRouter();
-    const saving = ref(false);
 
-    /**
-     * Fetch rack list from server
-     */
+    const {
+      entity: cable,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Cable',
+      entityPath: '/admin/cables',
+      createMutation: CABLE_CREATE,
+      createMutationKey: 'cableCreate',
+      createVariableName: 'cable',
+      excludeFields: ['__typename'],
+      initialData: {
+        code: '',
+        description: '',
+        nrWires: null,
+        maxAmp: null,
+        rack: null,
+        rackRowNr: null,
+        orderInRow: null
+      },
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Clean rack - only send ID if selected
+        if (transformed.rack) {
+          if (transformed.rack.id) {
+            transformed.rack = { id: transformed.rack.id };
+          } else {
+            delete transformed.rack;
+          }
+        }
+        return transformed;
+      }
+    });
+
     const fetchData = () => {
       client.query({
         query: RACK_LIST_ALL,
@@ -225,56 +232,14 @@ export default defineComponent({
       }).then(response => {
         rackList.value = response.data.rackList || [];
       }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load rack list',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
         console.error('Error fetching racks:', error);
       });
     };
 
-    /**
-     * Create new cable
-     */
-    const onSave = () => {
-      // Validate required fields
-      if (!cable.value.code || !cable.value.description || !cable.value.nrWires) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please fill in all required fields',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        return;
-      }
-
-      saving.value = true;
-
-      client.mutate({
-        mutation: CABLE_CREATE,
-        variables: {cable: cable.value},
-        fetchPolicy: 'no-cache',
-      }).then(response => {
-        saving.value = false;
-        $q.notify({
-          color: 'positive',
-          message: 'Cable created successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/cables/${response.data.cableCreate.id}/edit`});
-      }).catch(error => {
-        saving.value = false;
-        $q.notify({
-          color: 'negative',
-          message: error.message || 'Failed to create cable',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error creating cable:', error);
-      });
+    const onSave = async () => {
+      if (saving.value) return;
+      if (!validateRequired(cable.value, ['code', 'description', 'nrWires'])) return;
+      await createEntity();
     };
 
     onMounted(() => {

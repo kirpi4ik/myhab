@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="scenario">
       <q-card flat bordered>
         <q-card-section>
           <div class="text-h5 q-mb-md">
@@ -56,14 +56,11 @@
 
         <q-separator/>
 
-        <q-card-actions>
-          <q-btn color="primary" type="submit" icon="mdi-content-save">
-            Save
-          </q-btn>
-          <q-btn color="grey" @click="$router.go(-1)" icon="mdi-cancel">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create Scenario"
+        />
       </q-card>
     </form>
   </q-page>
@@ -71,30 +68,48 @@
 
 <script>
 import {defineComponent, onMounted, ref, computed} from 'vue';
-
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router/dist/vue-router";
-
-import {useQuasar} from 'quasar';
-
-import {SCENARIO_LIST_ALL, SCENARIO_CREATE} from '@/graphql/queries';
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import CodeEditor from '@/components/CodeEditor.vue';
+import {SCENARIO_LIST_ALL, SCENARIO_CREATE} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'ScenarioNew',
   components: {
-    CodeEditor
+    CodeEditor,
+    EntityFormActions
   },
   setup() {
-    const $q = useQuasar();
     const {client} = useApolloClient();
-    const scenario = ref({
-      name: '',
-      body: ''
-    });
-    const router = useRouter();
     const portListRaw = ref([]);
     const selectedPorts = ref([]);
+
+    const {
+      entity: scenario,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Scenario',
+      entityPath: '/admin/scenarios',
+      createMutation: SCENARIO_CREATE,
+      createMutationKey: 'scenarioCreate',
+      createVariableName: 'scenario',
+      excludeFields: ['__typename'],
+      initialData: {
+        name: '',
+        body: ''
+      },
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Add ports to the payload
+        transformed.ports = selectedPorts.value
+          .filter(port => port && port.id)
+          .map(port => ({ id: port.id }));
+        return transformed;
+      }
+    });
 
     const portList = computed(() => {
       return portListRaw.value.map(port => ({
@@ -124,48 +139,14 @@ export default defineComponent({
       }).then(response => {
         portListRaw.value = response.data.devicePortList || [];
       }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load port list',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
         console.error('Error fetching data:', error);
       });
     };
 
-    const onSave = () => {
-      // Prepare mutation data
-      const scenarioData = {
-        name: scenario.value.name,
-        body: scenario.value.body,
-        ports: selectedPorts.value.map(port => ({id: port.id}))
-      };
-
-      client.mutate({
-        mutation: SCENARIO_CREATE,
-        variables: {scenario: scenarioData},
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Prevent Apollo from processing the mutation result
-        }
-      }).then(response => {
-        $q.notify({
-          color: 'positive',
-          message: 'Scenario created successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/scenarios/${response.data.scenarioCreate.id}/edit`});
-      }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to create scenario',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error creating scenario:', error);
-      });
+    const onSave = async () => {
+      if (saving.value) return;
+      if (!validateRequired(scenario.value, ['name'])) return;
+      await createEntity();
     };
 
     onMounted(() => {
@@ -177,6 +158,7 @@ export default defineComponent({
       portList,
       selectedPorts,
       groovyCompletions,
+      saving,
       onSave
     };
   }
