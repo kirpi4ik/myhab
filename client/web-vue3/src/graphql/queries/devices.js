@@ -18,6 +18,16 @@ export const DEVICE_UPDATE = gql`
     }
   }
 `;
+export const DEVICE_UPDATE_CUSTOM = gql`
+  mutation ($id: Long!, $device: DeviceUpdate!) {
+    deviceUpdateCustom(id: $id, device: $device) {
+      id
+      uid
+      code
+      name
+    }
+  }
+`;
 export const DEVICE_DELETE = gql`
   mutation ($id: Long!) {
     deviceDelete(id: $id) {
@@ -200,6 +210,11 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
         port
       }
       rack {
+        id
+        name
+        description
+      }
+      zones {
         id
         name
         description

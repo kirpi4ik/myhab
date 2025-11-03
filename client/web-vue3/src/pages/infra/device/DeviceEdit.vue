@@ -140,6 +140,12 @@
               <q-icon name="mdi-server"/>
             </template>
           </q-select>
+
+          <LocationSelector
+            v-model="device.zones"
+            label="Zones"
+            hint="Select zones where this device is located"
+          />
         </q-card-section>
 
         <q-separator/>
@@ -179,12 +185,13 @@ import {useApolloClient} from "@vue/apollo-composable";
 import {useEntityCRUD} from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
+import LocationSelector from '@/components/selectors/LocationSelector.vue';
 
 import {
   DEVICE_CATEGORIES_LIST,
   DEVICE_GET_BY_ID_CHILDS,
   DEVICE_MODEL_LIST,
-  DEVICE_UPDATE,
+  DEVICE_UPDATE_CUSTOM,
   RACK_LIST_ALL
 } from '@/graphql/queries';
 
@@ -192,7 +199,8 @@ export default defineComponent({
   name: 'DeviceEdit',
   components: {
     EntityInfoPanel,
-    EntityFormActions
+    EntityFormActions,
+    LocationSelector
   },
   setup() {
     const route = useRoute();
@@ -215,13 +223,32 @@ export default defineComponent({
       entityName: 'Device',
       entityPath: '/admin/devices',
       getQuery: DEVICE_GET_BY_ID_CHILDS,
-      updateMutation: DEVICE_UPDATE,
-      excludeFields: ['__typename', 'id', 'ports', 'uid', 'tsCreated', 'tsUpdated'],
+      getQueryKey: 'device',
+      updateMutation: DEVICE_UPDATE_CUSTOM,
+      updateMutationKey: 'deviceUpdateCustom',
+      updateVariableName: 'device',
+      excludeFields: ['__typename', 'ports', 'authAccounts', 'tsCreated', 'tsUpdated'],
       transformBeforeSave: (data) => {
         // Ensure nested objects only send their ID
         const transformed = {...data};
-        if (transformed.rack) transformed.rack = { id: transformed.rack.id };
-        if (transformed.type) transformed.type = { id: transformed.type.id };
+        
+        // Clean rack - only send if it has an id, otherwise remove
+        if (transformed.rack) {
+          transformed.rack = transformed.rack.id ? { id: transformed.rack.id } : null;
+        }
+        
+        // Clean type - only send if it has an id, otherwise remove
+        if (transformed.type) {
+          transformed.type = transformed.type.id ? { id: transformed.type.id } : null;
+        }
+        
+        // Clean zones array - keep only id
+        if (transformed.zones && Array.isArray(transformed.zones)) {
+          transformed.zones = transformed.zones
+            .filter(zone => zone && zone.id)
+            .map(zone => ({ id: zone.id }));
+        }
+        
         return transformed;
       }
     });
