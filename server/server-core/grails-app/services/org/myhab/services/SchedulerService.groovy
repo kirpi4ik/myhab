@@ -12,84 +12,138 @@ class SchedulerService {
 
     StdScheduler quartzScheduler
 
-    def scheduleJob(String jobUid) {
-        def job = Job.findByUid(jobUid)
-        if (job.state == JobState.ACTIVE) {
-            job.cronTriggers.each { jobTrigger ->
-                JobDetail jobDetails = JobBuilder.newJob(DSLJob.class)
-                        .withIdentity(jobUid)
-                        .withDescription(job.description)
-                        .storeDurably()
-                        .requestRecovery()
-                        .usingJobData(DSLJob.JOB_UID, jobUid)
-                        .build()
-                def trigger = TriggerBuilder.newTrigger().withIdentity(TriggerKey.triggerKey(jobTrigger.uid, job.uid))
-                        .withSchedule(CronScheduleBuilder.cronSchedule(jobTrigger.expression))
-                        .withDescription(job.description)
-                        .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))
-                        .build()
-                if (quartzScheduler.checkExists(TriggerKey.triggerKey(jobTrigger.uid, job.uid))) {
-                    quartzScheduler.rescheduleJob(TriggerKey.triggerKey(jobTrigger.uid, job.uid), trigger)
-                } else {
-                    if (!quartzScheduler.checkExists(TriggerKey.triggerKey(jobTrigger.uid, job.uid))) {
-                        try {
-                            quartzScheduler.scheduleJob(jobDetails, trigger)
-                        } catch (ObjectAlreadyExistsException alreadyExistsException) {
-                            quartzScheduler.resumeJob(jobDetails.key)
-                            log.warn(alreadyExistsException.message)
-                        }
-                    }
+    def scheduleJob(Long jobId) {
+        def job = Job.get(jobId)
+        if (!job) {
+            log.warn("Job with id ${jobId} not found")
+            return
+        }
+        
+        // Set job state to ACTIVE
+        job.state = JobState.ACTIVE
+        job.save(flush: true)
+        
+        job.cronTriggers.each { jobTrigger ->
+            // Use job ID as the unique identifier for Quartz
+            String quartzJobId = "job_${jobId}"
+            String quartzTriggerId = "trigger_${jobTrigger.id}"
+            String quartzGroupId = "job_group_${jobId}"
+            
+            JobDetail jobDetails = JobBuilder.newJob(DSLJob.class)
+                    .withIdentity(quartzJobId, quartzGroupId)
+                    .withDescription(job.description)
+                    .storeDurably()
+                    .requestRecovery()
+                    .usingJobData(DSLJob.JOB_UID, job.uid) // Keep UID for backward compatibility in job execution
+                    .usingJobData("jobId", jobId)
+                    .build()
+                    
+            def trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(quartzTriggerId, quartzGroupId)
+                    .withSchedule(CronScheduleBuilder.cronSchedule(jobTrigger.expression))
+                    .withDescription(job.description)
+                    .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))
+                    .build()
+                    
+            TriggerKey triggerKey = TriggerKey.triggerKey(quartzTriggerId, quartzGroupId)
+            
+            if (quartzScheduler.checkExists(triggerKey)) {
+                quartzScheduler.rescheduleJob(triggerKey, trigger)
+            } else {
+                try {
+                    quartzScheduler.scheduleJob(jobDetails, trigger)
+                } catch (ObjectAlreadyExistsException alreadyExistsException) {
+                    quartzScheduler.resumeJob(jobDetails.key)
+                    log.warn(alreadyExistsException.message)
                 }
             }
         }
+        
+        log.info("Job ${jobId} scheduled and set to ACTIVE state")
     }
 
-    def unscheduleJob(String jobUid) {
-        def job = Job.findByUid(jobUid)
+    def unscheduleJob(Long jobId) {
+        def job = Job.get(jobId)
+        if (!job) {
+            log.warn("Job with id ${jobId} not found")
+            return
+        }
+        
+        // Set job state to DISABLED
+        job.state = JobState.DISABLED
+        job.save(flush: true)
+        
+        String quartzGroupId = "job_group_${jobId}"
         job.cronTriggers.each { jobTrigger ->
-            quartzScheduler.unscheduleJob(TriggerKey.triggerKey(jobTrigger.uid, jobUid))
+            String quartzTriggerId = "trigger_${jobTrigger.id}"
+            quartzScheduler.unscheduleJob(TriggerKey.triggerKey(quartzTriggerId, quartzGroupId))
         }
+        
+        log.info("Job ${jobId} unscheduled and set to DISABLED state")
     }
 
-
-    def pauseJob(String jobUid) {
-        def job = Job.findByUid(jobUid)
+    def pauseJob(Long jobId) {
+        def job = Job.get(jobId)
+        if (!job) {
+            log.warn("Job with id ${jobId} not found")
+            return
+        }
+        
         if (job.state == JobState.ACTIVE) {
+            String quartzGroupId = "job_group_${jobId}"
             job.cronTriggers.each { jobTrigger ->
-                quartzScheduler.pauseJob(TriggerKey.triggerKey(jobTrigger.uid, jobUid))
+                String quartzTriggerId = "trigger_${jobTrigger.id}"
+                quartzScheduler.pauseTrigger(TriggerKey.triggerKey(quartzTriggerId, quartzGroupId))
             }
         }
     }
 
-    def deleteJob(String jobUid) {
-        def job = Job.findByUid(jobUid)
-        if (quartzScheduler.checkExists(JobKey.jobKey(jobUid))) {
-            quartzScheduler.deleteJob(JobKey.jobKey(jobUid))
+    def deleteJob(Long jobId) {
+        def job = Job.get(jobId)
+        if (!job) {
+            log.warn("Job with id ${jobId} not found")
+            return
         }
-
-    }
-
-    def interrupt(String jobUid) {
-        def job = Job.findByUid(jobUid)
-        if (job.state == JobState.ACTIVE) {
-            job.cronTriggers.each { jobTrigger ->
-                quartzScheduler.interrupt(TriggerKey.triggerKey(jobTrigger.uid, jobUid))
-            }
+        
+        String quartzJobId = "job_${jobId}"
+        String quartzGroupId = "job_group_${jobId}"
+        
+        if (quartzScheduler.checkExists(JobKey.jobKey(quartzJobId, quartzGroupId))) {
+            quartzScheduler.deleteJob(JobKey.jobKey(quartzJobId, quartzGroupId))
         }
     }
 
-    def triggerJob(String jobUid) {
-        def job = Job.findByUid(jobUid)
+    def interrupt(Long jobId) {
+        def job = Job.get(jobId)
+        if (!job) {
+            log.warn("Job with id ${jobId} not found")
+            return
+        }
+        
         if (job.state == JobState.ACTIVE) {
-            job.cronTriggers.each { jobTrigger ->
-                quartzScheduler.triggerJob(JobKey.jobKey(jobUid))
-            }
+            String quartzJobId = "job_${jobId}"
+            String quartzGroupId = "job_group_${jobId}"
+            quartzScheduler.interrupt(JobKey.jobKey(quartzJobId, quartzGroupId))
+        }
+    }
+
+    def triggerJob(Long jobId) {
+        def job = Job.get(jobId)
+        if (!job) {
+            log.warn("Job with id ${jobId} not found")
+            return
+        }
+        
+        if (job.state == JobState.ACTIVE) {
+            String quartzJobId = "job_${jobId}"
+            String quartzGroupId = "job_group_${jobId}"
+            quartzScheduler.triggerJob(JobKey.jobKey(quartzJobId, quartzGroupId))
         }
     }
 
     def startAll() {
-        Job.findByState(JobState.ACTIVE).each { job ->
-            scheduleJob(job.uid)
+        Job.findAllByState(JobState.ACTIVE).each { job ->
+            scheduleJob(job.id)
         }
     }
 

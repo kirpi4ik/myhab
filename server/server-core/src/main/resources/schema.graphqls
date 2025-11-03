@@ -36,6 +36,8 @@ type Mutation {
     pushEvent(input:EventDatInput) : EventDataResponse
     cacheDelete(cacheName:String!, cacheKey:String!) : MutationResponse
     userRolesSave(input: SaveUserRoles): MutationResponse
+    jobSchedule(jobId: ID!): MutationResponse
+    jobUnschedule(jobId: ID!): MutationResponse
 }
 
 type EventDataResponse {

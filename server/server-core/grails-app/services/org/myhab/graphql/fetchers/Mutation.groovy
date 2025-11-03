@@ -7,6 +7,7 @@ import graphql.schema.DataFetchingEnvironment
 import groovy.util.logging.Slf4j
 import org.myhab.init.cache.CacheMap
 import org.myhab.services.UserService
+import org.myhab.services.SchedulerService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -21,7 +22,9 @@ class Mutation implements EventPublisher {
     @Autowired
     UserService userService
     @Autowired
-    HazelcastInstance hazelcastInstance;
+    HazelcastInstance hazelcastInstance
+    @Autowired
+    SchedulerService schedulerService
 
 
     DataFetcher pushEvent() {
@@ -44,6 +47,40 @@ class Mutation implements EventPublisher {
                 hazelcastInstance.getMap(CacheMap.EXPIRE.name).delete(String.valueOf(cacheKey))
                 hazelcastInstance.getMap(CacheMap.EXPIRE.name).flush()
                 return [success: true]
+            }
+        }
+    }
+
+    DataFetcher jobSchedule() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    Long jobId = environment.getArgument("jobId") as Long
+                    schedulerService.scheduleJob(jobId)
+                    log.info("Job ${jobId} scheduled successfully")
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to schedule job", e)
+                    return [success: false, error: e.message]
+                }
+            }
+        }
+    }
+
+    DataFetcher jobUnschedule() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    Long jobId = environment.getArgument("jobId") as Long
+                    schedulerService.unscheduleJob(jobId)
+                    log.info("Job ${jobId} unscheduled successfully")
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to unschedule job", e)
+                    return [success: false, error: e.message]
+                }
             }
         }
     }
