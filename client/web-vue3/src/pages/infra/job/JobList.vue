@@ -1,52 +1,98 @@
 <template>
   <q-page padding>
-    <q-btn icon="mdi-plus-circle" color="positive" :disable="loading" label="Add Job" @click="addRow" class="q-mb-md"/>
-    <q-table
-      :rows="rows"
-      :columns="columns"
-      :loading="loading"
-      :filter="filter"
-      v-model:pagination="pagination"
-      row-key="id"
-      flat
-      bordered
-      class="myhab-list-qgrid"
-    >
-      <template v-slot:top-right>
-        <q-input dense outlined debounce="300" color="primary" v-model="filter" placeholder="Search...">
-          <template v-slot:prepend>
-            <q-icon name="mdi-magnify"/>
-          </template>
-          <template v-slot:append v-if="filter">
-            <q-icon name="mdi-close-circle" @click="filter = ''" class="cursor-pointer"/>
-          </template>
-        </q-input>
-      </template>
-      <template v-slot:body="props">
-        <q-tr :props="props" @click="onRowClick(props.row)" style="cursor: pointer;">
-          <q-td key="id" style="max-width: 50px">
-            {{ props.row.id }}
-          </q-td>
-          <q-td key="name">
+    <q-card flat bordered>
+      <!-- Header Section -->
+      <q-card-section>
+        <div class="row items-center">
+          <div class="text-h5 text-primary">
+            <q-icon name="mdi-calendar-clock" class="q-mr-sm"/>
+            Job List
+          </div>
+          <q-space/>
+          <q-input 
+            v-model="filter" 
+            dense 
+            outlined
+            debounce="300" 
+            placeholder="Search jobs..."
+            clearable
+            class="q-mr-sm"
+            style="min-width: 250px"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-magnify"/>
+            </template>
+          </q-input>
+          <q-btn
+            color="primary"
+            icon="mdi-plus-circle"
+            label="Add Job"
+            @click="createItem"
+            :disable="loading"
+          />
+        </div>
+      </q-card-section>
+
+      <!-- Table Section -->
+      <q-table
+        :rows="filteredItems"
+        :columns="columns"
+        :loading="loading"
+        v-model:pagination="pagination"
+        row-key="id"
+        flat
+        @row-click="(evt, row) => viewItem(row)"
+      >
+        <template v-slot:body-cell-name="props">
+          <q-td :props="props">
             <q-badge color="primary" :label="props.row.name || 'Unnamed'"/>
           </q-td>
-          <q-td key="description">
-            {{ props.row.description ? (props.row.description.length > 100 ? props.row.description.substring(0, 100) + '...' : props.row.description) : '-' }}
+        </template>
+
+        <template v-slot:body-cell-description="props">
+          <q-td :props="props">
+            <div class="text-grey-8">
+              {{ props.row.description || '-' }}
+            </div>
           </q-td>
-          <q-td key="scenario">
-            {{ props.row.scenarioName || '-' }}
-          </q-td>
-          <q-td key="state">
-            <q-badge v-if="props.row.state" :color="getStateColor(props.row.state)" :label="props.row.state"/>
+        </template>
+
+        <template v-slot:body-cell-scenario="props">
+          <q-td :props="props">
+            <q-badge 
+              v-if="props.row.scenarioName" 
+              color="secondary" 
+              :label="props.row.scenarioName"
+            />
             <span v-else class="text-grey-6">-</span>
           </q-td>
-          <q-td key="tsCreated">
+        </template>
+
+        <template v-slot:body-cell-state="props">
+          <q-td :props="props">
+            <q-badge 
+              v-if="props.row.state" 
+              :color="getStateColor(props.row.state)" 
+              :label="props.row.state"
+            />
+            <span v-else class="text-grey-6">-</span>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-tsCreated="props">
+          <q-td :props="props">
             {{ formatDate(props.row.tsCreated) }}
           </q-td>
-          <q-td key="tsUpdated">
+        </template>
+
+        <template v-slot:body-cell-tsUpdated="props">
+          <q-td :props="props">
             {{ formatDate(props.row.tsUpdated) }}
           </q-td>
-          <q-td key="actions">
+        </template>
+
+        <template v-slot:body-cell-actions="props">
+          <q-td :props="props">
             <q-btn-group>
               <!-- Play/Pause Button -->
               <q-btn 
@@ -55,6 +101,7 @@
                 color="orange-7" 
                 @click.stop="toggleJobSchedule(props.row, false)" 
                 flat
+                dense
               >
                 <q-tooltip>Pause Job</q-tooltip>
               </q-btn>
@@ -64,67 +111,74 @@
                 color="green-7" 
                 @click.stop="toggleJobSchedule(props.row, true)" 
                 flat
+                dense
               >
                 <q-tooltip>Start Job</q-tooltip>
               </q-btn>
               
-              <q-btn icon="mdi-open-in-new" @click.stop="" :href="'/'+uri+'/'+props.row.id+'/view'" target="_blank"
-                     color="blue-6" flat>
+              <q-btn 
+                icon="mdi-eye" 
+                color="blue-6" 
+                @click.stop="viewItem(props.row)" 
+                flat
+                dense
+              >
                 <q-tooltip>View</q-tooltip>
               </q-btn>
-              <q-btn icon="mdi-note-edit-outline" color="amber-7" @click.stop="onEdit(props.row)" flat>
+              <q-btn 
+                icon="mdi-pencil" 
+                color="amber-7" 
+                @click.stop="editItem(props.row)" 
+                flat
+                dense
+              >
                 <q-tooltip>Edit</q-tooltip>
               </q-btn>
-              <q-btn icon="mdi-delete" color="red-7" @click.stop="removeItem(props.row)" flat>
+              <q-btn 
+                icon="mdi-delete" 
+                color="red-7" 
+                @click.stop="deleteItem(props.row)" 
+                flat
+                dense
+              >
                 <q-tooltip>Delete</q-tooltip>
               </q-btn>
             </q-btn-group>
           </q-td>
-        </q-tr>
-      </template>
-    </q-table>
+        </template>
+      </q-table>
+    </q-card>
   </q-page>
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from "vue";
-
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router/dist/vue-router";
-
-import {useQuasar} from "quasar";
-
-import {JOB_DELETE_BY_ID, JOB_LIST_ALL, JOB_SCHEDULE, JOB_UNSCHEDULE} from "@/graphql/queries";
-
-import _ from "lodash";
+import { defineComponent, onMounted } from 'vue';
+import { format } from 'date-fns';
+import { useQuasar } from 'quasar';
+import { useApolloClient } from '@vue/apollo-composable';
+import { useEntityList } from '@/composables';
+import { JOB_DELETE_BY_ID, JOB_LIST_ALL, JOB_SCHEDULE, JOB_UNSCHEDULE } from '@/graphql/queries';
 
 export default defineComponent({
   name: 'JobList',
   setup() {
-    const uri = '/admin/jobs';
     const $q = useQuasar();
-    const {client} = useApolloClient();
-    const loading = ref(false);
-    const router = useRouter();
-    const rows = ref([]);
-    const filter = ref('');
+    const { client } = useApolloClient();
+    
     const columns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
-      {name: 'scenario', label: 'Scenario', field: 'scenarioName', align: 'left', sortable: true},
-      {name: 'state', label: 'State', field: 'state', align: 'left', sortable: true},
-      {name: 'tsCreated', label: 'Created', field: 'tsCreated', align: 'left', sortable: true},
-      {name: 'tsUpdated', label: 'Updated', field: 'tsUpdated', align: 'left', sortable: true},
-      {name: 'actions', label: 'Actions', field: row => '', align: 'right', sortable: false}
+      { name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true },
+      { name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true },
+      { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
+      { name: 'scenario', label: 'Scenario', field: 'scenarioName', align: 'left', sortable: true },
+      { name: 'state', label: 'State', field: 'state', align: 'left', sortable: true },
+      { name: 'tsCreated', label: 'Created', field: 'tsCreated', align: 'left', sortable: true },
+      { name: 'tsUpdated', label: 'Updated', field: 'tsUpdated', align: 'left', sortable: true },
+      { name: 'actions', label: 'Actions', field: () => '', align: 'right', sortable: false }
     ];
-    const pagination = ref({
-      sortBy: 'id',
-      descending: true,
-      page: 1,
-      rowsPerPage: 10
-    });
 
+    /**
+     * Get color for job state
+     */
     const getStateColor = (state) => {
       const stateColors = {
         'ACTIVE': 'positive',
@@ -136,97 +190,49 @@ export default defineComponent({
       return stateColors[state] || 'grey';
     };
 
+    /**
+     * Format date for display
+     */
     const formatDate = (dateString) => {
       if (!dateString) return '-';
-      const date = new Date(dateString);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+      try {
+        return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
+      } catch (error) {
+        return '-';
+      }
     };
 
-    const fetchData = () => {
-      loading.value = true;
-      client.query({
-        query: JOB_LIST_ALL,
-        variables: {},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        rows.value = _.transform(response.data.jobList,
-          function (result, value) {
-            let job = {
-              id: value.id,
-              name: value.name || 'Unnamed',
-              description: value.description || '',
-              scenarioName: value.scenario ? value.scenario.name : '',
-              state: value.state,
-              tsCreated: value.tsCreated,
-              tsUpdated: value.tsUpdated
-            };
-            result.push(job);
-          }, []);
-        loading.value = false;
-      }).catch(error => {
-        loading.value = false;
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load jobs',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error fetching jobs:', error);
-      });
-    };
+    const {
+      filteredItems,
+      loading,
+      filter,
+      pagination,
+      fetchList,
+      viewItem,
+      editItem,
+      createItem,
+      deleteItem
+    } = useEntityList({
+      entityName: 'Job',
+      entityPath: '/admin/jobs',
+      listQuery: JOB_LIST_ALL,
+      deleteMutation: JOB_DELETE_BY_ID,
+      deleteKey: 'jobDelete',
+      columns,
+      transformAfterLoad: (job) => ({
+        id: job.id,
+        name: job.name || 'Unnamed',
+        description: job.description ? (job.description.length > 100 ? job.description.substring(0, 100) + '...' : job.description) : '-',
+        scenarioName: job.scenario?.name || null,
+        state: job.state,
+        tsCreated: job.tsCreated,
+        tsUpdated: job.tsUpdated
+      })
+    });
 
-    const removeItem = (toDelete) => {
-      $q.dialog({
-        title: 'Confirm Deletion',
-        message: `Are you sure you want to delete job "${toDelete.name}"?`,
-        ok: {
-          push: true,
-          color: 'negative',
-          label: "Delete",
-          icon: 'mdi-delete'
-        },
-        cancel: {
-          push: true,
-          color: 'grey',
-          label: 'Cancel'
-        }
-      }).onOk(() => {
-        client.mutate({
-          mutation: JOB_DELETE_BY_ID,
-          variables: {id: toDelete.id},
-          fetchPolicy: 'no-cache',
-          update: () => {
-            // Prevent Apollo from processing the mutation result
-          }
-        }).then(response => {
-          if (response.data.jobDelete.success) {
-            $q.notify({
-              color: 'positive',
-              message: 'Job deleted successfully',
-              icon: 'mdi-check-circle',
-              position: 'top'
-            });
-            fetchData();
-          } else {
-            $q.notify({
-              color: 'negative',
-              message: response.data.jobDelete.error || 'Failed to delete job',
-              icon: 'mdi-alert-circle',
-              position: 'top'
-            });
-          }
-        }).catch(error => {
-          $q.notify({
-            color: 'negative',
-            message: 'Failed to delete job',
-            icon: 'mdi-alert-circle',
-            position: 'top'
-          });
-          console.error('Error deleting job:', error);
-        });
-      });
-    };
-
+    /**
+     * Toggle job schedule (play/pause)
+     */
     const toggleJobSchedule = (job, shouldSchedule) => {
       const action = shouldSchedule ? 'schedule' : 'unschedule';
       const mutation = shouldSchedule ? JOB_SCHEDULE : JOB_UNSCHEDULE;
@@ -234,7 +240,7 @@ export default defineComponent({
       
       client.mutate({
         mutation: mutation,
-        variables: {jobId: job.id},
+        variables: { jobId: job.id },
         fetchPolicy: 'no-cache',
       }).then(response => {
         const result = response.data[`job${action.charAt(0).toUpperCase()}${action.slice(1)}`];
@@ -245,7 +251,7 @@ export default defineComponent({
             icon: shouldSchedule ? 'mdi-play-circle' : 'mdi-pause-circle',
             position: 'top'
           });
-          fetchData(); // Refresh the list
+          fetchList(); // Refresh the list
         } else {
           $q.notify({
             color: 'negative',
@@ -266,39 +272,24 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      fetchData();
+      fetchList();
     });
 
     return {
-      rows,
+      filteredItems,
       columns,
       pagination,
       loading,
-      fetchData,
       filter,
-      removeItem,
+      viewItem,
+      editItem,
+      createItem,
+      deleteItem,
       toggleJobSchedule,
-      uri,
       getStateColor,
-      formatDate,
-      onRowClick: (row) => {
-        router.push({path: `${uri}/${row.id}/view`});
-      },
-      onEdit: (row) => {
-        router.push({path: `${uri}/${row.id}/edit`});
-      },
-      addRow: () => {
-        router.push({path: `${uri}/new`});
-      },
+      formatDate
     };
   }
 });
-
 </script>
-
-<style scoped>
-.myhab-list-qgrid input:first-child {
-  max-width: 40px;
-}
-</style>
 
