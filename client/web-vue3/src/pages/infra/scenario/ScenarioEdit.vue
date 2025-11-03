@@ -57,38 +57,23 @@
         <q-separator/>
 
         <!-- Information Panel -->
-        <q-card-section class="bg-blue-grey-1">
-          <div class="text-subtitle2 text-weight-medium q-mb-sm">Information</div>
-          <div class="row q-gutter-md">
-            <div class="col">
-              <q-icon name="mdi-identifier" class="q-mr-xs"/>
-              <strong>ID:</strong> {{ scenario.id }}
-            </div>
-            <div class="col" v-if="scenario.uid">
-              <q-icon name="mdi-key" class="q-mr-xs"/>
-              <strong>UID:</strong> {{ scenario.uid }}
-            </div>
-            <div class="col" v-if="selectedPorts.length > 0">
-              <q-icon name="mdi-ethernet" class="q-mr-xs"/>
-              <strong>Connected Ports:</strong> {{ selectedPorts.length }}
-            </div>
-          </div>
-        </q-card-section>
+        <EntityInfoPanel
+          :entity="scenario"
+          icon="mdi-script-text"
+          :extra-info="[
+            { icon: 'mdi-ethernet', label: 'Connected Ports', value: selectedPorts.length }
+          ]"
+        />
 
         <q-separator/>
 
-        <q-card-actions>
-          <q-btn color="primary" type="submit" icon="mdi-content-save">
-            Save
-          </q-btn>
-          <q-btn color="grey" @click="$router.go(-1)" icon="mdi-cancel">
-            Cancel
-          </q-btn>
-          <q-space/>
-          <q-btn color="info" :to="`/admin/scenarios/${$route.params.idPrimary}/view`" icon="mdi-eye" outline>
-            View
-          </q-btn>
-        </q-card-actions>
+        <!-- Actions -->
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/scenarios/${$route.params.idPrimary}/view`"
+          save-label="Save Scenario"
+        />
       </q-card>
     </form>
 
@@ -101,31 +86,52 @@
 
 <script>
 import {defineComponent, onMounted, ref, computed} from 'vue';
-import _ from 'lodash';
-
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
-
-import {useQuasar} from 'quasar';
-
-import {SCENARIO_EDIT_GET_BY_ID, SCENARIO_UPDATE} from '@/graphql/queries';
-import {prepareForMutation} from "@/_helpers/apollo-utils";
+import {useRoute} from "vue-router/dist/vue-router";
+import {useEntityCRUD} from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import CodeEditor from '@/components/CodeEditor.vue';
+import {SCENARIO_EDIT_GET_BY_ID, SCENARIO_UPDATE} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'ScenarioEdit',
   components: {
-    CodeEditor
+    CodeEditor,
+    EntityInfoPanel,
+    EntityFormActions
   },
   setup() {
-    const $q = useQuasar();
     const {client} = useApolloClient();
-    const scenario = ref(null);
-    const router = useRouter();
     const route = useRoute();
-    const loading = ref(false);
+    
     const portListRaw = ref([]);
     const selectedPorts = ref([]);
+
+    // Use CRUD composable
+    const {
+      entity: scenario,
+      loading,
+      saving,
+      fetchEntity,
+      updateEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Scenario',
+      entityPath: '/admin/scenarios',
+      getQuery: SCENARIO_EDIT_GET_BY_ID,
+      getQueryKey: 'scenario',
+      updateMutation: SCENARIO_UPDATE,
+      updateMutationKey: 'updateScenario',
+      updateVariableName: 'scenario',
+      excludeFields: ['__typename', 'id', 'uid', 'tsCreated', 'tsUpdated', 'entityType'],
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Set ports to selected ports (only IDs)
+        transformed.ports = selectedPorts.value.map(port => ({id: port.id}));
+        return transformed;
+      }
+    });
 
     const portList = computed(() => {
       return portListRaw.value.map(port => ({
@@ -147,15 +153,14 @@ export default defineComponent({
       { label: 'log.warn', type: 'function', info: 'Log warning message' },
     ];
 
-    const fetchData = () => {
-      loading.value = true;
-      client.query({
-        query: SCENARIO_EDIT_GET_BY_ID,
-        variables: {id: route.params.idPrimary},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        scenario.value = _.cloneDeep(response.data.scenario);
-        portListRaw.value = response.data.devicePortList || [];
+    /**
+     * Fetch scenario data and port list
+     */
+    const fetchData = async () => {
+      const response = await fetchEntity();
+      
+      if (response) {
+        portListRaw.value = response.devicePortList || [];
         
         // Pre-select ports that are already connected
         if (scenario.value.ports && scenario.value.ports.length > 0) {
@@ -163,61 +168,22 @@ export default defineComponent({
             return portList.value.find(p => p.id === port.id);
           }).filter(Boolean);
         }
-        
-        loading.value = false;
-      }).catch(error => {
-        loading.value = false;
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load scenario data',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error fetching scenario:', error);
-      });
+      }
     };
 
-    const onSave = () => {
-      // Prepare mutation data - remove read-only fields
-      const cleanScenario = prepareForMutation(scenario.value, [
-        '__typename',
-        'id',
-        'uid',
-        'tsCreated',
-        'tsUpdated',
-        'entityType'
-      ]);
+    /**
+     * Save scenario
+     */
+    const onSave = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) return;
+      
+      // Validate required fields
+      if (!validateRequired(scenario.value, ['name', 'body'])) {
+        return;
+      }
 
-      // Set ports to selected ports
-      cleanScenario.ports = selectedPorts.value.map(port => ({id: port.id}));
-
-      client.mutate({
-        mutation: SCENARIO_UPDATE,
-        variables: {
-          id: scenario.value.id,
-          scenario: cleanScenario
-        },
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Prevent Apollo from processing the mutation result
-        }
-      }).then(() => {
-        $q.notify({
-          color: 'positive',
-          message: 'Scenario updated successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/scenarios/${scenario.value.id}/view`});
-      }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to update scenario',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error updating scenario:', error);
-      });
+      await updateEntity();
     };
 
     onMounted(() => {

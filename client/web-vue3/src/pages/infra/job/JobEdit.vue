@@ -120,38 +120,23 @@
         <q-separator/>
 
         <!-- Information Panel -->
-        <q-card-section class="bg-blue-grey-1">
-          <div class="text-subtitle2 text-weight-medium q-mb-sm">Information</div>
-          <div class="row q-gutter-md">
-            <div class="col">
-              <q-icon name="mdi-identifier" class="q-mr-xs"/>
-              <strong>ID:</strong> {{ job.id }}
-            </div>
-            <div class="col" v-if="job.uid">
-              <q-icon name="mdi-key" class="q-mr-xs"/>
-              <strong>UID:</strong> {{ job.uid }}
-            </div>
-            <div class="col" v-if="cronTriggers.length > 0">
-              <q-icon name="mdi-clock-outline" class="q-mr-xs"/>
-              <strong>Cron Triggers:</strong> {{ cronTriggers.length }}
-            </div>
-          </div>
-        </q-card-section>
+        <EntityInfoPanel
+          :entity="job"
+          icon="mdi-briefcase"
+          :extra-info="[
+            { icon: 'mdi-clock-outline', label: 'Cron Triggers', value: cronTriggers.length }
+          ]"
+        />
 
         <q-separator/>
 
-        <q-card-actions>
-          <q-btn color="primary" type="submit" icon="mdi-content-save">
-            Save
-          </q-btn>
-          <q-btn color="grey" @click="$router.go(-1)" icon="mdi-cancel">
-            Cancel
-          </q-btn>
-          <q-space/>
-          <q-btn color="info" :to="`/admin/jobs/${$route.params.idPrimary}/view`" icon="mdi-eye" outline>
-            View
-          </q-btn>
-        </q-card-actions>
+        <!-- Actions -->
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/jobs/${$route.params.idPrimary}/view`"
+          save-label="Save Job"
+        />
       </q-card>
     </form>
 
@@ -164,32 +149,76 @@
 
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
-import _ from 'lodash';
-
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
-
+import {useRoute} from "vue-router/dist/vue-router";
 import {useQuasar} from 'quasar';
-
+import {useEntityCRUD} from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {JOB_EDIT_GET_BY_ID, JOB_UPDATE} from '@/graphql/queries';
-import {prepareForMutation} from "@/_helpers/apollo-utils";
+import _ from 'lodash';
 
 export default defineComponent({
   name: 'JobEdit',
+  components: {
+    EntityInfoPanel,
+    EntityFormActions
+  },
   setup() {
     const $q = useQuasar();
     const {client} = useApolloClient();
-    const job = ref(null);
-    const router = useRouter();
     const route = useRoute();
-    const loading = ref(false);
+    
     const scenarioList = ref([]);
     const selectedScenario = ref(null);
     const tagList = ref([]);
     const tagListFiltered = ref([]);
     const selectedTags = ref([]);
     const cronTriggers = ref([]);
-    const jobStates = ['ACTIVE', 'INACTIVE', 'PAUSED', 'DISABLED'];
+    const jobStates = ['DRAFT', 'ACTIVE', 'DISABLED'];
+
+    // Use CRUD composable
+    const {
+      entity: job,
+      loading,
+      saving,
+      fetchEntity,
+      updateEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Job',
+      entityPath: '/admin/jobs',
+      getQuery: JOB_EDIT_GET_BY_ID,
+      getQueryKey: 'job',
+      updateMutation: JOB_UPDATE,
+      updateMutationKey: 'jobUpdate',
+      updateVariableName: 'job',
+      excludeFields: ['__typename', 'id', 'uid', 'tsCreated', 'tsUpdated', 'entityType', 'cronTriggers', 'eventTriggers', 'tags', 'scenario'],
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        
+        // Set scenario
+        transformed.scenario = { id: selectedScenario.value.id };
+        
+        // Set cron triggers
+        transformed.cronTriggers = cronTriggers.value.map(t => ({
+          id: t.id,
+          expression: t.expression
+        }));
+        
+        // Set tags: handle both existing tags (with IDs) and new tags (without IDs)
+        transformed.tags = selectedTags.value.map(tag => {
+          if (tag.id) {
+            return { id: tag.id };
+          } else {
+            // New tag - send only the name, server will create it
+            return { name: tag.name };
+          }
+        });
+        
+        return transformed;
+      }
+    });
 
     const addCronTrigger = () => {
       cronTriggers.value.push({ expression: '0 0 * * *' });
@@ -253,18 +282,17 @@ export default defineComponent({
       }
     };
 
-    const fetchData = () => {
-      loading.value = true;
-      client.query({
-        query: JOB_EDIT_GET_BY_ID,
-        variables: {id: route.params.idPrimary},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        job.value = _.cloneDeep(response.data.job);
-        scenarioList.value = response.data.scenarioList || [];
+    /**
+     * Fetch job data, scenarios, and tags
+     */
+    const fetchData = async () => {
+      const response = await fetchEntity();
+      
+      if (response) {
+        scenarioList.value = response.scenarioList || [];
         // Create mutable copies of tag lists to allow adding new tags
-        tagList.value = [...(response.data.jobTagList || [])];
-        tagListFiltered.value = [...(response.data.jobTagList || [])];
+        tagList.value = [...(response.jobTagList || [])];
+        tagListFiltered.value = [...(response.jobTagList || [])];
         
         // Pre-select scenario
         if (job.value.scenario) {
@@ -282,29 +310,18 @@ export default defineComponent({
         if (job.value.cronTriggers && job.value.cronTriggers.length > 0) {
           cronTriggers.value = _.cloneDeep(job.value.cronTriggers);
         }
-        
-        loading.value = false;
-      }).catch(error => {
-        loading.value = false;
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load job data',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error fetching job:', error);
-      });
+      }
     };
 
-    const onSave = () => {
+    /**
+     * Save job
+     */
+    const onSave = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) return;
+      
       // Validate required fields
-      if (!job.value.name) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please enter a job name',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
+      if (!validateRequired(job.value, ['name'])) {
         return;
       }
 
@@ -318,66 +335,7 @@ export default defineComponent({
         return;
       }
 
-      // Prepare mutation data - remove read-only fields
-      const cleanJob = prepareForMutation(job.value, [
-        '__typename',
-        'id',
-        'uid',
-        'tsCreated',
-        'tsUpdated',
-        'entityType',
-        'cronTriggers',
-        'eventTriggers',
-        'tags',
-        'scenario'
-      ]);
-
-      // Set scenario
-      cleanJob.scenario = { id: selectedScenario.value.id };
-      
-      // Set cron triggers
-      cleanJob.cronTriggers = cronTriggers.value.map(t => ({
-        id: t.id,
-        expression: t.expression
-      }));
-      
-      // Set tags: handle both existing tags (with IDs) and new tags (without IDs)
-      cleanJob.tags = selectedTags.value.map(tag => {
-        if (tag.id) {
-          return { id: tag.id };
-        } else {
-          // New tag - send only the name, server will create it
-          return { name: tag.name };
-        }
-      });
-
-      client.mutate({
-        mutation: JOB_UPDATE,
-        variables: {
-          id: job.value.id,
-          job: cleanJob
-        },
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Prevent Apollo from processing the mutation result
-        }
-      }).then(() => {
-        $q.notify({
-          color: 'positive',
-          message: 'Job updated successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/jobs/${job.value.id}/view`});
-      }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to update job',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error updating job:', error);
-      });
+      await updateEntity();
     };
 
     onMounted(() => {
