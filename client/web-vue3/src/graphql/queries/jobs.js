@@ -128,3 +128,21 @@ export const JOB_DELETE_BY_ID = gql`
   }
 `;
 
+export const JOB_SCHEDULE = gql`
+  mutation jobSchedule($jobId: ID!) {
+    jobSchedule(jobId: $jobId) {
+      success
+      error
+    }
+  }
+`;
+
+export const JOB_UNSCHEDULE = gql`
+  mutation jobUnschedule($jobId: ID!) {
+    jobUnschedule(jobId: $jobId) {
+      success
+      error
+    }
+  }
+`;
+

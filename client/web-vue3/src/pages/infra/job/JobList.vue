@@ -48,6 +48,26 @@
           </q-td>
           <q-td key="actions">
             <q-btn-group>
+              <!-- Play/Pause Button -->
+              <q-btn 
+                v-if="props.row.state === 'ACTIVE'" 
+                icon="mdi-pause" 
+                color="orange-7" 
+                @click.stop="toggleJobSchedule(props.row, false)" 
+                flat
+              >
+                <q-tooltip>Pause Job</q-tooltip>
+              </q-btn>
+              <q-btn 
+                v-else 
+                icon="mdi-play" 
+                color="green-7" 
+                @click.stop="toggleJobSchedule(props.row, true)" 
+                flat
+              >
+                <q-tooltip>Start Job</q-tooltip>
+              </q-btn>
+              
               <q-btn icon="mdi-open-in-new" @click.stop="" :href="'/'+uri+'/'+props.row.id+'/view'" target="_blank"
                      color="blue-6" flat>
                 <q-tooltip>View</q-tooltip>
@@ -74,7 +94,7 @@ import {useRouter} from "vue-router/dist/vue-router";
 
 import {useQuasar} from "quasar";
 
-import {JOB_DELETE_BY_ID, JOB_LIST_ALL} from "@/graphql/queries";
+import {JOB_DELETE_BY_ID, JOB_LIST_ALL, JOB_SCHEDULE, JOB_UNSCHEDULE} from "@/graphql/queries";
 
 import _ from "lodash";
 
@@ -207,6 +227,44 @@ export default defineComponent({
       });
     };
 
+    const toggleJobSchedule = (job, shouldSchedule) => {
+      const action = shouldSchedule ? 'schedule' : 'unschedule';
+      const mutation = shouldSchedule ? JOB_SCHEDULE : JOB_UNSCHEDULE;
+      const actionLabel = shouldSchedule ? 'Start' : 'Pause';
+      
+      client.mutate({
+        mutation: mutation,
+        variables: {jobId: job.id},
+        fetchPolicy: 'no-cache',
+      }).then(response => {
+        const result = response.data[`job${action.charAt(0).toUpperCase()}${action.slice(1)}`];
+        if (result.success) {
+          $q.notify({
+            color: 'positive',
+            message: `Job ${actionLabel.toLowerCase()}ed successfully`,
+            icon: shouldSchedule ? 'mdi-play-circle' : 'mdi-pause-circle',
+            position: 'top'
+          });
+          fetchData(); // Refresh the list
+        } else {
+          $q.notify({
+            color: 'negative',
+            message: result.error || `Failed to ${action} job`,
+            icon: 'mdi-alert-circle',
+            position: 'top'
+          });
+        }
+      }).catch(error => {
+        $q.notify({
+          color: 'negative',
+          message: `Failed to ${action} job`,
+          icon: 'mdi-alert-circle',
+          position: 'top'
+        });
+        console.error(`Error ${action}ing job:`, error);
+      });
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -219,6 +277,7 @@ export default defineComponent({
       fetchData,
       filter,
       removeItem,
+      toggleJobSchedule,
       uri,
       getStateColor,
       formatDate,
