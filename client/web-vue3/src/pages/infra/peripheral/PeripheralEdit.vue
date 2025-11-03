@@ -107,27 +107,11 @@
         </q-card-section>
 
         <q-card-section class="q-gutter-md">
-          <q-select 
+          <LocationSelector
             v-model="peripheral.zones"
-            :options="zoneListFiltered"
-            :disable="zoneListDisabled"
-            input-debounce="0"
-            @filter="filterZones"
-            :option-label="opt => opt && opt.name ? opt.name : ''"
-            map-options
-            stack-label
-            use-chips
-            use-input
-            filled
-            dense
-            multiple
             label="Zones"
-            clearable
-          >
-            <template v-slot:prepend>
-              <q-icon name="mdi-map-marker"/>
-            </template>
-          </q-select>
+            hint="Select zones where this peripheral is located"
+          />
         </q-card-section>
 
         <q-separator/>
@@ -178,32 +162,29 @@ import { useEntityCRUD } from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
 import PortConnectCard from '@/components/cards/PortConnectCard.vue';
+import LocationSelector from '@/components/selectors/LocationSelector.vue';
 
 import {
   PERIPHERAL_CATEGORIES,
   PERIPHERAL_GET_BY_ID,
-  PERIPHERAL_UPDATE,
-  ZONES_GET_ALL
+  PERIPHERAL_UPDATE
 } from '@/graphql/queries';
 
 import { useApolloClient } from '@vue/apollo-composable';
-import _ from 'lodash';
 
 export default defineComponent({
   name: 'PeripheralEdit',
   components: {
     EntityInfoPanel,
     EntityFormActions,
-    PortConnectCard
+    PortConnectCard,
+    LocationSelector
   },
   setup() {
     const route = useRoute();
     const { client } = useApolloClient();
     const categoryList = ref([]);
     const deviceList = ref([]);
-    const zoneList = ref([]);
-    const zoneListFiltered = ref([]);
-    const zoneListDisabled = ref(false);
 
     const {
       entity: peripheral,
@@ -244,25 +225,6 @@ export default defineComponent({
     });
 
     /**
-     * Filter zones for search
-     */
-    const filterZones = (val, update) => {
-      if (val === '') {
-        update(() => {
-          zoneListFiltered.value = zoneList.value;
-        });
-        return;
-      }
-
-      update(() => {
-        const needle = val.toLowerCase();
-        zoneListFiltered.value = zoneList.value.filter(
-          v => v.name.toLowerCase().indexOf(needle) > -1
-        );
-      });
-    };
-
-    /**
      * Custom fetch to load additional data
      */
     const fetchData = async () => {
@@ -290,22 +252,6 @@ export default defineComponent({
       }).then(response => {
         categoryList.value = response.data.peripheralCategoryList;
       });
-
-      // Fetch zones
-      client.query({
-        query: ZONES_GET_ALL,
-        variables: {},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        zoneList.value = _.transform(response.data.zoneList,
-          function (result, value) {
-            result.push({
-              id: value.id,
-              name: value.name
-            });
-          });
-        zoneListFiltered.value = [...zoneList.value];
-      });
     };
 
     /**
@@ -332,13 +278,9 @@ export default defineComponent({
       peripheral,
       categoryList,
       deviceList,
-      zoneList,
-      zoneListFiltered,
-      zoneListDisabled,
       loading,
       saving,
-      onSave,
-      filterZones
+      onSave
     };
   }
 });

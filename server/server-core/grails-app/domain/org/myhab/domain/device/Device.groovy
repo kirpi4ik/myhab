@@ -43,9 +43,9 @@ class Device extends BaseEntity implements Configurable<Device> {
         networkAddress nullable: true, cascade: "all"
         offlineScenario nullable: true
         rack nullable: true
-        type nullable: true, cascade: "all"
+        type nullable: true
         status nullable: true
-        zones joinTable: [name: "zones_devices_join", key: 'device_id'], cascade: "all"
+        zones joinTable: [name: "zones_devices_join", key: 'device_id']
     }
     static embedded = ['networkAddress']
     static graphql = GraphQLMapping.lazy {
@@ -57,6 +57,89 @@ class Device extends BaseEntity implements Configurable<Device> {
             }
             input false
         }
+        
+        // Custom update mutation to properly handle zones many-to-many relationship
+        mutation('deviceUpdateCustom', Device) {
+            argument('id', Long)
+            argument('device', Device.class)
+            returns Device
+            dataFetcher { DataFetchingEnvironment env ->
+                Long id = env.getArgument('id') as Long
+                Device deviceData = env.getArgument('device') as Device
+                
+                Device existingDevice = Device.get(id)
+                if (!existingDevice) {
+                    throw new RuntimeException("Device not found with id: ${id}")
+                }
+                
+                Device.withTransaction { status ->
+                    // Update basic fields
+                    if (deviceData.code != null) existingDevice.code = deviceData.code
+                    if (deviceData.name != null) existingDevice.name = deviceData.name
+                    if (deviceData.description != null) existingDevice.description = deviceData.description
+                    if (deviceData.offlineScenario != null) existingDevice.offlineScenario = deviceData.offlineScenario
+                    if (deviceData.networkAddress != null) existingDevice.networkAddress = deviceData.networkAddress
+                    
+                    // Update model - handle enum
+                    if (deviceData.model != null) {
+                        existingDevice.model = deviceData.model
+                    }
+                    
+                    // Update status - handle enum
+                    if (deviceData.status != null) {
+                        existingDevice.status = deviceData.status
+                    }
+                    
+                    // Update rack - get managed entity or clear
+                    if (deviceData.rack != null) {
+                        def newRackId = deviceData.rack?.id as Long
+                        if (newRackId) {
+                            existingDevice.rack = Rack.get(newRackId)
+                        } else {
+                            existingDevice.rack = null
+                        }
+                    }
+                    
+                    // Update type - get managed entity or clear
+                    if (deviceData.type != null) {
+                        def newTypeId = deviceData.type?.id as Long
+                        if (newTypeId) {
+                            existingDevice.type = DeviceCategory.get(newTypeId)
+                        } else {
+                            existingDevice.type = null
+                        }
+                    }
+                    
+                    // Save basic changes first
+                    existingDevice.save(flush: true, failOnError: true)
+                    
+                    // Update zones - rebuild the collection using explicit join table
+                    if (deviceData.zones != null) {
+                        def newZoneIds = deviceData.zones?.collect { it?.id as Long }?.findAll { it != null } ?: []
+                        
+                        // Clear all existing zone relationships for this device
+                        Device.executeUpdate(
+                            'delete from DeviceZoneJoin dzj where dzj.device.id = :deviceId',
+                            [deviceId: existingDevice.id]
+                        )
+                        
+                        // Add new zone relationships
+                        newZoneIds.each { zoneId ->
+                            Zone zone = Zone.get(zoneId)
+                            if (zone) {
+                                new DeviceZoneJoin(device: existingDevice, zone: zone).save(flush: true, failOnError: true)
+                            }
+                        }
+                    }
+                }
+                
+                // Refresh to get latest state
+                existingDevice.refresh()
+                
+                return existingDevice
+            }
+        }
+        
         query('deviceById', Device) {
             argument('id', String)
             dataFetcher(new DataFetcher() {
