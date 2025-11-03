@@ -87,24 +87,19 @@
             :options="availableSubZones"
             option-label="name"
             label="Sub-zones" 
-            hint="Select child zones (optional)"
+            hint="Select child zones (optional, excludes current zone and parent)"
             map-options 
             filled 
             dense 
             color="orange"
             multiple
             use-chips
+            use-input
             stack-label
+            clearable
           >
             <template v-slot:prepend>
               <q-icon name="mdi-map-marker-radius"/>
-            </template>
-            <template v-slot:append v-if="zone.zones && zone.zones.length">
-              <q-icon 
-                name="mdi-close-circle" 
-                @click.stop.prevent="zone.zones = []" 
-                class="cursor-pointer"
-              />
             </template>
           </q-select>
         </q-card-section>
