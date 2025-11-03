@@ -1,98 +1,152 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="!loading && zone">
       <q-card flat bordered>
-        <q-card-section class="full-width" v-if="zone">
-          <div class="text-h5">Edit zone: {{ zone.name }}</div>
-          
+        <q-card-section>
+          <div class="text-h5 q-mb-md">
+            <q-icon name="mdi-pencil" color="primary" size="sm" class="q-mr-sm"/>
+            Edit Zone
+          </div>
+          <div class="text-subtitle2 text-weight-medium">
+            {{ zone.name }}
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Basic Information -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">Basic Information</div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
           <q-input 
             v-model="zone.name" 
             label="Name" 
+            hint="Zone name or identifier"
             clearable 
             clear-icon="close" 
             color="orange"
-            :rules="[val => !!val || 'Field is required']"
-          />
+            filled
+            dense
+            :rules="[val => !!val || 'Name is required']"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-label"/>
+            </template>
+          </q-input>
           
           <q-input 
             v-model="zone.description" 
             label="Description" 
+            hint="Zone description or purpose"
             clearable 
             clear-icon="close" 
             color="orange"
+            filled
+            dense
             type="textarea"
             rows="3"
-          />
-          
-          <q-separator class="q-my-md"/>
-          
-          <div class="text-h6">Parent Zone</div>
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-text"/>
+            </template>
+          </q-input>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Zone Hierarchy -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">
+            <q-icon name="mdi-file-tree" class="q-mr-xs"/>
+            Zone Hierarchy
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
           <q-select 
             v-model="zone.parent"
             :options="zoneList"
             option-label="name"
             label="Parent Zone" 
+            hint="Select parent zone (optional)"
             map-options 
             filled 
             dense 
-            color="green"
+            color="orange"
             clearable
           >
             <template v-slot:prepend>
-              <q-icon name="mdi-map-marker-multiple" />
+              <q-icon name="mdi-map-marker-multiple"/>
             </template>
           </q-select>
           
-          <q-separator class="q-my-md"/>
-          
-          <div class="text-h6">Sub-zones</div>
           <q-select 
             v-model="zone.zones"
             :options="availableSubZones"
             option-label="name"
             label="Sub-zones" 
+            hint="Select child zones (optional)"
             map-options 
             filled 
             dense 
-            color="green"
+            color="orange"
             multiple
             use-chips
             stack-label
           >
             <template v-slot:prepend>
-              <q-icon name="mdi-map-marker-radius" />
+              <q-icon name="mdi-map-marker-radius"/>
             </template>
-            <q-icon 
-              name="cancel" 
-              @click.stop.prevent="zone.zones = []" 
-              class="cursor-pointer text-blue"
-            />
+            <template v-slot:append v-if="zone.zones && zone.zones.length">
+              <q-icon 
+                name="mdi-close-circle" 
+                @click.stop.prevent="zone.zones = []" 
+                class="cursor-pointer"
+              />
+            </template>
           </q-select>
-          
         </q-card-section>
-        
+
         <q-separator/>
-        
-        <q-card-actions>
-          <q-btn color="accent" type="submit" icon="save">
-            Save
-          </q-btn>
-          <q-btn color="info" @click="$router.go(-1)" icon="mdi-arrow-left">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+
+        <!-- Information Panel -->
+        <EntityInfoPanel
+          :entity="zone"
+          icon="mdi-map-marker"
+          :extra-info="[
+            { icon: 'mdi-map-marker-radius', label: 'Sub-zones', value: zone.zones?.length || 0 }
+          ]"
+        />
+
+        <q-separator/>
+
+        <!-- Actions -->
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/zones/${$route.params.idPrimary}/view`"
+          save-label="Save Zone"
+        />
       </q-card>
     </form>
+
+    <!-- Loading State -->
+    <q-inner-loading :showing="loading">
+      <q-spinner-gears size="50px" color="primary"/>
+    </q-inner-loading>
   </q-page>
 </template>
 
 <script>
 import { defineComponent, onMounted, ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useApolloClient } from '@vue/apollo-composable';
-import { prepareForMutation } from '@/_helpers';
-import _ from 'lodash';
+import { useEntityCRUD } from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 
 import { 
   ZONE_GET_BY_ID_MINIMAL,
@@ -102,117 +156,148 @@ import {
 
 export default defineComponent({
   name: 'ZoneEdit',
+  components: {
+    EntityInfoPanel,
+    EntityFormActions
+  },
   setup() {
+    const route = useRoute();
     const $q = useQuasar();
     const { client } = useApolloClient();
-    const zone = ref({ 
-      zones: [], 
-      parent: null,
-      name: '',
-      description: ''
-    });
-    const zoneList = ref([]);
-    const router = useRouter();
-    const route = useRoute();
     
-    // Compute available sub-zones (exclude current zone and its descendants)
+    // Additional data
+    const zoneList = ref([]);
+    
+    // Use CRUD composable
+    const {
+      entity: zone,
+      loading,
+      saving,
+      fetchEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Zone',
+      entityPath: '/admin/zones',
+      getQuery: ZONE_GET_BY_ID_MINIMAL,
+      updateMutation: ZONE_VALUE_UPDATE,
+      getQueryKey: 'zoneById',
+      excludeFields: ['__typename', 'uid', 'tsCreated', 'tsUpdated']
+    });
+    
+    // Compute available sub-zones (exclude current zone, parent zone, and already selected zones)
     const availableSubZones = computed(() => {
       if (!zone.value.id) return zoneList.value;
       
+      // Get IDs of currently selected sub-zones
+      const selectedZoneIds = (zone.value.zones || []).map(z => z.id);
+      
       return zoneList.value.filter(z => {
-        // Exclude the current zone itself
+        // Exclude the current zone itself (prevent self-reference)
         if (z.id === zone.value.id) return false;
         
-        // Exclude if this zone is already a parent of the candidate
-        // (to prevent circular references)
+        // Exclude the parent zone (prevent direct cyclic reference)
+        if (zone.value.parent && z.id === zone.value.parent.id) return false;
+        
+        // Exclude already selected sub-zones
+        if (selectedZoneIds.includes(z.id)) return false;
+        
         return true;
       });
     });
     
-    const fetchData = () => {
-      // Fetch the zone data
-      client.query({
-        query: ZONE_GET_BY_ID_MINIMAL,
-        variables: { id: route.params.idPrimary },
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        zone.value = _.cloneDeep(response.data.zoneById);
-      }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: error.message || 'Failed to load zone data'
-        });
-      });
+    /**
+     * Fetch zone data and all zones list
+     */
+    const fetchData = async () => {
+      // Fetch zone data
+      await fetchEntity();
       
       // Fetch all zones for parent/sub-zone selection
       client.query({
         query: ZONES_GET_ALL,
-        variables: {},
         fetchPolicy: 'network-only',
       }).then(response => {
         zoneList.value = response.data.zoneList;
+      }).catch(error => {
+        console.error('Error fetching zones list:', error);
       });
     };
     
-    const onSave = () => {
-      if (!zone.value.name) {
-        $q.notify({
-          color: 'negative',
-          message: 'Name is required'
-        });
+    /**
+     * Save zone
+     */
+    const onSave = async () => {
+      // Prevent double execution
+      if (saving.value) {
         return;
       }
       
-      // Create a clean copy for mutation
-      const cleanZone = prepareForMutation(zone.value, [
-        '__typename', 
-        'devices', 
-        'peripherals', 
-        'cables',
-        'categories'
-      ]);
+      // Validate required fields
+      if (!validateRequired(zone.value, ['name'])) {
+        return;
+      }
       
-      // Remove id from top-level zone object
-      delete cleanZone.id;
+      // We need to bypass the default updateEntity because prepareForMutation
+      // removes 'id' from nested objects, which breaks our parent and zones
+      // So we'll call the mutation directly
+      saving.value = true;
       
-      // Clean parent - keep only id
-      if (cleanZone.parent) {
-        cleanZone.parent = {
-          id: cleanZone.parent.id
+      try {
+        // Apply our custom transformation
+        const transformed = {
+          name: zone.value.name,
+          description: zone.value.description,
+          categories: zone.value.categories || [],
+          parent: null,
+          zones: []
         };
-      }
-      
-      // Clean zones array - keep only id
-      if (cleanZone.zones && Array.isArray(cleanZone.zones)) {
-        cleanZone.zones = cleanZone.zones.map(z => ({
-          id: z.id
-        }));
-      }
-      
-      client.mutate({
-        mutation: ZONE_VALUE_UPDATE,
-        variables: { 
-          id: route.params.idPrimary, 
-          zone: cleanZone 
-        },
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Skip cache update to avoid normalization issues
+        
+        // Clean parent - keep only id
+        if (zone.value.parent && zone.value.parent.id) {
+          transformed.parent = { id: zone.value.parent.id };
         }
-      }).then(response => {
+        
+        // Clean zones array - keep only id
+        if (zone.value.zones && Array.isArray(zone.value.zones)) {
+          transformed.zones = zone.value.zones
+            .filter(z => z && z.id)
+            .map(z => ({ id: z.id }));
+        }
+        
+        const response = await client.mutate({
+          mutation: ZONE_VALUE_UPDATE,
+          variables: { 
+            id: route.params.idPrimary, 
+            zone: transformed
+          },
+          fetchPolicy: 'no-cache',
+          update: () => {
+            // Skip cache update
+          }
+        });
+        
+        saving.value = false;
+        
         $q.notify({
           color: 'positive',
           message: 'Zone updated successfully',
-          icon: 'check_circle'
+          icon: 'mdi-check-circle',
+          position: 'top'
         });
-        router.push({ path: `/admin/zones/${response.data.zoneUpdate.id}/view` });
-      }).catch(error => {
+        
+        // Refresh data
+        await fetchData();
+        
+      } catch (error) {
+        saving.value = false;
         $q.notify({
           color: 'negative',
           message: error.message || 'Update failed',
-          icon: 'error'
+          icon: 'mdi-alert-circle',
+          position: 'top'
         });
-      });
+        console.error('Error updating zone:', error);
+      }
     };
     
     onMounted(() => {
@@ -223,15 +308,10 @@ export default defineComponent({
       zone,
       zoneList,
       availableSubZones,
+      loading,
+      saving,
       onSave
     };
   }
 });
 </script>
-
-<style scoped>
-.q-my-md {
-  margin-top: 16px;
-  margin-bottom: 16px;
-}
-</style>
