@@ -14,9 +14,13 @@ import _ from 'lodash';
  * @property {string} entityName - Display name of the entity (e.g., 'Cable', 'Device')
  * @property {string} entityPath - Base path for routing (e.g., '/admin/cables')
  * @property {Object} getQuery - GraphQL query for fetching single entity
+ * @property {string} getQueryKey - Key to extract entity from query response (optional)
  * @property {Object} createMutation - GraphQL mutation for creating entity
+ * @property {string} createMutationKey - Key to extract result from create mutation (optional)
  * @property {Object} updateMutation - GraphQL mutation for updating entity
+ * @property {string} updateMutationKey - Key to extract result from update mutation (optional)
  * @property {Object} deleteMutation - GraphQL mutation for deleting entity
+ * @property {string} deleteMutationKey - Key to extract result from delete mutation (optional)
  * @property {Array<string>} excludeFields - Fields to exclude from mutations (default: common fields)
  * @property {Function} transformBeforeSave - Optional function to transform data before saving
  * @property {Function} transformAfterLoad - Optional function to transform data after loading
@@ -27,9 +31,13 @@ export function useEntityCRUD(options) {
     entityName,
     entityPath,
     getQuery,
+    getQueryKey,
     createMutation,
+    createMutationKey,
     updateMutation,
+    updateMutationKey,
     deleteMutation,
+    deleteMutationKey,
     excludeFields = ['__typename', 'entityType', 'uid', 'tsCreated', 'tsUpdated', 'version'],
     transformBeforeSave,
     transformAfterLoad
@@ -66,7 +74,7 @@ export function useEntityCRUD(options) {
       });
 
       // Extract entity from response (handle different response structures)
-      const entityKey = Object.keys(response.data).find(key => 
+      const entityKey = getQueryKey || Object.keys(response.data).find(key => 
         !key.endsWith('List') && response.data[key] && typeof response.data[key] === 'object'
       );
       
@@ -106,14 +114,17 @@ export function useEntityCRUD(options) {
       // Clean data for mutation
       cleanData = prepareForMutation(cleanData, excludeFields);
 
+      // Determine the variable name for the mutation (e.g., 'deviceCategoryCreate' -> 'deviceCategory')
+      const variableName = createMutationKey ? createMutationKey.replace(/Create$/, '') : entityName;
+
       const response = await client.mutate({
         mutation: createMutation,
-        variables: { [entityName.toLowerCase()]: cleanData, ...additionalVariables },
+        variables: { [variableName]: cleanData, ...additionalVariables },
         fetchPolicy: 'no-cache',
       });
 
       // Extract created entity from response
-      const mutationKey = Object.keys(response.data)[0];
+      const mutationKey = createMutationKey || Object.keys(response.data)[0];
       const createdEntity = response.data[mutationKey];
 
       if (createdEntity && createdEntity.id) {
@@ -165,12 +176,15 @@ export function useEntityCRUD(options) {
       
       // Clean data for mutation
       cleanData = prepareForMutation(cleanData, [...excludeFields, 'id']);
+      
+      // Determine the variable name for the mutation (e.g., 'deviceCategoryUpdate' -> 'deviceCategory')
+      const variableName = updateMutationKey ? updateMutationKey.replace(/Update$/, '') : entityName;
 
       const response = await client.mutate({
         mutation: updateMutation,
         variables: { 
           id: entityId, 
-          [entityName.toLowerCase()]: cleanData, 
+          [variableName]: cleanData, 
           ...additionalVariables 
         },
         fetchPolicy: 'no-cache',
@@ -180,7 +194,7 @@ export function useEntityCRUD(options) {
       });
 
       // Extract updated entity from response
-      const mutationKey = Object.keys(response.data)[0];
+      const mutationKey = updateMutationKey || Object.keys(response.data)[0];
       const updatedEntity = response.data[mutationKey];
 
       if (updatedEntity && (updatedEntity.id || updatedEntity.success)) {

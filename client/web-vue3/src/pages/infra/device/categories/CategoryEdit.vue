@@ -40,51 +40,20 @@
         <q-separator/>
 
         <!-- Information Panel -->
-        <q-card-section class="bg-blue-grey-1">
-          <div class="text-subtitle2 text-weight-medium q-mb-sm">Information</div>
-          <div class="row q-gutter-md">
-            <div class="col">
-              <q-icon name="mdi-identifier" class="q-mr-xs"/>
-              <strong>ID:</strong> {{ category.id }}
-            </div>
-            <div class="col" v-if="category.uid">
-              <q-icon name="mdi-key" class="q-mr-xs"/>
-              <strong>UID:</strong> {{ category.uid }}
-            </div>
-          </div>
-        </q-card-section>
+        <EntityInfoPanel
+          :entity="category"
+          icon="mdi-shape"
+        />
 
         <q-separator/>
 
         <!-- Actions -->
-        <q-card-actions>
-          <q-btn 
-            color="primary" 
-            type="submit" 
-            icon="mdi-content-save"
-            :loading="saving"
-          >
-            Save
-          </q-btn>
-          <q-btn 
-            color="grey" 
-            @click="$router.go(-1)" 
-            icon="mdi-cancel"
-            :disable="saving"
-          >
-            Cancel
-          </q-btn>
-          <q-space/>
-          <q-btn 
-            color="info" 
-            :to="`/admin/dcategories/${$route.params.idPrimary}/view`" 
-            icon="mdi-eye" 
-            outline
-            :disable="saving"
-          >
-            View
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/dcategories/${$route.params.idPrimary}/view`"
+          save-label="Save Category"
+        />
       </q-card>
     </form>
 
@@ -96,12 +65,11 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import {useQuasar} from 'quasar';
-import {useApolloClient} from '@vue/apollo-composable';
-import {prepareForMutation} from '@/_helpers';
-import _ from 'lodash';
+import { defineComponent, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useEntityCRUD } from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 
 import {
   DEVICE_CATEGORY_BY_ID,
@@ -110,111 +78,56 @@ import {
 
 export default defineComponent({
   name: 'DCategoryEdit',
+  components: {
+    EntityInfoPanel,
+    EntityFormActions
+  },
   setup() {
-    const $q = useQuasar();
-    const {client} = useApolloClient();
-    const category = ref({
-      name: ''
-    });
-    const router = useRouter();
     const route = useRoute();
-    const loading = ref(false);
-    const saving = ref(false);
+
+    const {
+      entity: category,
+      loading,
+      saving,
+      fetchEntity,
+      updateEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Device Category',
+      entityPath: '/admin/dcategories',
+      getQuery: DEVICE_CATEGORY_BY_ID,
+      getQueryKey: 'deviceCategory',
+      updateMutation: DEVICE_CATEGORY_UPDATE,
+      updateMutationKey: 'deviceCategoryUpdate',
+      excludeFields: ['__typename', 'entityType', 'id', 'uid', 'tsCreated', 'tsUpdated']
+    });
 
     /**
-     * Fetch category data from server
+     * Save category
      */
-    const fetchData = () => {
-      loading.value = true;
-      client.query({
-        query: DEVICE_CATEGORY_BY_ID,
-        variables: {id: route.params.idPrimary},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        category.value = _.cloneDeep(response.data.deviceCategory);
-        loading.value = false;
-      }).catch(error => {
-        loading.value = false;
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load category data',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error fetching device category:', error);
-      });
-    };
-
-    /**
-     * Update device category
-     */
-    const onSave = () => {
-      // Validate required fields
-      if (!category.value.name) {
-        $q.notify({
-          color: 'negative',
-          message: 'Category name is required',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
+    const onSave = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) {
         return;
       }
-
-      saving.value = true;
-
-      // Create a clean copy for mutation
-      const cleanCategory = prepareForMutation(category.value, [
-        '__typename',
-        'entityType',
-        'id',
-        'uid',
-        'tsCreated',
-        'tsUpdated'
-      ]);
-
-      client.mutate({
-        mutation: DEVICE_CATEGORY_UPDATE,
-        variables: {
-          id: route.params.idPrimary,
-          deviceCategory: cleanCategory
-        },
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Skip cache update to avoid normalization issues
-        }
-      }).then(response => {
-        saving.value = false;
-        $q.notify({
-          color: 'positive',
-          message: 'Device category updated successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        // Refresh data to show updated values
-        fetchData();
-      }).catch(error => {
-        saving.value = false;
-        $q.notify({
-          color: 'negative',
-          message: error.message || 'Update failed',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error updating device category:', error);
-      });
+      
+      if (!validateRequired(category.value, ['name'])) {
+        return;
+      }
+      
+      await updateEntity();
     };
 
     onMounted(() => {
-      fetchData();
+      fetchEntity();
     });
 
     return {
       category,
-      onSave,
       loading,
-      saving
+      saving,
+      onSave
     };
   }
 });
-
 </script>
