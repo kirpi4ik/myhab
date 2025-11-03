@@ -21,7 +21,7 @@ class Zone extends BaseEntity implements Configurable<Zone> {
     Set<String> categories
     Zone parent
     Set<Zone> zones
-    Set<DevicePeripheral> devices
+    Set<Device> devices
     Set<DevicePeripheral> peripherals
     Set<Cable> cables
 
@@ -56,6 +56,65 @@ class Zone extends BaseEntity implements Configurable<Zone> {
             input true
         }
 
+        // Custom update mutation to properly handle sub-zones removal
+        mutation('zoneUpdateCustom', Zone) {
+            argument('id', Long)
+            argument('zone', Zone.class)
+            returns Zone
+            dataFetcher { DataFetchingEnvironment env ->
+                Long id = env.getArgument('id') as Long
+                Zone zoneData = env.getArgument('zone') as Zone
+                
+                Zone existingZone = Zone.get(id)
+                if (!existingZone) {
+                    throw new RuntimeException("Zone not found with id: ${id}")
+                }
+                
+                Zone.withTransaction { status ->
+                    // Update basic fields
+                    if (zoneData.name != null) existingZone.name = zoneData.name
+                    if (zoneData.description != null) existingZone.description = zoneData.description
+                    if (zoneData.categories != null) existingZone.categories = zoneData.categories
+                    
+                    // Update parent - get managed entity or clear
+                    def newParentId = zoneData.parent?.id as Long
+                    if (newParentId != existingZone.parent?.id) {
+                        existingZone.parent = newParentId ? Zone.load(newParentId) : null
+                    }
+                    
+                    // Update sub-zones - rebuild the collection
+                    def oldZoneIds = existingZone.zones?.collect { it.id } ?: []
+                    def newZoneIds = zoneData.zones?.collect { it.id } ?: []
+                    
+                    // Find zones that need to be removed (in old but not in new)
+                    def zonesToRemove = oldZoneIds - newZoneIds
+                    
+                    // Clear parent on removed zones BEFORE modifying the collection
+                    zonesToRemove.each { zoneId ->
+                        Zone.executeUpdate("UPDATE Zone z SET z.parent = NULL WHERE z.id = :zoneId", [zoneId: zoneId])
+                    }
+                    
+                    // Now rebuild the zones collection
+                    existingZone.zones?.clear()
+                    
+                    // Add all zones from the new list
+                    newZoneIds.each { zoneId ->
+                        Zone zone = Zone.load(zoneId as Long)
+                        if (zone) {
+                            existingZone.addToZones(zone)
+                        }
+                    }
+                    
+                    existingZone.save(flush: true, failOnError: true)
+                }
+                
+                // Refresh to get latest state
+                existingZone.refresh()
+                
+                return existingZone
+            }
+        }
+
         query('zoneById', Zone) {
             argument('id', String)
             dataFetcher(new DataFetcher() {
@@ -84,14 +143,6 @@ class Zone extends BaseEntity implements Configurable<Zone> {
                 @Override
                 protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
                     Zone.where { parent == null }.order("name", "asc")
-                }
-            })
-        }
-        query('zonesRoot', [Zone]) {
-            dataFetcher(new EntityDataFetcher<Zone>(Zone.gormPersistentEntity) {
-                @Override
-                protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
-                    Zone.where { parent == null }.order("name", "desc")
                 }
             })
         }

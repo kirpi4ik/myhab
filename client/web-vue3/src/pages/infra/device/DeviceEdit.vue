@@ -145,55 +145,23 @@
         <q-separator/>
 
         <!-- Information Panel -->
-        <q-card-section class="bg-blue-grey-1">
-          <div class="text-subtitle2 text-weight-medium q-mb-sm">Information</div>
-          <div class="row q-gutter-md">
-            <div class="col">
-              <q-icon name="mdi-identifier" class="q-mr-xs"/>
-              <strong>ID:</strong> {{ device.id }}
-            </div>
-            <div class="col" v-if="device.uid">
-              <q-icon name="mdi-key" class="q-mr-xs"/>
-              <strong>UID:</strong> {{ device.uid }}
-            </div>
-            <div class="col">
-              <q-icon name="mdi-ethernet" class="q-mr-xs"/>
-              <strong>Ports:</strong> {{ device.ports?.length || 0 }}
-            </div>
-          </div>
-        </q-card-section>
+        <EntityInfoPanel
+          :entity="device"
+          icon="mdi-devices"
+          :extra-info="[
+            { icon: 'mdi-ethernet', label: 'Ports', value: device.ports?.length || 0 }
+          ]"
+        />
 
         <q-separator/>
 
         <!-- Actions -->
-        <q-card-actions>
-          <q-btn 
-            color="primary" 
-            type="submit" 
-            icon="mdi-content-save"
-            :loading="saving"
-          >
-            Save
-          </q-btn>
-          <q-btn 
-            color="grey" 
-            @click="$router.go(-1)" 
-            icon="mdi-cancel"
-            :disable="saving"
-          >
-            Cancel
-          </q-btn>
-          <q-space/>
-          <q-btn 
-            color="info" 
-            :to="`/admin/devices/${$route.params.idPrimary}/view`" 
-            icon="mdi-eye" 
-            outline
-            :disable="saving"
-          >
-            View
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/devices/${$route.params.idPrimary}/view`"
+          save-label="Save Device"
+        />
       </q-card>
     </form>
 
@@ -206,12 +174,11 @@
 
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
-
+import {useRoute} from "vue-router";
 import {useApolloClient} from "@vue/apollo-composable";
-import {prepareForMutation} from '@/_helpers';
-import {useRoute, useRouter} from "vue-router";
-
-import {useQuasar} from 'quasar';
+import {useEntityCRUD} from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 
 import {
   DEVICE_CATEGORIES_LIST,
@@ -221,111 +188,86 @@ import {
   RACK_LIST_ALL
 } from '@/graphql/queries';
 
-import _ from "lodash";
-
 export default defineComponent({
   name: 'DeviceEdit',
+  components: {
+    EntityInfoPanel,
+    EntityFormActions
+  },
   setup() {
-    const $q = useQuasar();
+    const route = useRoute();
     const {client} = useApolloClient();
-    const device = ref({});
+    
+    // Additional data lists
     const rackList = ref([]);
     const typeList = ref([]);
     const modelList = ref([]);
-    const router = useRouter();
-    const route = useRoute();
-    const loading = ref(false);
-    const saving = ref(false);
+
+    // Use CRUD composable
+    const {
+      entity: device,
+      loading,
+      saving,
+      fetchEntity,
+      updateEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Device',
+      entityPath: '/admin/devices',
+      getQuery: DEVICE_GET_BY_ID_CHILDS,
+      updateMutation: DEVICE_UPDATE,
+      excludeFields: ['__typename', 'id', 'ports', 'uid', 'tsCreated', 'tsUpdated'],
+      transformBeforeSave: (data) => {
+        // Ensure nested objects only send their ID
+        const transformed = {...data};
+        if (transformed.rack) transformed.rack = { id: transformed.rack.id };
+        if (transformed.type) transformed.type = { id: transformed.type.id };
+        return transformed;
+      }
+    });
 
     /**
      * Fetch device data and related lists
      */
-    const fetchData = () => {
-      loading.value = true;
-
-      // Fetch all data in parallel
-      Promise.all([
-        client.query({
-          query: RACK_LIST_ALL,
-          variables: {},
-          fetchPolicy: 'network-only',
-        }),
-        client.query({
-          query: DEVICE_CATEGORIES_LIST,
-          variables: {},
-          fetchPolicy: 'network-only',
-        }),
-        client.query({
-          query: DEVICE_MODEL_LIST,
-          variables: {},
-          fetchPolicy: 'network-only',
-        }),
-        client.query({
-          query: DEVICE_GET_BY_ID_CHILDS,
-          variables: {id: route.params.idPrimary},
-          fetchPolicy: 'network-only',
-        })
-      ]).then(([racksResponse, categoriesResponse, modelsResponse, deviceResponse]) => {
-        rackList.value = racksResponse.data.rackList || [];
-        typeList.value = categoriesResponse.data.deviceCategoryList || [];
-        modelList.value = modelsResponse.data.deviceModelList || [];
-        device.value = _.cloneDeep(deviceResponse.data.device);
-        loading.value = false;
-      }).catch(error => {
-        loading.value = false;
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load device data',
-          icon: 'mdi-alert-circle',
-          position: 'top'
+    const fetchData = async () => {
+      // Fetch device data
+      const response = await fetchEntity();
+      
+      if (response) {
+        // Fetch related lists in parallel
+        Promise.all([
+          client.query({
+            query: RACK_LIST_ALL,
+            fetchPolicy: 'network-only',
+          }),
+          client.query({
+            query: DEVICE_CATEGORIES_LIST,
+            fetchPolicy: 'network-only',
+          }),
+          client.query({
+            query: DEVICE_MODEL_LIST,
+            fetchPolicy: 'network-only',
+          })
+        ]).then(([racksResponse, categoriesResponse, modelsResponse]) => {
+          rackList.value = racksResponse.data.rackList || [];
+          typeList.value = categoriesResponse.data.deviceCategoryList || [];
+          modelList.value = modelsResponse.data.deviceModelList || [];
+        }).catch(error => {
+          console.error('Error fetching related lists:', error);
         });
-        console.error('Error fetching device:', error);
-      });
+      }
     };
 
     /**
-     * Update device
+     * Save device
      */
-    const onSave = () => {
+    const onSave = async () => {
       // Validate required fields
-      if (!device.value.code || !device.value.name || !device.value.description) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please fill in all required fields',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
+      if (!validateRequired(device.value, ['code', 'name', 'description'])) {
         return;
       }
 
-      saving.value = true;
-
-      // Create a clean copy for mutation, removing Apollo-specific fields
-      const cleanDevice = prepareForMutation(device.value, ['__typename', 'id', 'ports']);
-
-      client.mutate({
-        mutation: DEVICE_UPDATE,
-        variables: {id: route.params.idPrimary, device: cleanDevice},
-        fetchPolicy: 'no-cache',
-      }).then(response => {
-        saving.value = false;
-        $q.notify({
-          color: 'positive',
-          message: 'Device updated successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        fetchData();
-      }).catch(error => {
-        saving.value = false;
-        $q.notify({
-          color: 'negative',
-          message: error.message || 'Update failed',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error updating device:', error);
-      });
+      await updateEntity();
     };
 
     onMounted(() => {
