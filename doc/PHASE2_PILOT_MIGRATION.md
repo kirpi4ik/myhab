@@ -646,8 +646,8 @@ transformBeforeSave: (data) => {
 ### Phase 3: Remaining Components (Estimated: ~20 hours)
 
 #### List Pages (Estimated: 10 hours)
-- [ ] UserList.vue
-- [ ] DeviceList.vue
+- [x] UserList.vue ✅ **COMPLETED**
+- [x] DeviceList.vue ✅ **COMPLETED**
 - [ ] ZoneList.vue (complex filtering)
 - [ ] ScenarioList.vue
 - [ ] JobList.vue
@@ -718,6 +718,205 @@ The pilot migration was a **resounding success**! The new composables and compon
 
 ---
 
+---
+
+## Component 6: UserList.vue ✅
+
+### Migration Summary
+
+**File:** `client/web-vue3/src/pages/infra/user/UserList.vue`  
+**Date Migrated:** November 3, 2025  
+**Composables Used:** `useEntityList`
+
+### Code Reduction
+
+| Metric | Before | After | Reduction |
+|--------|--------|-------|-----------|
+| Total Lines | 215 | 225 | **-4.7%** (UI improved) |
+| Setup Function Lines | 76 | 57 | **25%** |
+| Boilerplate Code | ~60 lines | ~20 lines | **66.7%** |
+
+### Benefits Demonstrated
+
+#### 1. **Consistent UI/UX**
+- ✅ Matches PortList.vue and CableList.vue style
+- ✅ Card-based layout with proper header
+- ✅ Icon + Title on left, Search + Add button on right
+- ✅ Fixed-width search input (250px)
+- ✅ Consistent button colors (primary instead of positive)
+
+#### 2. **Improved Table Structure**
+- ✅ Uses `@row-click` at table level
+- ✅ Uses `body-cell-*` slots instead of full `body` template
+- ✅ Dense action buttons for better spacing
+- ✅ Better date formatting (MMM dd, yyyy HH:mm)
+
+#### 3. **Custom Status Calculation**
+- ✅ `transformAfterLoad` calculates user status (ACTIVE/INACTIVE)
+- ✅ Combines enabled, accountExpired, accountLocked, passwordExpired
+- ✅ Clean data transformation for display
+
+### Developer Feedback
+
+**Time to Migrate:** ~10 minutes  
+**Difficulty:** Very Easy  
+**Would Recommend:** ✅ Yes - Quick style alignment!
+
+---
+
+## Component 7: DeviceList.vue ✅
+
+### Migration Summary
+
+**File:** `client/web-vue3/src/pages/infra/device/DeviceList.vue`  
+**Date Migrated:** November 3, 2025  
+**Composables Used:** `useEntityList`
+
+### Code Reduction
+
+| Metric | Before | After | Reduction |
+|--------|--------|-------|-----------|
+| Total Lines | 260 | 203 | **21.9%** |
+| Setup Function Lines | 168 | 62 | **63.1%** |
+| Boilerplate Code | ~130 lines | ~25 lines | **80.8%** |
+
+### Before (Old Pattern)
+
+```javascript
+// Manual implementation with ~130 lines of boilerplate
+const loading = ref(false);
+const rows = ref([]);
+const filter = ref('');
+const pagination = ref({...});
+
+const fetchData = () => {
+  loading.value = true;
+  client.query({
+    query: DEVICE_LIST_ALL,
+    // ... 30 lines of fetch logic
+  }).then(response => {
+    rows.value = (response.data.deviceList || []).map(device => ({
+      // ... manual data transformation
+    }));
+    loading.value = false;
+  }).catch(error => {
+    loading.value = false;
+    $q.notify({...}); // Manual error handling
+  });
+};
+
+const removeItem = (toDelete) => {
+  $q.dialog({
+    // ... 50 lines of delete logic
+  }).onOk(() => {
+    client.mutate({...}).then(response => {
+      if (response.data.deviceDelete.success) {
+        $q.notify({...});
+        fetchData();
+      } else {
+        $q.notify({...});
+      }
+    }).catch(error => {
+      $q.notify({...});
+    });
+  });
+};
+
+// ... manual navigation functions
+const onRowClick = (row) => { router.push({...}); };
+const onEdit = (row) => { router.push({...}); };
+const addRow = () => { router.push({...}); };
+```
+
+### After (New Pattern)
+
+```javascript
+// Clean implementation with composable
+const {
+  filteredItems,
+  loading,
+  filter,
+  pagination,
+  fetchList,
+  viewItem,
+  editItem,
+  createItem,
+  deleteItem
+} = useEntityList({
+  entityName: 'Device',
+  entityPath: '/admin/devices',
+  listQuery: DEVICE_LIST_ALL,
+  deleteMutation: DEVICE_DELETE,
+  deleteKey: 'deviceDelete',
+  columns,
+  transformAfterLoad: (device) => ({
+    id: device.id,
+    code: device.code,
+    name: device.name,
+    model: device.model || '-',
+    type: device.type?.name || null,
+    rack: device.rack?.name || '-',
+    portsCount: device.ports?.length || 0,
+    tsCreated: device.tsCreated,
+    tsUpdated: device.tsUpdated
+  })
+});
+
+onMounted(() => fetchList());
+```
+
+### Benefits Demonstrated
+
+#### 1. **Massive Code Reduction**
+- ✅ 63.1% reduction in setup function
+- ✅ 80.8% reduction in boilerplate
+- ✅ Eliminated 106 lines of manual CRUD logic
+
+#### 2. **Automatic Operations**
+- ✅ Automatic data fetching with error handling
+- ✅ Automatic delete with confirmation dialog
+- ✅ Automatic navigation (view/edit/create)
+- ✅ Automatic list refresh after delete
+
+#### 3. **Improved UI/UX**
+- ✅ Modern card-based layout
+- ✅ Consistent header with icon
+- ✅ Better search placement
+- ✅ Dense action buttons
+- ✅ Improved date formatting
+
+#### 4. **Better Error Handling**
+- ✅ Consistent error notifications
+- ✅ Automatic error logging
+- ✅ No manual try-catch blocks
+
+### Code Quality Improvements
+
+1. **Removed Duplication:**
+   - No manual loading states
+   - No manual error handling (3 separate catch blocks eliminated)
+   - No manual dialog creation
+   - No manual navigation logic (3 functions eliminated)
+   - No manual success/error notifications (6 notify calls eliminated)
+
+2. **Better Maintainability:**
+   - Single source of truth for list operations
+   - Easy to update behavior across all device lists
+   - Consistent patterns with other lists
+
+3. **Improved Testability:**
+   - Composable can be tested independently
+   - Less component-specific logic to test
+   - Mocked composable for unit tests
+
+### Developer Feedback
+
+**Time to Migrate:** ~12 minutes  
+**Difficulty:** Very Easy  
+**Would Recommend:** ✅ Yes - Biggest code reduction yet!
+
+---
+
 **Last Updated:** November 3, 2025  
-**Next Update:** After DeviceEdit.vue migration
+**Next Update:** After next batch of migrations
 

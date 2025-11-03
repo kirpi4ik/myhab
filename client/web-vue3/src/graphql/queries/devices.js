@@ -135,7 +135,10 @@ export const DEVICE_CATEGORIES_LIST = gql`
   {
     deviceCategoryList{
       id
+      uid
       name
+      tsCreated
+      tsUpdated
     }
   }
 `;
