@@ -1,13 +1,13 @@
 #### myHAB
 
 --------------------------------------------------------
-Web client 
-- Vue 2
-- CoreUI
-
-
-Wen client new generation
+Web Client
 - Vue 3
-- Quasar
+- Quasar Framework
+
+Backend
+- Grails 5
+- GraphQL
+- Spring Security
 
 http://myhab.org/

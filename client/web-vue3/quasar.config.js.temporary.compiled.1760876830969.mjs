@@ -61,7 +61,7 @@ var require_quasar_config = __commonJS({
         build: {
           vueRouterMode: "history",
           // available values: 'hash', 'history'
-          publicPath: "nx",
+          publicPath: "/",
           // transpile: false,
           // publicPath: '/',
           // Add dependencies for transpiling with Babel (Array of string/regex)
