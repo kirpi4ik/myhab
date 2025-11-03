@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="job">
       <q-card flat bordered>
         <q-card-section>
           <div class="text-h5 q-mb-md">
@@ -119,14 +119,11 @@
 
         <q-separator/>
 
-        <q-card-actions>
-          <q-btn color="primary" type="submit" icon="mdi-content-save">
-            Save
-          </q-btn>
-          <q-btn color="grey" @click="$router.go(-1)" icon="mdi-cancel">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create Job"
+        />
       </q-card>
     </form>
   </q-page>
@@ -134,32 +131,64 @@
 
 <script>
 import {defineComponent, onMounted, ref} from 'vue';
-
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router/dist/vue-router";
-
 import {useQuasar} from 'quasar';
-
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {JOB_LIST_ALL, JOB_CREATE} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'JobNew',
+  components: {
+    EntityFormActions
+  },
   setup() {
     const $q = useQuasar();
     const {client} = useApolloClient();
-    const job = ref({
-      name: '',
-      description: '',
-      state: 'ACTIVE'
-    });
-    const router = useRouter();
     const scenarioList = ref([]);
     const selectedScenario = ref(null);
     const tagList = ref([]);
     const tagListFiltered = ref([]);
     const selectedTags = ref([]);
     const cronTriggers = ref([]);
-    const jobStates = ['ACTIVE', 'INACTIVE', 'PAUSED', 'DISABLED'];
+    const jobStates = ['DRAFT', 'ACTIVE', 'DISABLED'];
+
+    const {
+      entity: job,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Job',
+      entityPath: '/admin/jobs',
+      createMutation: JOB_CREATE,
+      createMutationKey: 'jobCreate',
+      createVariableName: 'job',
+      excludeFields: ['__typename'],
+      initialData: {
+        name: '',
+        description: '',
+        state: 'DRAFT'
+      },
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Add scenario
+        if (selectedScenario.value && selectedScenario.value.id) {
+          transformed.scenario = { id: selectedScenario.value.id };
+        }
+        // Add cron triggers
+        transformed.cronTriggers = cronTriggers.value.map(t => ({ expression: t.expression }));
+        // Add tags (existing and new)
+        transformed.tags = selectedTags.value.map(tag => {
+          if (tag.id) {
+            return { id: tag.id };
+          } else {
+            return { name: tag.name };
+          }
+        });
+        return transformed;
+      }
+    });
 
     const addCronTrigger = () => {
       cronTriggers.value.push({ expression: '0 0 * * *' });
@@ -169,9 +198,6 @@ export default defineComponent({
       cronTriggers.value.splice(index, 1);
     };
 
-    /**
-     * Filter tags based on user input
-     */
     const filterTagFn = (val, update) => {
       update(() => {
         if (val === '') {
@@ -185,31 +211,22 @@ export default defineComponent({
       });
     };
 
-    /**
-     * Create a new tag on the fly
-     */
     const createNewTag = (val, done) => {
       if (val.length > 0) {
-        // Check if tag already exists
         const existingTag = tagList.value.find(
           tag => tag.name.toLowerCase() === val.toLowerCase()
         );
         
         if (existingTag) {
-          // Tag exists, just add it
           done(existingTag, 'add-unique');
         } else {
-          // Create new tag object (will be created on server when job is saved)
           const newTag = {
             name: val,
-            id: null // Will be created on server
+            id: null
           };
           
-          // Add to local list - create new array to avoid readonly issues
           tagList.value = [...tagList.value, newTag];
           tagListFiltered.value = [...tagList.value];
-          
-          // Add to selection
           done(newTag, 'add-unique');
           
           $q.notify({
@@ -230,32 +247,17 @@ export default defineComponent({
         fetchPolicy: 'network-only',
       }).then(response => {
         scenarioList.value = response.data.scenarioList || [];
-        // Initialize tag list as mutable copies to allow adding new tags
         tagList.value = [...(response.data.jobTagList || [])];
         tagListFiltered.value = [...(response.data.jobTagList || [])];
       }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to load data',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
         console.error('Error fetching data:', error);
       });
     };
 
-    const onSave = () => {
-      // Validate required fields
-      if (!job.value.name) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please enter a job name',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        return;
-      }
-
+    const onSave = async () => {
+      if (saving.value) return;
+      
+      // Custom validation for scenario
       if (!selectedScenario.value) {
         $q.notify({
           color: 'negative',
@@ -266,48 +268,8 @@ export default defineComponent({
         return;
       }
 
-      // Prepare mutation data
-      const jobData = {
-        name: job.value.name,
-        description: job.value.description,
-        state: job.value.state,
-        scenario: { id: selectedScenario.value.id },
-        cronTriggers: cronTriggers.value.map(t => ({ expression: t.expression })),
-        // Handle tags: existing tags have IDs, new tags only have names
-        tags: selectedTags.value.map(tag => {
-          if (tag.id) {
-            return { id: tag.id };
-          } else {
-            // New tag - send only the name, server will create it
-            return { name: tag.name };
-          }
-        })
-      };
-
-      client.mutate({
-        mutation: JOB_CREATE,
-        variables: {job: jobData},
-        fetchPolicy: 'no-cache',
-        update: () => {
-          // Prevent Apollo from processing the mutation result
-        }
-      }).then(response => {
-        $q.notify({
-          color: 'positive',
-          message: 'Job created successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/jobs/${response.data.jobCreate.id}/edit`});
-      }).catch(error => {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed to create job',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error creating job:', error);
-      });
+      if (!validateRequired(job.value, ['name'])) return;
+      await createEntity();
     };
 
     onMounted(() => {
@@ -327,6 +289,7 @@ export default defineComponent({
       removeCronTrigger,
       filterTagFn,
       createNewTag,
+      saving,
       onSave
     };
   }

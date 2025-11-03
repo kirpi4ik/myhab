@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="category">
       <q-card flat bordered>
         <q-card-section>
           <div class="text-h5 q-mb-md">
@@ -37,90 +37,58 @@
         <q-separator/>
 
         <!-- Actions -->
-        <q-card-actions>
-          <q-btn 
-            color="primary" 
-            type="submit" 
-            icon="mdi-content-save"
-            :loading="saving"
-          >
-            Create Category
-          </q-btn>
-          <q-btn 
-            color="grey" 
-            @click="$router.go(-1)" 
-            icon="mdi-cancel"
-            :disable="saving"
-          >
-            Cancel
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create Category"
+        />
       </q-card>
     </form>
   </q-page>
 </template>
 
 <script>
-import {defineComponent, ref} from 'vue';
-
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router";
-
-import {useQuasar} from 'quasar';
-
+import {defineComponent} from 'vue';
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {DEVICE_CATEGORY_CREATE} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'DCategoryNew',
+  components: {
+    EntityFormActions
+  },
   setup() {
-    const $q = useQuasar();
-    const {client} = useApolloClient();
-    const category = ref({
-      name: ''
+    // Use CRUD composable for create
+    const {
+      entity: category,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Device Category',
+      entityPath: '/admin/dcategories',
+      createMutation: DEVICE_CATEGORY_CREATE,
+      createMutationKey: 'deviceCategoryCreate',
+      createVariableName: 'deviceCategory',
+      initialData: {
+        name: ''
+      }
     });
-    const router = useRouter();
-    const saving = ref(false);
 
     /**
      * Create new device category
      */
-    const onSave = () => {
+    const onSave = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) return;
+      
       // Validate required fields
-      if (!category.value.name) {
-        $q.notify({
-          color: 'negative',
-          message: 'Please fill in the category name',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
+      if (!validateRequired(category.value, ['name'])) {
         return;
       }
 
-      saving.value = true;
-
-      client.mutate({
-        mutation: DEVICE_CATEGORY_CREATE,
-        variables: {deviceCategory: category.value},
-        fetchPolicy: 'no-cache',
-      }).then(response => {
-        saving.value = false;
-        $q.notify({
-          color: 'positive',
-          message: 'Device category created successfully',
-          icon: 'mdi-check-circle',
-          position: 'top'
-        });
-        router.push({path: `/admin/dcategories/${response.data.deviceCategoryCreate.id}/edit`});
-      }).catch(error => {
-        saving.value = false;
-        $q.notify({
-          color: 'negative',
-          message: error.message || 'Failed to create category',
-          icon: 'mdi-alert-circle',
-          position: 'top'
-        });
-        console.error('Error creating device category:', error);
-      });
+      await createEntity();
     };
 
     return {

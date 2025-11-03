@@ -26,6 +26,7 @@ import _ from 'lodash';
  * @property {Array<string>} excludeFields - Fields to exclude from mutations (default: common fields)
  * @property {Function} transformBeforeSave - Optional function to transform data before saving
  * @property {Function} transformAfterLoad - Optional function to transform data after loading
+ * @property {Object} initialData - Initial data for new entities (optional, for create mode)
  */
 
 export function useEntityCRUD(options) {
@@ -44,7 +45,8 @@ export function useEntityCRUD(options) {
     deleteMutationKey,
     excludeFields = ['__typename', 'entityType', 'uid', 'tsCreated', 'tsUpdated', 'version'],
     transformBeforeSave,
-    transformAfterLoad
+    transformAfterLoad,
+    initialData = null
   } = options;
 
   const router = useRouter();
@@ -52,7 +54,7 @@ export function useEntityCRUD(options) {
   const { client } = useApolloClient();
   const { notifySuccess, notifyError, notifyValidationError } = useNotifications();
 
-  const entity = ref(null);
+  const entity = ref(initialData);
   const loading = ref(false);
   const saving = ref(false);
 
@@ -104,7 +106,7 @@ export function useEntityCRUD(options) {
    * @param {Object} additionalVariables - Additional variables for the mutation
    * @returns {Promise<Object|null>} The created entity or null on failure
    */
-  const createEntity = async (data, additionalVariables = {}) => {
+  const createEntity = async (data = null, additionalVariables = {}) => {
     if (!createMutation) {
       notifyError('Create operation is not configured');
       return null;
@@ -112,8 +114,11 @@ export function useEntityCRUD(options) {
 
     saving.value = true;
     try {
+      // Use provided data or fall back to entity.value
+      const sourceData = data || entity.value;
+      
       // Apply transformation if provided
-      let cleanData = transformBeforeSave ? transformBeforeSave(data) : data;
+      let cleanData = transformBeforeSave ? transformBeforeSave(sourceData) : sourceData;
       
       // Clean data for mutation
       cleanData = prepareForMutation(cleanData, excludeFields);
