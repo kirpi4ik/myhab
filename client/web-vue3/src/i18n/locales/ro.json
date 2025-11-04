@@ -177,6 +177,13 @@
     }
   },
   "common": {
-    "close": "Inchide"
+    "close": "Inchide",
+    "alert": "Alerta",
+    "cancel": "Anuleaza"
+  },
+  "door": {
+    "small_gate": "Poarta mica",
+    "open": "Deschide",
+    "confirm_open": "Atentie! Doriti sa deschideti?"
   }
 }
