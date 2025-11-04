@@ -8,3 +8,5 @@
 .gradle
 **/.graphqlconfig
 
+# Documentation folder (local development notes)
+/doc/
