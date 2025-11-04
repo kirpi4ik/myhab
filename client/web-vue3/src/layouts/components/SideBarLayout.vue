@@ -184,7 +184,7 @@ export default defineComponent({
   setup() {
     const miniState = ref(Platform.is.mobile)
     const {isSidebarOpen} = useUiState();
-    const prjVersion = process.env.PRJ_VERSION || '2.5.14';
+    const prjVersion = process.env.PRJ_VERSION || '2.6.0';
     const graphiqlUrl = (process.env.BCK_SERVER_URL || '') + '/graphql/browser';
 
     const expanded = ref(true)
