@@ -1,5 +1,6 @@
 package org.myhab.jobs
 
+import grails.util.Holders
 import groovy.util.logging.Slf4j
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
@@ -12,12 +13,36 @@ import java.util.concurrent.TimeUnit
 @DisallowConcurrentExecution
 class ConfigSyncJob implements Job {
     static triggers = {
-        simple repeatInterval: TimeUnit.SECONDS.toMillis(60)
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.configSync.enabled', Boolean)
+        def interval = config?.getProperty('quartz.jobs.configSync.interval', Integer) ?: 60
+        
+        if (enabled == null) {
+            enabled = true  // Default to enabled for backward compatibility
+        }
+        
+        if (enabled) {
+            println "ConfigSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
+        } else {
+            println "ConfigSyncJob: DISABLED - Not registering trigger"
+        }
     }
     def configProvider
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.configSync.enabled', Boolean)
+        
+        if (enabled == null) {
+            enabled = true
+        }
+        
+        if (!enabled) {
+            log.info("ConfigSyncJob is DISABLED via configuration, skipping execution")
+            return
+        }
         configProvider.asyncLoad({ loaded ->
             if (loaded) {
                 log.debug "Configuration updated"
