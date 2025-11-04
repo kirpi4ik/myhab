@@ -2,6 +2,7 @@ package org.myhab.telegram
 
 
 import grails.events.EventPublisher
+import groovy.util.logging.Slf4j
 import org.myhab.config.ConfigProvider
 import org.myhab.domain.EntityType
 import org.myhab.domain.events.TopicName
@@ -25,6 +26,7 @@ import java.util.function.Function
  * https://emojipedia.org/
  * https://www.russellcottrell.com/greek/utilities/SurrogatePairCalculator.htm
  */
+@Slf4j
 @Component
 class TelegramBotHandler extends TelegramLongPollingBot implements EventPublisher {
     ConfigProvider configProvider
@@ -157,14 +159,14 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                     execute(message)
                 }
             } catch (TelegramApiException e) {
-                e.printStackTrace()
+                log.error("Telegram API exception in message handling", e)
                 SendMessage message = handleNotFoundCommand()
                 message.setChatId(String.valueOf(chat_id))
                 try {
                     sendInfoToSupport("Error " + e.getMessage())
                     execute(message)
                 } catch (TelegramApiException ex) {
-                    ex.printStackTrace()
+                    log.error("Telegram API exception while sending error message", ex)
                 }
             }
         } else if (update.hasCallbackQuery()) {
@@ -175,11 +177,11 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                 message.setChatId(String.valueOf(update.getCallbackQuery().getMessage().getChatId()))
                 execute(message)
             } catch (TelegramApiException e) {
-                e.printStackTrace()
+                log.error("Telegram API exception in callback query handling", e)
                 try {
                     sendInfoToSupport("Error " + e.getMessage())
                 } catch (TelegramApiException ex) {
-                    ex.printStackTrace()
+                    log.error("Telegram API exception while sending error info to support", ex)
                 }
             }
         }

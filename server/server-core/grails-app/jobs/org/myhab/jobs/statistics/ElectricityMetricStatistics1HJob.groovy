@@ -23,10 +23,10 @@ class ElectricityMetricStatistics1HJob implements Job{
         }
         
         if (enabled) {
-            println "ElectricityMetricStatistics1HJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "ElectricityMetricStatistics1HJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "ElectricityMetricStatistics1HJob: DISABLED - Not registering trigger"
+            log.debug "ElectricityMetricStatistics1HJob: DISABLED - Not registering trigger"
         }
     }
 

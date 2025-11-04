@@ -2,6 +2,7 @@ package org.myhab.jobs
 
 import grails.events.EventPublisher
 import grails.util.Holders
+import groovy.util.logging.Slf4j
 import org.myhab.config.CfgKey
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DeviceStatus
@@ -16,6 +17,7 @@ import org.quartz.JobExecutionException
 
 import java.util.concurrent.TimeUnit
 
+@Slf4j
 @DisallowConcurrentExecution
 class DeviceControllerStateSyncJob implements Job, EventPublisher {
     def deviceService
@@ -30,10 +32,10 @@ class DeviceControllerStateSyncJob implements Job, EventPublisher {
         }
         
         if (enabled) {
-            println "DeviceControllerStateSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "DeviceControllerStateSyncJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "DeviceControllerStateSyncJob: DISABLED - Not registering trigger"
+            log.debug "DeviceControllerStateSyncJob: DISABLED - Not registering trigger"
         }
     }
 

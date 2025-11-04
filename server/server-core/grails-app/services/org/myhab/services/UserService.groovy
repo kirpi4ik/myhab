@@ -7,7 +7,9 @@ import org.myhab.graphql.fetchers.DefaultDataFetcher
 import grails.gorm.DetachedCriteria
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetchingEnvironment
+import groovy.util.logging.Slf4j
 
+@Slf4j
 @Transactional
 class UserService extends DefaultDataFetcher {
 
@@ -39,8 +41,7 @@ class UserService extends DefaultDataFetcher {
             return [success: true]
 
         } catch (Exception ex) {
-            ex.printStackTrace()
-            log.error(ex.message)
+            log.error("Failed to update user roles", ex)
             return [success: false]
 
         }

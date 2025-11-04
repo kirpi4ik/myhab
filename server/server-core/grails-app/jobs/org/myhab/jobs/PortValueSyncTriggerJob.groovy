@@ -2,6 +2,7 @@ package org.myhab.jobs
 
 import grails.events.EventPublisher
 import grails.util.Holders
+import groovy.util.logging.Slf4j
 import org.myhab.async.mqtt.MqttTopicService
 import org.myhab.config.CfgKey
 import org.myhab.domain.device.Device
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeUnit
 /**
  *
  */
+@Slf4j
 @DisallowConcurrentExecution
 class PortValueSyncTriggerJob implements Job, EventPublisher {
 
@@ -31,10 +33,10 @@ class PortValueSyncTriggerJob implements Job, EventPublisher {
         }
         
         if (enabled) {
-            println "PortValueSyncTriggerJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "PortValueSyncTriggerJob: ENABLED - Registering trigger with interval ${interval}s"
             simple name: 'portValueSyncTrigger', repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "PortValueSyncTriggerJob: DISABLED - Not registering trigger"
+            log.debug "PortValueSyncTriggerJob: DISABLED - Not registering trigger"
         }
     }
     static group = "Internal"

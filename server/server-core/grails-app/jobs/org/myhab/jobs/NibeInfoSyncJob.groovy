@@ -3,6 +3,7 @@ package org.myhab.jobs
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import groovy.json.JsonSlurper
+import groovy.util.logging.Slf4j
 import kong.unirest.Unirest
 import org.myhab.async.mqtt.MqttTopicService
 import org.myhab.config.CfgKey
@@ -17,6 +18,7 @@ import org.quartz.JobExecutionException
 
 import java.util.concurrent.TimeUnit
 
+@Slf4j
 @DisallowConcurrentExecution
 @Transactional
 class NibeInfoSyncJob implements Job {
@@ -35,10 +37,10 @@ class NibeInfoSyncJob implements Job {
         }
         
         if (enabled) {
-            println "NibeInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "NibeInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "NibeInfoSyncJob: DISABLED - Not registering trigger"
+            log.debug "NibeInfoSyncJob: DISABLED - Not registering trigger"
         }
     }
 

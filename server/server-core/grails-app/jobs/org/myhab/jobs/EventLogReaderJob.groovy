@@ -22,10 +22,10 @@ class EventLogReaderJob implements Job {
     }
     
     if (enabled) {
-      println "EventLogReaderJob: ENABLED - Registering trigger with interval ${interval}s"
+      log.debug "EventLogReaderJob: ENABLED - Registering trigger with interval ${interval}s"
       simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
     } else {
-      println "EventLogReaderJob: DISABLED - Not registering trigger"
+      log.debug "EventLogReaderJob: DISABLED - Not registering trigger"
     }
   }
   def eventRouter
