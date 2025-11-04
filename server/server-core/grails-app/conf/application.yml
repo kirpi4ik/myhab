@@ -160,3 +160,7 @@ graphql:
     template-path: classpath:graphiql/index.html
     template-parameters:
     page-title: GraphiQL
+
+mqtt:
+  topic:
+    prefix: "myhab"
