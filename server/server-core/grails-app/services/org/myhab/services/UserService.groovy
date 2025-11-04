@@ -54,7 +54,19 @@ class UserService extends DefaultDataFetcher {
 
     def tgUserHasAnyRole(String username, List roleNames) {
         def myHabUser = User.findByTelegramUsername(username)
-        return myHabUser != null ? roleNames.any { roleName -> myHabUser.authorities.stream().anyMatch { role -> role.authority == roleName }.booleanValue() } : false
+        if (myHabUser == null) {
+            return false
+        }
+        
+        // ROLE_ADMIN has access to everything
+        if (myHabUser.authorities.stream().anyMatch { role -> role.authority == "ROLE_ADMIN" }.booleanValue()) {
+            return true
+        }
+        
+        // Check if user has any of the required roles
+        return roleNames.any { roleName -> 
+            myHabUser.authorities.stream().anyMatch { role -> role.authority == roleName }.booleanValue() 
+        }
     }
 
 }
