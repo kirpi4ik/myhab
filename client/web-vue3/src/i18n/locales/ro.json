@@ -168,5 +168,15 @@
     "list": {
       "title": "Configurarile"
     }
+  },
+  "mobile": {
+    "unlock": {
+      "title": "Alerta",
+      "message": "Atentie! Doriti sa deschideti?",
+      "button": "Deschide"
+    }
+  },
+  "common": {
+    "close": "Inchide"
   }
 }
