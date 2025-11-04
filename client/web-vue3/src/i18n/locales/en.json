@@ -151,6 +151,13 @@
 		}
 	},
 	"common": {
-		"close": "Close"
+		"close": "Close",
+		"alert": "Alert",
+		"cancel": "Cancel"
+	},
+	"door": {
+		"small_gate": "Small Gate",
+		"open": "Open",
+		"confirm_open": "Attention! Do you want to open the door?"
 	}
 }
