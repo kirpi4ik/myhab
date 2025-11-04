@@ -103,6 +103,21 @@
               <q-icon name="mdi-phone"/>
             </template>
           </q-input>
+
+          <q-input 
+            v-model="user.telegramUsername" 
+            label="Telegram Username" 
+            hint="Telegram username for bot access (without @)"
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            filled
+            dense
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-send"/>
+            </template>
+          </q-input>
         </q-card-section>
 
         <q-separator/>

@@ -35,6 +35,8 @@
                    :rules="[val => !!val || 'Field is required']"/>
           <q-input v-model="user.phoneNr" label="Telephone number" clearable clear-icon="close" type="tel"
                    color="orange"/>
+          <q-input v-model="user.telegramUsername" label="Telegram Username" clearable clear-icon="close"
+                   color="orange" hint="Telegram username for bot access (without @)"/>
         </q-card-section>
 
         <q-separator/>
@@ -82,6 +84,7 @@ export default defineComponent({
         password: '',
         email: '',
         phoneNr: '',
+        telegramUsername: '',
         passwordExpired: false,
         accountExpired: false,
         accountLocked: false,
