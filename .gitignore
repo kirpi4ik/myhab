@@ -10,3 +10,4 @@
 
 # Documentation folder (local development notes)
 /doc/
+**/version.txt
