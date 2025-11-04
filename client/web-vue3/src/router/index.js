@@ -13,9 +13,6 @@ import {authzService} from '@/_services';
  */
 
 export default route(function ({ store, ssrContext }) {
-  if (process.env.DEV) {
-    console.log('Router init - creating router, store:', store);
-  }
   const createHistory = createWebHistory;
 
   const router = createRouter({
@@ -52,8 +49,5 @@ export default route(function ({ store, ssrContext }) {
     next();
   });
 
-  if (process.env.DEV) {
-    console.log('Router created:', router);
-  }
   return router;
 });

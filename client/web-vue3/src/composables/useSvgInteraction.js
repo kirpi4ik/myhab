@@ -126,25 +126,7 @@ export function useSvgInteraction() {
       // peripherals is already the plain object (not a ref) when passed here
       const peripheral = peripherals && peripherals[parsed.id];
       
-      // Debug logging
-      if (process.env.DEV && parsed.category === 'LIGHT') {
-        console.log('=== SVG Element Debug ===');
-        console.log('Element ID:', element.id);
-        console.log('Parsed:', parsed);
-        console.log('Looking for peripheral ID:', parsed.id);
-        console.log('Peripheral found:', !!peripheral);
-        if (peripheral) {
-          console.log('Peripheral:', {
-            id: peripheral.id,
-            state: peripheral.state,
-            portValue: peripheral.portValue,
-            category: peripheral.category?.name
-          });
-        } else {
-          console.log('Available peripheral IDs:', Object.keys(peripherals || {}).slice(0, 5));
-        }
-        console.log('========================');
-      }
+      // Debug logging removed - use browser devtools if needed
       
       cssClass = getAssetClass(parsed.category, peripheral?.state, peripheral?.deviceStatus);
 

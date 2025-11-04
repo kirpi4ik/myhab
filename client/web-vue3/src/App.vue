@@ -19,9 +19,6 @@ export default defineComponent({
       const wsStore = useWebSocketStore();
       
       onMounted(() => {
-        if (process.env.DEV) {
-          console.log('App mounted, connecting WebSocket...');
-        }
         wsStore.connect();
       });
       

@@ -174,9 +174,7 @@ export default {
               }
             }
           } else {
-            if (process.env.DEV) {
-              console.log('null id');
-            }
+            // Null ID - skip processing
           }
         }
       }

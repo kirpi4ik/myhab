@@ -50,7 +50,6 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
     backendUnavailableCount = 0;
     
     graphQLErrors.map(({message, locations, path}) =>
-      // console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`),
       Notify.create({
         color: 'negative',
         message: `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}`,
@@ -81,9 +80,6 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
     
     if (isCacheError) {
       // Cache errors don't count as backend unavailability
-      if (process.env.DEV) {
-        console.log('[Apollo]: Cache error (ignoring):', networkError.message);
-      }
       backendUnavailableCount = 0;
       return forward(operation);
     }
@@ -100,10 +96,6 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
     if (isBackendDown) {
       backendUnavailableCount++;
       error.code = 'ERROR_SERVER_DOWN';
-      
-      if (process.env.DEV) {
-        console.log(`[Apollo]: Backend unavailable (${backendUnavailableCount}/${MAX_BACKEND_ERRORS}):`, networkError.message);
-      }
       
       // If we've had multiple consecutive failures, redirect to maintenance page
       if (backendUnavailableCount >= MAX_BACKEND_ERRORS) {
@@ -126,10 +118,6 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
     } else {
       // Reset counter on different type of error
       backendUnavailableCount = 0;
-    }
-    
-    if (process.env.DEV) {
-      console.log(`[Network error]: ${networkError}`);
     }
   } else {
     // Reset counter on successful response (no network error)

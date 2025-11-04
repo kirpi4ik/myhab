@@ -159,7 +159,8 @@ export function usePeripheralControl() {
         await toggleHeat(peripheral);
         break;
       default:
-        console.log('Unhandled peripheral category:', peripheral.category.name);
+        // Unhandled peripheral category - no action needed
+        break;
     }
   };
 

@@ -28,14 +28,8 @@ export const useWebSocketStore = defineStore('websocket', {
 		},
 
 		connect(handler) {
-			if (process.env.DEV) {
-				console.log('WS connect action called, currentUser:', authzService.currentUserValue);
-			}
 			if (authzService.currentUserValue) {
 				const wsUri = Utils.host() + '/stomp?access_token=' + authzService.currentUserValue.access_token;
-				if (process.env.DEV) {
-					console.log('STOMP: Attempting connection to:', wsUri);
-				}
 
 				const message_callback = (message) => {
 					if (message.headers['content-type'] === 'application/octet-stream') {
@@ -48,9 +42,7 @@ export const useWebSocketStore = defineStore('websocket', {
 				this.wsStompClient = new Client({
 					brokerURL: wsUri,
 					debug: function (str) {
-						if (process.env.DEV) {
-							console.log(str);
-						}
+						// Debug disabled for production
 					},
 					heartbeatIncoming: 4000,
 					heartbeatOutgoing: 4000,
@@ -58,9 +50,6 @@ export const useWebSocketStore = defineStore('websocket', {
 						return new SockJS(wsUri);
 					},
 					onConnect: () => {
-						if (process.env.DEV) {
-							console.log('CONNECTED');
-						}
 						this.setConnection('ONLINE');
 						this.wsStompClient.subscribe('/topic/events', message_callback, {});
 						if (handler != null) {
@@ -70,27 +59,17 @@ export const useWebSocketStore = defineStore('websocket', {
 					onStompError: (error) => this.stompFailureCallback(error),
 					onWebSocketError: (error) => this.stompFailureCallback(error),
 				});
-				if (process.env.DEV) {
-					console.log('Connecting...');
-				}
 				this.wsStompClient.activate();
 			} else {
-				if (process.env.DEV) {
-					console.log('STOMP: User not authenticated, skipping connection');
-				}
+				// User not authenticated, skipping WebSocket connection
 			}
 		},
 
-		stompFailureCallback(error) {
-			this.setConnection('OFFLINE');
-			if (process.env.DEV) {
-				console.log('STOMP error: ' + error);
-			}
-			setTimeout(() => this.connect(), 5000);
-			if (process.env.DEV) {
-				console.log('STOMP: Reconnecting in 5 seconds');
-			}
-		},
+	stompFailureCallback(error) {
+		this.setConnection('OFFLINE');
+		// WebSocket error - will reconnect in 5 seconds
+		setTimeout(() => this.connect(), 5000);
+	},
 	},
 });
 
