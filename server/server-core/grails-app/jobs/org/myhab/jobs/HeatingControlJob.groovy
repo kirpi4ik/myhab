@@ -3,6 +3,7 @@ package org.myhab.jobs
 
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
+import grails.util.Holders
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
@@ -30,7 +31,20 @@ import static org.myhab.ConfigKey.CONFIG_TEMP_ALL_DAY
 @DisallowConcurrentExecution
 class HeatingControlJob implements Job, EventPublisher {
     static triggers = {
-        simple name: 'heatControlJob', repeatInterval: TimeUnit.MINUTES.toMillis(2)
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.heatingControl.enabled', Boolean)
+        def interval = config?.getProperty('quartz.jobs.heatingControl.interval', Integer) ?: 120
+        
+        if (enabled == null) {
+            enabled = true  // Default to enabled for backward compatibility
+        }
+        
+        if (enabled) {
+            println "HeatingControlJob: ENABLED - Registering trigger with interval ${interval}s"
+            simple name: 'heatControlJob', repeatInterval: TimeUnit.SECONDS.toMillis(interval)
+        } else {
+            println "HeatingControlJob: DISABLED - Not registering trigger"
+        }
     }
     public static final String PERIPHERAL_HEAT_CTRL_CATEGORY = "HEAT"
     public static final String PERIPHERAL_TEMPERATURE_SENSOR_CATEGORY = 'TEMP'
@@ -41,6 +55,17 @@ class HeatingControlJob implements Job, EventPublisher {
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.heatingControl.enabled', Boolean)
+        
+        if (enabled == null) {
+            enabled = true
+        }
+        
+        if (!enabled) {
+            log.info("HeatingControlJob is DISABLED via configuration, skipping execution")
+            return
+        }
         if (configProvider.get(Boolean.class, "heat.thermostat.enabled")) {
             def actions = [:]
             Set<Zone> allzones = Zone.findAll()

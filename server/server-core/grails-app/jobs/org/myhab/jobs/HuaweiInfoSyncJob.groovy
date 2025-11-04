@@ -1,6 +1,7 @@
 package org.myhab.jobs
 
 import grails.gorm.transactions.Transactional
+import grails.util.Holders
 import groovy.json.JsonSlurper
 import kong.unirest.HttpResponse
 import kong.unirest.JsonNode
@@ -35,11 +36,44 @@ class HuaweiInfoSyncJob implements Job {
     String token
 
     static triggers = {
-        simple repeatInterval: TimeUnit.SECONDS.toMillis(120)
+        // Read configuration for job enablement and interval
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.huaweiInfoSync.enabled', Boolean)
+        def interval = config?.getProperty('quartz.jobs.huaweiInfoSync.interval', Integer) ?: 120
+        
+        // If enabled is null, configuration not found - default to false for safety
+        if (enabled == null) {
+            println "HuaweiInfoSyncJob: Configuration not found, defaulting to DISABLED"
+            enabled = false
+        }
+        
+        if (enabled) {
+            println "HuaweiInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
+        } else {
+            println "HuaweiInfoSyncJob: DISABLED - Not registering trigger"
+        }
     }
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        // Runtime check: respect configuration even if trigger was already registered
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.huaweiInfoSync.enabled', Boolean)
+        
+        // If enabled is null, configuration not found - default to false for safety
+        if (enabled == null) {
+            enabled = false
+        }
+        
+        log.info("HuaweiInfoSyncJob execute() called - enabled: ${enabled}")
+        
+        if (!enabled) {
+            log.info("HuaweiInfoSyncJob is DISABLED via configuration, skipping execution")
+            return
+        }
+        
+        log.info("HuaweiInfoSyncJob is ENABLED, proceeding with execution")
         login()
         sleep(3000)
         

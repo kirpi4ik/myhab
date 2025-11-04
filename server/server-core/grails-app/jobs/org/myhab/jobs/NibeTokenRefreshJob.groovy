@@ -3,6 +3,7 @@ package org.myhab.jobs
 import org.myhab.config.CfgKey
 import org.myhab.domain.device.Device
 import grails.gorm.transactions.Transactional
+import grails.util.Holders
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import kong.unirest.HttpResponse
@@ -27,12 +28,36 @@ class NibeTokenRefreshJob implements Job {
 
     def telegramBotHandler
     static triggers = {
-        simple repeatInterval: TimeUnit.SECONDS.toMillis(500)
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.nibeTokenRefresh.enabled', Boolean)
+        def interval = config?.getProperty('quartz.jobs.nibeTokenRefresh.interval', Integer) ?: 500
+        
+        if (enabled == null) {
+            enabled = true  // Default to enabled for backward compatibility
+        }
+        
+        if (enabled) {
+            println "NibeTokenRefreshJob: ENABLED - Registering trigger with interval ${interval}s"
+            simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
+        } else {
+            println "NibeTokenRefreshJob: DISABLED - Not registering trigger"
+        }
     }
 
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.nibeTokenRefresh.enabled', Boolean)
+        
+        if (enabled == null) {
+            enabled = true
+        }
+        
+        if (!enabled) {
+            log.info("NibeTokenRefreshJob is DISABLED via configuration, skipping execution")
+            return
+        }
         def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
         try {
             Configuration refreshKeyFromCfg = device.getConfigurationByKey(CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN) ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.refresh_token')

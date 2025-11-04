@@ -1,6 +1,7 @@
 package org.myhab.jobs
 
 import grails.events.EventPublisher
+import grails.util.Holders
 import org.myhab.async.mqtt.MqttTopicService
 import org.myhab.config.CfgKey
 import org.myhab.domain.device.Device
@@ -21,13 +22,37 @@ class PortValueSyncTriggerJob implements Job, EventPublisher {
 
 
     static triggers = {
-        simple name: 'portValueSyncTrigger', repeatInterval: TimeUnit.SECONDS.toMillis(60)
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.portValueSyncTrigger.enabled', Boolean)
+        def interval = config?.getProperty('quartz.jobs.portValueSyncTrigger.interval', Integer) ?: 60
+        
+        if (enabled == null) {
+            enabled = true  // Default to enabled for backward compatibility
+        }
+        
+        if (enabled) {
+            println "PortValueSyncTriggerJob: ENABLED - Registering trigger with interval ${interval}s"
+            simple name: 'portValueSyncTrigger', repeatInterval: TimeUnit.SECONDS.toMillis(interval)
+        } else {
+            println "PortValueSyncTriggerJob: DISABLED - Not registering trigger"
+        }
     }
     static group = "Internal"
     static description = "Trigger read port status"
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.portValueSyncTrigger.enabled', Boolean)
+        
+        if (enabled == null) {
+            enabled = true
+        }
+        
+        if (!enabled) {
+            log.info("PortValueSyncTriggerJob is DISABLED via configuration, skipping execution")
+            return
+        }
         log.trace("PortValueReaderJob reader execute")
         Device.findAll().each { device ->
             def mqttSupported = device.getConfigurationByKey(CfgKey.DEVICE.DEVICE_MQTT_SYNC_SUPPORTED)
