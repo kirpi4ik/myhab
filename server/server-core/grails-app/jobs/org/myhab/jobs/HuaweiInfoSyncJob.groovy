@@ -42,9 +42,22 @@ class HuaweiInfoSyncJob implements Job {
     void execute(JobExecutionContext context) throws JobExecutionException {
         login()
         sleep(3000)
-        readHuaweiDevice(Device.findByModel(DeviceModel.HUAWEI_SUN2000_12KTL_M2), 1, "1000000036363790")
+        
+        def inverterDevice = Device.findByModel(DeviceModel.HUAWEI_SUN2000_12KTL_M2)
+        if (inverterDevice) {
+            readHuaweiDevice(inverterDevice, 1, "1000000036363790")
+        } else {
+            log.warn("Huawei inverter device not found (model: ${DeviceModel.HUAWEI_SUN2000_12KTL_M2})")
+        }
+        
         sleep(3000)
-        readHuaweiDevice(Device.findByModel(DeviceModel.ELECTRIC_METER_DTS), 47, "1000000036406276")
+        
+        def meterDevice = Device.findByModel(DeviceModel.ELECTRIC_METER_DTS)
+        if (meterDevice) {
+            readHuaweiDevice(meterDevice, 47, "1000000036406276")
+        } else {
+            log.warn("Electric meter device not found (model: ${DeviceModel.ELECTRIC_METER_DTS})")
+        }
     }
 
     def readHuaweiDevice(Device device, def devTypeId, def devIds) {
