@@ -37,10 +37,10 @@ class NibeTokenRefreshJob implements Job {
         }
         
         if (enabled) {
-            println "NibeTokenRefreshJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "NibeTokenRefreshJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "NibeTokenRefreshJob: DISABLED - Not registering trigger"
+            log.debug "NibeTokenRefreshJob: DISABLED - Not registering trigger"
         }
     }
 

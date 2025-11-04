@@ -4,6 +4,7 @@ import com.hazelcast.core.HazelcastInstance
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
+import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
 import org.myhab.ConfigKey
 import org.myhab.domain.EntityType
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit
 /**
  * SwitchOFF peripheral after some timeout, also check if there is some peripheral in status ON but without cached expiration
  */
+@Slf4j
 @DisallowConcurrentExecution
 @Transactional
 class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
@@ -35,10 +37,10 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
         }
         
         if (enabled) {
-            println "SwitchOFFOnTimeoutJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "SwitchOFFOnTimeoutJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "SwitchOFFOnTimeoutJob: DISABLED - Not registering trigger"
+            log.debug "SwitchOFFOnTimeoutJob: DISABLED - Not registering trigger"
         }
     }
 

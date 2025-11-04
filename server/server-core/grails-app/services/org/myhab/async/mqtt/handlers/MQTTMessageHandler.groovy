@@ -39,7 +39,7 @@ class MQTTMessageHandler implements MessageHandler, EventPublisher {
 
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to handle MQTT message", e)
         }
     }
 

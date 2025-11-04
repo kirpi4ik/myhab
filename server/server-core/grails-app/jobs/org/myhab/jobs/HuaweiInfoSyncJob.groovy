@@ -3,6 +3,7 @@ package org.myhab.jobs
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import groovy.json.JsonSlurper
+import groovy.util.logging.Slf4j
 import kong.unirest.HttpResponse
 import kong.unirest.JsonNode
 import kong.unirest.Unirest
@@ -24,6 +25,7 @@ import org.quartz.JobExecutionException
 
 import java.util.concurrent.TimeUnit
 
+@Slf4j
 @DisallowConcurrentExecution
 @Transactional
 class HuaweiInfoSyncJob implements Job {
@@ -43,15 +45,15 @@ class HuaweiInfoSyncJob implements Job {
         
         // If enabled is null, configuration not found - default to false for safety
         if (enabled == null) {
-            println "HuaweiInfoSyncJob: Configuration not found, defaulting to DISABLED"
+            log.debug "HuaweiInfoSyncJob: Configuration not found, defaulting to DISABLED"
             enabled = false
         }
         
         if (enabled) {
-            println "HuaweiInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "HuaweiInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "HuaweiInfoSyncJob: DISABLED - Not registering trigger"
+            log.debug "HuaweiInfoSyncJob: DISABLED - Not registering trigger"
         }
     }
 
@@ -118,7 +120,7 @@ class HuaweiInfoSyncJob implements Job {
                         mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
                     }
                 } catch (Exception ex) {
-                    ex.printStackTrace()
+                    log.error("Failed to sync Huawei inverter data", ex)
                 }
 
             }

@@ -40,10 +40,10 @@ class HeatingControlJob implements Job, EventPublisher {
         }
         
         if (enabled) {
-            println "HeatingControlJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "HeatingControlJob: ENABLED - Registering trigger with interval ${interval}s"
             simple name: 'heatControlJob', repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "HeatingControlJob: DISABLED - Not registering trigger"
+            log.debug "HeatingControlJob: DISABLED - Not registering trigger"
         }
     }
     public static final String PERIPHERAL_HEAT_CTRL_CATEGORY = "HEAT"

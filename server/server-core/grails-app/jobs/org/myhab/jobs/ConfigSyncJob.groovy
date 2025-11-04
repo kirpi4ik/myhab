@@ -22,10 +22,10 @@ class ConfigSyncJob implements Job {
         }
         
         if (enabled) {
-            println "ConfigSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "ConfigSyncJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "ConfigSyncJob: DISABLED - Not registering trigger"
+            log.debug "ConfigSyncJob: DISABLED - Not registering trigger"
         }
     }
     def configProvider

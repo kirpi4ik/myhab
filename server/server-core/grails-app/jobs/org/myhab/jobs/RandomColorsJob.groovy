@@ -29,10 +29,10 @@ class RandomColorsJob implements Job, EventPublisher {
         }
         
         if (enabled) {
-            println "RandomColorsJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.debug "RandomColorsJob: ENABLED - Registering trigger with interval ${interval}s"
             simple name: 'randomColors', repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            println "RandomColorsJob: DISABLED - Not registering trigger"
+            log.debug "RandomColorsJob: DISABLED - Not registering trigger"
         }
     }
 
