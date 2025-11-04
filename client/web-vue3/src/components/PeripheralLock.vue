@@ -88,11 +88,8 @@ export default defineComponent({
 					variables: { input: event },
 				})
 				.then(resp => {
-					this.passDialog = false;
-					if (process.env.DEV) {
-						console.log('Unlock');
-					}
-				});
+				this.passDialog = false;
+			});
 		},
 	},
 });

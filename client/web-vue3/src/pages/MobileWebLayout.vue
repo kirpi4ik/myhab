@@ -205,9 +205,7 @@ const handleAssetClick = (event) => {
   const peripheralId = asset.id;
 
   if (!hasPeripheral(peripheralId)) {
-    if (process.env.DEV) {
-      console.log('Peripheral not found:', peripheralId);
-    }
+    // Peripheral not found - silently return
     return;
   }
 
