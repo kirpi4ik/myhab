@@ -22,6 +22,8 @@
 <script>
 import {defineComponent} from 'vue';
 
+
+
 export default defineComponent({
 	name: 'UserMessages',
 	setup() {
@@ -66,6 +68,7 @@ export default defineComponent({
 		};
 	},
 });
+
 </script>
 
 <style scoped></style>

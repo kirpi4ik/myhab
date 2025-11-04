@@ -90,8 +90,7 @@ class ConfigProvider implements InitializingBean {
                 }
 
             } catch (Exception ex) {
-                ex.printStackTrace()
-                log.error(ex.message)
+                log.error("Failed to synchronize configuration", ex)
             }
         }
 
@@ -126,10 +125,10 @@ class ConfigProvider implements InitializingBean {
                 .call();
         if (syncLoad()) {
             config.keys.each { key ->
-                println "$key = ${config.get(Object.class, key)}"
+                log.debug "$key = ${config.get(Object.class, key)}"
             }
         } else {
-            println("Error read config")
+            log.error("Error read config")
         }
     }
 }

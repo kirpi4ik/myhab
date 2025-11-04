@@ -4,113 +4,113 @@
 	},
 	"actions": {
 		"view": "View",
-		"save": "Salvare",
-		"edit": "Editare",
-		"delete": "Stergere",
-		"create": "Creare",
-		"add": "Adaugare",
-		"cancel": "Renuntare",
-		"config": "Configurare",
-		"add_new": "Adauga",
-		"remove_from": "Starge din lista",
+		"save": "Save",
+		"edit": "Edit",
+		"delete": "Delete",
+		"create": "Create",
+		"add": "Add",
+		"cancel": "Cancel",
+		"config": "Configure",
+		"add_new": "Add New",
+		"remove_from": "Remove from list",
 		"nav": {
-			"back": "Inapoi",
-			"next": "Pasul urmator"
+			"back": "Back",
+			"next": "Next Step"
 		}
 	},
 	"modal": {
 		"delete": {
-			"title": "Stergere",
-			"confirmation_msg": "Sunteti sigur ca doriti sa stergeti :"
+			"title": "Delete",
+			"confirmation_msg": "Are you sure you want to delete:"
 		}
 	},
 	"table": {
 		"header": {
-			"actions": "Actiune"
+			"actions": "Actions"
 		}
 	},
 	"breadcrumb": {
-		"home": "Acasa",
+		"home": "Home",
 		"dashboard": "Dashboard",
-		"peripherals": "Periferice",
+		"peripherals": "Peripherals",
 		"peripheral": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Periferic nou"
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Peripheral"
 		},
 		"ports": {
-			"list": "Porturi",
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Port nou"
+			"list": "Ports",
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Port"
 		},
-		"zones": "Locatii",
+		"zones": "Locations",
 		"zone": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Locatie noua"
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Location"
 		},
-		"users": "Utilizatori",
+		"users": "Users",
 		"user": {
-			"details": "Detalii utilizator",
-			"edit": "Editeaza utilizator",
-			"create": "Utilizator nou"
+			"details": "User Details",
+			"edit": "Edit User",
+			"create": "New User"
 		},
-		"devices": "Dispozitive",
+		"devices": "Devices",
 		"device": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Dispozitiv nou"
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Device"
 		},
-		"cables": "Cablaj",
+		"cables": "Cables",
 		"cable": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Cablaj nou"
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Cable"
 		},
-		"configurations": "Configurare"
+		"configurations": "Configuration"
 	},
 	"peripheral": {
 		"fields": {
-			"category": "Categorie",
-			"categories": "Categorii",
-			"zone": "Localizare",
-			"zones": "Localizari",
-			"connectedTo": "Conectat la "
+			"category": "Category",
+			"categories": "Categories",
+			"zone": "Location",
+			"zones": "Locations",
+			"connectedTo": "Connected to "
 		},
 		"list": {
-			"nav_title": "Lista periferice"
+			"nav_title": "Peripherals List"
 		},
 		"view": {
-			"nav_title": "Detalii Periferic :"
+			"nav_title": "Peripheral Details:"
 		},
 		"create": {
-			"nav_title": "Periferice"
+			"nav_title": "Peripherals"
 		},
 		"edit": {
-			"nav_title": "Editare periferic :"
+			"nav_title": "Edit Peripheral:"
 		}
 	},
 	"device": {
 		"edit": {
-			"nav_title": "Editare dispozitiv :"
+			"nav_title": "Edit Device:"
 		},
 		"details": {
-			"title": "Detalii dispozitiv :"
+			"title": "Device Details:"
 		},
 		"fields": {
 			"type": {
-				"label": "Tip"
+				"label": "Type"
 			},
 			"rack": {
 				"label": "Rack",
 				"fields": {
-					"name": "Denumire",
-					"description": "Descriere"
+					"name": "Name",
+					"description": "Description"
 				}
 			},
 			"networkAddress": {
-				"label": "Adresa retea",
+				"label": "Network Address",
 				"fields": {
 					"ip": "IP",
 					"port": "Port",
@@ -118,29 +118,46 @@
 				}
 			},
 			"authAccounts": {
-				"label": "Conturi access",
+				"label": "Access Accounts",
 				"fields": {
-					"username": "IP",
-					"password": "Port",
-					"isDefault": "Implicit"
+					"username": "Username",
+					"password": "Password",
+					"isDefault": "Default"
 				}
 			}
 		}
 	},
 	"cables": {
 		"list": {
-			"nav_title": "Cabluri"
+			"nav_title": "Cables"
 		}
 	},
 	"port": {
 		"fields": {
-			"type": "Tip",
-			"state": "Stare"
+			"type": "Type",
+			"state": "State"
 		}
 	},
 	"configurations": {
 		"list": {
-			"title": "Configurarile"
+			"title": "Configurations"
 		}
+	},
+	"mobile": {
+		"unlock": {
+			"title": "Alert",
+			"message": "Attention! Do you want to open?",
+			"button": "Open"
+		}
+	},
+	"common": {
+		"close": "Close",
+		"alert": "Alert",
+		"cancel": "Cancel"
+	},
+	"door": {
+		"small_gate": "Small Gate",
+		"open": "Open",
+		"confirm_open": "Attention! Do you want to open the door?"
 	}
 }

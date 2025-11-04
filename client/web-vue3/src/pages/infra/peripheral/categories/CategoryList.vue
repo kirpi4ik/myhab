@@ -47,10 +47,15 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRouter} from "vue-router/dist/vue-router";
+
 import {PERIPHERAL_CATEGORIES, PERIPHERAL_DELETE} from "@/graphql/queries";
+
 import _ from "lodash";
+
+
 
 export default defineComponent({
   name: 'PCategoryList',
@@ -60,7 +65,7 @@ export default defineComponent({
     const {client} = useApolloClient();
     const loading = ref(false)
     const router = useRouter();
-    const rows = ref();
+    const rows = ref([]);
     const confirmDelete = ref(false);
     const selectedRow = ref(null);
     const columns = [
@@ -130,4 +135,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

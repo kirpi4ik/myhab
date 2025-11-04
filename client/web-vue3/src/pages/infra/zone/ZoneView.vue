@@ -68,9 +68,13 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {ZONE_GET_BY_ID_MINIMAL} from "@/graphql/queries";
+
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
+
+import {ZONE_GET_BY_ID_MINIMAL} from "@/graphql/queries";
+
+
 
 export default defineComponent({
   name: 'ZoneView',
@@ -131,4 +135,5 @@ export default defineComponent({
     }
   }
 });
+
 </script>

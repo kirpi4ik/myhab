@@ -50,6 +50,8 @@
 <script>
 import {defineComponent, ref} from 'vue';
 
+
+
 export default defineComponent({
 	name: 'LockScreen',
 
@@ -60,6 +62,7 @@ export default defineComponent({
 		};
 	},
 });
+
 </script>
 
 <style>

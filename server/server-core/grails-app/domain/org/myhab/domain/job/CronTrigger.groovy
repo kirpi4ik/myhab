@@ -12,4 +12,6 @@ class CronTrigger extends BaseEntity {
   static mapping = {
     table '`job_triggers_cron`'
   }
+
+  static graphql = true
 }

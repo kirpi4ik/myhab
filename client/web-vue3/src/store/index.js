@@ -1,31 +1,10 @@
-import {store} from 'quasar/wrappers';
-import {createStore} from 'vuex';
-
-import settings from './store.settings';
-import ws from './store.ws';
-
-// import example from './module-example'
+import { createPinia } from 'pinia';
 
 /*
- * If not building with SSR mode, you can
- * directly export the Store instantiation;
- *
- * The function below can be async too; either use
- * async/await or return a Promise which resolves
- * with the Store instance.
+ * When using Pinia with Quasar, simply export the Pinia instance
  */
 
-export default store(function (/* { ssrContext } */) {
-	const Store = createStore({
-		modules: {
-			settings,
-			ws,
-		},
-
-		// enable strict mode (adds overhead!)
-		// for dev mode and --debug builds only
-		strict: process.env.DEBUGGING,
-	});
-
-	return Store;
-});
+export default function (/* { ssrContext } */) {
+	const pinia = createPinia();
+	return pinia;
+}

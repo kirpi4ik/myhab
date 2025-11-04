@@ -11,4 +11,6 @@ class JobTag {
     table '`jobs_tags`'
     jobs joinTable: [name: "jobs_tags_join", key: 'tag_id']
   }
+
+  static graphql = true
 }

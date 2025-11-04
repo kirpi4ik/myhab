@@ -13,4 +13,6 @@ class EventDefinition extends BaseEntity {
     table '`event_definitions`'
     version false
   }
+
+  static graphql = true
 }

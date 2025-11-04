@@ -7,6 +7,14 @@ export const ZONES_GET_ALL = gql`
       uid
       name
       description
+      parent {
+        id
+        name
+      }
+      zones {
+        id
+        name
+      }
       peripherals {
         id
         uid
@@ -95,6 +103,11 @@ export const ZONE_GET_BY_ID_MINIMAL = gql`
       name
       description
       categories
+      parent {
+        id
+        name
+        description
+      }
       zones {
         id
         name
@@ -147,6 +160,43 @@ export const ZONES_GET_ROOT = gql`
           value
         }
       }
+    }
+  }
+`;
+
+export const ZONE_VALUE_UPDATE = gql`
+  mutation ($id: Long!, $zone: ZoneUpdate!) {
+    zoneUpdateCustom(id: $id, zone: $zone) {
+      id
+      name
+      description
+      parent {
+        id
+        name
+      }
+      zones {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const ZONE_CREATE = gql`
+  mutation ($zone: ZoneCreate!) {
+    zoneCreate(zone: $zone) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const ZONE_DELETE = gql`
+  mutation ($id: Long!) {
+    zoneDelete(id: $id) {
+      success
+      error
     }
   }
 `;

@@ -1,54 +1,85 @@
 <template>
-  <q-card class="text-white" style="background: linear-gradient(#156cb8, #60a3c2)">
+  <q-card class="peripheral-light-card text-white">
     <q-item>
+      <!-- Light Bulb Avatar -->
       <q-item-section avatar>
-        <q-avatar size="60px" :class="!asset['state'] ? 'shadow-10 bg-blue' : 'shadow-10 bg-yellow-4'">
-          <q-icon name="mdi-lightbulb-on" color="yellow-10" size="40px" v-if="asset['state']" />
-          <q-icon name="mdi-lightbulb-off" color="white" size="40px" v-if="!asset['state']" />
+        <q-avatar 
+          size="60px" 
+          :class="isLightOn ? 'shadow-10 bg-yellow-4' : 'shadow-10 bg-blue'"
+        >
+          <q-icon 
+            :name="isLightOn ? 'mdi-lightbulb-on' : 'mdi-lightbulb-off'" 
+            :color="isLightOn ? 'yellow-10' : 'white'" 
+            size="40px" 
+          />
         </q-avatar>
       </q-item-section>
 
+      <!-- Light Info -->
       <q-item-section>
-        <q-item-label class="text-weight-medium text-h5">{{ asset.data.name }}</q-item-label>
-        <q-item-label class="text-weight-light text-blue-grey-3">{{ asset.data.description }}</q-item-label>
-        <q-item-label class="text-weight-light text-teal-2 text-caption">
-          <label v-if="config('key.on.timeout')"
-          >[ timer: {{ humanizeDuration(Number(config('key.on.timeout').value) * 1000, { largest: 2 }) }}</label
-          >
-          <label v-if="asset.expiration" class="text-weight-light text-blue-grey-3">
-            | off at :{{ format(new Date(Number(asset.expiration)), 'HH:mm') }}
-          </label>
-          <label v-if="config('key.on.timeout')">]</label>
+        <q-item-label class="text-weight-medium text-h5">
+          {{ asset.data?.name || 'Unknown Light' }}
+        </q-item-label>
+        <q-item-label class="text-weight-light text-blue-grey-3">
+          {{ asset.data?.description || '' }}
+        </q-item-label>
+        <q-item-label v-if="timeoutConfig || asset.expiration" class="text-weight-light text-teal-2 text-caption">
+          <span v-if="timeoutConfig">
+            [ timer: {{ formatDuration(Number(timeoutConfig.value) * 1000) }}
+          </span>
+          <span v-if="asset.expiration" class="text-weight-light text-blue-grey-3">
+            | off at: {{ formatTime(asset.expiration) }}
+          </span>
+          <span v-if="timeoutConfig">]</span>
         </q-item-label>
       </q-item-section>
 
+      <!-- Actions Menu -->
       <q-item-section side>
         <q-item-label>
           <q-btn-dropdown size="sm" flat round icon="settings" class="text-white">
             <q-list>
+              <!-- Timeout Options -->
+              <q-item-label header class="text-weight-bold">Set Timeout</q-item-label>
+              <q-item
+                v-for="item in timeoutOptions"
+                :key="item.value"
+                clickable
+                v-close-popup
+                @click="handleSetTimeout(item.value)"
+              >
+                <q-item-section>
+                  <q-item-label>{{ formatDuration(item.value * 1000) }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              
+              <q-separator/>
+              
+              <!-- Delete Timeout -->
               <q-item
                 clickable
                 v-close-popup
-                @click="setTimeout({ key: 'key.on.timeout', value: item.value, entityId: asset.id, entityType: 'PERIPHERAL' })"
-                v-for="item in stItems"
-                v-bind:key="item.value"
+                @click="handleDeleteTimeout"
               >
+                <q-item-section avatar>
+                  <q-icon name="mdi-timer-off" color="negative"/>
+                </q-item-section>
                 <q-item-section>
-                  <q-item-label>Timeout: {{ humanizeDuration(item.value * 1000, { largest: 2 }) }}</q-item-label>
+                  <q-item-label>Remove Timeout</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-item
-                clickable
-                v-close-popup
-                @click="deleteTimeout({ entityId: asset.id, entityType: 'PERIPHERAL', key: 'key.on.timeout' })"
+              
+              <!-- View Details -->
+              <q-item 
+                clickable 
+                v-close-popup 
+                @click="viewDetails"
               >
-                <q-item-section>
-                  <q-item-label>Sterge timeout</q-item-label>
+                <q-item-section avatar>
+                  <q-icon name="mdi-information" color="info"/>
                 </q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup @click="$router.push({ path: '/admin/peripherals/' + peripheral.id + '/view' })">
                 <q-item-section>
-                  <q-item-label>Detalii</q-item-label>
+                  <q-item-label>Details</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -60,24 +91,27 @@
       </q-item-section>
     </q-item>
 
-    <q-separator></q-separator>
+    <q-separator/>
+    
+    <!-- Toggle Switch -->
     <q-card-section>
       <div class="q-pa-sm text-grey-8">
-        <toggle v-model="asset['data']['state']" @change="lightService.toggle(asset)" :id="peripheral.id"/>
+        <toggle 
+          v-model="lightState" 
+          @change="handleToggle" 
+          :id="String(peripheral.id)"
+        />
       </div>
     </q-card-section>
   </q-card>
 </template>
 <script>
-import _ from 'lodash';
-import {useStore} from 'vuex';
-import {lightService} from '@/_services/controls';
-import EventLogger from 'components/EventLogger.vue';
-import {computed, defineComponent, toRefs, watch} from 'vue';
-import Toggle from '@vueform/toggle';
-import {format} from 'date-fns';
-import humanizeDuration from 'humanize-duration';
+import {computed, defineComponent, toRefs, ref} from 'vue';
+import {useRouter} from 'vue-router';
+
 import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
+import {useWebSocketListeners} from '@/composables';
+
 import {
   CACHE_DELETE,
   CACHE_GET_VALUE,
@@ -85,6 +119,13 @@ import {
   CONFIGURATION_SET_VALUE,
   PERIPHERAL_GET_BY_ID,
 } from '@/graphql/queries';
+import {lightService} from '@/_services/controls';
+
+import _ from 'lodash';
+import {format} from 'date-fns';
+import EventLogger from 'components/EventLogger.vue';
+import humanizeDuration from 'humanize-duration';
+import Toggle from '@vueform/toggle';
 
 export default defineComponent({
   name: 'PeripheralLightCard',
@@ -93,110 +134,232 @@ export default defineComponent({
     EventLogger,
   },
   props: {
-    peripheral: Object,
-  },
-  setup(props, { emit }) {
-    const store = useStore();
-    const { client } = useApolloClient();
-    let { peripheral: asset } = toRefs(props);
-    const stItems = [
-      { value: 30 },
-      { value: 60 },
-      { value: 300 },
-      { value: 600 },
-      { value: 1800 },
-      { value: 3600 },
-      { value: 7200 },
-      { value: 10800 },
-      { value: 18000 },
-    ];
-    let portId = -1;
-    if (asset.value.data.connectedTo.length > 0) {
-      portId = asset.value.data.connectedTo[0].id;
+    peripheral: {
+      type: Object,
+      required: true
     }
+  },
+  emits: ['onUpdate'],
+  setup(props, { emit }) {
+    const router = useRouter();
+    const { client } = useApolloClient();
+    const { peripheral: asset } = toRefs(props);
 
-    const loadDetails = () => {
-      client
-        .query({
-          query: PERIPHERAL_GET_BY_ID,
-          variables: { id: asset.value.id },
-          fetchPolicy: 'network-only',
-        })
-        .then(data => {
-          let assetRW = _.cloneDeep(data.data.devicePeripheral);
-          const { data: cfg } = client
-            .query({
-              query: CACHE_GET_VALUE,
-              variables: { cacheName: 'expiring', cacheKey: portId },
-              fetchPolicy: 'network-only',
-            })
-            .then(cfg => {
-              if (cfg.data.cache) {
-                assetRW['expiration'] = cfg.data.cache.cachedValue;
-              }
-              compPeripheral.value = assetRW;
-            });
-        });
-    };
+    // Timeout options in seconds
+    const timeoutOptions = [
+      { value: 30, label: '30 seconds' },
+      { value: 60, label: '1 minute' },
+      { value: 300, label: '5 minutes' },
+      { value: 600, label: '10 minutes' },
+      { value: 1800, label: '30 minutes' },
+      { value: 3600, label: '1 hour' },
+      { value: 7200, label: '2 hours' },
+      { value: 10800, label: '3 hours' },
+      { value: 18000, label: '5 hours' },
+    ];
 
-    const wsMessage = computed(() => store.getters.ws.message);
-    watch(
-      () => store.getters.ws.message,
-      function () {
-        if (wsMessage.value.eventName == 'evt_port_value_persisted') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (portId == payload.p2) {
-            asset.value['value'] = payload.p4;
-            asset.value['state'] = payload.p4 === 'ON';
-            asset.value['data']['state'] = payload.p4 === 'ON';
-            loadDetails();
-          }
-        } else if (wsMessage.value.eventName == 'evt_cfg_value_changed') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (asset.value.id == payload.p3 && 'PERIPHERAL' == payload.p2) {
-            loadDetails();
-          }
+    /**
+     * Get the port ID from connected ports
+     */
+    const portId = computed(() => {
+      if (asset.value?.data?.connectedTo?.length > 0) {
+        return asset.value.data.connectedTo[0].id;
+      }
+      return -1;
+    });
+
+    /**
+     * Check if light is currently on
+     */
+    const isLightOn = computed(() => asset.value?.state === true);
+
+    /**
+     * Get/Set light state for toggle
+     */
+    const lightState = computed({
+      get: () => asset.value?.data?.state === true,
+      set: (value) => {
+        if (asset.value?.data) {
+          asset.value.data.state = value;
         }
-      },
-    );
+      }
+    });
 
-    const config = key =>
-      _.find(asset.value.data.configurations, function (cfg) {
-        return cfg.key == key;
-      });
+    /**
+     * Get timeout configuration
+     */
+    const timeoutConfig = computed(() => {
+      return asset.value?.data?.configurations?.find(cfg => cfg.key === 'key.on.timeout');
+    });
 
+    /**
+     * Computed peripheral for emit
+     */
     const compPeripheral = computed({
       get: () => props.peripheral,
       set: value => emit('onUpdate', value),
     });
 
-    const { mutate: setTimeout } = useMutation(CONFIGURATION_SET_VALUE, {
-      update: () => {
-        loadDetails();
+    /**
+     * Load peripheral details and expiration from cache
+     */
+    const loadDetails = async () => {
+      try {
+        const { data } = await client.query({
+          query: PERIPHERAL_GET_BY_ID,
+          variables: { id: asset.value.id },
+          fetchPolicy: 'network-only',
+        });
+
+        let assetRW = _.cloneDeep(data.devicePeripheral);
+
+        // Load expiration from cache
+        if (portId.value !== -1) {
+          try {
+            const cacheData = await client.query({
+              query: CACHE_GET_VALUE,
+              variables: { cacheName: 'expiring', cacheKey: portId.value },
+              fetchPolicy: 'network-only',
+            });
+
+            if (cacheData.data?.cache?.cachedValue) {
+              assetRW.expiration = cacheData.data.cache.cachedValue;
+            }
+          } catch (error) {
+            console.warn('Failed to load cache expiration:', error);
+          }
+        }
+
+        compPeripheral.value = assetRW;
+      } catch (error) {
+        console.error('Failed to load peripheral details:', error);
+      }
+    };
+
+    // WebSocket event listeners
+    useWebSocketListeners([
+      {
+        eventName: 'evt_port_value_persisted',
+        callback: (payload) => {
+          const newState = payload.p4 === 'ON';
+          asset.value.value = payload.p4;
+          asset.value.state = newState;
+          if (asset.value.data) {
+            asset.value.data.state = newState;
+          }
+          loadDetails();
+        },
+        filter: (payload) => portId.value === Number(payload.p2)
       },
+      {
+        eventName: 'evt_cfg_value_changed',
+        callback: () => loadDetails(),
+        filter: (payload) => 
+          asset.value.id === Number(payload.p3) && payload.p2 === 'PERIPHERAL'
+      }
+    ]);
+
+    // Mutations
+    const { mutate: setTimeoutMutation } = useMutation(CONFIGURATION_SET_VALUE, {
+      update: () => loadDetails(),
     });
-    const { mutate: deleteCache } = useMutation(CACHE_DELETE, { variables: { cacheName: 'expiring', cacheKey: portId } });
-    const { mutate: deleteTimeout } = useMutation(CONFIGURATION_REMOVE_CONFIG_BY_KEY, {
+
+    const { mutate: deleteCacheMutation } = useMutation(CACHE_DELETE);
+
+    const { mutate: deleteTimeoutMutation } = useMutation(CONFIGURATION_REMOVE_CONFIG_BY_KEY, {
       update: () => {
-        deleteCache();
+        if (portId.value !== -1) {
+          deleteCacheMutation({ cacheName: 'expiring', cacheKey: portId.value });
+        }
         loadDetails();
       },
     });
 
+    /**
+     * Handle light toggle
+     */
+    const handleToggle = () => {
+      lightService.toggle(asset.value);
+    };
+
+    /**
+     * Handle set timeout
+     */
+    const handleSetTimeout = (timeoutValue) => {
+      setTimeoutMutation({
+        key: 'key.on.timeout',
+        value: timeoutValue,
+        entityId: asset.value.id,
+        entityType: 'PERIPHERAL'
+      });
+    };
+
+    /**
+     * Handle delete timeout
+     */
+    const handleDeleteTimeout = () => {
+      deleteTimeoutMutation({
+        entityId: asset.value.id,
+        entityType: 'PERIPHERAL',
+        key: 'key.on.timeout'
+      });
+    };
+
+    /**
+     * Navigate to peripheral details
+     */
+    const viewDetails = () => {
+      router.push({ path: `/admin/peripherals/${props.peripheral.id}/view` });
+    };
+
+    /**
+     * Format duration in human-readable format
+     */
+    const formatDuration = (milliseconds) => {
+      return humanizeDuration(milliseconds, { largest: 2, language: 'en', round: true });
+    };
+
+    /**
+     * Format time from timestamp
+     */
+    const formatTime = (timestamp) => {
+      try {
+        return format(new Date(Number(timestamp)), 'HH:mm');
+      } catch (error) {
+        return '--:--';
+      }
+    };
+
     return {
       asset,
-      format,
-      config,
-      humanizeDuration,
-      stItems,
-      setTimeout,
-      deleteTimeout,
+      isLightOn,
+      lightState,
+      timeoutConfig,
+      timeoutOptions,
       portId,
-      lightService,
+      handleToggle,
+      handleSetTimeout,
+      handleDeleteTimeout,
+      viewDetails,
+      formatDuration,
+      formatTime,
       loading: useGlobalQueryLoading(),
     };
   },
 });
+
 </script>
-<style></style>
+
+<style scoped>
+.peripheral-light-card {
+  background: linear-gradient(135deg, #156cb8, #60a3c2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.peripheral-light-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+</style>
+
 <style src="@vueform/toggle/themes/default.css"></style>

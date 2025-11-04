@@ -18,6 +18,16 @@ export const DEVICE_UPDATE = gql`
     }
   }
 `;
+export const DEVICE_UPDATE_CUSTOM = gql`
+  mutation ($id: Long!, $device: DeviceUpdate!) {
+    deviceUpdateCustom(id: $id, device: $device) {
+      id
+      uid
+      code
+      name
+    }
+  }
+`;
 export const DEVICE_DELETE = gql`
   mutation ($id: Long!) {
     deviceDelete(id: $id) {
@@ -29,6 +39,22 @@ export const DEVICE_CATEGORY_CREATE = gql`
   mutation ($deviceCategory: DeviceCategoryCreate) {
     deviceCategoryCreate(deviceCategory: $deviceCategory ) {
       id
+    }
+  }
+`;
+export const DEVICE_CATEGORY_UPDATE = gql`
+  mutation ($id: Long!, $deviceCategory: DeviceCategoryUpdate) {
+    deviceCategoryUpdate(id: $id, deviceCategory: $deviceCategory) {
+      id
+      name
+    }
+  }
+`;
+export const DEVICE_CATEGORY_DELETE = gql`
+  mutation ($id: Long!) {
+    deviceCategoryDelete(id: $id) {
+      success
+      error
     }
   }
 `;
@@ -119,7 +145,10 @@ export const DEVICE_CATEGORIES_LIST = gql`
   {
     deviceCategoryList{
       id
+      uid
       name
+      tsCreated
+      tsUpdated
     }
   }
 `;
@@ -127,7 +156,10 @@ export const DEVICE_CATEGORY_BY_ID = gql`
   query categoryById($id: Long!) {
     deviceCategory(id: $id){
       id
+      uid
       name
+      tsCreated
+      tsUpdated
     }
   }
 `;
@@ -178,6 +210,11 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
         port
       }
       rack {
+        id
+        name
+        description
+      }
+      zones {
         id
         name
         description

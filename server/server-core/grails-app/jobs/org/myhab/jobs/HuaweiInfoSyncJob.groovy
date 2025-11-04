@@ -1,7 +1,9 @@
 package org.myhab.jobs
 
 import grails.gorm.transactions.Transactional
+import grails.util.Holders
 import groovy.json.JsonSlurper
+import groovy.util.logging.Slf4j
 import kong.unirest.HttpResponse
 import kong.unirest.JsonNode
 import kong.unirest.Unirest
@@ -23,6 +25,7 @@ import org.quartz.JobExecutionException
 
 import java.util.concurrent.TimeUnit
 
+@Slf4j
 @DisallowConcurrentExecution
 @Transactional
 class HuaweiInfoSyncJob implements Job {
@@ -35,16 +38,62 @@ class HuaweiInfoSyncJob implements Job {
     String token
 
     static triggers = {
-        simple repeatInterval: TimeUnit.SECONDS.toMillis(120)
+        // Read configuration for job enablement and interval
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.huaweiInfoSync.enabled', Boolean)
+        def interval = config?.getProperty('quartz.jobs.huaweiInfoSync.interval', Integer) ?: 120
+        
+        // If enabled is null, configuration not found - default to false for safety
+        if (enabled == null) {
+            log.debug "HuaweiInfoSyncJob: Configuration not found, defaulting to DISABLED"
+            enabled = false
+        }
+        
+        if (enabled) {
+            log.debug "HuaweiInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
+        } else {
+            log.debug "HuaweiInfoSyncJob: DISABLED - Not registering trigger"
+        }
     }
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        // Runtime check: respect configuration even if trigger was already registered
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.huaweiInfoSync.enabled', Boolean)
+        
+        // If enabled is null, configuration not found - default to false for safety
+        if (enabled == null) {
+            enabled = false
+        }
+        
+        log.info("HuaweiInfoSyncJob execute() called - enabled: ${enabled}")
+        
+        if (!enabled) {
+            log.info("HuaweiInfoSyncJob is DISABLED via configuration, skipping execution")
+            return
+        }
+        
+        log.info("HuaweiInfoSyncJob is ENABLED, proceeding with execution")
         login()
         sleep(3000)
-        readHuaweiDevice(Device.findByModel(DeviceModel.HUAWEI_SUN2000_12KTL_M2), 1, "1000000036363790")
+        
+        def inverterDevice = Device.findByModel(DeviceModel.HUAWEI_SUN2000_12KTL_M2)
+        if (inverterDevice) {
+            readHuaweiDevice(inverterDevice, 1, "1000000036363790")
+        } else {
+            log.warn("Huawei inverter device not found (model: ${DeviceModel.HUAWEI_SUN2000_12KTL_M2})")
+        }
+        
         sleep(3000)
-        readHuaweiDevice(Device.findByModel(DeviceModel.ELECTRIC_METER_DTS), 47, "1000000036406276")
+        
+        def meterDevice = Device.findByModel(DeviceModel.ELECTRIC_METER_DTS)
+        if (meterDevice) {
+            readHuaweiDevice(meterDevice, 47, "1000000036406276")
+        } else {
+            log.warn("Electric meter device not found (model: ${DeviceModel.ELECTRIC_METER_DTS})")
+        }
     }
 
     def readHuaweiDevice(Device device, def devTypeId, def devIds) {
@@ -71,7 +120,7 @@ class HuaweiInfoSyncJob implements Job {
                         mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
                     }
                 } catch (Exception ex) {
-                    ex.printStackTrace()
+                    log.error("Failed to sync Huawei inverter data", ex)
                 }
 
             }

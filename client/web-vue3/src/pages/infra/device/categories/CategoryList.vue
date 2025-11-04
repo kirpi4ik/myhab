@@ -1,134 +1,175 @@
 <template>
   <q-page padding>
-    <q-table
-      :dense="$q.screen.lt.md"
-      title="Devices"
-      :rows="rows"
-      :columns="columns"
-      :loading="loading"
-      :filter="filter"
-      :pagination="pagination"
-      row-key="id"
-      @row-click="onRowClick"
-      @request="fetchData"
-      binary-state-sort
-    >
-      <template v-slot:loading>
-        <q-inner-loading showing color="primary"/>
-      </template>
-      <template v-slot:top>
-        <q-btn icon="add" color="positive" :disable="loading" label="Add category" @click="addRow"/>
-        <q-space/>
-        <q-input dense outlined debounce="300" color="primary" v-model="filter">
-          <template v-slot:append>
-            <q-icon name="search"/>
-          </template>
-        </q-input>
-      </template>
-      <template v-slot:body-cell-code="props">
-        <q-td :props="props">
-          <q-badge :label="props.value" class="text-weight-bold text-blue-6 text-h6 bg-transparent"/>
-        </q-td>
-      </template>
-      <template v-slot:body-cell-name="props">
-        <q-td :props="props">
-          <q-badge :label="props.value" class="text-weight-bold text-blue-6 text-h6 bg-transparent"/>
-        </q-td>
-      </template>
-      <template v-slot:body-cell-actions="props">
-        <q-td :props="props">
-          <q-btn icon="mode_edit" @click="onEdit(props.row)"></q-btn>
-          <q-btn icon="delete" @click="confirmDelete = true; selectedRow=props.row"></q-btn>
-        </q-td>
-      </template>
-    </q-table>
+    <q-card flat bordered>
+      <!-- Header Section -->
+      <q-card-section>
+        <div class="row items-center">
+          <div class="text-h5 text-primary">
+            <q-icon name="mdi-shape" class="q-mr-sm"/>
+            Device Category List
+          </div>
+          <q-space/>
+          <q-input 
+            v-model="filter" 
+            dense 
+            outlined
+            debounce="300" 
+            placeholder="Search categories..."
+            clearable
+            class="q-mr-sm"
+            style="min-width: 250px"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-magnify"/>
+            </template>
+          </q-input>
+          <q-btn
+            color="primary"
+            icon="mdi-plus-circle"
+            label="Add Category"
+            @click="createItem"
+            :disable="loading"
+          />
+        </div>
+      </q-card-section>
+
+      <!-- Table Section -->
+      <q-table
+        :rows="filteredItems"
+        :columns="columns"
+        :loading="loading"
+        v-model:pagination="pagination"
+        row-key="id"
+        flat
+        @row-click="(evt, row) => viewItem(row)"
+      >
+        <template v-slot:body-cell-name="props">
+          <q-td :props="props">
+            <q-badge color="primary" :label="props.row.name || 'Unnamed'"/>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-tsCreated="props">
+          <q-td :props="props">
+            {{ formatDate(props.row.tsCreated) }}
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-tsUpdated="props">
+          <q-td :props="props">
+            {{ formatDate(props.row.tsUpdated) }}
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-actions="props">
+          <q-td :props="props">
+            <q-btn-group>
+              <q-btn 
+                icon="mdi-eye" 
+                color="blue-6" 
+                @click.stop="viewItem(props.row)" 
+                flat
+                dense
+              >
+                <q-tooltip>View</q-tooltip>
+              </q-btn>
+              <q-btn 
+                icon="mdi-pencil" 
+                color="amber-7" 
+                @click.stop="editItem(props.row)" 
+                flat
+                dense
+              >
+                <q-tooltip>Edit</q-tooltip>
+              </q-btn>
+              <q-btn 
+                icon="mdi-delete" 
+                color="red-7" 
+                @click.stop="deleteItem(props.row)" 
+                flat
+                dense
+              >
+                <q-tooltip>Delete</q-tooltip>
+              </q-btn>
+            </q-btn-group>
+          </q-td>
+        </template>
+      </q-table>
+    </q-card>
   </q-page>
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from "vue";
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router/dist/vue-router";
-import {DEVICE_CATEGORIES_LIST, PERIPHERAL_DELETE} from "@/graphql/queries";
-import _ from "lodash";
+import { defineComponent, onMounted } from 'vue';
+import { format } from 'date-fns';
+import { useEntityList } from '@/composables';
+import { DEVICE_CATEGORIES_LIST, DEVICE_CATEGORY_DELETE } from '@/graphql/queries';
 
 export default defineComponent({
   name: 'DCategoryList',
   setup() {
-    const uri = '/admin/dcategories'
-    const filter = ref('')
-    const {client} = useApolloClient();
-    const loading = ref(false)
-    const router = useRouter();
-    const rows = ref();
-    const confirmDelete = ref(false);
-    const selectedRow = ref(null);
     const columns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true},
-      {name: 'actions', label: 'Actions', field: 'actions'},
+      { name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true },
+      { name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true },
+      { name: 'tsCreated', label: 'Created', field: 'tsCreated', align: 'left', sortable: true },
+      { name: 'tsUpdated', label: 'Updated', field: 'tsUpdated', align: 'left', sortable: true },
+      { name: 'actions', label: 'Actions', field: () => '', align: 'right', sortable: false }
     ];
-    const pagination = ref({
-      sortBy: 'code',
-      descending: false,
-      page: 1,
-      rowsPerPage: 10
-    })
-    const fetchData = () => {
-      loading.value = true;
-      client.query({
-        query: DEVICE_CATEGORIES_LIST,
-        variables: {},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        rows.value = [];
-        rows.value = _.transform(response.data.deviceCategoryList,
-          function (result, value, key) {
-            let device = {
-              id: value.id,
-              title: value.title,
-              name: value.name,
-              description: value.description
-            }
-            result.push(device)
-          }
-        );
-        loading.value = false;
-      });
-    }
-    onMounted(() => {
-      fetchData()
-    })
-    return {
-      rows,
-      columns,
+
+    /**
+     * Format date for display
+     */
+    const formatDate = (dateString) => {
+      if (!dateString) return '-';
+      try {
+        return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
+      } catch (error) {
+        return '-';
+      }
+    };
+
+    const {
+      filteredItems,
+      loading,
       filter,
       pagination,
+      fetchList,
+      viewItem,
+      editItem,
+      createItem,
+      deleteItem
+    } = useEntityList({
+      entityName: 'Device Category',
+      entityPath: '/admin/dcategories',
+      listQuery: DEVICE_CATEGORIES_LIST,
+      listKey: 'deviceCategoryList',
+      deleteMutation: DEVICE_CATEGORY_DELETE,
+      deleteKey: 'deviceCategoryDelete',
+      columns,
+      transformAfterLoad: (category) => ({
+        id: category.id,
+        name: category.name,
+        tsCreated: category.tsCreated,
+        tsUpdated: category.tsUpdated
+      })
+    });
+
+    onMounted(() => {
+      fetchList();
+    });
+
+    return {
+      filteredItems,
+      columns,
+      pagination,
       loading,
-      fetchData,
-      confirmDelete,
-      selectedRow,
-      onRowClick: (evt, row) => {
-        if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
-          router.push({path: `${uri}/${row.id}/view`})
-        }
-      },
-      onEdit: (row) => {
-        router.push({path: `${uri}/${row.id}/edit`})
-      },
-      onDelete: () => {
-        client.mutate({
-          mutation: PERIPHERAL_DELETE,
-          variables: {id: selectedRow.value.id},
-        }).then(response => {
-          fetchData()
-        });
-      },
-      addRow: () => {
-        router.push({path: `${uri}/new`})
-      },
-    }
+      filter,
+      viewItem,
+      editItem,
+      createItem,
+      deleteItem,
+      formatDate
+    };
   }
 });
 </script>
