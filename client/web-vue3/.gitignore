@@ -6,6 +6,7 @@ package-lock.json
 # Quasar core related directories
 .quasar
 /dist
+quasar.config.js.temporary.compiled.*.mjs
 
 # Cordova related directories and files
 /src-cordova/node_modules
