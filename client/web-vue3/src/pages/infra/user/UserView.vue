@@ -96,6 +96,28 @@
           </q-item-section>
         </q-item>
 
+        <q-item v-if="viewItem.phoneNr">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-phone" class="q-mr-sm"/>
+              Phone Number
+            </q-item-label>
+            <q-item-label caption class="text-body2">{{ viewItem.phoneNr }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="viewItem.telegramUsername">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-send" class="q-mr-sm"/>
+              Telegram Username
+            </q-item-label>
+            <q-item-label caption class="text-body2">
+              <q-badge color="secondary" :label="'@' + viewItem.telegramUsername"/>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+
         <q-separator class="q-my-md"/>
 
         <!-- Account Status Section -->

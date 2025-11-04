@@ -49,6 +49,17 @@
           </q-td>
         </template>
 
+        <template v-slot:body-cell-telegramUsername="props">
+          <q-td :props="props">
+            <q-badge 
+              v-if="props.row.telegramUsername" 
+              color="secondary" 
+              :label="'@' + props.row.telegramUsername"
+            />
+            <span v-else class="text-grey-6">-</span>
+          </q-td>
+        </template>
+
         <template v-slot:body-cell-status="props">
           <q-td :props="props">
             <q-badge 
@@ -140,6 +151,7 @@ export default defineComponent({
     const columns = [
       { name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true },
       { name: 'username', label: 'Username', field: 'username', align: 'left', sortable: true },
+      { name: 'telegramUsername', label: 'Telegram', field: 'telegramUsername', align: 'left', sortable: true },
       { name: 'status', label: 'Status', field: 'status', align: 'left', sortable: true },
       { name: 'enabled', label: 'Enabled', field: 'enabled', align: 'center', sortable: true },
       { name: 'accountLocked', label: 'Locked', field: 'accountLocked', align: 'center', sortable: true },
@@ -186,6 +198,7 @@ export default defineComponent({
         return {
           id: user.id,
           username: user.username || 'Unknown',
+          telegramUsername: user.telegramUsername || null,
           status: isActive ? 'ACTIVE' : 'INACTIVE',
           enabled: user.enabled || false,
           accountExpired: user.accountExpired || false,
