@@ -1,415 +1,287 @@
 <template>
-  <!--https://boxy-svg.com/app/disk:MtaL1PZN9k-->
   <div id="fullscreen">
-    <swiper :pagination="{ dynamicBullets: true }" :modules="modules" class="swiper">
-      <swiper-slide v-for="svgPage in this.svgPages" v-bind:key="svgPage.id">
+    <!-- Swiper for SVG pages -->
+    <swiper 
+      v-if="!loading"
+      :pagination="{ dynamicBullets: true }" 
+      :modules="modules" 
+      class="swiper"
+      @slideChange="onSlideChange"
+      @swiper="onSwiper"
+    >
+      <swiper-slide v-for="svgPage in svgPages" :key="svgPage.id">
         <inline-svg
           :src="svgPage.svgContent"
-          :transformSource="transform"
+          :transform-source="(svg) => transformSvg(svg, svgPage.id)"
           :fill-opacity="svgPage.fillOpacity"
           :stroke-opacity="svgPage.strokeOpacity"
           :color="false"
-          ref="svg"
-        ></inline-svg>
+        />
       </swiper-slide>
     </swiper>
-    <q-dialog v-model="unlockConfirmation.show" transition-show="jump-up" transition-hide="jump-down">
+
+    <!-- Unlock Confirmation Dialog -->
+    <q-dialog 
+      v-model="unlockDialog.show" 
+      transition-show="jump-up" 
+      transition-hide="jump-down"
+    >
       <q-card class="bg-white">
         <q-bar class="bg-deep-orange-7 text-white">
-          <q-icon name="lock"/>
-          <div>Alert</div>
+          <q-icon name="mdi-lock"/>
+          <div>{{ $t('mobile.unlock.title') }}</div>
           <q-space/>
-          <q-btn dense flat icon="close" v-close-popup>
-            <q-tooltip class="bg-primary">Close</q-tooltip>
+          <q-btn dense flat icon="mdi-close" v-close-popup>
+            <q-tooltip>{{ $t('common.close') }}</q-tooltip>
           </q-btn>
         </q-bar>
+
         <q-card-section>
-          <div class="text-h6">Atentie! Doriti sa deschideti ?</div>
+          <div class="text-h6">
+            {{ $t('mobile.unlock.message') }}
+          </div>
         </q-card-section>
 
         <q-card-section class="q-pa-none" vertical align="center">
           <div class="q-pa-sm">
-            <q-btn flat class="text-h6" icon="fas fa-lock-open" label="Deschide" no-caps @click="unlock"></q-btn>
+            <q-btn 
+              flat 
+              class="text-h6" 
+              icon="mdi-lock-open" 
+              :label="$t('mobile.unlock.button')" 
+              no-caps 
+              @click="handleUnlock"
+              :loading="unlocking"
+              :disable="unlocking"
+            />
           </div>
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <!-- Loading State -->
+    <q-inner-loading :showing="loading">
+      <q-spinner-gears size="50px" color="primary"/>
+    </q-inner-loading>
   </div>
 </template>
-<script>
-import {authzService} from '@/_services';
-import {heatService, lightService} from '@/_services/controls';
-import {PERIPHERAL_LIST_WUI, PUSH_EVENT} from '@/graphql/queries';
-import {apolloClient} from '@/boot/graphql';
-import {useWebSocketStore} from '@/store/websocket.store';
 
-import _ from 'lodash';
-import { Navigation, Pagination } from 'swiper/modules';
-import {Swiper, SwiperSlide} from 'swiper/vue';
+<script setup>
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/vue';
 import InlineSvg from 'vue-inline-svg';
+import { useWebSocketStore } from '@/store/websocket.store';
+import { 
+  useNotifications, 
+  useSvgInteraction, 
+  usePeripheralState, 
+  usePeripheralControl 
+} from '@/composables';
 
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/pagination';
 
+// Router
+const router = useRouter();
 
-export default {
-  name: 'MobileWebLayout',
-  components: {
-    'inline-svg': InlineSvg,
-    Swiper,
-    SwiperSlide,
+// Swiper modules
+const modules = [Pagination];
+
+// SVG pages configuration
+const svgPages = ref([
+  {
+    id: 'screen-1',
+    visible: true,
+    svgContent: 'svg/screen-1.svg',
+    fillOpacity: 0.3,
+    strokeOpacity: 0.5,
   },
-  setup() {
-    return {
-      modules: [Pagination],
-    };
+  {
+    id: 'screen-2',
+    visible: false,
+    svgContent: 'svg/screen-2.svg',
+    fillOpacity: 0.3,
+    strokeOpacity: 0.5,
   },
-  data() {
-    return {
-      srvPeripherals: {},
-      portToPeripheralMap: {},
-      assetMap: {},
-      svgMap: {},
-      svgPages: [
-        {
-          id: 'screen-1',
-          visible: true,
-          svgContent: 'svg/screen-1.svg',
-          fillOpacity: 0.3,
-          strokeOpacity: 0.5,
-        },
-        {
-          id: 'screen-2',
-          visible: false,
-          svgContent: 'svg/screen-2.svg',
-          fillOpacity: 0.3,
-          strokeOpacity: 0.5,
-        },
-      ],
-      nodes: ['path', 'rect', 'circle', 'polygon', 'polyline', 'text', 'g'],
-      unlockConfirmation: {
-        show: false,
-        unlockCode: null,
-        assetId: null,
-      },
-      showErrorModal: false,
-    };
-  },
-  created() {
-    this.init();
-  },
-  mounted() {
-    document.addEventListener('click', this.handleClick, false);
-  },
+]);
 
-  computed: {
-    stompMessage() {
-      const wsStore = useWebSocketStore();
-      return wsStore.ws.message;
-    }
-  },
-  watch: {
-    '$route.path': 'init',
-    stompMessage(newVal) {
-      if (newVal?.eventName === 'evt_port_value_persisted') {
-        this.updatePeripheralUI(newVal.jsonPayload);
-      }
-    },
-  },
-  methods: {
-    assetIdParser: function (id) {
-      let svgElement = [...id.matchAll(/([A-Za-z_]+)-(([0-9]+)(-([0-9])))*/g)];
-      return {
-        type: svgElement[0] != null ? svgElement[0][1] : null,
-        info: svgElement[1] != null ? svgElement[1][1] : null,
-        category: svgElement[1] != null ? svgElement[1][1].toUpperCase() : null,
-        id: svgElement[2] != null ? svgElement[2][3] : null,
-        assetOrder: svgElement[2] != null ? svgElement[2][5] : null,
-      };
-    },
-    handleClick: function (event) {
-      let targetId = event.target.id;
-      if (targetId.startsWith('nav-')) {
-        let direction = this.assetIdParser(targetId).info;
-        if (direction === 'home') {
-          this.$router.push({path: '/'}).catch(() => {
-          });
-        } else if (direction === 'back' || direction === 'forward') {
-          if (direction === 'forward' && this.svgPageHasNext()) {
-            this.svgPageGoNext();
-          } else if (direction === 'back' && this.svgPageHasPrev()) {
-            this.svgPageGoBack();
-          }
-        }
-      } else if (targetId.startsWith('asset-')) {
-        let closest;
-        let i = 0;
-        do {
-          closest = event.target.closest(this.nodes[i]);
-        } while (closest == null && i++ < this.nodes.length);
-        if (closest != null) {
-          let asset = this.assetIdParser(closest.id);
-          let reverseCss = closest.getAttribute('class');
-          if (reverseCss == null) {
-            reverseCss = 'no-focus';
-          }
-          closest.setAttribute('class', 'focus');
-          setTimeout(function () {
-            closest.setAttribute('class', reverseCss);
-          }, 100);
-          let id = asset['id'];
-          if (this.srvPeripherals[id] != null) {
-            switch (this.srvPeripherals[id].category.name) {
-              case 'DOOR_LOCK': {
-                this.unlockConfirmation.show = true;
-                this.unlockConfirmation.assetId = id;
-                this.unlockConfirmation.unlockCode = null;
-                break;
-              }
-              case 'LIGHT': {
-                lightService.toggle(this.srvPeripherals[id]);
-                break;
-              }
-              case 'HEAT': {
-                heatService.toggle(this.srvPeripherals[id]);
-                break;
-              }
-            }
-          } else {
-            if (process.env.DEV) {
-              console.log('null id');
-            }
-          }
-        }
-      }
-    },
-    updatePeripheralUI: function (jsonPayload) {
-      let payload = JSON.parse(jsonPayload);
-      let connectedPeripherals = this.portToPeripheralMap[payload.p2];
+const currentPageIndex = ref(0);
+const swiperInstance = ref(null);
 
-      if (connectedPeripherals) {
-        connectedPeripherals.forEach(
-          function (peripheralId) {
-            const peripheralComp = _.map(this.srvPeripherals, peripheral => {
-              if (peripheral['id'] === peripheralId) {
-                peripheral['portValue'] = payload.p4;
-                peripheral['state'] = payload.p4 === 'ON';
-                return peripheral;
-              }
-            });
-          }.bind(this),
-        );
-      }
-    },
-    unlock: function () {
-      let event = {
-        p0: 'evt_intercom_door_lock',
-        p1: 'PERIPHERAL',
-        p2: this.unlockConfirmation.assetId,
-        p3: 'mweb',
-        p4: 'open',
-        p5: `{"unlockCode": "${this.unlockConfirmation.unlockCode}"}`,
-        p6: authzService.currentUserValue.login,
-      };
-      apolloClient
-        .mutate({
-          mutation: PUSH_EVENT,
-          variables: {input: event},
-        })
-        .then(response => {
-          this.unlockConfirmation = false;
-        });
-    },
-    init: function () {
-      let initPeripheralMap = function (peripheral) {
-        if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
-          let port = peripheral.connectedTo[0];
-          if (port != null) {
-            if (!this.portToPeripheralMap[port.id]) {
-              this.portToPeripheralMap[port.id] = [];
-            }
-            this.portToPeripheralMap[port.id].push(peripheral.id);
-            let category = peripheral.category.name.toLowerCase();
-            if (!this.assetMap[category]) {
-              this.assetMap[category] = [];
-            }
-            if (!this.assetMap[category][port.id]) {
-              this.assetMap[category][port.id] = [];
-            }
-            this.assetMap[category][port.id].push(peripheral.id);
-          }
-        }
-      }.bind(this);
-      let initState = function (peripheral) {
-        if (peripheral.connectedTo && peripheral.connectedTo.length > 0) {
-          let port = peripheral.connectedTo[0];
+// Composables
+const { notifyError, notifySuccess } = useNotifications();
+const { parseAssetId, findClosestNode, applyFocusEffect, transformSvg: svgTransform } = useSvgInteraction();
+const { 
+  peripherals, 
+  loading, 
+  error, 
+  loadPeripherals, 
+  updatePeripheralFromEvent,
+  getPeripheral,
+  hasPeripheral 
+} = usePeripheralState();
+const { 
+  unlockDialog, 
+  handlePeripheralAction, 
+  unlockDoor,
+  toggleLight,
+  toggleHeat,
+  showUnlockDialog
+} = usePeripheralControl();
 
-          if (port != null) {
-            peripheral['portValue'] = port.value;
-            peripheral['state'] = peripheral['portValue'] === 'ON';
-            peripheral['portId'] = port.id;
-            peripheral['portUid'] = port.uid;
-            peripheral['deviceStatus'] = port.device.status;
-          } else {
-            port = null;
-          }
-        }
-      }.bind(this);
+// WebSocket store
+const wsStore = useWebSocketStore();
 
-      apolloClient
-        .query({
-          query: PERIPHERAL_LIST_WUI,
-          variables: {},
-          fetchPolicy: 'network-only',
-        })
-        .then(response => {
-          //clone response
-          let data = _.cloneDeep(response.data);
-          //convert to map
-          data.devicePeripheralList.forEach(initPeripheralMap);
-          let assets = data.devicePeripheralList;
-          assets.forEach(initState);
-          this.srvPeripherals = _.reduce(
-            assets,
-            function (hash, value) {
-              var key = value['id'];
-              hash[key] = value;
-              return hash;
-            },
-            {},
-          );
-        });
-    },
-    transform: function (svg) {
-      this.svgMap = svg;
-      for (const node of this.nodes) {
-        let elementsByTagName = svg.getElementsByTagName(node);
-        for (let i = 0; i < elementsByTagName.length; i++) {
-          this.svgElInit(svg, elementsByTagName[i]);
-        }
-      }
+// Unlocking state
+const unlocking = ref(false);
 
-      return svg;
-    },
-    svgElInit: function (svg, svgEl) {
-      let wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'a');
-      let actionElementClass = '';
-      let svgElement = this.assetIdParser(svgEl.id);
-      if (svgElement.type === 'asset') {
-        let srvAsset = this.srvPeripherals[svgElement['id']];
-        switch (svgElement['category']) {
-          case 'LIGHT': {
-            if (srvAsset && srvAsset.state) {
-              actionElementClass = 'bulb-on';
-            } else {
-              actionElementClass = 'bulb-off';
-            }
-            break;
-          }
-          case 'HEAT': {
-            if (srvAsset && srvAsset.state) {
-              actionElementClass = 'heat-on';
-            } else {
-              actionElementClass = 'heat-off';
-            }
-            break;
-          }
-          case 'MOTION': {
-            if (srvAsset && srvAsset.state) {
-              actionElementClass = 'motion-off';
-            } else {
-              actionElementClass = 'motion-on';
-            }
-            break;
-          }
-          case 'TEMP': {
-            if (srvAsset && srvAsset.portValue) {
-              let degree = srvAsset.portValue
-              if (degree.length == 3 && !degree.includes(".")) {
-                degree = degree / 10
-              }
-              svgEl.firstChild.textContent = degree + '℃';
-            }
-            if (srvAsset && srvAsset['deviceStatus'] === 'OFFLINE') {
-              actionElementClass = 'device-offline';
-            }
-            break;
-          }
-          case 'DOOR_LOCK': {
-            actionElementClass = 'lock';
-            break;
-          }
-          case 'LUMINOSITY': {
-            if (srvAsset && srvAsset.portValue) {
-              svgEl.getElementsByTagName('text').item(0).textContent = srvAsset.portValue / 10 + '%';
-            }
-            svgEl.getElementsByTagName('text').item(0).setAttribute('class', 'luminosity-text');
-            break;
-          }
-        }
-      } else if (svgElement.type === 'nav') {
-        if (svgElement.info === 'back' || svgElement.info === 'forward') {
-          actionElementClass = 'nav-button';
-          if (svgElement.info === 'back' && svg.id === this.svgPages[0].id) {
-            actionElementClass = 'hidden';
-          } else if (svgElement.info === 'forward' && svg.id === this.svgPages[this.svgPages.length - 1].id) {
-            actionElementClass = 'hidden';
-          }
-        } else {
-          actionElementClass = 'bulb-off';
-        }
-      }
-      svgEl.setAttribute('class', actionElementClass);
-      svgEl.parentNode.insertBefore(wrapper, svgEl);
-      wrapper.appendChild(svgEl);
-    },
-    svgPageHasNext: function () {
-      let currentIndex = _.findIndex(
-        this.svgPages,
-        e => {
-          return e.visible === true;
-        },
-        0,
-      );
-      return currentIndex + 1 < this.svgPages.length;
-    },
-    svgPageHasPrev: function () {
-      let currentIndex = _.findIndex(
-        this.svgPages,
-        e => {
-          return e.visible === true;
-        },
-        0,
-      );
-      return currentIndex - 1 >= 0;
-    },
-    svgPageGoNext: function () {
-      let currentIndex = _.findIndex(
-        this.svgPages,
-        e => {
-          return e.visible === true;
-        },
-        0,
-      );
+// Computed
+const stompMessage = computed(() => wsStore.ws.message);
 
-      this.svgPages[currentIndex + 1].visible = true;
-      this.svgPages[currentIndex].visible = false;
-    },
-    svgPageGoBack: function () {
-      let currentIndex = _.findIndex(
-        this.svgPages,
-        e => {
-          return e.visible === true;
-        },
-        0,
-      );
-
-      this.svgPages[currentIndex - 1].visible = true;
-      this.svgPages[currentIndex].visible = false;
-    },
-  },
+/**
+ * Transform SVG with current peripheral state
+ */
+const transformSvg = (svg, pageId) => {
+  return svgTransform(svg, peripherals.value, svgPages.value, pageId);
 };
 
+/**
+ * Handle click events on SVG elements
+ */
+const handleClick = (event) => {
+  
+  const targetId = event.target.id;
+
+  // Handle navigation clicks
+  if (targetId.startsWith('nav-')) {
+    handleNavigation(targetId);
+    return;
+  }
+
+  // Handle asset clicks
+  if (targetId.startsWith('asset-')) {
+    handleAssetClick(event);
+  }
+};
+
+/**
+ * Handle navigation button clicks
+ */
+const handleNavigation = (targetId) => {
+  const parsed = parseAssetId(targetId);
+  const direction = parsed.info;
+
+  if (direction === 'home') {
+    router.push({ path: '/' }).catch(() => {});
+  } else if (direction === 'back' && currentPageIndex.value > 0) {
+    swiperInstance.value?.slidePrev();
+  } else if (direction === 'forward' && currentPageIndex.value < svgPages.value.length - 1) {
+    swiperInstance.value?.slideNext();
+  }
+};
+
+/**
+ * Store swiper instance reference
+ */
+const onSwiper = (swiper) => {
+  swiperInstance.value = swiper;
+};
+
+/**
+ * Handle asset (peripheral) clicks
+ */
+const handleAssetClick = (event) => {
+  const closest = findClosestNode(event.target);
+  if (!closest) return;
+
+  // Apply visual feedback
+  applyFocusEffect(closest);
+
+  // Parse asset info
+  const asset = parseAssetId(closest.id);
+  const peripheralId = asset.id;
+
+  if (!hasPeripheral(peripheralId)) {
+    if (process.env.DEV) {
+      console.log('Peripheral not found:', peripheralId);
+    }
+    return;
+  }
+
+  // Handle peripheral action
+  const peripheral = getPeripheral(peripheralId);
+  handlePeripheralAction(peripheral).catch(err => {
+    notifyError('Failed to control peripheral');
+    console.error('Error handling peripheral action:', err);
+  });
+};
+
+/**
+ * Handle unlock button click
+ */
+const handleUnlock = async () => {
+  unlocking.value = true;
+  try {
+    await unlockDoor();
+    notifySuccess('Door unlocked successfully');
+  } catch (err) {
+    notifyError('Failed to unlock door');
+    console.error('Error unlocking door:', err);
+  } finally {
+    unlocking.value = false;
+  }
+};
+
+/**
+ * Handle slide change
+ */
+const onSlideChange = (swiper) => {
+  currentPageIndex.value = swiper.activeIndex;
+  svgPages.value.forEach((page, index) => {
+    page.visible = index === swiper.activeIndex;
+  });
+};
+
+/**
+ * Initialize component
+ */
+const initialize = async () => {
+  try {
+    await loadPeripherals();
+  } catch (err) {
+    notifyError('Failed to load peripherals');
+    console.error('Error initializing:', err);
+  }
+};
+
+// Watch for WebSocket messages
+watch(stompMessage, (newVal) => {
+  if (newVal?.eventName === 'evt_port_value_persisted') {
+    updatePeripheralFromEvent(newVal.jsonPayload);
+  }
+});
+
+// Watch for route changes
+watch(() => router.currentRoute.value.path, () => {
+  initialize();
+});
+
+// Lifecycle hooks
+onMounted(() => {
+  initialize();
+  document.addEventListener('click', handleClick, false);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClick, false);
+});
 </script>
+
 <style>
+
 .hidden {
   display: none;
 }
@@ -542,8 +414,6 @@ text.luminosity-text {
   fill-opacity: 0.9;
 }
 
-/* Enter and leave animations can use different */
-/* durations and timing functions.              */
 .slide-fade-enter-active {
   transition: all 0.3s ease;
 }
@@ -552,9 +422,8 @@ text.luminosity-text {
   transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
 }
 
-.slide-fade-enter, .slide-fade-leave-to
-  /* .slide-fade-leave-active below version 2.1.8 */
-{
+.slide-fade-enter,
+.slide-fade-leave-to {
   transform: translateX(10px);
   opacity: 0;
 }
@@ -568,19 +437,8 @@ text.luminosity-text {
   text-align: center;
   font-size: 18px;
   background: #fff;
-
-  /* Center slide text vertically */
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  -webkit-justify-content: center;
   justify-content: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  -webkit-align-items: center;
   align-items: center;
 }
 
@@ -591,3 +449,4 @@ text.luminosity-text {
   object-fit: cover;
 }
 </style>
+
