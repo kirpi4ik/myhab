@@ -10,4 +10,7 @@
 
 # Documentation folder (local development notes)
 /doc/
+
+# Generated files (auto-generated during build)
 **/version.txt
+src/main/docker/

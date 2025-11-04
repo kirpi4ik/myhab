@@ -74,7 +74,24 @@ subprojects { project ->
 
 task versionTxt() {
     doLast {
-        new File("${projectDir}/src/main/docker", "version.txt").text = "${projectVersion}"
+        // Create docker directory if it doesn't exist
+        def dockerDir = new File("${projectDir}/src/main/docker")
+        if (!dockerDir.exists()) {
+            dockerDir.mkdirs()
+            logger.quiet "Created directory: ${dockerDir.absolutePath}"
+        }
+        
+        // Generate version.txt
+        new File(dockerDir, "version.txt").text = "${projectVersion}"
+        
+        // Generate app-entrypoint.sh
+        def entrypointFile = new File(dockerDir, "app-entrypoint.sh")
+        entrypointFile.text = """#!/bin/sh
+set -e
+java -jar -Dgrails.env=\$GRAILS_ENV /app/myhab.jar \$@
+"""
+        // Make the script executable (Unix-like systems)
+        entrypointFile.setExecutable(true)
     }
 }
 task copyClientResources(dependsOn: [':web-vue3:build']) { // <1>
@@ -108,7 +125,6 @@ copyClientResources.doFirst { // <4>
         into "${project(':server-core').buildDir}/resources/main/public"
     }
 }
-
 
 task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
     description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
