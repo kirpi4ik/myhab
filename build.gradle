@@ -146,7 +146,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'openjdk:14'
+    from 'eclipse-temurin:17-jre'
 
     label(['project': 'myHAB'])
     label(['version': "${projectVersion}"])
