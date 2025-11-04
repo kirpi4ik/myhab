@@ -59,6 +59,80 @@ management:
     httptrace:
       enabled: true
 
+quartz:
+  pluginEnabled: true
+  autoStartup: true
+  purgeQuartzTablesOnStartup: false
+  threadPool:
+    class: "org.quartz.simpl.SimpleThreadPool"
+    threadCount: 25
+    threadPriority: 5
+  jobs:
+    # Huawei solar inverter sync
+    huaweiInfoSync:
+      enabled: false
+      interval: 120  # seconds
+    
+    # Nibe heat pump data sync
+    nibeInfoSync:
+      enabled: false
+      interval: 60  # seconds
+    
+    # Nibe OAuth token refresh
+    nibeTokenRefresh:
+      enabled: false
+      interval: 500  # seconds
+    
+    # Device controller state synchronization via HTTP
+    deviceControllerStateSync:
+      enabled: true
+      interval: 60  # seconds
+    
+    # Heating/thermostat control
+    heatingControl:
+      enabled: true
+      interval: 120  # seconds (2 minutes)
+    
+    # Configuration synchronization
+    configSync:
+      enabled: true
+      interval: 60  # seconds
+    
+    # Port value sync trigger (MQTT read)
+    portValueSyncTrigger:
+      enabled: true
+      interval: 60  # seconds
+    
+    # Electricity metric statistics - 1 hour
+    electricityMetricStatistics1H:
+      enabled: false
+      interval: 3600  # seconds (1 hour)
+    
+    # Electricity metric statistics - 24 hours
+    electricityMetricStatistics24H:
+      enabled: false
+      interval: 86400  # seconds (24 hours)
+    
+    # Electricity metric statistics - 1 month
+    electricityMetricStatistics1Month:
+      enabled: false
+      interval: 2592000  # seconds (30 days)
+    
+    # Switch OFF on timeout
+    switchOffOnTimeout:
+      enabled: true
+      interval: 30  # seconds
+    
+    # Random colors (demo/testing)
+    randomColors:
+      enabled: false
+      interval: 5  # seconds
+    
+    # Event log reader
+    eventLogReader:
+      enabled: false
+      interval: 60  # seconds
+
 ---
 grails:
   cors:
@@ -111,15 +185,6 @@ grails:
   converters:
     encoding: UTF-8
 ---
-quartz:
-  pluginEnabled: true
-  autoStartup: true
-  purgeQuartzTablesOnStartup: false
-  threadPool:
-    class: "org.quartz.simpl.SimpleThreadPool"
-    threadCount: 25
-    threadPriority: 5
-
 hibernate:
   cache:
     queries: false
@@ -160,3 +225,7 @@ graphql:
     template-path: classpath:graphiql/index.html
     template-parameters:
     page-title: GraphiQL
+
+mqtt:
+  topic:
+    prefix: "myhab"

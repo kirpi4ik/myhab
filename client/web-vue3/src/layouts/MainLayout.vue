@@ -9,10 +9,13 @@
 </template>
 
 <script>
+import {defineComponent} from 'vue';
+
 import HeaderLayout from 'layouts/components/HeaderLayout.vue';
 import SideBarLayout from 'layouts/components/SideBarLayout.vue';
 
-import {defineComponent} from 'vue';
+
+
 
 export default defineComponent({
 	name: 'MainLayout',
@@ -23,4 +26,5 @@ export default defineComponent({
 	},
 	setup() {},
 });
+
 </script>

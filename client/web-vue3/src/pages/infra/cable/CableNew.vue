@@ -1,51 +1,228 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="cable">
       <q-card flat bordered>
-        <q-card-section class="full-width">
-          <div class="text-h5">Create new cable</div>
-          <q-input v-model="cable.code" label="Code" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="cable.description" label="Description" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="cable.nrWires" label="Nr wires" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
-          <q-select v-model="cable.rack"
-                    :options="rackList"
-                    option-label="name"
-                    label="Located" map-options filled dense>
-            <q-icon name="cancel" @click.stop.prevent="cable.rack = null" class="cursor-pointer text-blue"/>
-          </q-select>
+        <q-card-section>
+          <div class="text-h5 q-mb-md">
+            <q-icon name="mdi-plus-circle" color="primary" size="sm" class="q-mr-sm"/>
+            Create New Cable
+          </div>
         </q-card-section>
+
         <q-separator/>
-        <q-card-actions>
-          <q-btn color="accent" type="submit">
-            Save
-          </q-btn>
-          <q-btn color="info" @click="$router.go(-1)">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+
+        <!-- Basic Information -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">Basic Information</div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <q-input 
+            v-model="cable.code" 
+            label="Code" 
+            hint="Unique cable identifier"
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            filled
+            dense
+            :rules="[val => !!val || 'Code is required']"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-barcode"/>
+            </template>
+          </q-input>
+
+          <q-input 
+            v-model="cable.description" 
+            label="Description" 
+            hint="Cable description or purpose"
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            filled
+            dense
+            type="textarea"
+            rows="3"
+            :rules="[val => !!val || 'Description is required']"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-text"/>
+            </template>
+          </q-input>
+
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model.number="cable.nrWires" 
+                label="Number of Wires" 
+                hint="Total wire count"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                type="number"
+                min="1"
+                filled
+                dense
+                :rules="[val => !!val || 'Number of wires is required']"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-cable-data"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model.number="cable.maxAmp" 
+                label="Max Amperage (Optional)" 
+                hint="Maximum current capacity"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                type="number"
+                min="0"
+                step="0.1"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-lightning-bolt"/>
+                </template>
+              </q-input>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Location Information -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">
+            <q-icon name="mdi-map-marker" class="q-mr-xs"/>
+            Location Information
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <q-select 
+            v-model="cable.rack"
+            :options="rackList"
+            option-label="name"
+            label="Rack Location" 
+            hint="Select the rack where cable is located"
+            map-options 
+            filled 
+            dense
+            clearable
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-server"/>
+            </template>
+          </q-select>
+
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model.number="cable.rackRowNr" 
+                label="Row Number (Optional)" 
+                hint="Row position in rack"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                type="number"
+                min="1"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-grid"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model.number="cable.orderInRow" 
+                label="Order in Row (Optional)" 
+                hint="Cable order within row"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                type="number"
+                min="1"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-sort-numeric-ascending"/>
+                </template>
+              </q-input>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Actions -->
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create Cable"
+        />
       </q-card>
     </form>
   </q-page>
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
-import {CABLE_CREATE, RACK_LIST_ALL} from '@/graphql/queries';
 import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router/dist/vue-router";
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
+import {CABLE_CREATE, RACK_LIST_ALL} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'CableNew',
+  components: {
+    EntityFormActions
+  },
   setup() {
-    const $q = useQuasar()
     const {client} = useApolloClient();
-    const cable = ref({})
-    const rackList = ref([])
-    const router = useRouter();
+    const rackList = ref([]);
+
+    const {
+      entity: cable,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Cable',
+      entityPath: '/admin/cables',
+      createMutation: CABLE_CREATE,
+      createMutationKey: 'cableCreate',
+      createVariableName: 'cable',
+      excludeFields: ['__typename'],
+      initialData: {
+        code: '',
+        description: '',
+        nrWires: null,
+        maxAmp: null,
+        rack: null,
+        rackRowNr: null,
+        orderInRow: null
+      },
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Clean rack - only send ID if selected
+        if (transformed.rack) {
+          if (transformed.rack.id) {
+            transformed.rack = { id: transformed.rack.id };
+          } else {
+            delete transformed.rack;
+          }
+        }
+        return transformed;
+      }
+    });
 
     const fetchData = () => {
       client.query({
@@ -53,32 +230,29 @@ export default defineComponent({
         variables: {},
         fetchPolicy: 'network-only',
       }).then(response => {
-        rackList.value = response.data.rackList
-      })
-    }
-    const onSave = () => {
-      if (cable.value.hasError) {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed submission'
-        })
-      } else {
-        client.mutate({
-          mutation: CABLE_CREATE,
-          variables: {cable: cable.value},
-        }).then(response => {
-          router.push({path: `/admin/cables/${response.data.cableCreate.id}/edit`})
-        });
-      }
-    }
+        rackList.value = response.data.rackList || [];
+      }).catch(error => {
+        console.error('Error fetching racks:', error);
+      });
+    };
+
+    const onSave = async () => {
+      if (saving.value) return;
+      if (!validateRequired(cable.value, ['code', 'description', 'nrWires'])) return;
+      await createEntity();
+    };
+
     onMounted(() => {
-      fetchData()
-    })
+      fetchData();
+    });
+
     return {
       cable,
       onSave,
-      rackList
-    }
+      rackList,
+      saving
+    };
   }
 });
+
 </script>

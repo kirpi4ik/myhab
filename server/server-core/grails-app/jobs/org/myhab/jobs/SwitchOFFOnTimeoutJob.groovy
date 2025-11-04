@@ -3,6 +3,8 @@ package org.myhab.jobs
 import com.hazelcast.core.HazelcastInstance
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
+import grails.util.Holders
+import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
 import org.myhab.ConfigKey
 import org.myhab.domain.EntityType
@@ -14,20 +16,47 @@ import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
 
+import java.util.concurrent.TimeUnit
+
 /**
  * SwitchOFF peripheral after some timeout, also check if there is some peripheral in status ON but without cached expiration
  */
+@Slf4j
 @DisallowConcurrentExecution
 @Transactional
 class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
     HazelcastInstance hazelcastInstance;
 
     static triggers = {
-        simple repeatInterval: 10000
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.switchOffOnTimeout.enabled', Boolean)
+        def interval = config?.getProperty('quartz.jobs.switchOffOnTimeout.interval', Integer) ?: 30
+        
+        if (enabled == null) {
+            enabled = true  // Default to enabled for backward compatibility
+        }
+        
+        if (enabled) {
+            log.debug "SwitchOFFOnTimeoutJob: ENABLED - Registering trigger with interval ${interval}s"
+            simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
+        } else {
+            log.debug "SwitchOFFOnTimeoutJob: DISABLED - Not registering trigger"
+        }
     }
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.switchOffOnTimeout.enabled', Boolean)
+        
+        if (enabled == null) {
+            enabled = true
+        }
+        
+        if (!enabled) {
+            log.info("SwitchOFFOnTimeoutJob is DISABLED via configuration, skipping execution")
+            return
+        }
         checkCacheAndSwitchOffAfterTimeout(context)
         checkOnPeripheralAndSetTimeoutValueIfNeeded(context)
 

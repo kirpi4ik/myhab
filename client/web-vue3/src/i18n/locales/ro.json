@@ -81,6 +81,18 @@
       "edit": "Editeaza",
       "create": "Cablaj nou"
     },
+    "scenarios": "Scenarii",
+    "scenario": {
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Scenariu nou"
+    },
+    "jobs": "Sarcini",
+    "job": {
+      "details": "Detalii",
+      "edit": "Editeaza",
+      "create": "Sarcina noua"
+    },
     "graphiql": "GraphiQL",
     "configurations": "Configurare"
   },
@@ -156,5 +168,22 @@
     "list": {
       "title": "Configurarile"
     }
+  },
+  "mobile": {
+    "unlock": {
+      "title": "Alerta",
+      "message": "Atentie! Doriti sa deschideti?",
+      "button": "Deschide"
+    }
+  },
+  "common": {
+    "close": "Inchide",
+    "alert": "Alerta",
+    "cancel": "Anuleaza"
+  },
+  "door": {
+    "small_gate": "Poarta mica",
+    "open": "Deschide",
+    "confirm_open": "Atentie! Doriti sa deschideti?"
   }
 }

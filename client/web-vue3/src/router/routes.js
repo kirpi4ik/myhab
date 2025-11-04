@@ -228,7 +228,7 @@ const routes = [
           },
           {
             path: adminPrefix + '/pcategories/:idPrimary/edit',
-            component: () => import('pages/infra/peripheral/PeripheralEdit'),
+            component: () => import('pages/infra/peripheral/categories/CategoryEdit'),
             meta: {
               name: "edit"
             }
@@ -316,6 +316,56 @@ const routes = [
             }
           },
         ],
+      },
+      {
+        path: adminPrefix + '/scenarios',
+        component: () => import('pages/infra/scenario/ScenarioList'),
+      },
+      {
+        path: adminPrefix + '/scenarios/new',
+        component: () => import('pages/infra/scenario/ScenarioNew'),
+        meta: {
+          name: "new"
+        }
+      },
+      {
+        path: adminPrefix + '/scenarios/:idPrimary/view',
+        component: () => import('pages/infra/scenario/ScenarioView'),
+        meta: {
+          name: "details"
+        }
+      },
+      {
+        path: adminPrefix + '/scenarios/:idPrimary/edit',
+        component: () => import('pages/infra/scenario/ScenarioEdit'),
+        meta: {
+          name: "edit"
+        }
+      },
+      {
+        path: adminPrefix + '/jobs',
+        component: () => import('pages/infra/job/JobList'),
+      },
+      {
+        path: adminPrefix + '/jobs/new',
+        component: () => import('pages/infra/job/JobNew'),
+        meta: {
+          name: "new"
+        }
+      },
+      {
+        path: adminPrefix + '/jobs/:idPrimary/view',
+        component: () => import('pages/infra/job/JobView'),
+        meta: {
+          name: "details"
+        }
+      },
+      {
+        path: adminPrefix + '/jobs/:idPrimary/edit',
+        component: () => import('pages/infra/job/JobEdit'),
+        meta: {
+          name: "edit"
+        }
       },
     ],
     meta: {authorize: [Role.Admin, Role.User]},

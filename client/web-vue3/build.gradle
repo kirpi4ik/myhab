@@ -1,10 +1,10 @@
 plugins {
     //https://github.com/node-gradle/gradle-node-plugin/releases
-    id "com.github.node-gradle.node" version "7.0.1"
+    id "com.github.node-gradle.node" version "7.1.0"
 }
 node {
-    version = '18.18.2' // https://nodejs.org/en/
-    yarnVersion = '1.22.19' // https://yarnpkg.com/en/
+    version = '22.13.0' // https://nodejs.org/en/
+    yarnVersion = '1.22.22' // https://yarnpkg.com/en/
     download = true
 }
 

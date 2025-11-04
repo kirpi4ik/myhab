@@ -21,6 +21,7 @@ export const USERS_GET_ALL = gql`
 			email
 			firstName
 			lastName
+			telegramUsername
 		}
 	}
 `;
@@ -38,6 +39,7 @@ export const USER_GET_BY_ID = gql`
 			email
 			firstName
 			lastName
+			telegramUsername
 		}
 	}
 `;
@@ -55,6 +57,8 @@ export const USER_GET_BY_ID_WITH_ROLES = gql`
 			email
 			firstName
 			lastName
+			phoneNr
+			telegramUsername
 		}
 		userRolesForUser(userId: $id) {
 			userId

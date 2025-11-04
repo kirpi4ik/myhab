@@ -1,7 +1,15 @@
 package org.myhab.async.mqtt
 
+import grails.util.Holders
+
 enum MQTTTopic {
-    public static final String MYHAB_PREFIX = "myhab"
+    // Get prefix from configuration, fallback to "myhab" if not configured
+    private static String getMqttPrefix() {
+        return Holders.grailsApplication?.config?.getProperty('mqtt.topic.prefix', String, 'myhab') ?: 'myhab'
+    }
+    
+    public static final String MYHAB_PREFIX = getMqttPrefix()
+    
     class COMMON implements DeviceTopic {
         static String topic(TopicTypes topicType) {
             switch (topicType) {

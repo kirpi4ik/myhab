@@ -63,15 +63,20 @@
   </q-card>
 </template>
 <script>
-import {computed, defineComponent, onMounted, ref, watch} from 'vue';
-import EventLogger from "components/EventLogger";
-import {peripheralService} from '@/_services/controls';
-import {CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
-import _ from "lodash";
-import humanizeDuration from 'humanize-duration';
-import {useStore} from "vuex";
+import {computed, defineComponent, onMounted, ref} from 'vue';
+
 import {useApolloClient, useMutation} from "@vue/apollo-composable";
+import {useWebSocketListener} from "@/composables";
+
+import {CONFIGURATION_SET_VALUE, PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
+import {peripheralService} from '@/_services/controls';
+
+import _ from "lodash";
 import {format} from "date-fns";
+import EventLogger from "components/EventLogger";
+import humanizeDuration from 'humanize-duration';
+
+
 
 export default defineComponent({
   name: 'SprinklersDashComponent',
@@ -79,13 +84,11 @@ export default defineComponent({
     EventLogger
   },
   setup(props, {emit}) {
-    const zoneLanId = parseInt(process.env.VUE_APP_CONF_ZONE_LAN_ID);
-    const zoneGardenId = parseInt(process.env.VUE_APP_CONF_ZONE_GARDEN_ID);
+    const zoneLanId = process.env.VUE_APP_CONF_ZONE_LAN_ID;
+    const zoneGardenId = process.env.VUE_APP_CONF_ZONE_GARDEN_ID;
 
-    const store = useStore();
     let asset = ref({})
     const {client} = useApolloClient();
-    const wsMessage = computed(() => store.getters.ws.message);
     const {mutate: setTimeout} = useMutation(CONFIGURATION_SET_VALUE, {
       update: () => {
         init();
@@ -112,13 +115,9 @@ export default defineComponent({
       {value: 10800},
       {value: 18000},
     ];
-    watch(
-      () => store.getters.ws.message,
-      function () {
-        if (wsMessage.value.eventName == 'evt_port_value_persisted') {
-        }
-      },
-    );
+    
+    // WebSocket listener removed - was empty and not being used
+    
     onMounted(() => {
       init()
     });
@@ -138,5 +137,6 @@ export default defineComponent({
     };
   }
 });
+
 </script>
 <style src="@vueform/toggle/themes/default.css"></style>

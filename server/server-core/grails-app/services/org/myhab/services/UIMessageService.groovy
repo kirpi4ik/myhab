@@ -110,7 +110,7 @@ class UIMessageService implements EventPublisher {
                 new DeviceHttpService(port: b, action: color.rgb.b).writeState()
 
             } catch (Exception ex) {
-                ex.printStackTrace()
+                log.error("Failed to set RGB color", ex)
             }
         }
     }

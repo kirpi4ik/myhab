@@ -74,36 +74,40 @@ subprojects { project ->
 
 task versionTxt() {
     doLast {
-        new File("${projectDir}/src/main/docker", "version.txt").text = "${projectVersion}"
-        def var = new Properties()
-        def vueEnv = new File("${projectDir}/client/web-vue/.env")
-        var.load(vueEnv.newDataInputStream())
-        var.setProperty("VUE_APP_CONF_VERSION", "${projectVersion}")
-        var.setProperty("VUE_APP_CONF_VERSION_BUILD_DATE", "${DateTime.now().toString("YYYY-MM-dd'T'HH:mm")}")
-        def writer = new PrintWriter(new FileOutputStream(vueEnv))
-        var.list(writer)
-        writer.close()
-        writer.flush()
+        // Create docker directory if it doesn't exist
+        def dockerDir = new File("${projectDir}/src/main/docker")
+        if (!dockerDir.exists()) {
+            dockerDir.mkdirs()
+            logger.quiet "Created directory: ${dockerDir.absolutePath}"
+        }
+        
+        // Generate version.txt
+        new File(dockerDir, "version.txt").text = "${projectVersion}"
+        
+        // Generate app-entrypoint.sh
+        def entrypointFile = new File(dockerDir, "app-entrypoint.sh")
+        entrypointFile.text = """#!/bin/sh
+set -e
+java -jar -Dgrails.env=\$GRAILS_ENV /app/myhab.jar \$@
+"""
+        // Make the script executable (Unix-like systems)
+        entrypointFile.setExecutable(true)
     }
 }
-task copyClientResources(dependsOn: [':web-vue:build', ':web-vue3:build']) { // <1>
+task copyClientResources(dependsOn: [':web-vue3:build']) { // <1>
     group = 'build'
     description = 'Copy client resources into server'
     doLast {
         copy {
-            from project(':web-vue').buildDir.absolutePath
-            into "${project(':server-core').buildDir}/resources/main/public"
-        }
-        copy {
             from project(':web-vue3').buildDir.absolutePath
-            into "${project(':server-core').buildDir}/resources/main/public/nx"
+            into "${project(':server-core').buildDir}/resources/main/public"
         }
     }
 }
 
 task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':server-core:assemble']) { // <2>
     group = 'build'
-    description = 'Build combined server & web-vue JAR/WAR'
+    description = 'Build combined server & web-vue3 JAR/WAR'
 
     doLast {
         copy {
@@ -111,21 +115,16 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':
             into "${buildDir}"
         }
 
-        logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue projects."
+        logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue3 projects."
     }
 }
 
 copyClientResources.doFirst { // <4>
     copy {
-        from "${project(':web-vue').projectDir}/dist"
+        from "${project(':web-vue3').projectDir}/dist/spa"
         into "${project(':server-core').buildDir}/resources/main/public"
     }
-    copy {
-        from "${project(':web-vue3').projectDir}/dist/spa"
-        into "${project(':server-core').buildDir}/resources/main/public/nx"
-    }
 }
-
 
 task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
     description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
@@ -147,7 +146,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'openjdk:14'
+    from 'eclipse-temurin:17-jre'
 
     label(['project': 'myHAB'])
     label(['version': "${projectVersion}"])

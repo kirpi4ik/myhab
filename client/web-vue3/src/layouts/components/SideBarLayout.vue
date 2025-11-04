@@ -113,6 +113,25 @@
                 <q-item-label>{{ $t('navigation.zones') }}</q-item-label>
               </q-item-section>
             </q-item>
+            
+            <q-item to="/admin/scenarios" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-script-text"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.scenarios') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            
+            <q-item to="/admin/jobs" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-briefcase-clock"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.jobs') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            
             <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="mdi-graphql"/>
@@ -153,16 +172,20 @@
 </template>
 <script>
 import {defineComponent, ref} from 'vue';
-import {useUiState} from '@/composables';
+
 import {Platform} from "quasar";
+
+import {useUiState} from '@/composables';
+
+
 
 export default defineComponent({
   name: 'SideBarLayout',
   setup() {
     const miniState = ref(Platform.is.mobile)
     const {isSidebarOpen} = useUiState();
-    const prjVersion = process.env.PRJ_VERSION;
-    const graphiqlUrl = process.env.BCK_SERVER_URL + '/graphql/browser';
+    const prjVersion = process.env.PRJ_VERSION || '2.6.0';
+    const graphiqlUrl = (process.env.BCK_SERVER_URL || '') + '/graphql/browser';
 
     const expanded = ref(true)
     return {
@@ -197,6 +220,7 @@ export default defineComponent({
     },
   },
 });
+
 </script>
 <style lang="sass" scoped>
 .mini-slot

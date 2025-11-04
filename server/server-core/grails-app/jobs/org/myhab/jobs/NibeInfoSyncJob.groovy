@@ -1,7 +1,9 @@
 package org.myhab.jobs
 
 import grails.gorm.transactions.Transactional
+import grails.util.Holders
 import groovy.json.JsonSlurper
+import groovy.util.logging.Slf4j
 import kong.unirest.Unirest
 import org.myhab.async.mqtt.MqttTopicService
 import org.myhab.config.CfgKey
@@ -16,6 +18,7 @@ import org.quartz.JobExecutionException
 
 import java.util.concurrent.TimeUnit
 
+@Slf4j
 @DisallowConcurrentExecution
 @Transactional
 class NibeInfoSyncJob implements Job {
@@ -25,11 +28,35 @@ class NibeInfoSyncJob implements Job {
 
 
     static triggers = {
-        simple repeatInterval: TimeUnit.SECONDS.toMillis(60)
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.nibeInfoSync.enabled', Boolean)
+        def interval = config?.getProperty('quartz.jobs.nibeInfoSync.interval', Integer) ?: 60
+        
+        if (enabled == null) {
+            enabled = true  // Default to enabled for backward compatibility
+        }
+        
+        if (enabled) {
+            log.debug "NibeInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
+        } else {
+            log.debug "NibeInfoSyncJob: DISABLED - Not registering trigger"
+        }
     }
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
+        def config = Holders.grailsApplication?.config
+        def enabled = config?.getProperty('quartz.jobs.nibeInfoSync.enabled', Boolean)
+        
+        if (enabled == null) {
+            enabled = true
+        }
+        
+        if (!enabled) {
+            log.info("NibeInfoSyncJob is DISABLED via configuration, skipping execution")
+            return
+        }
         def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
         try {
             def accConfig = device.getConfigurationByKey(CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN)

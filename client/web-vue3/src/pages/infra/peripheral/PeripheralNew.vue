@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="peripheral">
       <q-card flat bordered>
         <q-card-section class="full-width">
           <div class="text-h5">Create new peripheral</div>
@@ -40,102 +40,130 @@
           </q-select>
         </q-card-section>
         <q-separator/>
-        <q-card-actions>
-          <q-btn color="accent" type="submit">
-            Save
-          </q-btn>
-          <q-btn color="info" @click="$router.go(-1)">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create Peripheral"
+        />
       </q-card>
     </form>
   </q-page>
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, onMounted, ref} from 'vue';
+import {useApolloClient} from "@vue/apollo-composable";
+import {useRoute} from "vue-router/dist/vue-router";
+import _ from "lodash";
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {
   DEVICE_LIST_ALL_WITH_PORTS,
   PERIPHERAL_CATEGORIES,
-  PERIPHERAL_CREATE,
-  PORT_LIST_ALL
+  PERIPHERAL_CREATE
 } from '@/graphql/queries';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
-import _ from "lodash";
 
 export default defineComponent({
-    name: 'PeripheralNew',
-    setup() {
-      const $q = useQuasar()
-      const {client} = useApolloClient();
-      const deviceList = ref([])
-      const selectedDevice = ref(null)
-      const deviceListDisabled = ref(false)
-      const peripheral = ref({connectedTo: []})
-      const categoryList = ref([])
-      const router = useRouter();
-      const route = useRoute();
-      const portList = ref([])
-      const portListDisabled = ref(false)
+  name: 'PeripheralNew',
+  components: {
+    EntityFormActions
+  },
+  setup() {
+    const {client} = useApolloClient();
+    const route = useRoute();
+    const deviceList = ref([]);
+    const selectedDevice = ref(null);
+    const deviceListDisabled = ref(false);
+    const categoryList = ref([]);
+    const portListDisabled = ref(false);
 
-      const fetchData = () => {
-        client.query({
-          query: PERIPHERAL_CATEGORIES,
-          variables: {},
-          fetchPolicy: 'network-only',
-        }).then(response => {
-          categoryList.value = response.data.peripheralCategoryList
-        })
-        client.query({
-          query: DEVICE_LIST_ALL_WITH_PORTS,
-          variables: {},
-          fetchPolicy: 'network-only',
-        }).then(response => {
-          deviceList.value = response.data.deviceList
-          if (route.query.deviceId != null) {
-            port.value.device = _.find(response.data.deviceList, function (o) {
-              return o.id == route.query.deviceId;
-            });
-            deviceListDisabled.value = true
-            if (route.query.portId != null) {
-              portListDisabled.value = true
-            }
+    const {
+      entity: peripheral,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Peripheral',
+      entityPath: '/admin/peripherals',
+      createMutation: PERIPHERAL_CREATE,
+      createMutationKey: 'peripheralCreate',
+      createVariableName: 'devicePeripheral',
+      excludeFields: ['__typename'],
+      initialData: {
+        name: '',
+        description: '',
+        model: '',
+        category: null,
+        connectedTo: []
+      },
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        // Clean category - only send ID
+        if (transformed.category) {
+          if (transformed.category.id) {
+            transformed.category = { id: transformed.category.id };
+          } else {
+            delete transformed.category;
           }
-        });
-      }
-      const onSave = () => {
-        if (peripheral.value.hasError) {
-          $q.notify({
-            color: 'negative',
-            message: 'Failed submission'
-          })
-        } else {
-          client.mutate({
-            mutation: PERIPHERAL_CREATE,
-            variables: {devicePeripheral: peripheral.value},
-          }).then(response => {
-            router.push({path: `/admin/peripherals/${response.data.peripheralCreate.id}/edit`})
-          });
         }
+        // Clean connectedTo ports - only send IDs
+        if (transformed.connectedTo && Array.isArray(transformed.connectedTo)) {
+          transformed.connectedTo = transformed.connectedTo
+            .filter(port => port && port.id)
+            .map(port => ({ id: port.id }));
+        }
+        return transformed;
       }
-      onMounted(() => {
-        fetchData()
-      })
-      return {
-        selectedDevice,
-        deviceList,
-        deviceListDisabled,
-        peripheral,
-        categoryList,
-        portList,
-        portListDisabled,
-        onSave
-      }
-    }
+    });
+
+    const fetchData = () => {
+      client.query({
+        query: PERIPHERAL_CATEGORIES,
+        variables: {},
+        fetchPolicy: 'network-only',
+      }).then(response => {
+        categoryList.value = response.data.peripheralCategoryList;
+      });
+      
+      client.query({
+        query: DEVICE_LIST_ALL_WITH_PORTS,
+        variables: {},
+        fetchPolicy: 'network-only',
+      }).then(response => {
+        deviceList.value = response.data.deviceList;
+        if (route.query.deviceId != null) {
+          selectedDevice.value = _.find(response.data.deviceList, function (o) {
+            return o.id == route.query.deviceId;
+          });
+          deviceListDisabled.value = true;
+          if (route.query.portId != null) {
+            portListDisabled.value = true;
+          }
+        }
+      });
+    };
+
+    const onSave = async () => {
+      if (saving.value) return;
+      if (!validateRequired(peripheral.value, ['name', 'description'])) return;
+      await createEntity();
+    };
+
+    onMounted(() => {
+      fetchData();
+    });
+
+    return {
+      selectedDevice,
+      deviceList,
+      deviceListDisabled,
+      peripheral,
+      categoryList,
+      portListDisabled,
+      saving,
+      onSave
+    };
   }
-)
-;
+});
+
 </script>
