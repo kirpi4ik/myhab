@@ -11,6 +11,7 @@
 # Documentation folder (local development notes)
 /doc/
 
-# Generated files (auto-generated during build)
+# Generated files (auto-generated during build from gradle.properties)
 **/version.txt
 src/main/docker/
+VERSIONING.md
