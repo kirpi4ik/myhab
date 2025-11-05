@@ -2,16 +2,16 @@
   // Java Configuration
   "java.configuration.runtimes": [
     {
-      "name": "JavaSE-21",
-      "path": "d:\\software\\jdk\\coretto-21",
+      "name": "JavaSE-17",
+      "path": "d:\\software\\jdk\\coretto-17",
       "default": true
     }
   ],
-  "java.home": "d:\\software\\jdk\\coretto-21",
-  "java.jdt.ls.java.home": "d:\\software\\jdk\\coretto-21",
+  "java.home": "d:\\software\\jdk\\coretto-17",
+  "java.jdt.ls.java.home": "d:\\software\\jdk\\coretto-17",
   
   // Gradle Configuration
-  "java.import.gradle.java.home": "d:\\software\\jdk\\coretto-21",
+  "java.import.gradle.java.home": "d:\\software\\jdk\\coretto-17",
   "java.import.gradle.home": "${workspaceFolder}\\gradle",
   "java.import.gradle.wrapper.enabled": true,
   
@@ -64,7 +64,7 @@
   
   // Terminal Configuration
   "terminal.integrated.env.windows": {
-    "JAVA_HOME": "d:\\software\\jdk\\coretto-21"
+    "JAVA_HOME": "d:\\software\\jdk\\coretto-17"
   },
   
   // Language Server

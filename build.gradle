@@ -4,7 +4,8 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+        // Temporarily commented out to resolve cache corruption issue
+        // classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
         classpath "com.bmuschko:gradle-docker-plugin:7.2.0"
         classpath 'commons-io:commons-io:2.6'
         classpath 'joda-time:joda-time:2.10.13'
@@ -69,6 +70,18 @@ subprojects { project ->
         isGrailsProject = isGrailsApp || isGrailsPlugin
         isBuildSnapshot = version.toString().endsWith("-SNAPSHOT")
 
+    }
+    
+    // Configure Java toolchain to use Java 17 for all Java/Groovy projects
+    afterEvaluate {
+        if (plugins.hasPlugin('java') || plugins.hasPlugin('groovy') || plugins.hasPlugin('java-library')) {
+            // Use Java toolchain (requires Java 17 to be available)
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(17)
+                }
+            }
+        }
     }
 }
 
@@ -195,7 +208,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'eclipse-temurin:21-jre'
+    from 'eclipse-temurin:17-jre'
 
     label(['project': 'myHAB'])
     label(['version': "${projectVersion}"])

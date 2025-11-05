@@ -11,6 +11,12 @@ plugins {
     id 'idea'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 repositories {
     mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }
