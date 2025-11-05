@@ -72,7 +72,56 @@ subprojects { project ->
     }
 }
 
-task versionTxt() {
+task syncVersionToPackageJson() {
+    description = 'Sync version from gradle.properties to package.json'
+    group = 'versioning'
+    
+    doLast {
+        def packageJsonFile = new File("${projectDir}/client/web-vue3/package.json")
+        if (packageJsonFile.exists()) {
+            def packageJson = new groovy.json.JsonSlurper().parseText(packageJsonFile.text)
+            packageJson.version = "${projectVersion}"
+            packageJsonFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(packageJson))
+            logger.quiet "Updated package.json version to ${projectVersion}"
+        }
+    }
+}
+
+task syncVersionToEnvFiles() {
+    description = 'Sync version from gradle.properties to .env and .env.prod'
+    group = 'versioning'
+    
+    doLast {
+        // Update .env file
+        def envFile = new File("${projectDir}/client/web-vue3/.env")
+        if (envFile.exists()) {
+            def envContent = envFile.text
+            envContent = envContent.replaceAll(/PRJ_VERSION=.*/, "PRJ_VERSION=${projectVersion}")
+            envFile.text = envContent
+            logger.quiet "Updated .env version to ${projectVersion}"
+        }
+        
+        // Update .env.prod file
+        def envProdFile = new File("${projectDir}/client/web-vue3/.env.prod")
+        if (envProdFile.exists()) {
+            def envProdContent = envProdFile.text
+            envProdContent = envProdContent.replaceAll(/PRJ_VERSION=.*/, "PRJ_VERSION=${projectVersion}")
+            envProdFile.text = envProdContent
+            logger.quiet "Updated .env.prod version to ${projectVersion}"
+        }
+    }
+}
+
+task syncVersions(dependsOn: [syncVersionToPackageJson, syncVersionToEnvFiles]) {
+    description = 'Sync version from gradle.properties to all project files'
+    group = 'versioning'
+    
+    doLast {
+        logger.quiet "✅ All versions synchronized to ${projectVersion}"
+    }
+}
+
+task versionTxt(dependsOn: syncVersions) {
     doLast {
         // Create docker directory if it doesn't exist
         def dockerDir = new File("${projectDir}/src/main/docker")
@@ -146,7 +195,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'eclipse-temurin:17-jre'
+    from 'eclipse-temurin:21-jre'
 
     label(['project': 'myHAB'])
     label(['version': "${projectVersion}"])
