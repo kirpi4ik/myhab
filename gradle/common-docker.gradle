@@ -39,7 +39,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'eclipse-temurin:21-jdk-alpine'
+    from 'eclipse-temurin:17-jdk-alpine'
 
     exposePort 8181
     environmentVariable 'GRAILS_ENV', 'production'

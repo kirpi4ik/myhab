@@ -1,7 +1,8 @@
 apply plugin: 'maven-publish'
-if (!isGrailsPlugin) {
-    apply plugin: 'com.bmuschko.nexus'
-}
+// Temporarily commented out to resolve cache corruption issue
+// if (!isGrailsPlugin) {
+//     apply plugin: 'com.bmuschko.nexus'
+// }
 
 
 ext.pomInfo = {
@@ -35,11 +36,12 @@ ext.pomInfo = {
     }
 }
 
-if (!isGrailsPlugin) {
-    modifyPom {
-        project(pomInfo)
-    }
-}
+// Temporarily commented out to resolve cache corruption issue
+// if (!isGrailsPlugin) {
+//     modifyPom {
+//         project(pomInfo)
+//     }
+// }
 tasks.named("publish").get().dependsOn assembleServerAndClient
 publishing {
     repositories {

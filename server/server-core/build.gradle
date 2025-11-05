@@ -139,6 +139,7 @@ bootRun {
 }
 
 bootJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     rootSpec.filesMatching('**/*.jar', { jar ->
         String groupId = jar.file.parentFile.parentFile.parentFile.parentFile.name
         jar.name = "$groupId-${jar.name}"
