@@ -13,7 +13,20 @@ task bootRun(dependsOn: 'serve') {
     description = 'Run the client app (for use with gradle bootRun -parallel'
 }
 
-task serve(type: YarnTask, dependsOn: 'yarn') {
+task cleanNodeModules(type: Delete) {
+    group = 'application'
+    description = 'Clean node_modules and reinstall dependencies'
+    delete "${projectDir}/node_modules"
+    delete "${projectDir}/package-lock.json"
+}
+
+task yarnInstall(type: YarnTask) {
+    group = 'application'
+    description = 'Install yarn dependencies with force and check files'
+    args = ['install', '--force', '--check-files']
+}
+
+task serve(type: YarnTask, dependsOn: ['yarnInstall']) {
     group = 'application'
     description = 'Run the client app'
     args = ['serve']

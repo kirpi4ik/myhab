@@ -85,6 +85,23 @@ class Mutation implements EventPublisher {
         }
     }
 
+    DataFetcher jobTrigger() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    Long jobId = environment.getArgument("jobId") as Long
+                    schedulerService.triggerJob(jobId)
+                    log.info("Job ${jobId} triggered successfully")
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to trigger job", e)
+                    return [success: false, error: e.message]
+                }
+            }
+        }
+    }
+
     public DataFetcher userRolesSave() {
         return userService
     }

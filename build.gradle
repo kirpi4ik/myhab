@@ -74,7 +74,8 @@ subprojects { project ->
     
     // Configure Java toolchain to use Java 17 for all Java/Groovy projects
     afterEvaluate {
-        if (plugins.hasPlugin('java') || plugins.hasPlugin('groovy') || plugins.hasPlugin('java-library')) {
+        // Apply to all projects that use Java/Groovy
+        if (plugins.hasPlugin('java') || plugins.hasPlugin('groovy') || plugins.hasPlugin('java-library') || plugins.hasPlugin('org.grails.grails-web')) {
             // Use Java toolchain (requires Java 17 to be available)
             java {
                 toolchain {
@@ -156,6 +157,11 @@ java -jar -Dgrails.env=\$GRAILS_ENV /app/myhab.jar \$@
         entrypointFile.setExecutable(true)
     }
 }
+task serve(dependsOn: ':web-vue3:serve') {
+    group = 'application'
+    description = 'Run the Quasar development server for the web client'
+}
+
 task copyClientResources(dependsOn: [':web-vue3:build']) { // <1>
     group = 'build'
     description = 'Copy client resources into server'

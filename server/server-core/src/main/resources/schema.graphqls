@@ -38,6 +38,7 @@ type Mutation {
     userRolesSave(input: SaveUserRoles): MutationResponse
     jobSchedule(jobId: ID!): MutationResponse
     jobUnschedule(jobId: ID!): MutationResponse
+    jobTrigger(jobId: ID!): MutationResponse
 }
 
 type EventDataResponse {
