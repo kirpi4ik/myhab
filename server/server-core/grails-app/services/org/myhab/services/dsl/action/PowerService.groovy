@@ -17,7 +17,19 @@ class PowerService implements EventPublisher {
             def ports = []
             if (params.portUids != null) {
                 params.portUids.each { uid ->
-                    ports << DevicePort.findByUid(uid)
+                    // Support both uid (deprecated) and id
+                    def port = null
+                    try {
+                        // Try to find by id first (if uid is actually an id)
+                        Long portId = Long.valueOf(uid)
+                        port = DevicePort.findById(portId)
+                    } catch (NumberFormatException e) {
+                        // If not a number, try findByUid for backward compatibility
+                        port = DevicePort.findByUid(uid)
+                    }
+                    if (port) {
+                        ports << port
+                    }
                 }
             }
             if (params.portIds != null) {

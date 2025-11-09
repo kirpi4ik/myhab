@@ -29,7 +29,6 @@ export const JOB_GET_BY_ID = gql`
   query ($id: Long!) {
     job(id: $id) {
       id
-      uid
       name
       description
       state
@@ -63,7 +62,6 @@ export const JOB_EDIT_GET_BY_ID = gql`
   query ($id: Long!) {
     job(id: $id) {
       id
-      uid
       name
       description
       state
@@ -106,7 +104,6 @@ export const JOB_CREATE = gql`
   mutation jobCreate($job: JobCreate) {
     jobCreate(job: $job) {
       id
-      uid
     }
   }
 `;

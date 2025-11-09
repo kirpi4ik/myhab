@@ -4,7 +4,6 @@ export const ZONES_GET_ALL = gql`
   query {
     zoneList {
       id
-      uid
       name
       description
       parent {
@@ -17,14 +16,13 @@ export const ZONES_GET_ALL = gql`
       }
       peripherals {
         id
-        uid
         name
         description
         category {
-          uid
+          id
+          name
         }
         connectedTo {
-          uid
           value
         }
       }
@@ -35,17 +33,14 @@ export const ZONE_GET_BY_ID = gql`
   query zoneById($id: String!) {
     zoneById(id: $id) {
       id
-      uid
       name
       description
       zones {
         id
-        uid
         name
         description
         peripherals {
           id
-          uid
           name
           description
           category {
@@ -53,7 +48,6 @@ export const ZONE_GET_BY_ID = gql`
           }
           connectedTo {
             id
-            uid
             value
             device {
               status
@@ -73,7 +67,6 @@ export const ZONE_GET_BY_ID = gql`
       }
       peripherals {
         id
-        uid
         name
         description
         category {
@@ -81,7 +74,6 @@ export const ZONE_GET_BY_ID = gql`
         }
         connectedTo {
           id
-          uid
           value
           device {
             status
@@ -129,24 +121,21 @@ export const ZONE_GET_BY_ID_MINIMAL = gql`
 export const ZONES_GET_ROOT = gql`
   {
     zonesRoot {
-      uid
+      id
       name
       description
       zones {
-        uid
         name
         description
       }
       peripherals {
         id
-        uid
         name
         description
         category {
           name
         }
         connectedTo {
-          uid
           value
           configurations {
             id

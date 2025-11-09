@@ -39,6 +39,7 @@ type Mutation {
     jobSchedule(jobId: ID!): MutationResponse
     jobUnschedule(jobId: ID!): MutationResponse
     jobTrigger(jobId: ID!): MutationResponse
+    scenarioDelete(id: ID!): MutationResponse
 }
 
 type EventDataResponse {
@@ -50,7 +51,6 @@ type EventDataResponse {
     p4: String
     p5: String
     p6: String
-    uid: String
 }
 
 input EventDatInput {

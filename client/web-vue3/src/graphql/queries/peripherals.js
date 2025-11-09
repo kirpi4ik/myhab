@@ -40,7 +40,6 @@ export const PERIPHERAL_LIST_ALL = gql`
   {
     devicePeripheralList {
       id
-      uid
       name
       model
       description
@@ -71,7 +70,6 @@ export const PERIPHERAL_CATEGORY_GET_DETAILS = gql`
       id
       name
       title
-      uid
       entityType
       peripherals {
         id
@@ -107,19 +105,16 @@ export const PERIPHERAL_META_GET = gql`
   {
     peripheralCategoryList {
       id
-      uid
       title
       name
     }
     zoneList {
       id
-      uid
       name
       description
     }
     devicePortList {
       id
-      uid
       internalRef
       name
       description
@@ -176,20 +171,17 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
   query devicePeripheralById($id: Long!) {
     devicePeripheral(id: $id) {
       id
-      uid
       name
       description
       model
       maxAmp
       category {
         id
-        uid
         title
         name
       }
       connectedTo {
         id
-        uid
         internalRef
         name
         description
@@ -200,7 +192,6 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
       }
       zones {
         id
-        uid
         name
         description
         __typename
@@ -208,19 +199,16 @@ export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
     }
     peripheralCategoryList {
       id
-      uid
       title
       name
     }
     zoneList {
       id
-      uid
       name
       description
     }
     devicePortList {
       id
-      uid
       internalRef
       name
       description
@@ -235,18 +223,15 @@ export const PERIPHERAL_LIST_WUI = gql`
   query devicePeripheralList {
     devicePeripheralList {
       id
-      uid
       name
       description
       category {
         id
-        uid
         title
         name
       }
       connectedTo {
         id
-        uid
         internalRef
         name
         description
@@ -262,7 +247,6 @@ export const PERIPHERAl_EVENT_LOGS = gql`
   query eventsByP2($p2: String!, $count: Int!, $offset: Int!) {
     eventsByP2(p2: $p2, count: $count, offset: $offset) {
       id
-      uid
       tsCreated
       entityType
       p4

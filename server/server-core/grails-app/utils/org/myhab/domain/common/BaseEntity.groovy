@@ -19,6 +19,11 @@ abstract class BaseEntity implements Serializable {
 //    @GenericGenerator(name = "uuid2", strategy = "uuid2")
 //    private UUID id;
 
+    /**
+     * @deprecated Use 'id' instead. This field is kept for backward compatibility only.
+     * Will be removed in a future version.
+     */
+    @Deprecated
     String uid = DomainUtil.NULL_UID
     Date tsCreated = DomainUtil.NULL_DATE
     Date tsUpdated = DomainUtil.NULL_DATE
@@ -28,21 +33,30 @@ abstract class BaseEntity implements Serializable {
         return entityType
     }
 
-    void beforeInsert() {
-        if (this.uid == DomainUtil.NULL_UID) {
-            this.uid = UUID.randomUUID().toString()
+    /**
+     * Backward-compatible getter for uid that returns id.toString()
+     * @deprecated Use 'id' instead
+     */
+    @Deprecated
+    String getUid() {
+        if (id) {
+            return id.toString()
         }
+        return uid ?: DomainUtil.NULL_UID
+    }
+
+    void beforeInsert() {
         if (this.tsCreated == DomainUtil.NULL_DATE) {
             def now = DateTime.now().toDate()
             this.tsCreated = now
         }
-        log.trace 'Before inserting [' + this.entityType + ']... ' + this.uid
+        log.trace 'Before inserting [' + this.entityType + ']... ' + (id ?: 'new')
     }
 
     void beforeUpdate() {
         def now = DateTime.now().toDate()
         this.tsUpdated = now
-        log.trace 'Before updating [' + this.entityType + ']... ' + this.uid
+        log.trace 'Before updating [' + this.entityType + ']... ' + (id ?: 'new')
     }
 //  static mapping = {
 //    table '`device_event_logs`'

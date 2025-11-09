@@ -34,7 +34,6 @@ export const CABLE_LIST_ALL = gql`
   {
     cableList {
       id
-      uid
       code
       codeNew
       codeOld
@@ -125,7 +124,6 @@ export const CABLE_EDIT_GET_DETAILS = gql`
         cable(id: $id) {
             id
             version
-            uid
             tsCreated
             tsUpdated
             entityType
