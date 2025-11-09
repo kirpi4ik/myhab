@@ -96,9 +96,9 @@ class UIMessageService implements EventPublisher {
         if (PERIPHERAL.isEqual(event.data.p1)) {
             def peripheral = DevicePeripheral.findById(event.data.p2)
             def args = [:]
-            args.portUids = []
+            args.portIds = []
             peripheral.getConnectedTo().each { port ->
-                args.portUids << port.uid
+                args.portIds << port.id
             }
             try {
                 def color = new JsonSlurper().parseText(event.data.p4)
@@ -170,9 +170,9 @@ class UIMessageService implements EventPublisher {
             def peripheral = DevicePeripheral.findById(Long.valueOf(event.data.p2))
             if (peripheral.category.name == "PRESENCE") {
                 def args = [:]
-                args.portUids = []
+                args.portIds = []
                 peripheral.getConnectedTo().each { port ->
-                    args.portUids << port.uid
+                    args.portIds << port.id
                 }
                 switch (event.data.p4) {
                     case "on":
@@ -207,6 +207,10 @@ class UIMessageService implements EventPublisher {
         log.debug(event.toString())
     }
 
+    /**
+     * @deprecated This method is no longer needed since uid is deprecated. Use id instead.
+     */
+    @Deprecated
     def isUid(id) {
         return !id.matches("[0-9]+")
     }

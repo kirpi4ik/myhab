@@ -7,7 +7,9 @@ import graphql.schema.DataFetchingEnvironment
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.CreateEntityDataFetcher
 import org.grails.gorm.graphql.fetcher.impl.UpdateEntityDataFetcher
+import org.grails.gorm.graphql.fetcher.impl.DeleteEntityDataFetcher
 import org.myhab.domain.device.port.PortScenarioJoin
+import org.myhab.domain.job.Job
 
 class Scenario extends BaseEntity {
   String name
@@ -101,5 +103,6 @@ class Scenario extends BaseEntity {
         }
       })
     }
+
   }
 }
