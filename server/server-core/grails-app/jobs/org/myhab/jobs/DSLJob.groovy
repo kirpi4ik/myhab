@@ -14,12 +14,12 @@ import org.springframework.context.ApplicationContext
  */
 @Transactional
 class DSLJob implements Job {
-    public static final String JOB_UID = "jobId"
+    public static final String JOB_ID = "jobId"
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-        def jobUid = context.getMergedJobDataMap().get(JOB_UID)
-        def job = org.myhab.domain.job.Job.findByUid(jobUid)
+        def jobId = context.getMergedJobDataMap().get(JOB_ID)
+        def job = org.myhab.domain.job.Job.findById(jobId)
 
         ApplicationContext ctx = Holders.grailsApplication.mainContext
         DslService dslService = (DslService) ctx.getBean("dslService");

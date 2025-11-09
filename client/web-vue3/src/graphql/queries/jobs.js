@@ -146,3 +146,12 @@ export const JOB_UNSCHEDULE = gql`
   }
 `;
 
+export const JOB_TRIGGER = gql`
+  mutation jobTrigger($jobId: ID!) {
+    jobTrigger(jobId: $jobId) {
+      success
+      error
+    }
+  }
+`;
+

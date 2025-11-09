@@ -15,3 +15,6 @@
 **/version.txt
 src/main/docker/
 VERSIONING.md
+
+# Quasar temporary compiled config files
+**/quasar.config.js.temporary.compiled.*.mjs
