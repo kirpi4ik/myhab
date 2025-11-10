@@ -78,24 +78,24 @@
   ],
   "scenarioMethods": [
     { 
-      "label": "getIsEvening", 
+      "label": "isEvening", 
       "type": "method", 
-      "info": "Check if current time is evening: getIsEvening()" 
+      "info": "Check if current time is evening (after 18:00 in UTC+2): isEvening()" 
     },
     { 
       "label": "switchOn", 
       "type": "method", 
-      "info": "Switch device/port ON: switchOn([portIds: [123, 456]]) or switchOn([peripheral: 'name'])" 
+      "info": "Switch device/port ON: switchOn([portIds: [123, 456]]) or switchOn([peripheralIds: [10, 11]])" 
     },
     { 
       "label": "switchOff", 
       "type": "method", 
-      "info": "Switch device/port OFF: switchOff([portIds: [123, 456]]) or switchOff([peripheral: 'name'])" 
+      "info": "Switch device/port OFF: switchOff([portIds: [123, 456]]) or switchOff([peripheralIds: [10, 11]])" 
     },
     { 
       "label": "switchToggle", 
       "type": "method", 
-      "info": "Toggle device/port state: switchToggle([portIds: [123, 456]]) or switchToggle([peripheral: 'name'])" 
+      "info": "Toggle device/port state: switchToggle([portIds: [123, 456]]) or switchToggle([peripheralIds: [10, 11]])" 
     },
     { 
       "label": "pause", 
