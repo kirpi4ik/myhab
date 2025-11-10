@@ -1,5 +1,20 @@
 import {gql} from '@apollo/client/core';
 
+export const PORT_LIST_HINTS = gql`
+  query {
+    devicePortList {
+      id
+      name
+      description
+      internalRef
+      device {
+        code
+        name
+      }
+    }
+  }
+`;
+
 export const PORT_LIST_ALL = gql`
   query {
     devicePortList {

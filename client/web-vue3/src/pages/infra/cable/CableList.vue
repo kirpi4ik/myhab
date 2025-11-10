@@ -76,6 +76,18 @@
           </q-td>
         </template>
 
+        <template v-slot:body-cell-patchPanel="props">
+          <q-td :props="props">
+            {{ props.row.patchPanel || '-' }}
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-tsCreated="props">
+          <q-td :props="props">
+            {{ formatDate(props.row.tsCreated) }}
+          </q-td>
+        </template>
+
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
             <q-btn-group>
@@ -115,7 +127,7 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, computed} from "vue";
+import {defineComponent, onMounted} from "vue";
 import {useEntityList} from '@/composables';
 import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
 import {format} from 'date-fns';
@@ -147,7 +159,6 @@ export default defineComponent({
 
     // Use the entity list composable
     const {
-      items,
       filteredItems,
       loading,
       filter,

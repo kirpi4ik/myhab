@@ -21,13 +21,15 @@
 </template>
 
 <script>
-import { defineComponent, ref, watch, shallowRef } from 'vue';
+import { defineComponent, ref, watch, shallowRef, onMounted } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { autocompletion } from '@codemirror/autocomplete';
 import { EditorView } from '@codemirror/view';
 import groovyCompletionsData from '../data/groovy-completions.json';
+import { useApolloClient } from '@vue/apollo-composable';
+import { PORT_LIST_HINTS } from '@/graphql/queries';
 
 export default defineComponent({
   name: 'CodeEditor',
@@ -84,6 +86,8 @@ export default defineComponent({
   setup(props, { emit }) {
     const code = ref(props.modelValue);
     const view = shallowRef();
+    const { client } = useApolloClient();
+    const portHints = ref([]);
 
     // Watch for external changes to modelValue
     watch(() => props.modelValue, (newVal) => {
@@ -100,6 +104,31 @@ export default defineComponent({
       ...(groovyCompletionsData.scenarioMethods || [])
     ];
 
+    // Fetch device ports for dynamic hints
+    const fetchPortHints = async () => {
+      try {
+        const { data } = await client.query({
+          query: PORT_LIST_HINTS,
+          fetchPolicy: 'network-only'
+        });
+
+        if (data?.devicePortList) {
+          portHints.value = data.devicePortList.map(port => ({
+            label: `${port.id}`,
+            type: 'constant',
+            info: `Port: ${port.name || port.internalRef} (${port.device?.code || 'Unknown'}) - ${port.description || 'No description'}`
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch port hints:', error);
+      }
+    };
+
+    // Fetch hints on mount
+    onMounted(() => {
+      fetchPortHints();
+    });
+
     // Custom completions for Groovy/scripting
     const customCompletions = (context) => {
       const word = context.matchBefore(/\w*/);
@@ -107,9 +136,12 @@ export default defineComponent({
         return null;
       }
 
-      // Combine loaded completions from JSON with custom completions from props
+      // Combine loaded completions from JSON with custom completions from props and dynamic port hints
       const completions = [
         ...loadedCompletions,
+        
+        // Add dynamic port ID hints
+        ...portHints.value,
         
         // Add custom completions from props
         ...props.customCompletions.map(item => ({
