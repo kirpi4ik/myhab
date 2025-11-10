@@ -214,10 +214,32 @@ class SchedulerService {
         }
     }
 
+    /**
+     * Start all ACTIVE jobs in Quartz scheduler
+     * Called on application startup to restore scheduled jobs
+     */
     def startAll() {
-        Job.findAllByState(JobState.ACTIVE).each { job ->
-            scheduleJob(job.id)
+        def activeJobs = Job.findAllByState(JobState.ACTIVE)
+        log.info("Found ${activeJobs.size()} ACTIVE jobs to schedule")
+        
+        int successCount = 0
+        int failureCount = 0
+        
+        activeJobs.each { job ->
+            try {
+                // Only schedule in Quartz, don't modify job state (already ACTIVE)
+                if (scheduleJobInQuartz(job.id)) {
+                    successCount++
+                } else {
+                    failureCount++
+                }
+            } catch (Exception e) {
+                log.error("Failed to schedule job ${job.id} (${job.name}): ${e.message}", e)
+                failureCount++
+            }
         }
+        
+        log.info("Scheduler startup complete: ${successCount} jobs scheduled successfully, ${failureCount} failed")
     }
 
     def resumeAll() {
