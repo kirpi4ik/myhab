@@ -101,6 +101,7 @@ import {peripheralService} from '@/_services/controls';
 import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
 import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
 import PeripheralSwitchCard from '@/components/cards/PeripheralSwitchCard';
+import PeripheralTempCard from '@/components/cards/PeripheralTempCard';
 import TempChartCard from '@/components/cards/TempChartCard';
 import ZoneCard from '@/components/cards/ZoneCard';
 
@@ -127,7 +128,7 @@ const CATEGORY_CONFIG = {
     label: 'sprinklers'
   },
   TEMP: {
-    component: null,
+    component: 'PeripheralTempCard',
     label: 'temperature sensors'
   }
 };
@@ -139,6 +140,7 @@ export default defineComponent({
     PeripheralLightCard,
     PeripheralSwitchCard,
     PeripheralHeatCard,
+    PeripheralTempCard,
     TempChartCard
   },
   setup() {
