@@ -41,6 +41,10 @@
         v-model:pagination="pagination"
         row-key="id"
         flat
+        virtual-scroll
+        :rows-per-page-options="[0]"
+        style="max-height: calc(100vh - 250px)"
+        class="sticky-header-table"
         @row-click="(evt, row) => viewItem(row)"
       >
         <template v-slot:body-cell-username="props">
@@ -157,7 +161,17 @@ export default defineComponent({
       { name: 'accountLocked', label: 'Locked', field: 'accountLocked', align: 'center', sortable: true },
       { name: 'tsCreated', label: 'Created', field: 'tsCreated', align: 'left', sortable: true },
       { name: 'tsUpdated', label: 'Updated', field: 'tsUpdated', align: 'left', sortable: true },
-      { name: 'actions', label: 'Actions', field: () => '', align: 'right', sortable: false }
+      { 
+        name: 'actions', 
+        label: 'Actions', 
+        field: () => '', 
+        align: 'right', 
+        sortable: false,
+        headerClasses: 'bg-grey-2',
+        classes: 'bg-grey-1',
+        headerStyle: 'position: sticky; right: 0; z-index: 1',
+        style: 'position: sticky; right: 0'
+      }
     ];
 
     /**
