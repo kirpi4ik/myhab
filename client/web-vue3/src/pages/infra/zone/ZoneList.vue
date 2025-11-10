@@ -41,6 +41,10 @@
         v-model:pagination="pagination"
         row-key="id"
         flat
+        virtual-scroll
+        :rows-per-page-options="[0]"
+        style="max-height: calc(100vh - 250px)"
+        class="sticky-header-table"
         @row-click="(evt, row) => viewItem(row)"
       >
         <template v-slot:body-cell-name="props">
@@ -129,7 +133,17 @@ export default defineComponent({
       { name: 'parent', label: 'Parent Zone', field: 'parent', align: 'left', sortable: true },
       { name: 'subZones', label: 'Sub-zones', field: 'subZones', align: 'center', sortable: true },
       { name: 'peripherals', label: 'Peripherals', field: 'peripherals', align: 'center', sortable: true },
-      { name: 'actions', label: 'Actions', field: () => '', align: 'right', sortable: false }
+      { 
+        name: 'actions', 
+        label: 'Actions', 
+        field: () => '', 
+        align: 'right', 
+        sortable: false,
+        headerClasses: 'bg-grey-2',
+        classes: 'bg-grey-1',
+        headerStyle: 'position: sticky; right: 0; z-index: 1',
+        style: 'position: sticky; right: 0'
+      }
     ];
 
     const {
