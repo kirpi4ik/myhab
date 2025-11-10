@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import {defineComponent, computed, ref} from 'vue';
+import {defineComponent, computed} from 'vue';
 
 import {authzService} from '@/_services';
 
@@ -120,6 +120,21 @@ export default defineComponent({
           {
             label: 'Exterior',
             route: `/zones/${zoneExtId}?category=LIGHT`
+          }
+        ]
+      },
+      {
+        title: 'Switches',
+        icon: 'mdi-electric-switch',
+        bgColor: 'bg-green-6',
+        actions: [
+          {
+            label: 'Interior',
+            route: `/zones/${zoneIntId}?category=SWITCH`
+          },
+          {
+            label: 'Exterior',
+            route: `/zones/${zoneExtId}?category=SWITCH`
           }
         ]
       },

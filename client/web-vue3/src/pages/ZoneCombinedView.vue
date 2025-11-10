@@ -100,6 +100,7 @@ import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID} from '@/graphql/queries';
 import {peripheralService} from '@/_services/controls';
 import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
 import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
+import PeripheralSwitchCard from '@/components/cards/PeripheralSwitchCard';
 import TempChartCard from '@/components/cards/TempChartCard';
 import ZoneCard from '@/components/cards/ZoneCard';
 
@@ -112,6 +113,10 @@ const CATEGORY_CONFIG = {
   LIGHT: {
     component: 'PeripheralLightCard',
     label: 'lights'
+  },
+  SWITCH: {
+    component: 'PeripheralSwitchCard',
+    label: 'switches'
   },
   HEAT: {
     component: 'PeripheralHeatCard',
@@ -132,6 +137,7 @@ export default defineComponent({
   components: {
     ZoneCard,
     PeripheralLightCard,
+    PeripheralSwitchCard,
     PeripheralHeatCard,
     TempChartCard
   },
