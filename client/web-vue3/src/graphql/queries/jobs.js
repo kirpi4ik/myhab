@@ -32,13 +32,6 @@ export const JOB_GET_BY_ID = gql`
       name
       description
       state
-      tsCreated
-      tsUpdated
-      scenario {
-        id
-        name
-        body
-      }
       cronTriggers {
         id
         expression
@@ -53,6 +46,13 @@ export const JOB_GET_BY_ID = gql`
       tags {
         id
         name
+      }
+      tsCreated
+      tsUpdated
+      scenario {
+        id
+        name
+        body
       }
     }
   }
@@ -65,10 +65,6 @@ export const JOB_EDIT_GET_BY_ID = gql`
       name
       description
       state
-      scenario {
-        id
-        name
-      }
       cronTriggers {
         id
         expression
@@ -81,6 +77,10 @@ export const JOB_EDIT_GET_BY_ID = gql`
         }
       }
       tags {
+        id
+        name
+      }
+      scenario {
         id
         name
       }

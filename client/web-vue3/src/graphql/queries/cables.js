@@ -57,16 +57,6 @@ export const CABLE_LIST_ALL = gql`
     }
   }
 `;
-export const CABLE_GET_BY_ID_CHILDS = gql`
-  query cableById($id: String!) {
-    cableById(id: $id) {
-      id
-      description
-      code
-
-    }
-  }
-`;
 export const CABLE_BY_ID = gql`
   query cableById($id: Long!) {
     cable(id: $id) {
@@ -76,27 +66,26 @@ export const CABLE_BY_ID = gql`
       codeOld
       description
       nrWires
+      patchPanelPort
+      rackRowNr
+      orderInRow
+      maxAmp
       patchPanel {
         id
         name
         size
+        description
         rack {
           id
           name
           description
         }
-        name
-        description
       }
-      patchPanelPort
-      rackRowNr
-      orderInRow
       rack {
         id
         name
         description
       }
-
       category {
         id
         name
@@ -119,106 +108,58 @@ export const CABLE_BY_ID = gql`
     }
   }
 `;
-export const CABLE_EDIT_GET_DETAILS = gql`
-    query cableById($id: Long!) {
-        cable(id: $id) {
-            id
-            version
-            tsCreated
-            tsUpdated
-            entityType
-            rack {
-                id
-                name
-            }
-            patchPanel {
-                id
-                name
-                size
-            }
-            category {
-                id
-                name
-            }
-            code
-            codeNew
-            codeOld
-            description
-            patchPanelPort
-            nrWires
-            rackRowNr
-            orderInRow
-            peripherals {
-                id
-                name
-            }
-            connectedTo {
-                id
-                name
-                internalRef
-                device {
-                    code
-                }
-            }
-            zones {
-                id
-                name
-            }
-            maxAmp
-        }
-        rackList {
-            id
-            name
-            patchPanels {
-                id
-                name
-            }
-        }
-        cableCategoryList {
-            id
-            name
-        }
-        zoneList {
-            id
-            name
-        }
-        patchPanelList {
-            id
-            name
-            size
-        }
-        deviceList{
-            id
-            code
-            name
-            ports {
-                id
-                name
-                internalRef
-            }
-        }
-        devicePeripheralList {
-            id
-            name
-        }
 
-        devicePortList {
-            id
-            internalRef
-            name
-            description
-            device {
-                code
-                description
-            }
+export const CABLE_EDIT_GET_DETAILS = gql`
+  query cableById($id: Long!) {
+    cable(id: $id) {
+      id
+      code
+      codeNew
+      codeOld
+      description
+      nrWires
+      patchPanelPort
+      rackRowNr
+      orderInRow
+      maxAmp
+      version
+      tsCreated
+      tsUpdated
+      entityType
+      rack {
+        id
+        name
+      }
+      patchPanel {
+        id
+        name
+        size
+      }
+      category {
+        id
+        name
+      }
+      peripherals {
+        id
+        name
+      }
+      connectedTo {
+        id
+        name
+        internalRef
+        device {
+          code
         }
+      }
+      zones {
+        id
+        name
+      }
     }
-`;
-export const CABLE_CREATE_GET_DETAILS = gql`
-  query {
     rackList {
       id
       name
+      description
       patchPanels {
         id
         name
@@ -231,14 +172,36 @@ export const CABLE_CREATE_GET_DETAILS = gql`
     zoneList {
       id
       name
+      description
     }
     patchPanelList {
       id
       name
+      size
+    }
+    deviceList {
+      id
+      code
+      name
+      ports {
+        id
+        name
+        internalRef
+      }
     }
     devicePeripheralList {
       id
       name
+    }
+    devicePortList {
+      id
+      internalRef
+      name
+      description
+      device {
+        code
+        description
+      }
     }
   }
 `;

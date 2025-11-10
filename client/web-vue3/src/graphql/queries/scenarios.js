@@ -16,6 +16,7 @@ export const SCENARIO_LIST_ALL = gql`
       device {
         id
         name
+        code
       }
     }
   }
@@ -56,6 +57,7 @@ export const SCENARIO_EDIT_GET_BY_ID = gql`
         device {
           id
           name
+          code
         }
       }
     }
@@ -66,6 +68,7 @@ export const SCENARIO_EDIT_GET_BY_ID = gql`
       device {
         id
         name
+        code
       }
     }
   }
