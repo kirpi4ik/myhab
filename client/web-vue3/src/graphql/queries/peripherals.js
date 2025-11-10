@@ -22,13 +22,6 @@ export const PERIPHERAL_CATEGORY_CREATE = gql`
     }
   }
 `;
-export const PERIPHERAL_VALUE_UPDATE = gql`
-  mutation ($id: Long!, $devicePeripheralUpdate: DevicePeripheralUpdate!) {
-    updatePeripheral(id: $id, peripheral: $devicePeripheralUpdate) {
-      success
-    }
-  }
-`;
 export const PERIPHERAL_DELETE = gql`
   mutation ($id: Long!) {
     devicePeripheralDelete(id: $id) {
@@ -37,17 +30,27 @@ export const PERIPHERAL_DELETE = gql`
   }
 `;
 export const PERIPHERAL_LIST_ALL = gql`
-  {
+  query {
     devicePeripheralList {
       id
       name
       model
       description
+      category {
+        id
+        name
+      }
+      connectedTo {
+        id
+      }
+      tsCreated
+      tsUpdated
     }
   }
 `;
+
 export const PERIPHERAL_CATEGORIES = gql`
-  {
+  query {
     peripheralCategoryList {
       id
       name
@@ -82,7 +85,6 @@ export const PERIPHERAL_CATEGORY_GET_DETAILS = gql`
     }
   }
 `;
-
 export const PERIPHERAL_CATEGORY_UPDATE = gql`
   mutation ($id: Long!, $peripheralCategory: PeripheralCategoryUpdate!) {
     peripheralCategoryUpdate(id: $id, peripheralCategory: $peripheralCategory) {
@@ -101,34 +103,14 @@ export const PERIPHERAL_CATEGORY_DELETE = gql`
     }
   }
 `;
-export const PERIPHERAL_META_GET = gql`
-  {
-    peripheralCategoryList {
-      id
-      title
-      name
-    }
-    zoneList {
-      id
-      name
-      description
-    }
-    devicePortList {
-      id
-      internalRef
-      name
-      description
-    }
-  }
-`;
 export const PERIPHERAL_GET_BY_ID = gql`
   query devicePeripheralById($id: Long!) {
     devicePeripheral(id: $id) {
       id
       name
+      description
       model
       maxAmp
-      description
       category {
         id
         name
@@ -143,7 +125,6 @@ export const PERIPHERAL_GET_BY_ID = gql`
           status
         }
       }
-
       configurations {
         id
         key
@@ -167,58 +148,7 @@ export const PERIPHERAL_GET_BY_ID = gql`
     }
   }
 `;
-export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
-  query devicePeripheralById($id: Long!) {
-    devicePeripheral(id: $id) {
-      id
-      name
-      description
-      model
-      maxAmp
-      category {
-        id
-        title
-        name
-      }
-      connectedTo {
-        id
-        internalRef
-        name
-        description
-        device {
-          id
-        }
-        __typename
-      }
-      zones {
-        id
-        name
-        description
-        __typename
-      }
-    }
-    peripheralCategoryList {
-      id
-      title
-      name
-    }
-    zoneList {
-      id
-      name
-      description
-    }
-    devicePortList {
-      id
-      internalRef
-      name
-      description
-      device {
-        name
-        code
-      }
-    }
-  }
-`;
+
 export const PERIPHERAL_LIST_WUI = gql`
   query devicePeripheralList {
     devicePeripheralList {
@@ -227,8 +157,8 @@ export const PERIPHERAL_LIST_WUI = gql`
       description
       category {
         id
-        title
         name
+        title
       }
       connectedTo {
         id

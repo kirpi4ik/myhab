@@ -165,6 +165,7 @@ export default defineComponent({
       entityName: 'Device',
       entityPath: '/admin/devices',
       listQuery: DEVICE_LIST_ALL,
+      listKey: 'deviceList',
       deleteMutation: DEVICE_DELETE,
       deleteKey: 'deviceDelete',
       columns,

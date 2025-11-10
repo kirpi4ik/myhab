@@ -29,6 +29,7 @@ export const ZONES_GET_ALL = gql`
     }
   }
 `;
+
 export const ZONE_GET_BY_ID = gql`
   query zoneById($id: String!) {
     zoneById(id: $id) {
@@ -44,6 +45,7 @@ export const ZONE_GET_BY_ID = gql`
           name
           description
           category {
+            id
             name
           }
           connectedTo {
@@ -70,6 +72,7 @@ export const ZONE_GET_BY_ID = gql`
         name
         description
         category {
+          id
           name
         }
         connectedTo {
@@ -77,6 +80,11 @@ export const ZONE_GET_BY_ID = gql`
           value
           device {
             status
+          }
+          configurations {
+            id
+            key
+            value
           }
         }
         configurations {
@@ -114,40 +122,6 @@ export const ZONE_GET_BY_ID_MINIMAL = gql`
         id
         name
         description
-      }
-    }
-  }
-`;
-export const ZONES_GET_ROOT = gql`
-  {
-    zonesRoot {
-      id
-      name
-      description
-      zones {
-        name
-        description
-      }
-      peripherals {
-        id
-        name
-        description
-        category {
-          name
-        }
-        connectedTo {
-          value
-          configurations {
-            id
-            key
-            value
-          }
-        }
-        configurations {
-          id
-          key
-          value
-        }
       }
     }
   }

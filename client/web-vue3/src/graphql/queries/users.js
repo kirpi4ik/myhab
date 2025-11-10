@@ -23,23 +23,6 @@ export const USERS_GET_ALL = gql`
 		}
 	}
 `;
-export const USER_GET_BY_ID = gql`
-	query findUserById($id: String!) {
-		userById(id: $id) {
-			id
-			name
-			username
-			enabled
-			accountExpired
-			accountLocked
-			passwordExpired
-			email
-			firstName
-			lastName
-			telegramUsername
-		}
-	}
-`;
 export const USER_GET_BY_ID_WITH_ROLES = gql`
 	query findUserById($id: String!) {
 		userById(id: $id) {
@@ -77,18 +60,6 @@ export const USER_DELETE = gql`
 	mutation ($id: Long!) {
 		userDeleteCascade(id: $id) {
 			success
-		}
-	}
-`;
-export const ROLES_GET_FOR_USER = gql`
-	query rolesForUser($id: String!) {
-		roleList {
-			id
-			authority
-		}
-		userRolesForUser(userId: $id) {
-			userId
-			roleId
 		}
 	}
 `;

@@ -12,6 +12,8 @@ import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortValue
 import org.myhab.domain.infra.Zone
 import org.myhab.domain.job.EventData
+import org.myhab.domain.device.Scenario
+import org.myhab.domain.job.Job
 
 /**
  *
@@ -30,6 +32,10 @@ enum EntityType {
     CONFIG(Configuration.class),
     PORT_VALUE(PortValue.class),
     TS_STATISTIC(TimeSeriesStatistic.class),
+    SCENARIO(Scenario.class),
+    JOB(Job.class),
+    JOB_TAG(JobTag.class),
+    LAYER(Layer.class),
     USER(User.class);
 
     static <T extends BaseEntity> EntityType get(T type) {
