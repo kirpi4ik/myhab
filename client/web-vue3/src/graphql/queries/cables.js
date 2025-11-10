@@ -50,6 +50,8 @@ export const CABLE_LIST_ALL = gql`
       category {
         name
       }
+      tsCreated
+      tsUpdated
     }
     cableCategoryList{
       id

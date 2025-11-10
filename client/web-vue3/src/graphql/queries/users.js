@@ -20,6 +20,8 @@ export const USERS_GET_ALL = gql`
 			firstName
 			lastName
 			telegramUsername
+			tsCreated
+			tsUpdated
 		}
 	}
 `;
