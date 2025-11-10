@@ -27,6 +27,7 @@ import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { autocompletion } from '@codemirror/autocomplete';
 import { EditorView } from '@codemirror/view';
+import groovyCompletionsData from '../data/groovy-completions.json';
 
 export default defineComponent({
   name: 'CodeEditor',
@@ -91,6 +92,14 @@ export default defineComponent({
       }
     });
 
+    // Load completions from external JSON file
+    const loadedCompletions = [
+      ...(groovyCompletionsData.keywords || []),
+      ...(groovyCompletionsData.functions || []),
+      ...(groovyCompletionsData.dsl || []),
+      ...(groovyCompletionsData.scenarioMethods || [])
+    ];
+
     // Custom completions for Groovy/scripting
     const customCompletions = (context) => {
       const word = context.matchBefore(/\w*/);
@@ -98,33 +107,9 @@ export default defineComponent({
         return null;
       }
 
+      // Combine loaded completions from JSON with custom completions from props
       const completions = [
-        // Groovy keywords
-        { label: 'def', type: 'keyword', info: 'Define a variable' },
-        { label: 'class', type: 'keyword', info: 'Define a class' },
-        { label: 'interface', type: 'keyword', info: 'Define an interface' },
-        { label: 'trait', type: 'keyword', info: 'Define a trait' },
-        { label: 'enum', type: 'keyword', info: 'Define an enum' },
-        { label: 'package', type: 'keyword', info: 'Package declaration' },
-        { label: 'import', type: 'keyword', info: 'Import statement' },
-        { label: 'extends', type: 'keyword', info: 'Class inheritance' },
-        { label: 'implements', type: 'keyword', info: 'Interface implementation' },
-        { label: 'return', type: 'keyword', info: 'Return statement' },
-        { label: 'if', type: 'keyword', info: 'Conditional statement' },
-        { label: 'else', type: 'keyword', info: 'Else clause' },
-        { label: 'for', type: 'keyword', info: 'For loop' },
-        { label: 'while', type: 'keyword', info: 'While loop' },
-        { label: 'switch', type: 'keyword', info: 'Switch statement' },
-        { label: 'case', type: 'keyword', info: 'Case clause' },
-        { label: 'break', type: 'keyword', info: 'Break statement' },
-        { label: 'continue', type: 'keyword', info: 'Continue statement' },
-        { label: 'try', type: 'keyword', info: 'Try block' },
-        { label: 'catch', type: 'keyword', info: 'Catch block' },
-        { label: 'finally', type: 'keyword', info: 'Finally block' },
-        { label: 'throw', type: 'keyword', info: 'Throw exception' },
-        { label: 'new', type: 'keyword', info: 'Create new instance' },
-        { label: 'println', type: 'function', info: 'Print line to console' },
-        { label: 'print', type: 'function', info: 'Print to console' },
+        ...loadedCompletions,
         
         // Add custom completions from props
         ...props.customCompletions.map(item => ({

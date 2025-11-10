@@ -32,8 +32,7 @@ class ScenarioService {
         powerService.execute(args)
     }
 
-    def pause(miliseconds) {
-        log.debug(miliseconds)
+    def pause(miliseconds) {        
         Thread.sleep(miliseconds)
     }
 
