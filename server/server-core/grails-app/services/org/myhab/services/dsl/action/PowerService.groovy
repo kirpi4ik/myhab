@@ -13,34 +13,28 @@ class PowerService implements EventPublisher {
 
     def execute(params) {
         if (params != null) {
-            Collections.emptyList()
             def ports = []
-            if (params.portUids != null) {
-                params.portUids.each { uid ->
-                    // Support both uid (deprecated) and id
-                    def port = null
-                    try {
-                        // Try to find by id first (if uid is actually an id)
-                        Long portId = Long.valueOf(uid)
-                        port = DevicePort.findById(portId)
-                    } catch (NumberFormatException e) {
-                        // If not a number, try findByUid for backward compatibility
-                        port = DevicePort.findByUid(uid)
-                    }
-                    if (port) {
-                        ports << port
-                    }
-                }
-            }
+            
+            // Use portIds (id-based lookups)
             if (params.portIds != null) {
                 params.portIds.each { id ->
-                    ports << DevicePort.findById(Long.valueOf(id))
+                    def port = DevicePort.findById(Long.valueOf(id))
+                    if (port) {
+                        ports << port
+                    } else {
+                        log.warn("DevicePort not found for id: ${id}")
+                    }
                 }
             }
 
-            ports.each { p ->
-                log.debug("power switch : ${p} - ${params.action}")
-                mqttTopicService.publish(p, [params.action])
+            // Execute action on all found ports
+            ports.each { port ->
+                log.debug("Power switch: ${port.name} (id: ${port.id}) - action: ${params.action}")
+                mqttTopicService.publish(port, [params.action])
+            }
+            
+            if (ports.isEmpty()) {
+                log.warn("No ports found to execute action: ${params.action}")
             }
         }
     }
