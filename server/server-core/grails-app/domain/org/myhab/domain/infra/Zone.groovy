@@ -13,7 +13,9 @@ import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.EntityDataFetcher
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DevicePeripheral
+import groovy.util.logging.Slf4j
 
+@Slf4j
 @Resource(readOnly = true, formats = ['json', 'xml'])
 class Zone extends BaseEntity implements Configurable<Zone> {
     String name
@@ -117,10 +119,29 @@ class Zone extends BaseEntity implements Configurable<Zone> {
 
         query('zoneById', Zone) {
             argument('id', String)
+            argument('category', String) {
+                nullable true
+            }
             dataFetcher(new DataFetcher() {
                 @Override
                 Object get(DataFetchingEnvironment environment) {
-                    Zone.findById(environment.getArgument('id') as Long, [sort: "name", order: "asc"])
+                    def zoneId = environment.getArgument('id') as Long
+                    def category = environment.getArgument('category') as String
+                    
+                    def zone = Zone.findById(zoneId, [sort: "name", order: "asc"])
+                    
+                    // If category is provided, eagerly filter peripherals
+                    if (zone && category) {
+                        // Eagerly initialize and filter peripherals collection
+                        def filteredPeripherals = zone.peripherals?.findAll { peripheral ->
+                            peripheral.category?.name?.trim()?.equalsIgnoreCase(category?.trim())
+                        } ?: []
+                        
+                        // Replace the peripherals collection with filtered one
+                        zone.@peripherals = filteredPeripherals as Set
+                    }
+                    
+                    return zone
                 }
             })
         }

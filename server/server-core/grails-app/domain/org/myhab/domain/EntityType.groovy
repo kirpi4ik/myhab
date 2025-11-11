@@ -14,6 +14,8 @@ import org.myhab.domain.infra.Zone
 import org.myhab.domain.job.EventData
 import org.myhab.domain.device.Scenario
 import org.myhab.domain.job.Job
+import org.myhab.domain.infra.Layer
+import org.myhab.domain.job.JobTag
 
 /**
  *

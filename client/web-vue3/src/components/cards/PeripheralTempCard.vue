@@ -23,9 +23,6 @@
         <q-item-label class="text-weight-light text-blue-grey-3">
           {{ asset.data?.description || '' }}
         </q-item-label>
-        <q-item-label v-if="asset.data?.zone?.name" class="text-weight-light text-blue-grey-3 text-caption">
-          Zone: {{ asset.data.zone.name }}
-        </q-item-label>
       </q-item-section>
 
       <!-- Actions Menu -->
