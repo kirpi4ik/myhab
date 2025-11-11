@@ -127,6 +127,40 @@ export const ZONE_GET_BY_ID_MINIMAL = gql`
   }
 `;
 
+export const ZONE_GET_BY_ID_WITH_CATEGORY = gql`
+  query zoneById($id: String!, $category: String) {
+    zoneById(id: $id, category: $category) {
+      id
+      name
+      description
+      zones {
+        id
+        name
+        description
+      }
+      peripherals {
+        id
+        name
+        description
+        category {
+          name
+        }
+        connectedTo {
+          id
+          name
+          internalRef
+          value
+        }
+        configurations {
+          key
+          value
+        }
+        tsUpdated
+      }
+    }
+  }
+`;
+
 export const ZONE_VALUE_UPDATE = gql`
   mutation ($id: Long!, $zone: ZoneUpdate!) {
     zoneUpdateCustom(id: $id, zone: $zone) {
