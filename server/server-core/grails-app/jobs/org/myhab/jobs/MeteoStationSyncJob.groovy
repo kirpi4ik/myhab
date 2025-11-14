@@ -176,23 +176,33 @@ class MeteoStationSyncJob implements Job {
         publishParameter(device, 'timezone_abbreviation', data.timezone_abbreviation)
         
         // Publish current weather parameters (single values, not arrays)
+        // Add small delay between publishes to avoid overwhelming MQTT broker
         if (data.current) {
-            data.current.each { key, value ->
+            data.current.eachWithIndex { key, value, index ->
                 publishParameter(device, "current.${key}", value)
+                if (index < data.current.size() - 1) {
+                    Thread.sleep(10) // 10ms delay between publishes
+                }
             }
         }
         
         // Publish daily parameters (arrays for forecast)
         if (data.daily) {
-            data.daily.each { key, value ->
+            data.daily.eachWithIndex { key, value, index ->
                 publishParameter(device, "daily.${key}", value)
+                if (index < data.daily.size() - 1) {
+                    Thread.sleep(10) // 10ms delay between publishes
+                }
             }
         }
         
         // Publish hourly parameters (arrays for forecast)
         if (data.hourly) {
-            data.hourly.each { key, value ->
+            data.hourly.eachWithIndex { key, value, index ->
                 publishParameter(device, "hourly.${key}", value)
+                if (index < data.hourly.size() - 1) {
+                    Thread.sleep(10) // 10ms delay between publishes
+                }
             }
         }
         
