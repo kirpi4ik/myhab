@@ -4,10 +4,11 @@
     <template v-if="hasAccess">
       <div 
         v-for="card in quickAccessCards" 
-        :key="card.title" 
+        :key="card.title || card.component" 
         class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
       >
-        <q-card class="dashboard-card">
+        <!-- Standard action card -->
+        <q-card v-if="card.actions" class="dashboard-card">
           <q-card-section :class="`${card.bgColor} text-white text-h6`">
             <div class="row items-center">
               <div class="col">{{ card.title }}</div>
@@ -34,13 +35,14 @@
             </template>
           </q-card-actions>
         </q-card>
-      </div>
-
-      <!-- Peripheral Controls -->
-      <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-        <peripheral-lock class="q-mb-md"/>
-        <water-pump :peripheral="{state: true}" class="q-mb-md"/>
-        <sprinklers-dash-component :peripheral="{state: true}"/>
+        
+        <!-- Component card -->
+        <component 
+          v-else-if="card.component" 
+          :is="card.component" 
+          v-bind="card.props"
+          :class="card.class"
+        />
       </div>
     </template>
     <!-- Weather Station -->
@@ -175,6 +177,18 @@ export default defineComponent({
             route: `/zones/${zoneExtId}?category=TEMP`
           }
         ]
+      },
+      // Peripheral control components
+      {
+        component: 'peripheral-lock'
+      },
+      {
+        component: 'water-pump',
+        props: { peripheral: { state: true } }
+      },
+      {
+        component: 'sprinklers-dash-component',
+        props: { peripheral: { state: true } }
       }
     ]);
 
