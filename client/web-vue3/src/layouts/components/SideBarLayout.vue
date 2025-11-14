@@ -1,5 +1,5 @@
 <template>
-  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" bordered persistent
+  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || isSidebarMini" @click.capture="drawerClick" bordered persistent
             class="bg-grey-9 text-white">
     <template v-slot:mini>
       <q-scroll-area class="fit mini-slot cursor-pointer">
@@ -173,8 +173,6 @@
 <script>
 import {defineComponent, ref} from 'vue';
 
-import {Platform} from "quasar";
-
 import {useUiState} from '@/composables';
 
 
@@ -182,30 +180,29 @@ import {useUiState} from '@/composables';
 export default defineComponent({
   name: 'SideBarLayout',
   setup() {
-    const miniState = ref(Platform.is.mobile)
-    const {isSidebarOpen} = useUiState();
+    const {isSidebarOpen, isSidebarMini} = useUiState();
     const prjVersion = process.env.PRJ_VERSION;
     const graphiqlUrl = (process.env.BCK_SERVER_URL || '') + '/graphql/browser';
 
     const expanded = ref(true)
     return {
       expanded,
-      miniState,
       isSidebarOpen,
+      isSidebarMini,
       prjVersion,
       graphiqlUrl,
       drawerClick(e) {
-        if (miniState.value) {
-          miniState.value = false
+        if (isSidebarMini.value) {
+          isSidebarMini.value = false
           e.stopPropagation()
         }
       },
       drawerClick2(e) {
-        if (miniState.value) {
-          miniState.value = false
+        if (isSidebarMini.value) {
+          isSidebarMini.value = false
           e.stopPropagation()
         } else {
-          miniState.value = true
+          isSidebarMini.value = true
         }
       }
     };
