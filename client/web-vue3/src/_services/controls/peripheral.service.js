@@ -172,11 +172,9 @@ function peripheralInit(cacheMap, peripheral) {
 	initialized.data.category = peripheral.category;
 	initialized.data.value = peripheral.value;
 
-	// Initialize state from value if available
-	if (peripheral.value !== undefined) {
-		initialized.data.state = peripheral.value === 'ON';
-		initialized.state = peripheral.value === 'ON';
-	}
+	// Always initialize state (default to false if value is undefined)
+	initialized.data.state = peripheral.value === 'ON';
+	initialized.state = peripheral.value === 'ON';
 
 	// Add connected port information to data
 	if (peripheral.connectedTo) {

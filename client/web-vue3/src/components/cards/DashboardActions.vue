@@ -43,7 +43,10 @@
         <sprinklers-dash-component :peripheral="{state: true}"/>
       </div>
     </template>
-
+    <!-- Weather Station -->
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+      <meteo-station-card :device-id="meteoStationDeviceId" :location-name="'Brașov, Romania'"/>
+    </div>
     <!-- Device Monitoring -->
     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
       <electric-meter :device-id="eMeterDeviceId"/>
@@ -52,10 +55,7 @@
       <heat-pump :deviceId="heatPumpDeviceId"/>
     </div>
     
-    <!-- Weather Station -->
-    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-      <meteo-station-card :device-id="meteoStationDeviceId" :location-name="'Brașov, Romania'"/>
-    </div>
+
 
     <q-resize-observer @resize="onResize"/>
   </div>
