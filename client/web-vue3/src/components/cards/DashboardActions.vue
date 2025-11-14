@@ -56,7 +56,7 @@
       </div>
       <!-- Solar Power Plant -->
       <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-        <solar-plant-widget :device-id="solarPlantDeviceId"/>
+        <solar-plant-widget :device-id="solarPlantDeviceId" :meter-device-id="solarMeterDeviceId"/>
       </div>
       <!-- Heat Pump -->
       <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
@@ -104,6 +104,7 @@ export default defineComponent({
     const eMeterDeviceId = Number(process.env.ELECTRIC_METER_01_DEVICE_ID);
     const meteoStationDeviceId = 2000; // Virtual Meteo Station device
     const solarPlantDeviceId = 1000; // Huawei Solar Inverter device
+    const solarMeterDeviceId = 1001; // Huawei Solar Meter device
 
     /**
      * Check if current user has any of the specified roles
@@ -214,6 +215,7 @@ export default defineComponent({
       eMeterDeviceId,
       meteoStationDeviceId,
       solarPlantDeviceId,
+      solarMeterDeviceId,
       onResize
     };
   }

@@ -2,26 +2,33 @@
 -- Huawei Solar Inverter Feature - Setup Script
 -- ============================================================================
 --
--- Description: Setup for the Huawei SUN2000 solar inverter device that
---              fetches data from Huawei FusionSolar API and publishes
---              via MQTT for real-time monitoring and dashboard display.
+-- Description: Setup for the Huawei SUN2000 solar inverter and DTSU666-H
+--              smart meter devices that fetch data from Huawei FusionSolar
+--              API and publish via MQTT for real-time monitoring.
 --
--- Version:     1.0.0
+-- Version:     2.0.0
 -- Date:        2025-11-14
 -- Database:    PostgreSQL 12+
 --
 -- Changes:
---   1. Add SOLAR_INVERTER device category
---   2. Create Huawei SUN2000 inverter device
---   3. Configure API credentials and endpoints
+--   1. Add SOLAR_INVERTER and ELECTRIC_METER device categories
+--   2. Create Huawei SUN2000 inverter device (ID 1000)
+--   3. Create Huawei DTSU666-H meter device (ID 1001)
+--   4. Configure API credentials and endpoints
+--   5. Configure parameter tracking for both devices
 --
 -- Prerequisites:
---   - DeviceModel.HUAWEI_SUN2000_12KTL_M2 enum must be defined in code (already done)
+--   - DeviceModel.HUAWEI_SUN2000_12KTL_M2 enum defined in code (already done)
+--   - DeviceModel.ELECTRIC_METER_DTS enum defined in code (already done)
 --   - HuaweiInfoSyncJob must be deployed (already done)
 --   - device_ports.value and port_values.value columns should be TEXT type
 --
 -- Run as:
 --   psql -U postgres -d myhab -f huawei-inverter-setup.sql
+--
+-- If you get "current transaction is aborted" error:
+--   1. Run: ROLLBACK;
+--   2. Then run this script again
 --
 -- ============================================================================
 
@@ -32,17 +39,17 @@ BEGIN;
 -- ============================================================================
 -- Note: Must delete in correct order to avoid foreign key violations
 
--- Delete configurations first
-DELETE FROM configurations WHERE entity_type = 'DEVICE' AND entity_id = 1000;
+-- Delete configurations (both devices)
+DELETE FROM configurations WHERE entity_type = 'DEVICE' AND entity_id IN (1000, 1001);
 
--- Delete device ports
-DELETE FROM device_ports WHERE device_id = 1000;
+-- Delete device ports (both devices)
+DELETE FROM device_ports WHERE device_id IN (1000, 1001);
 
--- Delete the device
-DELETE FROM device_controllers WHERE id = 1000;
+-- Delete the devices
+DELETE FROM device_controllers WHERE id IN (1000, 1001);
 
--- Delete category (safe now that device is gone)
-DELETE FROM device_categories WHERE name = 'SOLAR_INVERTER';
+-- Delete categories (safe now that devices are gone)
+DELETE FROM device_categories WHERE name IN ('SOLAR_INVERTER', 'ELECTRIC_METER');
 
 -- ============================================================================
 -- STEP 2: Create SOLAR_INVERTER device category
@@ -64,10 +71,28 @@ VALUES (
 );
 
 -- ============================================================================
--- STEP 3: Create Huawei SUN2000 inverter device
+-- STEP 3: Create ELECTRIC_METER device category
 -- ============================================================================
 
--- Insert device controller
+INSERT INTO device_categories (
+    id,
+    version,
+    name,
+    ts_created,
+    ts_updated
+)
+VALUES (
+    nextval('hibernate_sequence'),
+    0,
+    'ELECTRIC_METER',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
+-- STEP 4: Create Huawei SUN2000 inverter device (ID 1000)
+-- ============================================================================
+
 INSERT INTO device_controllers (
     id,
     version,
@@ -94,7 +119,36 @@ VALUES (
 );
 
 -- ============================================================================
--- STEP 4: Configure API credentials and endpoints
+-- STEP 5: Create Huawei DTSU666-H meter device (ID 1001)
+-- ============================================================================
+
+INSERT INTO device_controllers (
+    id,
+    version,
+    code,
+    name,
+    description,
+    type_id,
+    model,
+    status,
+    ts_created,
+    ts_updated
+)
+VALUES (
+    1001,
+    0,
+    'HUAWEI_DTSU666_METER_01',
+    'Huawei DTSU666-H Smart Meter',
+    'Smart power meter connected to Huawei FusionSolar system',
+    (SELECT id FROM device_categories WHERE name = 'ELECTRIC_METER'),
+    'ELECTRIC_METER_DTS',
+    'ONLINE',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
+-- STEP 6: Configure API credentials and endpoints (Inverter Device)
 -- ============================================================================
 
 -- OAuth Access User (username for Huawei FusionSolar API)
@@ -251,7 +305,11 @@ VALUES (
     'Comma-separated device IDs for this inverter'
 );
 
--- Meter Device IDs (for power meter)
+-- ============================================================================
+-- STEP 7: Configure Meter Device Settings
+-- ============================================================================
+
+-- Device IDs for meter
 INSERT INTO configurations (
     id,
     version,
@@ -265,19 +323,17 @@ INSERT INTO configurations (
 VALUES (
     nextval('hibernate_sequence'),
     0,
-    1000,
+    1001,
     'DEVICE',
     'Meter Device IDs',
     '1000000036406276',
-    'METER_DEV_IDS',
-    'Comma-separated device IDs for power meter'
+    'DEV_IDS',
+    'Device ID for the smart meter in Huawei FusionSolar API'
 );
 
 -- ============================================================================
--- STEP 5: Configure API Parameter Selection
+-- STEP 8: Configure API Parameter Selection (Inverter Device)
 -- ============================================================================
--- These configurations define which parameters to track from each API
--- Format: Comma-separated list of parameter names
 
 -- Station API Parameters (aggregated totals)
 INSERT INTO configurations (
@@ -323,6 +379,10 @@ VALUES (
     'Inverter parameters to track: power, energy, efficiency, temperature, state, grid parameters'
 );
 
+-- ============================================================================
+-- STEP 9: Configure API Parameter Selection (Meter Device)
+-- ============================================================================
+
 -- Meter API Parameters (grid import/export and per-phase consumption)
 INSERT INTO configurations (
     id,
@@ -337,7 +397,7 @@ INSERT INTO configurations (
 VALUES (
     nextval('hibernate_sequence'),
     0,
-    1000,
+    1001,
     'DEVICE',
     'Meter API Parameters',
     'active_power,active_power_a,active_power_b,active_power_c,meter_i,c_i,b_i,active_cap,reverse_active_cap,c_u,b_u,meter_u,grid_frequency,power_factor,meter_status,run_state',
@@ -346,37 +406,52 @@ VALUES (
 );
 
 -- ============================================================================
--- STEP 6: Verify the migration
+-- STEP 10: Verify the migration
 -- ============================================================================
 
 DO $$
 DECLARE
-    category_exists BOOLEAN;
-    device_exists BOOLEAN;
-    config_count INTEGER;
+    inverter_category_exists BOOLEAN;
+    meter_category_exists BOOLEAN;
+    inverter_device_exists BOOLEAN;
+    meter_device_exists BOOLEAN;
+    inverter_config_count INTEGER;
+    meter_config_count INTEGER;
+    total_config_count INTEGER;
 BEGIN
-    -- Check category
-    SELECT EXISTS(SELECT 1 FROM device_categories WHERE name = 'SOLAR_INVERTER') INTO category_exists;
+    -- Check categories
+    SELECT EXISTS(SELECT 1 FROM device_categories WHERE name = 'SOLAR_INVERTER') INTO inverter_category_exists;
+    SELECT EXISTS(SELECT 1 FROM device_categories WHERE name = 'ELECTRIC_METER') INTO meter_category_exists;
     
-    -- Check device
-    SELECT EXISTS(SELECT 1 FROM device_controllers WHERE id = 1000) INTO device_exists;
+    -- Check devices
+    SELECT EXISTS(SELECT 1 FROM device_controllers WHERE id = 1000 AND model = 'HUAWEI_SUN2000_12KTL_M2') INTO inverter_device_exists;
+    SELECT EXISTS(SELECT 1 FROM device_controllers WHERE id = 1001 AND model = 'ELECTRIC_METER_DTS') INTO meter_device_exists;
     
-    -- Check configurations
-    SELECT COUNT(*) INTO config_count
-    FROM configurations
-    WHERE entity_type = 'DEVICE' AND entity_id = 1000;
+    -- Count configurations
+    SELECT COUNT(*) INTO inverter_config_count FROM configurations WHERE entity_id = 1000 AND entity_type = 'DEVICE';
+    SELECT COUNT(*) INTO meter_config_count FROM configurations WHERE entity_id = 1001 AND entity_type = 'DEVICE';
+    total_config_count := inverter_config_count + meter_config_count;
     
     -- Report results
     RAISE NOTICE '=================================================================';
     RAISE NOTICE 'Migration Verification Results:';
     RAISE NOTICE '=================================================================';
-    RAISE NOTICE 'SOLAR_INVERTER category:  % (expected: t)', category_exists;
-    RAISE NOTICE 'Virtual device created:   % (expected: t)', device_exists;
-    RAISE NOTICE 'Configurations created:   % (expected: 11)', config_count;
+    RAISE NOTICE 'Categories:';
+    RAISE NOTICE '  SOLAR_INVERTER:         % (expected: t)', inverter_category_exists;
+    RAISE NOTICE '  ELECTRIC_METER:         % (expected: t)', meter_category_exists;
+    RAISE NOTICE 'Devices:';
+    RAISE NOTICE '  Inverter (ID 1000):     % (expected: t)', inverter_device_exists;
+    RAISE NOTICE '  Meter (ID 1001):        % (expected: t)', meter_device_exists;
+    RAISE NOTICE 'Configurations:';
+    RAISE NOTICE '  Inverter configs:       % (expected: 10)', inverter_config_count;
+    RAISE NOTICE '  Meter configs:          % (expected: 2)', meter_config_count;
+    RAISE NOTICE '  Total:                  % (expected: 12)', total_config_count;
     RAISE NOTICE '=================================================================';
     
     -- Verify all checks passed
-    IF NOT category_exists OR NOT device_exists OR config_count != 11 THEN
+    IF NOT inverter_category_exists OR NOT meter_category_exists OR 
+       NOT inverter_device_exists OR NOT meter_device_exists OR 
+       inverter_config_count != 10 OR meter_config_count != 2 THEN
         RAISE EXCEPTION 'Device setup incomplete';
     END IF;
     
