@@ -45,6 +45,7 @@ class PortValueService implements EventPublisher {
         }
         if (devicePort != null) {
             def newVal = ValueParser.parser(devicePort).apply(event.data.p5)
+            
             if (devicePort.value != newVal) {
 
                 try {

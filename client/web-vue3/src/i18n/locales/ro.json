@@ -185,5 +185,22 @@
     "small_gate": "Poarta mica",
     "open": "Deschide",
     "confirm_open": "Atentie! Doriti sa deschideti?"
+  },
+  "meteo": {
+    "title": "Statie Meteo",
+    "forecast_3_days": "Prognoza pe 3 zile",
+    "sunrise": "Răsărit",
+    "sunset": "Apus",
+    "sunshine": "Insorire",
+    "daylight": "Lumină zilei",
+    "last_update": "Ultima actualizare",
+    "today": "Astăzi",
+    "tomorrow": "Mâine",
+    "wind": "Vânt",
+    "rain": "Ploaie",
+    "visibility": "Vizibilitate",
+    "temperature": "Temperatură",
+    "precipitation": "Precipitații",
+    "weather_station": "Stație meteo"
   }
 }

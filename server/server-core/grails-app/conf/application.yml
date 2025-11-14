@@ -146,6 +146,11 @@ quartz:
     eventLogReader:
       enabled: false
       interval: 60  # seconds
+    
+    # Meteo Station weather data sync
+    meteoStationSync:
+      enabled: true
+      interval: 100  # seconds (1 hour)
 
 ---
 grails:

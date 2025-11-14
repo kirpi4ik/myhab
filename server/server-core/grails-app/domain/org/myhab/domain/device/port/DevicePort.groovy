@@ -46,6 +46,7 @@ class DevicePort extends BaseEntity implements Configurable<DevicePort> {
         peripherals joinTable: [name: "device_ports_peripherals_join", key: 'port_id']
         scenarios joinTable: [name: "device_ports_scenarios_join", key: 'port_id']
         sort name: "asc"
+        value sqlType: 'text'  // Support large values (e.g., JSON arrays for time-series data)
     }
     static graphql = GraphQLMapping.lazy {
         mutation('updatePort', DevicePort) {
