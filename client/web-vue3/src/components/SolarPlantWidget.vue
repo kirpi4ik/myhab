@@ -251,10 +251,15 @@ export default defineComponent({
       required: true,
       default: 1000 // Huawei inverter device ID
     },
+    meterDeviceId: {
+      type: Number,
+      required: false,
+      default: 1001 // Huawei meter device ID
+    },
   },
   setup(props) {
     const { client } = useApolloClient();
-    const { deviceId } = toRefs(props);
+    const { deviceId, meterDeviceId } = toRefs(props);
     
     const device = ref({});
     const deviceDetails = ref({});
@@ -292,11 +297,11 @@ export default defineComponent({
     });
 
     /**
-     * Grid power in kW (from meter)
+     * Grid power in W (from meter)
      * Negative = importing from grid
      * Positive = exporting to grid
      */
-    const meterActivePower = computed(() => {
+    const meterActivePowerWatts = computed(() => {
       const watts = getFloatValue('meter.active_power', 0);
       return watts ? parseFloat(watts) : 0;
     });
@@ -305,31 +310,33 @@ export default defineComponent({
      * Grid import in kW (when meter is negative)
      */
     const gridImportKw = computed(() => {
-      const power = meterActivePower.value;
-      if (power >= 0) return '0.00 kW';
-      return (Math.abs(power) / 1000).toFixed(2) + ' kW';
+      const watts = meterActivePowerWatts.value;
+      if (watts >= 0) return '0.00 kW';
+      return (Math.abs(watts) / 1000).toFixed(2) + ' kW';
     });
 
     /**
      * Grid export in kW (when meter is positive)
      */
     const gridExportKw = computed(() => {
-      const power = meterActivePower.value;
-      if (power <= 0) return '0.00 kW';
-      return (power / 1000).toFixed(2) + ' kW';
+      const watts = meterActivePowerWatts.value;
+      if (watts <= 0) return '0.00 kW';
+      return (watts / 1000).toFixed(2) + ' kW';
     });
 
     /**
-     * House consumption from plant
+     * House consumption from solar plant
      * = Solar production - Grid export (or + Grid import)
+     * 
+     * Note: API docs say inverter.active_power is in kW, but widget treats it as W
+     * TODO: Verify actual API response unit during daytime production
      */
     const houseFromPlantKw = computed(() => {
-      const solarWatts = parseFloat(getFloatValue('inverter.active_power', 0) || 0);
-      const meterWatts = meterActivePower.value;
+      const solarValue = parseFloat(getFloatValue('inverter.active_power', 0) || 0);
+      const meterWatts = meterActivePowerWatts.value;
       
-      // When meter is negative (importing), house uses all solar + import from grid
-      // When meter is positive (exporting), house uses solar - export
-      const houseUsage = solarWatts - meterWatts;
+      // Assuming both are in same units (likely W based on current widget behavior)
+      const houseUsage = solarValue - meterWatts;
       
       if (houseUsage < 0) return '0.00 kW';
       return (houseUsage / 1000).toFixed(2) + ' kW';
@@ -355,30 +362,61 @@ export default defineComponent({
 
     /**
      * Phase currents
-     * Use direct meter current readings when available
+     * Uses direct meter current readings for accuracy
+     * Fallback to calculated values if meter data unavailable
      */
     const phaseACurrent = computed(() => {
-      // Calculate from power if direct current not available
+      // Use direct meter reading (most accurate)
+      const directCurrent = getFloatValue('meter.meter_i', 2);
+      if (directCurrent !== null) {
+        return Math.abs(parseFloat(directCurrent)).toFixed(2);
+      }
+      
+      // Fallback: calculate from power and voltage (accounting for power factor)
       const powerA = parseFloat(getFloatValue('meter.active_power_a', 0) || 0);
       const voltage = parseFloat(getFloatValue('meter.meter_u', 0) || 230);
-      return voltage > 0 ? Math.abs(powerA / voltage).toFixed(2) : '--';
+      const powerFactor = parseFloat(getFloatValue('meter.power_factor', 2) || 1.0);
+      
+      if (voltage > 0 && powerFactor > 0) {
+        return Math.abs(powerA / (voltage * powerFactor)).toFixed(2);
+      }
+      return '--';
     });
 
     const phaseBCurrent = computed(() => {
+      // Use direct meter reading (most accurate)
+      const directCurrent = getFloatValue('meter.b_i', 2);
+      if (directCurrent !== null) {
+        return Math.abs(parseFloat(directCurrent)).toFixed(2);
+      }
+      
+      // Fallback: calculate from power and voltage (accounting for power factor)
       const powerB = parseFloat(getFloatValue('meter.active_power_b', 0) || 0);
-      const voltage = parseFloat(getFloatValue('meter.meter_u', 0) || 230);
-      return voltage > 0 ? Math.abs(powerB / voltage).toFixed(2) : '--';
+      const voltage = parseFloat(getFloatValue('meter.b_u', 0) || 230);
+      const powerFactor = parseFloat(getFloatValue('meter.power_factor', 2) || 1.0);
+      
+      if (voltage > 0 && powerFactor > 0) {
+        return Math.abs(powerB / (voltage * powerFactor)).toFixed(2);
+      }
+      return '--';
     });
 
     const phaseCCurrent = computed(() => {
-      // Use direct reading if available
+      // Use direct meter reading (most accurate)
       const directCurrent = getFloatValue('meter.c_i', 2);
-      if (directCurrent !== null) return Math.abs(parseFloat(directCurrent)).toFixed(2);
+      if (directCurrent !== null) {
+        return Math.abs(parseFloat(directCurrent)).toFixed(2);
+      }
       
-      // Otherwise calculate
+      // Fallback: calculate from power and voltage (accounting for power factor)
       const powerC = parseFloat(getFloatValue('meter.active_power_c', 0) || 0);
-      const voltage = parseFloat(getFloatValue('meter.meter_u', 0) || 230);
-      return voltage > 0 ? Math.abs(powerC / voltage).toFixed(2) : '--';
+      const voltage = parseFloat(getFloatValue('meter.c_u', 0) || 230);
+      const powerFactor = parseFloat(getFloatValue('meter.power_factor', 2) || 1.0);
+      
+      if (voltage > 0 && powerFactor > 0) {
+        return Math.abs(powerC / (voltage * powerFactor)).toFixed(2);
+      }
+      return '--';
     });
 
     // ============================================================================
@@ -486,16 +524,30 @@ export default defineComponent({
     // ============================================================================
 
     const loadDetails = () => {
-      client.query({
-        query: DEVICE_GET_BY_ID_WITH_PORT_VALUES,
-        variables: { id: deviceId.value },
-        fetchPolicy: 'network-only',
-      }).then(data => {
-        device.value = data.data.device;
+      // Load both inverter and meter devices
+      Promise.all([
+        client.query({
+          query: DEVICE_GET_BY_ID_WITH_PORT_VALUES,
+          variables: { id: deviceId.value },
+          fetchPolicy: 'network-only',
+        }),
+        client.query({
+          query: DEVICE_GET_BY_ID_WITH_PORT_VALUES,
+          variables: { id: meterDeviceId.value },
+          fetchPolicy: 'network-only',
+        })
+      ]).then(([inverterData, meterData]) => {
+        device.value = inverterData.data.device;
+        
+        // Merge ports from both devices
+        const allPorts = [
+          ...inverterData.data.device.ports,
+          ...meterData.data.device.ports
+        ];
         
         // Map ports by internal reference
         deviceDetails.value = _.reduce(
-          data.data.device.ports,
+          allPorts,
           (hash, port) => {
             hash[port.internalRef] = ref(structuredClone(port));
             return hash;
@@ -503,8 +555,8 @@ export default defineComponent({
           {}
         );
         
-        // Collect port IDs for WebSocket filtering
-        portIds.value = data.data.device.ports.map(port => port.id);
+        // Collect port IDs for WebSocket filtering (both devices)
+        portIds.value = allPorts.map(port => port.id);
       });
     };
 
