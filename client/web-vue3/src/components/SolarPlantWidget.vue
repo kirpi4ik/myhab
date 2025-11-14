@@ -283,6 +283,21 @@ export default defineComponent({
       return isNaN(parsed) ? null : parsed.toFixed(decimals);
     };
 
+    /**
+     * Format energy value - converts to MWh if >= 1000 kWh
+     */
+    const formatEnergy = (kwh) => {
+      if (!kwh || kwh === '--') return '--';
+      const value = parseFloat(kwh);
+      if (isNaN(value)) return '--';
+      
+      if (value >= 1000) {
+        const mwh = value / 1000;
+        return `${mwh.toFixed(2)} MWh`;
+      }
+      return `${value.toFixed(2)} kWh`;
+    };
+
     // ============================================================================
     // REAL-TIME COMPUTED PROPERTIES
     // ============================================================================
@@ -475,7 +490,7 @@ export default defineComponent({
 
     const monthlyYield = computed(() => {
       const kwh = getFloatValue('station.month_power', 2);
-      return kwh ? `${kwh} kWh` : '--';
+      return kwh ? formatEnergy(kwh) : '--';
     });
 
     const yearlyYield = computed(() => {
@@ -485,17 +500,17 @@ export default defineComponent({
 
     const totalYield = computed(() => {
       const kwh = getFloatValue('station.total_power', 2);
-      return kwh ? `${kwh} kWh` : '--';
+      return kwh ? formatEnergy(kwh) : '--';
     });
 
     const totalGridExport = computed(() => {
       const kwh = getFloatValue('meter.reverse_active_cap', 2);
-      return kwh ? `${kwh} kWh` : '--';
+      return kwh ? formatEnergy(kwh) : '--';
     });
 
     const totalGridImport = computed(() => {
       const kwh = getFloatValue('meter.active_cap', 2);
-      return kwh ? `${kwh} kWh` : '--';
+      return kwh ? formatEnergy(kwh) : '--';
     });
 
     // ============================================================================
