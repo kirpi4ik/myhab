@@ -17,28 +17,20 @@
               <q-item-label>
                 <q-btn-dropdown size="sm" flat round icon="settings" class="text-white">
                   <q-list>
-                    <q-item
-                      clickable
-                      v-close-popup
-                      @click="setTimeout({ key: 'key.on.timeout', value: item.value, entityId: asset.id, entityType: 'PERIPHERAL' })"
-                      v-for="item in stItems"
-                      v-bind:key="item.value"
-                    >
-                      <q-item-section>
-                        <q-item-label>Timeout: {{ humanizeDuration(item.value * 1000, {largest: 2}) }}</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                    <q-item
-                      clickable
-                      v-close-popup
-                      @click="deleteTimeout({ entityId: asset.id, entityType: 'PERIPHERAL', key: 'key.on.timeout' })"
-                    >
-                      <q-item-section>
-                        <q-item-label>Sterge timeout</q-item-label>
-                      </q-item-section>
-                    </q-item>
+                    <!-- Timeout Selector -->
+                    <timeout-selector
+                      @set-timeout="handleSetTimeout"
+                      @delete-timeout="handleDeleteTimeout"
+                    />
+                    
+                    <q-separator/>
+                    
+                    <!-- View Details -->
                     <q-item clickable v-close-popup
                             @click="$router.push({ path: '/admin/peripherals/' + asset.id + '/view' })">
+                      <q-item-section avatar>
+                        <q-icon name="mdi-information" color="info"/>
+                      </q-item-section>
                       <q-item-section>
                         <q-item-label>Detalii</q-item-label>
                       </q-item-section>
@@ -58,7 +50,7 @@
         <toggle v-if="asset && asset['data'] && asset['data']['state'] !== undefined"
                 v-model="asset['data']['state']"
                 :id="asset['id']"
-                @change="peripheralService.toggle(asset)"/>
+                @change="handleToggle"/>
       </div>
     </q-card-section>
   </q-card>
@@ -77,26 +69,40 @@ import {format} from "date-fns";
 import EventLogger from "components/EventLogger";
 import humanizeDuration from 'humanize-duration';
 import Toggle from "@vueform/toggle";
-
-
+import TimeoutSelector from "components/TimeoutSelector.vue";
 
 export default defineComponent({
   name: 'WaterPump',
   components: {
     Toggle,
-    EventLogger
+    EventLogger,
+    TimeoutSelector
   },
   setup(props, {emit}) {
     let asset = ref({})
     const {client} = useApolloClient();
-    const {mutate: setTimeout} = useMutation(CONFIGURATION_SET_VALUE, {
+    const {mutate: setConfigValue} = useMutation(CONFIGURATION_SET_VALUE, {
       update: () => {
         init();
       },
     });
-    const deleteTimeout = (variables) => {
-      // Implementation for deleting timeout configuration
-      setTimeout({ ...variables, value: null });
+    
+    const handleSetTimeout = (timeoutValue) => {
+      setConfigValue({
+        key: 'key.on.timeout',
+        value: timeoutValue,
+        entityId: asset.value.id,
+        entityType: 'PERIPHERAL'
+      });
+    };
+
+    const handleDeleteTimeout = () => {
+      setConfigValue({
+        key: 'key.on.timeout',
+        value: null,
+        entityId: asset.value.id,
+        entityType: 'PERIPHERAL'
+      });
     };
     const init = () => {
       client.query({
@@ -113,18 +119,7 @@ export default defineComponent({
           return cfg.key == key;
         });
       }
-    }
-    const stItems = [
-      {value: 30},
-      {value: 60},
-      {value: 300},
-      {value: 600},
-      {value: 1800},
-      {value: 3600},
-      {value: 7200},
-      {value: 10800},
-      {value: 18000},
-    ];
+    };
     
     // Listen for port value updates
     useWebSocketListener('evt_port_value_persisted', (payload) => {
@@ -135,21 +130,25 @@ export default defineComponent({
       }
     });
     
+    const handleToggle = () => {
+      peripheralService.toggle(asset.value, 'evt_light');
+    };
+
     onMounted(() => {
       init()
     });
+    
     return {
       asset,
       humanizeDuration,
       peripheralService,
       passDialog: ref(false),
       peripheral: {id: process.env.WATER_PUMP_ID},
-      stItems,
-      setTimeout,
-      deleteTimeout,
+      handleSetTimeout,
+      handleDeleteTimeout,
       config,
       format,
-
+      handleToggle,
     };
   }
 });

@@ -38,7 +38,7 @@
 </template>
 <script>
 import {authzService} from '@/_services';
-import {heatService, lightService} from '@/_services/controls';
+import {peripheralService} from '@/_services/controls';
 import {PERIPHERAL_LIST_WUI, PUSH_EVENT} from '@/graphql/queries';
 import {apolloClient} from '@/boot/graphql';
 import {useWebSocketStore} from '@/store/websocket.store';
@@ -165,11 +165,11 @@ export default {
                 break;
               }
               case 'LIGHT': {
-                lightService.toggle(this.srvPeripherals[id]);
+                peripheralService.toggle(this.srvPeripherals[id], 'evt_light');
                 break;
               }
               case 'HEAT': {
-                heatService.toggle(this.srvPeripherals[id]);
+                peripheralService.toggle(this.srvPeripherals[id], 'evt_heat');
                 break;
               }
             }
