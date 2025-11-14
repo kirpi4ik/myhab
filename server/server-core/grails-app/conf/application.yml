@@ -150,7 +150,7 @@ quartz:
     # Meteo Station weather data sync
     meteoStationSync:
       enabled: true
-      interval: 100  # seconds (1 hour)
+      interval: 1800  # seconds (1800 seconds = 30 minutes)
 
 ---
 grails:

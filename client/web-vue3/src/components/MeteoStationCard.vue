@@ -106,14 +106,14 @@
         <div class="col-6">
           <div class="info-box">
             <q-icon name="mdi-white-balance-sunny" size="sm" color="amber-6"/>
-            <div class="text-caption text-grey-7">{{ $t('meteo.sunshine') }}</div>
+            <div class="text-caption text-orange-7">{{ $t('meteo.sunshine') }}</div>
             <div class="text-weight-medium">{{ todaySunshineDuration }} h</div>
           </div>
         </div>
         <div class="col-6">
           <div class="info-box">
             <q-icon name="mdi-clock-outline" size="sm" color="blue-6"/>
-            <div class="text-caption text-grey-7">{{ $t('meteo.daylight') }}</div>
+            <div class="text-caption text-orange-7">{{ $t('meteo.daylight') }}</div>
             <div class="text-weight-medium">{{ todayDaylightDuration }} h</div>
           </div>
         </div>
