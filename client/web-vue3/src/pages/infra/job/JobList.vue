@@ -38,11 +38,11 @@
         :rows="filteredItems"
         :columns="columns"
         :loading="loading"
-        v-model:pagination="pagination"
         row-key="id"
         flat
         virtual-scroll
         :rows-per-page-options="[0]"
+        hide-pagination
         style="max-height: calc(100vh - 250px)"
         class="sticky-header-table"
         @row-click="(evt, row) => viewItem(row)"
@@ -221,7 +221,6 @@ export default defineComponent({
       filteredItems,
       loading,
       filter,
-      pagination,
       fetchList,
       viewItem,
       editItem,
@@ -339,7 +338,6 @@ export default defineComponent({
     return {
       filteredItems,
       columns,
-      pagination,
       loading,
       filter,
       viewItem,
