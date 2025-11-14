@@ -27,6 +27,7 @@ class PortValue extends BaseEntity implements EventPublisher {
     static mapping = {
         table '`port_values`'
         version false
+        value sqlType: 'text'  // Support large values (e.g., JSON arrays for time-series data)
     }
 
     void beforeInsert() {

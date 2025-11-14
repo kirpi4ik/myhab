@@ -51,6 +51,11 @@
     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
       <heat-pump :deviceId="heatPumpDeviceId"/>
     </div>
+    
+    <!-- Weather Station -->
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+      <meteo-station-card :device-id="meteoStationDeviceId" :location-name="'Brașov, Romania'"/>
+    </div>
 
     <q-resize-observer @resize="onResize"/>
   </div>
@@ -63,6 +68,7 @@ import {authzService} from '@/_services';
 
 import ElectricMeter from "components/ElectricMeter";
 import HeatPump from "components/HeatPump";
+import MeteoStationCard from "components/MeteoStationCard.vue";
 import PeripheralLock from 'components/PeripheralLock.vue';
 import SprinklersDashComponent from "components/SprinklersDashComponent";
 import WaterPump from "components/WaterPump";
@@ -73,6 +79,7 @@ export default defineComponent({
     WaterPump,
     HeatPump,
     ElectricMeter,
+    MeteoStationCard,
     PeripheralLock,
     SprinklersDashComponent
   },
@@ -86,6 +93,7 @@ export default defineComponent({
     // Device IDs from environment
     const heatPumpDeviceId = Number(process.env.HEAT_PUMP_DEVICE_ID);
     const eMeterDeviceId = Number(process.env.ELECTRIC_METER_01_DEVICE_ID);
+    const meteoStationDeviceId = 2000; // Virtual Meteo Station device
 
     /**
      * Check if current user has any of the specified roles
@@ -182,6 +190,7 @@ export default defineComponent({
       quickAccessCards,
       heatPumpDeviceId,
       eMeterDeviceId,
+      meteoStationDeviceId,
       onResize
     };
   }

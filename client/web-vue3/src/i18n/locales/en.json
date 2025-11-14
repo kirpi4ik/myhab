@@ -2,6 +2,14 @@
 	"project": {
 		"name": "myHAB"
 	},
+	"electric_meter": {
+		"title": "Electric Meter",
+		"sub_title": "Real-time consumption data"
+	},
+	"heat_pump": {
+		"title": "Heat Pump",
+		"sub_title": "Central heating, pump data"
+	},
 	"actions": {
 		"view": "View",
 		"save": "Save",
@@ -159,5 +167,22 @@
 		"small_gate": "Small Gate",
 		"open": "Open",
 		"confirm_open": "Attention! Do you want to open the door?"
+	},
+	"meteo": {
+		"title": "Weather Station",
+		"forecast_3_days": "3-Day Forecast",
+		"sunrise": "Sunrise",
+		"sunset": "Sunset",
+		"sunshine": "Sunshine",
+		"daylight": "Daylight",
+		"last_update": "Last updated",
+		"today": "Today",
+		"tomorrow": "Tomorrow",
+		"wind": "Wind",
+		"rain": "Rain",
+		"visibility": "Visibility",
+		"temperature": "Temperature",
+		"precipitation": "Precipitation",
+		"weather_station": "Weather Station"
 	}
 }
