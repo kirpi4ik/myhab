@@ -100,7 +100,7 @@ import {
   CONFIGURATION_SET_VALUE,
   PERIPHERAL_GET_BY_ID,
 } from '@/graphql/queries';
-import {heatService} from '@/_services/controls';
+import {peripheralService} from '@/_services/controls';
 
 import _ from 'lodash';
 import {format} from 'date-fns';
@@ -249,7 +249,7 @@ export default defineComponent({
      * Handle heat toggle
      */
     const handleToggle = () => {
-      heatService.toggle(asset.value);
+      peripheralService.toggle(asset.value, 'evt_heat');
     };
 
     /**
