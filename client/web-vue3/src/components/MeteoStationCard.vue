@@ -10,7 +10,7 @@
 
       <q-item-section>
         <q-item-label class="text-h6">{{ locationName || $t('meteo.weather_station') }}</q-item-label>
-        <q-item-label caption>{{ currentDate }}</q-item-label>
+        <q-item-label caption class="text-orange-3">{{ currentDate }}</q-item-label>
       </q-item-section>
     </q-item>
 
@@ -30,13 +30,13 @@
               <q-icon name="mdi-weather-windy" size="sm"/>
               <span>{{ currentWindSpeed }} km/h</span>
             </div>
-            <div class="detail-item" v-if="currentPrecipitation !== null">
+            <div class="detail-item" v-if="currentPrecipitation !== null && currentPrecipitation > 0">
               <q-icon name="mdi-water" size="sm"/>
               <span>{{ currentPrecipitation }} mm</span>
             </div>
-            <div class="detail-item" v-if="currentVisibility !== null">
-              <q-icon name="mdi-eye" size="sm"/>
-              <span>{{ (currentVisibility / 1000).toFixed(1) }} km</span>
+            <div class="detail-item" v-if="currentHumidity !== null">
+              <q-icon name="mdi-water-percent" size="sm"/>
+              <span>{{ currentHumidity }}%</span>
             </div>
           </div>
         </div>
@@ -88,12 +88,12 @@
       <div class="row q-col-gutter-md">
         <div class="col-6 text-center">
           <q-icon name="mdi-weather-sunset-up" size="md" color="orange-6"/>
-          <div class="text-caption text-grey-7">{{ $t('meteo.sunrise') }}</div>
+          <div class="text-caption text-orange-3">{{ $t('meteo.sunrise') }}</div>
           <div class="text-weight-medium">{{ todaySunrise }}</div>
         </div>
         <div class="col-6 text-center">
           <q-icon name="mdi-weather-sunset-down" size="md" color="orange-8"/>
-          <div class="text-caption text-grey-7">{{ $t('meteo.sunset') }}</div>
+          <div class="text-caption text-orange-3">{{ $t('meteo.sunset') }}</div>
           <div class="text-weight-medium">{{ todaySunset }}</div>
         </div>
       </div>
@@ -178,10 +178,6 @@ export default defineComponent({
         // Store port IDs for websocket filtering
         portIds.value = data.data.device.ports.map(port => port.id);
         lastUpdate.value = new Date();
-        
-        // Debug: Log available ports
-        console.log('Meteo Station - Loaded ports:', Object.keys(devicePorts.value));
-        console.log('Meteo Station - Sample port data:', devicePorts.value);
       }).catch(error => {
         console.error('Failed to load meteo station data:', error);
       });
@@ -219,11 +215,6 @@ export default defineComponent({
         }
       }
       
-      // Debug: Log when port is missing
-      if (value === null) {
-        console.debug(`Port ${internalRef} has no value`);
-      }
-      
       return [];
     };
 
@@ -241,65 +232,115 @@ export default defineComponent({
     });
 
     /**
-     * Current temperature from hourly data
+     * Current temperature from current weather data
      */
     const currentTemperature = computed(() => {
-      const temps = getPortArrayValue('hourly.temperature_2m');
-      if (temps.length > 0) {
-        return Math.round(temps[0]);
+      const temp = getPortValue('current.temperature_2m');
+      if (temp !== null) {
+        return Math.round(parseFloat(temp));
       }
       return '--';
     });
 
     /**
-     * Current wind speed
+     * Current wind speed from current weather data
      */
     const currentWindSpeed = computed(() => {
-      const winds = getPortArrayValue('hourly.wind_speed_10m');
-      if (winds.length > 0) {
-        return Math.round(winds[0]);
+      const wind = getPortValue('current.wind_speed_10m');
+      if (wind !== null) {
+        return Math.round(parseFloat(wind));
       }
       return '--';
     });
 
     /**
-     * Current precipitation
+     * Current precipitation from current weather data
      */
     const currentPrecipitation = computed(() => {
-      const precip = getPortArrayValue('hourly.precipitation');
-      if (precip.length > 0) {
-        return precip[0];
+      const precip = getPortValue('current.precipitation');
+      if (precip !== null) {
+        return parseFloat(precip);
       }
       return null;
     });
 
     /**
-     * Current visibility
+     * Current humidity from current weather data
      */
-    const currentVisibility = computed(() => {
-      const visibility = getPortArrayValue('hourly.visibility');
-      if (visibility.length > 0) {
-        return visibility[0];
+    const currentHumidity = computed(() => {
+      const humidity = getPortValue('current.relative_humidity_2m');
+      if (humidity !== null) {
+        return Math.round(parseFloat(humidity));
       }
       return null;
     });
 
     /**
-     * Weather icon based on conditions
+     * Weather icon based on weather code from current data
+     * Using WMO Weather interpretation codes (WW)
+     * https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
      */
     const currentWeatherIcon = computed(() => {
-      const precip = currentPrecipitation.value;
-      const temp = currentTemperature.value;
+      const weatherCode = getPortValue('current.weather_code');
+      const isDay = getPortValue('current.is_day');
       
-      if (precip > 0) {
-        return 'mdi-weather-rainy';
-      } else if (temp < 0) {
-        return 'mdi-weather-snowy';
-      } else if (temp > 25) {
-        return 'mdi-weather-sunny';
-      } else {
-        return 'mdi-weather-partly-cloudy';
+      if (weatherCode === null) {
+        // Fallback to simple logic
+        const precip = currentPrecipitation.value;
+        const temp = currentTemperature.value;
+        
+        if (precip > 0) {
+          return 'mdi-weather-rainy';
+        } else if (temp < 0) {
+          return 'mdi-weather-snowy';
+        } else if (temp > 25) {
+          return 'mdi-weather-sunny';
+        } else {
+          return 'mdi-weather-partly-cloudy';
+        }
       }
+      
+      const code = parseInt(weatherCode);
+      const dayIcon = isDay === 1 || isDay === '1';
+      
+      // Clear sky
+      if (code === 0) {
+        return dayIcon ? 'mdi-weather-sunny' : 'mdi-weather-night';
+      }
+      // Mainly clear, partly cloudy
+      if (code <= 3) {
+        return dayIcon ? 'mdi-weather-partly-cloudy' : 'mdi-weather-night-partly-cloudy';
+      }
+      // Fog
+      if (code <= 48) {
+        return 'mdi-weather-fog';
+      }
+      // Drizzle
+      if (code <= 57) {
+        return 'mdi-weather-partly-rainy';
+      }
+      // Rain
+      if (code <= 67) {
+        return 'mdi-weather-rainy';
+      }
+      // Snow
+      if (code <= 77) {
+        return 'mdi-weather-snowy';
+      }
+      // Rain showers
+      if (code <= 82) {
+        return 'mdi-weather-pouring';
+      }
+      // Snow showers
+      if (code <= 86) {
+        return 'mdi-weather-snowy-heavy';
+      }
+      // Thunderstorm
+      if (code <= 99) {
+        return 'mdi-weather-lightning-rainy';
+      }
+      
+      return 'mdi-weather-partly-cloudy';
     });
 
     /**
@@ -415,7 +456,7 @@ export default defineComponent({
       currentTemperature,
       currentWindSpeed,
       currentPrecipitation,
-      currentVisibility,
+      currentHumidity,
       currentWeatherIcon,
       dailyForecast,
       todaySunrise,

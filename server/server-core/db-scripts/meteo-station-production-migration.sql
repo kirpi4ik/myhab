@@ -218,6 +218,28 @@ VALUES (
     'Hourly weather parameters to fetch'
 );
 
+-- Current weather parameters (comma-separated)
+INSERT INTO configurations (
+    id,
+    version,
+    entity_id,
+    entity_type,
+    name,
+    value,
+    key,
+    description
+)
+VALUES (
+    nextval('hibernate_sequence'),
+    0,
+    2000,
+    'DEVICE',
+    'Current Weather Parameters',
+    'cloud_cover,is_day,temperature_2m,relative_humidity_2m,pressure_msl,wind_speed_10m,rain,precipitation,showers,weather_code,wind_direction_10m,snowfall,apparent_temperature',
+    'current',
+    'Current weather parameters (real-time data, single values)'
+);
+
 -- Timezone (will be URL-encoded automatically by the job)
 INSERT INTO configurations (
     id,
@@ -303,7 +325,7 @@ BEGIN
     RAISE NOTICE 'port_values.value type:  % (expected: text)', port_values_type;
     RAISE NOTICE 'METEO_STATION category:  % (expected: t)', category_exists;
     RAISE NOTICE 'Virtual device created:  % (expected: t)', device_exists;
-    RAISE NOTICE 'Configurations created:  % (expected: 8)', config_count;
+    RAISE NOTICE 'Configurations created:  % (expected: 9)', config_count;
     RAISE NOTICE '=================================================================';
     
     -- Verify all checks passed
@@ -311,7 +333,7 @@ BEGIN
         RAISE EXCEPTION 'Column type migration failed';
     END IF;
     
-    IF NOT category_exists OR NOT device_exists OR config_count != 8 THEN
+    IF NOT category_exists OR NOT device_exists OR config_count != 9 THEN
         RAISE EXCEPTION 'Device setup incomplete';
     END IF;
     

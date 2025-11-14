@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit
  */
 @Slf4j
 @DisallowConcurrentExecution
-@Transactional
 class MeteoStationSyncJob implements Job {
     
     MqttTopicService mqttTopicService
@@ -108,6 +107,7 @@ class MeteoStationSyncJob implements Job {
         def longitude = getConfigValue(device, 'longitude')
         def daily = getConfigValue(device, 'daily')
         def hourly = getConfigValue(device, 'hourly')
+        def current = getConfigValue(device, 'current')
         def timezone = getConfigValue(device, 'timezone')
         def forecastDays = getConfigValue(device, 'forecast_days')
         
@@ -129,6 +129,10 @@ class MeteoStationSyncJob implements Job {
         
         if (hourly) {
             requestUrl += "&hourly=${urlEncode(hourly)}"
+        }
+        
+        if (current) {
+            requestUrl += "&current=${urlEncode(current)}"
         }
         
         log.info("Fetching weather data from: ${requestUrl}")
@@ -171,14 +175,21 @@ class MeteoStationSyncJob implements Job {
         publishParameter(device, 'timezone', data.timezone)
         publishParameter(device, 'timezone_abbreviation', data.timezone_abbreviation)
         
-        // Publish daily parameters
+        // Publish current weather parameters (single values, not arrays)
+        if (data.current) {
+            data.current.each { key, value ->
+                publishParameter(device, "current.${key}", value)
+            }
+        }
+        
+        // Publish daily parameters (arrays for forecast)
         if (data.daily) {
             data.daily.each { key, value ->
                 publishParameter(device, "daily.${key}", value)
             }
         }
         
-        // Publish hourly parameters
+        // Publish hourly parameters (arrays for forecast)
         if (data.hourly) {
             data.hourly.each { key, value ->
                 publishParameter(device, "hourly.${key}", value)
@@ -191,7 +202,7 @@ class MeteoStationSyncJob implements Job {
 
     /**
      * Publish a single parameter to MQTT
-     * Creates port if it doesn't exist
+     * Creates port if it doesn't exist (in its own transaction)
      * Value will be persisted to database by PortValueService via MQTT event flow
      */
     private void publishParameter(Device device, String internalRef, Object value) {
@@ -203,17 +214,22 @@ class MeteoStationSyncJob implements Job {
         
         if (port == null) {
             log.debug("Creating new port for parameter: ${internalRef}")
-            port = new DevicePort(
-                device: device,
-                type: PortType.SENSOR,
-                state: PortState.ACTIVE,
-                internalRef: internalRef,
-                name: formatPortName(internalRef),
-                description: "Auto-created weather parameter"
-            )
             
+            // Create port in its own transaction to prevent cascading failures
             try {
-                port.save(flush: true, failOnError: true)
+                port = DevicePort.withNewTransaction { status ->
+                    def newPort = new DevicePort(
+                        device: device,
+                        type: PortType.SENSOR,
+                        state: PortState.ACTIVE,
+                        internalRef: internalRef,
+                        name: formatPortName(internalRef),
+                        description: "Auto-created weather parameter",
+                        uid: null  // Set to null instead of empty string to avoid unique constraint violations
+                    )
+                    newPort.save(flush: true, failOnError: true)
+                    return newPort
+                }
                 log.info("Created new port: ${internalRef}")
                 // Refresh device ports collection
                 device.refresh()
@@ -295,6 +311,11 @@ class MeteoStationSyncJob implements Job {
         // Root level
         ['latitude', 'longitude', 'elevation', 'timezone', 'timezone_abbreviation'].each {
             if (data[it]) count++
+        }
+        
+        // Current
+        if (data.current) {
+            count += data.current.size()
         }
         
         // Daily
