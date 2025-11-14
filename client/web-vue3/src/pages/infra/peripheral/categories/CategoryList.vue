@@ -7,10 +7,10 @@
       :columns="columns"
       :loading="loading"
       :filter="filter"
-      :pagination="pagination"
       row-key="id"
       virtual-scroll
       :rows-per-page-options="[0]"
+      hide-pagination
       style="max-height: calc(100vh - 250px)"
       class="sticky-header-table"
       @row-click="onRowClick"
@@ -88,12 +88,6 @@ export default defineComponent({
         style: 'position: sticky; right: 0'
       },
     ];
-    const pagination = ref({
-      sortBy: 'code',
-      descending: false,
-      page: 1,
-      rowsPerPage: 10
-    })
     const fetchData = () => {
       loading.value = true;
       client.query({
@@ -122,7 +116,6 @@ export default defineComponent({
       rows,
       columns,
       filter,
-      pagination,
       loading,
       fetchData,
       confirmDelete,
