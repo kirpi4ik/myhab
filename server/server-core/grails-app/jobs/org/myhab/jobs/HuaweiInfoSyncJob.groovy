@@ -102,11 +102,11 @@ class HuaweiInfoSyncJob implements Job {
             def inverterDevice = Device.findByModel(DeviceModel.HUAWEI_SUN2000_12KTL_M2)
             if (inverterDevice) {
                 fetchStationData(inverterDevice)
-                sleep(1000) // Small delay between API calls
+                sleep(5000) // Small delay between API calls
                 
                 // Step 3: Fetch inverter real-time data
                 fetchDeviceRealKpi(inverterDevice, DEV_TYPE_INVERTER, 'DEV_IDS', 'INVERTER_API_PARAMS', 'inverter')
-                sleep(1000)
+                sleep(5000)
                 
                 // Step 4: Fetch power meter data
                 def meterDevice = Device.findByModel(DeviceModel.ELECTRIC_METER_DTS)

@@ -54,9 +54,9 @@
       <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
         <meteo-station-card :device-id="meteoStationDeviceId" :location-name="'Halchiu, Romania'"/>
       </div>
-      <!-- Electric Meter -->
+      <!-- Solar Power Plant -->
       <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-        <electric-meter :device-id="eMeterDeviceId"/>
+        <solar-plant-widget :device-id="solarPlantDeviceId"/>
       </div>
       <!-- Heat Pump -->
       <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
@@ -76,6 +76,7 @@ import {authzService} from '@/_services';
 import ElectricMeter from "components/ElectricMeter";
 import HeatPump from "components/HeatPump";
 import MeteoStationCard from "components/MeteoStationCard.vue";
+import SolarPlantWidget from "components/SolarPlantWidget.vue";
 import PeripheralLock from 'components/PeripheralLock.vue';
 import SprinklersDashComponent from "components/SprinklersDashComponent";
 import WaterPump from "components/WaterPump";
@@ -87,6 +88,7 @@ export default defineComponent({
     HeatPump,
     ElectricMeter,
     MeteoStationCard,
+    SolarPlantWidget,
     PeripheralLock,
     SprinklersDashComponent
   },
@@ -101,6 +103,7 @@ export default defineComponent({
     const heatPumpDeviceId = Number(process.env.HEAT_PUMP_DEVICE_ID);
     const eMeterDeviceId = Number(process.env.ELECTRIC_METER_01_DEVICE_ID);
     const meteoStationDeviceId = 2000; // Virtual Meteo Station device
+    const solarPlantDeviceId = 1000; // Huawei Solar Inverter device
 
     /**
      * Check if current user has any of the specified roles
@@ -210,6 +213,7 @@ export default defineComponent({
       heatPumpDeviceId,
       eMeterDeviceId,
       meteoStationDeviceId,
+      solarPlantDeviceId,
       onResize
     };
   }
