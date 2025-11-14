@@ -1,63 +1,68 @@
 <template>
-  <div class="row q-col-gutter-md">
-    <!-- Quick Access Cards -->
-    <template v-if="hasAccess">
-      <div 
-        v-for="card in quickAccessCards" 
-        :key="card.title || card.component" 
-        class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
-      >
-        <!-- Standard action card -->
-        <q-card v-if="card.actions" class="dashboard-card">
-          <q-card-section :class="`${card.bgColor} text-white text-h6`">
-            <div class="row items-center">
-              <div class="col">{{ card.title }}</div>
-              <div class="col-auto">
-                <q-icon :name="card.icon" size="40px"/>
+  <div class="dashboard-layout">
+    <!-- Quick Access Cards Section -->
+    <div class="row q-col-gutter-md q-mb-md">
+      <template v-if="hasAccess">
+        <div 
+          v-for="card in quickAccessCards" 
+          :key="card.title || card.component" 
+          class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
+        >
+          <!-- Standard action card -->
+          <q-card v-if="card.actions" class="dashboard-card small-card">
+            <q-card-section :class="`${card.bgColor} text-white text-h6`">
+              <div class="row items-center">
+                <div class="col">{{ card.title }}</div>
+                <div class="col-auto">
+                  <q-icon :name="card.icon" size="40px"/>
+                </div>
               </div>
-            </div>
-          </q-card-section>
-          <q-card-actions align="around" class="q-pa-md">
-            <template v-for="(action, index) in card.actions" :key="action.label">
-              <q-btn 
-                flat 
-                class="text-h6 text-grey-14" 
-                no-caps 
-                :to="action.route"
-              >
-                {{ action.label }}
-              </q-btn>
-              <q-separator 
-                v-if="index < card.actions.length - 1" 
-                vertical 
-                class="q-mx-md"
-              />
-            </template>
-          </q-card-actions>
-        </q-card>
-        
-        <!-- Component card -->
-        <component 
-          v-else-if="card.component" 
-          :is="card.component" 
-          v-bind="card.props"
-          :class="card.class"
-        />
-      </div>
-    </template>
-    <!-- Weather Station -->
-    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-      <meteo-station-card :device-id="meteoStationDeviceId" :location-name="'Brașov, Romania'"/>
+            </q-card-section>
+            <q-card-actions align="around" class="q-pa-md">
+              <template v-for="(action, index) in card.actions" :key="action.label">
+                <q-btn 
+                  flat 
+                  class="text-h6 text-grey-14" 
+                  no-caps 
+                  :to="action.route"
+                >
+                  {{ action.label }}
+                </q-btn>
+                <q-separator 
+                  v-if="index < card.actions.length - 1" 
+                  vertical 
+                  class="q-mx-md"
+                />
+              </template>
+            </q-card-actions>
+          </q-card>
+          
+          <!-- Component card -->
+          <component 
+            v-else-if="card.component" 
+            :is="card.component" 
+            v-bind="card.props"
+            class="small-card"
+          />
+        </div>
+      </template>
     </div>
-    <!-- Device Monitoring -->
-    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-      <electric-meter :device-id="eMeterDeviceId"/>
-    </div>
-    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-      <heat-pump :deviceId="heatPumpDeviceId"/>
-    </div>
-    
 
+    <!-- Device Monitoring Section -->
+    <div class="row q-col-gutter-md">
+      <!-- Weather Station -->
+      <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+        <meteo-station-card :device-id="meteoStationDeviceId" :location-name="'Halchiu, Romania'"/>
+      </div>
+      <!-- Electric Meter -->
+      <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+        <electric-meter :device-id="eMeterDeviceId"/>
+      </div>
+      <!-- Heat Pump -->
+      <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+        <heat-pump :deviceId="heatPumpDeviceId"/>
+      </div>
+    </div>
 
     <q-resize-observer @resize="onResize"/>
   </div>
@@ -213,6 +218,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.dashboard-layout {
+  width: 100%;
+}
+
 .dashboard-card {
   background-color: white;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -221,5 +230,21 @@ export default defineComponent({
 .dashboard-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.small-card {
+  height: 100%;
+  min-height: 120px;
+}
+
+/* Mobile optimization - stack cards vertically */
+@media (max-width: 599px) {
+  .dashboard-layout > .row:first-child {
+    margin-bottom: 16px;
+  }
+  
+  .small-card {
+    margin-bottom: 8px;
+  }
 }
 </style>
