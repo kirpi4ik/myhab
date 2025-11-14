@@ -84,7 +84,7 @@ quartz:
   jobs:
     # Huawei solar inverter sync
     huaweiInfoSync:
-      enabled: false
+      enabled: true
       interval: 120  # seconds
     
     # Nibe heat pump data sync
