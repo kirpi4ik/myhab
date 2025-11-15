@@ -44,9 +44,9 @@
           <div class="flow-node consumption-node">
             <div class="node-circle consumption-circle">
               <q-icon name="mdi-home-lightning-bolt-outline" size="38px" class="text-blue-6"/>
-              <div class="node-value text-weight-bold">{{ houseFromPlantKw }}</div>
+              <div class="node-value text-weight-bold">{{ totalHouseConsumptionKw }}</div>
             </div>
-            <div class="node-label text-caption text-grey-7">{{ $t('solar.house_from_plant') }}</div>
+            <div class="node-label text-caption text-grey-7">{{ $t('solar.house_consumption') || 'Consumption' }}</div>
           </div>
 
           <!-- Grid Circle (Bottom Right) -->
@@ -62,15 +62,15 @@
           <svg class="flow-lines" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
             <!-- PV to Consumption -->
             <line x1="150" y1="100" x2="100" y2="220" class="flow-line pv-to-consumption" stroke-width="3"/>
-            <polygon points="95,215 105,225 100,220" class="flow-arrow" :class="{'active': parseFloat(houseFromPlantKw) > 0}"/>
+            <polygon points="95,215 105,225 100,220" class="flow-arrow" :class="{'active': totalHouseConsumptionWatts > 0}"/>
             
             <!-- PV to Grid -->
             <line x1="250" y1="100" x2="300" y2="220" class="flow-line pv-to-grid" stroke-width="3"/>
-            <polygon points="305,215 295,225 300,220" class="flow-arrow" :class="{'active': parseFloat(gridExportKw) > 0}"/>
+            <polygon points="305,215 295,225 300,220" class="flow-arrow" :class="{'active': meterActivePowerWatts > 0}"/>
             
             <!-- Grid to Consumption (bidirectional base) -->
             <line x1="120" y1="240" x2="280" y2="240" class="flow-line grid-consumption" stroke-width="3"/>
-            <polygon points="125,235 115,240 125,245" class="flow-arrow" :class="{'active': parseFloat(gridImportKw) > 0}"/>
+            <polygon points="125,235 115,240 125,245" class="flow-arrow" :class="{'active': meterActivePowerWatts < 0}"/>
           </svg>
         </div>
       </div>
@@ -88,8 +88,8 @@
         <div class="col-6 col-sm-3">
           <div class="metric-card consumption-metric">
             <q-icon name="mdi-home-lightning-bolt" size="md" class="metric-icon"/>
-            <div class="metric-value">{{ houseFromPlantKw }}</div>
-            <div class="metric-label">{{ $t('solar.house_from_plant') }}</div>
+            <div class="metric-value">{{ totalHouseConsumptionKw }}</div>
+            <div class="metric-label">{{ $t('solar.house_consumption') || 'House Consumption' }}</div>
           </div>
         </div>
 
@@ -326,8 +326,8 @@ export default defineComponent({
     const getFloatValue = (internalRef, decimals = 2) => {
       const value = getPortValue(internalRef);
       if (value === null || value === undefined) return null;
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? null : parsed.toFixed(decimals);
+      const parsed = Number.parseFloat(value);
+      return Number.isNaN(parsed) ? null : parsed.toFixed(decimals);
     };
 
     /**
@@ -335,8 +335,8 @@ export default defineComponent({
      */
     const formatEnergy = (kwh) => {
       if (!kwh || kwh === '--') return '--';
-      const value = parseFloat(kwh);
-      if (isNaN(value)) return '--';
+      const value = Number.parseFloat(kwh);
+      if (Number.isNaN(value)) return '--';
       
       if (value >= 1000) {
         const mwh = value / 1000;
@@ -351,21 +351,32 @@ export default defineComponent({
 
     /**
      * Solar production in kW (from inverter)
+     * Note: inverter.active_power is already in kW from API
      */
     const solarProductionKw = computed(() => {
-      const watts = getFloatValue('inverter.active_power', 0);
-      if (watts === null) return '--';
-      return (parseFloat(watts) / 1000).toFixed(2) + ' kW';
+      const kw = getFloatValue('inverter.active_power', 2);
+      if (kw === null) return '--';
+      return `${kw} kW`;
+    });
+    
+    /**
+     * Solar production raw value for calculations (in W)
+     */
+    const solarProductionWatts = computed(() => {
+      const kw = getFloatValue('inverter.active_power', 2);
+      if (kw === null) return 0;
+      return Number.parseFloat(kw) * 1000; // Convert kW to W
     });
 
     /**
      * Grid power in W (from meter)
+     * Note: meter.active_power is in W (Watts), not kW
      * Negative = importing from grid
      * Positive = exporting to grid
      */
     const meterActivePowerWatts = computed(() => {
       const watts = getFloatValue('meter.active_power', 0);
-      return watts ? parseFloat(watts) : 0;
+      return watts ? Number.parseFloat(watts) : 0;
     });
 
     /**
@@ -387,39 +398,57 @@ export default defineComponent({
     });
 
     /**
-     * House consumption from solar plant
+     * Total house consumption (from solar + grid)
      * = Solar production - Grid export (or + Grid import)
-     * 
-     * Note: API docs say inverter.active_power is in kW, but widget treats it as W
-     * TODO: Verify actual API response unit during daytime production
+     * Both values converted to Watts for calculation
      */
-    const houseFromPlantKw = computed(() => {
-      const solarValue = parseFloat(getFloatValue('inverter.active_power', 0) || 0);
+    const totalHouseConsumptionKw = computed(() => {
+      const solarWatts = solarProductionWatts.value;
       const meterWatts = meterActivePowerWatts.value;
       
-      // Assuming both are in same units (likely W based on current widget behavior)
-      const houseUsage = solarValue - meterWatts;
+      // House usage = Solar production - Grid power
+      // If meter is positive (exporting), house uses less than solar produces
+      // If meter is negative (importing), house uses more than solar produces
+      const houseUsage = solarWatts - meterWatts;
       
       if (houseUsage < 0) return '0.00 kW';
       return (houseUsage / 1000).toFixed(2) + ' kW';
     });
+    
+    /**
+     * Total house consumption raw value for calculations (in W)
+     */
+    const totalHouseConsumptionWatts = computed(() => {
+      const solarWatts = solarProductionWatts.value;
+      const meterWatts = meterActivePowerWatts.value;
+      const houseUsage = solarWatts - meterWatts;
+      return Math.max(0, houseUsage);
+    });
 
     /**
      * Phase power and current
+     * Note: Despite API docs saying kW, meter.active_power_a/b/c appear to be in W (Watts)
+     * Display as absolute values since negative indicates export direction
      */
     const phaseAPower = computed(() => {
       const watts = getFloatValue('meter.active_power_a', 0);
-      return watts ? `${Math.abs(parseFloat(watts))} W` : '--';
+      if (!watts) return '--';
+      const kw = Math.abs(Number.parseFloat(watts)) / 1000;
+      return `${kw.toFixed(2)} kW`;
     });
 
     const phaseBPower = computed(() => {
       const watts = getFloatValue('meter.active_power_b', 0);
-      return watts ? `${Math.abs(parseFloat(watts))} W` : '--';
+      if (!watts) return '--';
+      const kw = Math.abs(Number.parseFloat(watts)) / 1000;
+      return `${kw.toFixed(2)} kW`;
     });
 
     const phaseCPower = computed(() => {
       const watts = getFloatValue('meter.active_power_c', 0);
-      return watts ? `${Math.abs(parseFloat(watts))} W` : '--';
+      if (!watts) return '--';
+      const kw = Math.abs(Number.parseFloat(watts)) / 1000;
+      return `${kw.toFixed(2)} kW`;
     });
 
     /**
@@ -431,13 +460,14 @@ export default defineComponent({
       // Use direct meter reading (most accurate)
       const directCurrent = getFloatValue('meter.meter_i', 2);
       if (directCurrent !== null) {
-        return Math.abs(parseFloat(directCurrent)).toFixed(2);
+        return Math.abs(Number.parseFloat(directCurrent)).toFixed(2);
       }
       
       // Fallback: calculate from power and voltage (accounting for power factor)
-      const powerA = parseFloat(getFloatValue('meter.active_power_a', 0) || 0);
-      const voltage = parseFloat(getFloatValue('meter.meter_u', 0) || 230);
-      const powerFactor = parseFloat(getFloatValue('meter.power_factor', 2) || 1.0);
+      // Note: active_power_a is in W (Watts), not kW
+      const powerA = Number.parseFloat(getFloatValue('meter.active_power_a', 0) || 0);
+      const voltage = Number.parseFloat(getFloatValue('meter.meter_u', 0) || 230);
+      const powerFactor = Number.parseFloat(getFloatValue('meter.power_factor', 2) || 1);
       
       if (voltage > 0 && powerFactor > 0) {
         return Math.abs(powerA / (voltage * powerFactor)).toFixed(2);
@@ -449,13 +479,14 @@ export default defineComponent({
       // Use direct meter reading (most accurate)
       const directCurrent = getFloatValue('meter.b_i', 2);
       if (directCurrent !== null) {
-        return Math.abs(parseFloat(directCurrent)).toFixed(2);
+        return Math.abs(Number.parseFloat(directCurrent)).toFixed(2);
       }
       
       // Fallback: calculate from power and voltage (accounting for power factor)
-      const powerB = parseFloat(getFloatValue('meter.active_power_b', 0) || 0);
-      const voltage = parseFloat(getFloatValue('meter.b_u', 0) || 230);
-      const powerFactor = parseFloat(getFloatValue('meter.power_factor', 2) || 1.0);
+      // Note: active_power_b is in W (Watts), not kW
+      const powerB = Number.parseFloat(getFloatValue('meter.active_power_b', 0) || 0);
+      const voltage = Number.parseFloat(getFloatValue('meter.b_u', 0) || 230);
+      const powerFactor = Number.parseFloat(getFloatValue('meter.power_factor', 2) || 1);
       
       if (voltage > 0 && powerFactor > 0) {
         return Math.abs(powerB / (voltage * powerFactor)).toFixed(2);
@@ -467,13 +498,14 @@ export default defineComponent({
       // Use direct meter reading (most accurate)
       const directCurrent = getFloatValue('meter.c_i', 2);
       if (directCurrent !== null) {
-        return Math.abs(parseFloat(directCurrent)).toFixed(2);
+        return Math.abs(Number.parseFloat(directCurrent)).toFixed(2);
       }
       
       // Fallback: calculate from power and voltage (accounting for power factor)
-      const powerC = parseFloat(getFloatValue('meter.active_power_c', 0) || 0);
-      const voltage = parseFloat(getFloatValue('meter.c_u', 0) || 230);
-      const powerFactor = parseFloat(getFloatValue('meter.power_factor', 2) || 1.0);
+      // Note: active_power_c is in W (Watts), not kW
+      const powerC = Number.parseFloat(getFloatValue('meter.active_power_c', 0) || 0);
+      const voltage = Number.parseFloat(getFloatValue('meter.c_u', 0) || 230);
+      const powerFactor = Number.parseFloat(getFloatValue('meter.power_factor', 2) || 1);
       
       if (voltage > 0 && powerFactor > 0) {
         return Math.abs(powerC / (voltage * powerFactor)).toFixed(2);
@@ -504,8 +536,8 @@ export default defineComponent({
      * = Daily production - Daily grid export
      */
     const dailySolarUsage = computed(() => {
-      const production = parseFloat(getFloatValue('station.day_power', 2) || 0);
-      const export_ = parseFloat(getFloatValue('station.day_on_grid_energy', 2) || 0);
+      const production = Number.parseFloat(getFloatValue('station.day_power', 2) || 0);
+      const export_ = Number.parseFloat(getFloatValue('station.day_on_grid_energy', 2) || 0);
       
       const solarUsage = production - export_;
       return solarUsage >= 0 ? `${solarUsage.toFixed(2)} kWh` : '0.00 kWh';
@@ -521,9 +553,9 @@ export default defineComponent({
      * = Total consumption - Solar usage
      */
     const dailyGridImport = computed(() => {
-      const totalConsumption = parseFloat(getFloatValue('station.day_use_energy', 2) || 0);
-      const production = parseFloat(getFloatValue('station.day_power', 2) || 0);
-      const export_ = parseFloat(getFloatValue('station.day_on_grid_energy', 2) || 0);
+      const totalConsumption = Number.parseFloat(getFloatValue('station.day_use_energy', 2) || 0);
+      const production = Number.parseFloat(getFloatValue('station.day_power', 2) || 0);
+      const export_ = Number.parseFloat(getFloatValue('station.day_on_grid_energy', 2) || 0);
       
       const solarUsage = production - export_;
       const import_ = totalConsumption - solarUsage;
@@ -566,7 +598,7 @@ export default defineComponent({
 
     const systemHealth = computed(() => {
       const health = getPortValue('station.real_health_state');
-      return health ? parseInt(health) : 3; // Default to OK
+      return health ? Number.parseInt(health, 10) : 3; // Default to OK
     });
 
     const inverterTemp = computed(() => {
@@ -641,9 +673,13 @@ export default defineComponent({
       deviceDetails,
       // Real-time
       solarProductionKw,
-      houseFromPlantKw,
+      totalHouseConsumptionKw,
       gridImportKw,
       gridExportKw,
+      // Raw values for SVG arrows
+      totalHouseConsumptionWatts,
+      meterActivePowerWatts,
+      // Phase data
       phaseAPower,
       phaseBPower,
       phaseCPower,
