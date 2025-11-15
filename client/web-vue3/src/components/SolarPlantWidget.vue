@@ -61,12 +61,12 @@
           <!-- Connection Lines -->
           <svg class="flow-lines" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
             <!-- PV to Consumption -->
-            <line x1="150" y1="100" x2="100" y2="220" class="flow-line pv-to-consumption" stroke-width="3"/>
-            <polygon points="95,215 105,225 100,220" class="flow-arrow" :class="{'active': totalHouseConsumptionWatts > 0}"/>
+            <line x1="150" y1="100" x2="115" y2="170" class="flow-line pv-to-consumption" stroke-width="3"/>
+            <polygon points="115,170 126,162 115,157" class="flow-arrow" :class="{'active': totalHouseConsumptionWatts > 0}"/>
             
             <!-- PV to Grid -->
-            <line x1="250" y1="100" x2="300" y2="220" class="flow-line pv-to-grid" stroke-width="3"/>
-            <polygon points="305,215 295,225 300,220" class="flow-arrow" :class="{'active': meterActivePowerWatts > 0}"/>
+            <line x1="250" y1="100" x2="285" y2="170" class="flow-line pv-to-grid" stroke-width="3"/>
+            <polygon points="285,170 274,162 285,157" class="flow-arrow" :class="{'active': meterActivePowerWatts > 0}"/>
             
             <!-- Grid to Consumption (bidirectional base) -->
             <line x1="120" y1="240" x2="280" y2="240" class="flow-line grid-consumption" stroke-width="3"/>
@@ -77,13 +77,6 @@
 
       <!-- Metrics Cards -->
       <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-6 col-sm-3">
-          <div class="metric-card solar-metric">
-            <q-icon name="mdi-solar-panel-large" size="md" class="metric-icon"/>
-            <div class="metric-value">{{ solarProductionKw }}</div>
-            <div class="metric-label">{{ $t('solar.solar_production') }}</div>
-          </div>
-        </div>
 
         <div class="col-6 col-sm-3">
           <div class="metric-card consumption-metric">
@@ -92,12 +85,20 @@
             <div class="metric-label">{{ $t('solar.house_consumption') || 'House Consumption' }}</div>
           </div>
         </div>
-
+        
         <div class="col-6 col-sm-3">
           <div class="metric-card import-metric">
             <q-icon name="mdi-transmission-tower-import" size="md" class="metric-icon"/>
             <div class="metric-value">{{ gridImportKw }}</div>
             <div class="metric-label">{{ $t('solar.grid_import') }}</div>
+          </div>
+        </div>
+
+        <div class="col-6 col-sm-3">
+          <div class="metric-card solar-metric">
+            <q-icon name="mdi-solar-panel-large" size="md" class="metric-icon"/>
+            <div class="metric-value">{{ solarProductionKw }}</div>
+            <div class="metric-label">{{ $t('solar.solar_production') }}</div>
           </div>
         </div>
 
@@ -163,126 +164,132 @@
     <q-separator/>
 
     <!-- Daily Totals Section -->
-    <q-card-section class="daily-section q-pa-md">
-      <div class="section-title q-mb-md">
-        <q-icon name="mdi-calendar-today" size="sm" class="text-blue-7 q-mr-xs"/>
-        <span class="text-subtitle1 text-weight-medium text-grey-8">{{ $t('solar.today') }}</span>
-      </div>
-      
-      <div class="row q-col-gutter-md">
-        <div class="col-6 col-md-4">
-          <div class="stat-card yield-card">
-            <div class="stat-icon">
-              <q-icon name="mdi-solar-power" size="lg"/>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ dailyYield }}</div>
-              <div class="stat-label">{{ $t('solar.daily_yield') }}</div>
+    <q-expansion-item
+      v-model="dailySectionExpanded"
+      icon="mdi-calendar-today"
+      :label="$t('solar.today')"
+      header-class="bg-grey-1"
+      expand-separator
+    >
+      <q-card-section class="daily-section q-pa-md">
+        <div class="row q-col-gutter-md">
+          <div class="col-6 col-md-4">
+            <div class="stat-card yield-card">
+              <div class="stat-icon">
+                <q-icon name="mdi-solar-power" size="lg"/>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ dailyYield }}</div>
+                <div class="stat-label">{{ $t('solar.daily_yield') }}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-6 col-md-4">
-          <div class="stat-card consumption-card">
-            <div class="stat-icon">
-              <q-icon name="mdi-home-import-outline" size="lg"/>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ dailyTotalConsumption }}</div>
-              <div class="stat-label">{{ $t('solar.daily_total_consumption') }}</div>
+          <div class="col-6 col-md-4">
+            <div class="stat-card consumption-card">
+              <div class="stat-icon">
+                <q-icon name="mdi-home-import-outline" size="lg"/>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ dailyTotalConsumption }}</div>
+                <div class="stat-label">{{ $t('solar.daily_total_consumption') }}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-6 col-md-4">
-          <div class="stat-card solar-usage-card">
-            <div class="stat-icon">
-              <q-icon name="mdi-home-lightning-bolt-outline" size="lg"/>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ dailySolarUsage }}</div>
-              <div class="stat-label">{{ $t('solar.daily_solar_usage') }}</div>
+          <div class="col-6 col-md-4">
+            <div class="stat-card solar-usage-card">
+              <div class="stat-icon">
+                <q-icon name="mdi-home-lightning-bolt-outline" size="lg"/>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ dailySolarUsage }}</div>
+                <div class="stat-label">{{ $t('solar.daily_solar_usage') }}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-6 col-md-6">
-          <div class="stat-card export-card">
-            <div class="stat-icon">
-              <q-icon name="mdi-transmission-tower-export" size="lg"/>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ dailyGridExport }}</div>
-              <div class="stat-label">{{ $t('solar.daily_grid_export') }}</div>
+          <div class="col-6 col-md-6">
+            <div class="stat-card export-card">
+              <div class="stat-icon">
+                <q-icon name="mdi-transmission-tower-export" size="lg"/>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ dailyGridExport }}</div>
+                <div class="stat-label">{{ $t('solar.daily_grid_export') }}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-6 col-md-6">
-          <div class="stat-card import-card">
-            <div class="stat-icon">
-              <q-icon name="mdi-transmission-tower-import" size="lg"/>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ dailyGridImport }}</div>
-              <div class="stat-label">{{ $t('solar.daily_grid_import') }}</div>
+          <div class="col-6 col-md-6">
+            <div class="stat-card import-card">
+              <div class="stat-icon">
+                <q-icon name="mdi-transmission-tower-import" size="lg"/>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ dailyGridImport }}</div>
+                <div class="stat-label">{{ $t('solar.daily_grid_import') }}</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </q-card-section>
+      </q-card-section>
+    </q-expansion-item>
 
     <q-separator/>
 
     <!-- Long-term Totals Section -->
-    <q-card-section class="totals-section q-pa-md">
-      <div class="section-title q-mb-md">
-        <q-icon name="mdi-chart-line" size="sm" class="text-green-7 q-mr-xs"/>
-        <span class="text-subtitle1 text-weight-medium text-grey-8">{{ $t('solar.totals') }}</span>
-      </div>
-      
-      <div class="row q-col-gutter-md">
-        <div class="col-6 col-md-4">
-          <div class="total-card">
-            <q-icon name="mdi-calendar-month" class="total-icon text-amber-7"/>
-            <div class="total-value">{{ monthlyYield }}</div>
-            <div class="total-label">{{ $t('solar.monthly_yield') }}</div>
+    <q-expansion-item
+      v-model="totalsSectionExpanded"
+      icon="mdi-chart-line"
+      :label="$t('solar.totals')"
+      header-class="bg-grey-1"
+      expand-separator
+    >
+      <q-card-section class="totals-section q-pa-md">
+        <div class="row q-col-gutter-md">
+          <div class="col-6 col-md-4">
+            <div class="total-card">
+              <q-icon name="mdi-calendar-month" class="total-icon text-amber-7"/>
+              <div class="total-value">{{ monthlyYield }}</div>
+              <div class="total-label">{{ $t('solar.monthly_yield') }}</div>
+            </div>
           </div>
-        </div>
 
-        <div class="col-6 col-md-4">
-          <div class="total-card">
-            <q-icon name="mdi-calendar-range" class="total-icon text-amber-8"/>
-            <div class="total-value">{{ yearlyYield }}</div>
-            <div class="total-label">{{ $t('solar.yearly_yield') }}</div>
+          <div class="col-6 col-md-4">
+            <div class="total-card">
+              <q-icon name="mdi-calendar-range" class="total-icon text-amber-8"/>
+              <div class="total-value">{{ yearlyYield }}</div>
+              <div class="total-label">{{ $t('solar.yearly_yield') }}</div>
+            </div>
           </div>
-        </div>
 
-        <div class="col-6 col-md-4">
-          <div class="total-card">
-            <q-icon name="mdi-sigma" class="total-icon text-green-7"/>
-            <div class="total-value">{{ totalYield }}</div>
-            <div class="total-label">{{ $t('solar.total_yield') }}</div>
+          <div class="col-6 col-md-4">
+            <div class="total-card">
+              <q-icon name="mdi-sigma" class="total-icon text-green-7"/>
+              <div class="total-value">{{ totalYield }}</div>
+              <div class="total-label">{{ $t('solar.total_yield') }}</div>
+            </div>
           </div>
-        </div>
 
-        <div class="col-6">
-          <div class="total-card">
-            <q-icon name="mdi-arrow-up-bold-circle" class="total-icon text-blue-6"/>
-            <div class="total-value">{{ totalGridExport }}</div>
-            <div class="total-label">{{ $t('solar.total_grid_export') }}</div>
+          <div class="col-6">
+            <div class="total-card">
+              <q-icon name="mdi-arrow-up-bold-circle" class="total-icon text-blue-6"/>
+              <div class="total-value">{{ totalGridExport }}</div>
+              <div class="total-label">{{ $t('solar.total_grid_export') }}</div>
+            </div>
           </div>
-        </div>
 
-        <div class="col-6">
-          <div class="total-card">
-            <q-icon name="mdi-arrow-down-bold-circle" class="total-icon text-red-6"/>
-            <div class="total-value">{{ totalGridImport }}</div>
-            <div class="total-label">{{ $t('solar.total_grid_import') }}</div>
+          <div class="col-6">
+            <div class="total-card">
+              <q-icon name="mdi-arrow-down-bold-circle" class="total-icon text-red-6"/>
+              <div class="total-value">{{ totalGridImport }}</div>
+              <div class="total-label">{{ $t('solar.total_grid_import') }}</div>
+            </div>
           </div>
         </div>
-      </div>
-    </q-card-section>
+      </q-card-section>
+    </q-expansion-item>
 
     <!-- System Info Footer -->
     <q-card-section v-if="inverterTemp || gridFrequency || efficiency" class="system-info-section q-pa-sm bg-grey-2">
@@ -332,6 +339,10 @@ export default defineComponent({
     const device = ref({});
     const deviceDetails = ref({});
     const portIds = ref([]);
+    
+    // Expansion state for collapsible sections
+    const dailySectionExpanded = ref(false);
+    const totalsSectionExpanded = ref(false);
 
     /**
      * Get port value by internal reference
@@ -717,6 +728,9 @@ export default defineComponent({
     return {
       device,
       deviceDetails,
+      // UI state
+      dailySectionExpanded,
+      totalsSectionExpanded,
       // Real-time
       solarProductionKw,
       totalHouseConsumptionKw,
