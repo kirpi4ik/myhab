@@ -117,21 +117,42 @@
           <div class="col-4">
             <div class="phase-card">
               <div class="phase-header">{{ $t('solar.phase_a') }}</div>
-              <div class="phase-power">{{ phaseAPower }}</div>
+              <div class="phase-power">
+                <q-icon 
+                  :name="phaseADirection === 'import' ? 'mdi-arrow-down-bold' : 'mdi-arrow-up-bold'" 
+                  :class="phaseADirection === 'import' ? 'text-red-6' : 'text-blue-6'"
+                  size="xs"
+                />
+                {{ phaseAPower }}
+              </div>
               <div class="phase-current">{{ phaseACurrent }} A</div>
             </div>
           </div>
           <div class="col-4">
             <div class="phase-card">
               <div class="phase-header">{{ $t('solar.phase_b') }}</div>
-              <div class="phase-power">{{ phaseBPower }}</div>
+              <div class="phase-power">
+                <q-icon 
+                  :name="phaseBDirection === 'import' ? 'mdi-arrow-down-bold' : 'mdi-arrow-up-bold'" 
+                  :class="phaseBDirection === 'import' ? 'text-red-6' : 'text-blue-6'"
+                  size="xs"
+                />
+                {{ phaseBPower }}
+              </div>
               <div class="phase-current">{{ phaseBCurrent }} A</div>
             </div>
           </div>
           <div class="col-4">
             <div class="phase-card">
               <div class="phase-header">{{ $t('solar.phase_c') }}</div>
-              <div class="phase-power">{{ phaseCPower }}</div>
+              <div class="phase-power">
+                <q-icon 
+                  :name="phaseCDirection === 'import' ? 'mdi-arrow-down-bold' : 'mdi-arrow-up-bold'" 
+                  :class="phaseCDirection === 'import' ? 'text-red-6' : 'text-blue-6'"
+                  size="xs"
+                />
+                {{ phaseCPower }}
+              </div>
               <div class="phase-current">{{ phaseCCurrent }} A</div>
             </div>
           </div>
@@ -427,28 +448,53 @@ export default defineComponent({
 
     /**
      * Phase power and current
-     * Note: Despite API docs saying kW, meter.active_power_a/b/c appear to be in W (Watts)
-     * Display as absolute values since negative indicates export direction
+     * Note: meter.active_power_a/b/c are in W (Watts), not kW despite documentation
+     * These are REAL power values (accounting for power factor)
+     * Negative values indicate export direction, positive = import
+     * Display as absolute values for clarity
      */
     const phaseAPower = computed(() => {
       const watts = getFloatValue('meter.active_power_a', 0);
-      if (!watts) return '--';
+      if (watts === null) return '--';
       const kw = Math.abs(Number.parseFloat(watts)) / 1000;
       return `${kw.toFixed(2)} kW`;
     });
 
     const phaseBPower = computed(() => {
       const watts = getFloatValue('meter.active_power_b', 0);
-      if (!watts) return '--';
+      if (watts === null) return '--';
       const kw = Math.abs(Number.parseFloat(watts)) / 1000;
       return `${kw.toFixed(2)} kW`;
     });
 
     const phaseCPower = computed(() => {
       const watts = getFloatValue('meter.active_power_c', 0);
-      if (!watts) return '--';
+      if (watts === null) return '--';
       const kw = Math.abs(Number.parseFloat(watts)) / 1000;
       return `${kw.toFixed(2)} kW`;
+    });
+
+    /**
+     * Phase power direction indicators
+     * Positive = import from grid (arrow down, red)
+     * Negative = export to grid (arrow up, blue)
+     */
+    const phaseADirection = computed(() => {
+      const watts = getFloatValue('meter.active_power_a', 0);
+      if (watts === null) return 'neutral';
+      return Number.parseFloat(watts) >= 0 ? 'import' : 'export';
+    });
+
+    const phaseBDirection = computed(() => {
+      const watts = getFloatValue('meter.active_power_b', 0);
+      if (watts === null) return 'neutral';
+      return Number.parseFloat(watts) >= 0 ? 'import' : 'export';
+    });
+
+    const phaseCDirection = computed(() => {
+      const watts = getFloatValue('meter.active_power_c', 0);
+      if (watts === null) return 'neutral';
+      return Number.parseFloat(watts) >= 0 ? 'import' : 'export';
     });
 
     /**
@@ -464,13 +510,13 @@ export default defineComponent({
       }
       
       // Fallback: calculate from power and voltage (accounting for power factor)
-      // Note: active_power_a is in W (Watts), not kW
-      const powerA = Number.parseFloat(getFloatValue('meter.active_power_a', 0) || 0);
-      const voltage = Number.parseFloat(getFloatValue('meter.meter_u', 0) || 230);
+      // Note: active_power_a is in W (Watts), already real power
+      const powerW = Number.parseFloat(getFloatValue('meter.active_power_a', 0) || 0);
+      const voltage = Number.parseFloat(getFloatValue('meter.meter_u', 0) || 240);
       const powerFactor = Number.parseFloat(getFloatValue('meter.power_factor', 2) || 1);
       
       if (voltage > 0 && powerFactor > 0) {
-        return Math.abs(powerA / (voltage * powerFactor)).toFixed(2);
+        return Math.abs(powerW / (voltage * powerFactor)).toFixed(2);
       }
       return '--';
     });
@@ -483,13 +529,13 @@ export default defineComponent({
       }
       
       // Fallback: calculate from power and voltage (accounting for power factor)
-      // Note: active_power_b is in W (Watts), not kW
-      const powerB = Number.parseFloat(getFloatValue('meter.active_power_b', 0) || 0);
-      const voltage = Number.parseFloat(getFloatValue('meter.b_u', 0) || 230);
+      // Note: active_power_b is in W (Watts), already real power
+      const powerW = Number.parseFloat(getFloatValue('meter.active_power_b', 0) || 0);
+      const voltage = Number.parseFloat(getFloatValue('meter.b_u', 0) || 240);
       const powerFactor = Number.parseFloat(getFloatValue('meter.power_factor', 2) || 1);
       
       if (voltage > 0 && powerFactor > 0) {
-        return Math.abs(powerB / (voltage * powerFactor)).toFixed(2);
+        return Math.abs(powerW / (voltage * powerFactor)).toFixed(2);
       }
       return '--';
     });
@@ -502,13 +548,13 @@ export default defineComponent({
       }
       
       // Fallback: calculate from power and voltage (accounting for power factor)
-      // Note: active_power_c is in W (Watts), not kW
-      const powerC = Number.parseFloat(getFloatValue('meter.active_power_c', 0) || 0);
-      const voltage = Number.parseFloat(getFloatValue('meter.c_u', 0) || 230);
+      // Note: active_power_c is in W (Watts), already real power
+      const powerW = Number.parseFloat(getFloatValue('meter.active_power_c', 0) || 0);
+      const voltage = Number.parseFloat(getFloatValue('meter.c_u', 0) || 240);
       const powerFactor = Number.parseFloat(getFloatValue('meter.power_factor', 2) || 1);
       
       if (voltage > 0 && powerFactor > 0) {
-        return Math.abs(powerC / (voltage * powerFactor)).toFixed(2);
+        return Math.abs(powerW / (voltage * powerFactor)).toFixed(2);
       }
       return '--';
     });
@@ -686,6 +732,10 @@ export default defineComponent({
       phaseACurrent,
       phaseBCurrent,
       phaseCCurrent,
+      // Phase directions
+      phaseADirection,
+      phaseBDirection,
+      phaseCDirection,
       // Daily
       dailyYield,
       dailyTotalConsumption,
