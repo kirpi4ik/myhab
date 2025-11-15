@@ -62,11 +62,11 @@
           <svg class="flow-lines" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
             <!-- PV to Consumption -->
             <line x1="150" y1="100" x2="115" y2="170" class="flow-line pv-to-consumption" stroke-width="3"/>
-            <polygon points="115,170 126,162 115,157" class="flow-arrow" :class="{'active': totalHouseConsumptionWatts > 0}"/>
+            <polygon points="115,170 126,162 115,157" class="flow-arrow" :class="{'active': solarProductionWatts > 0 && totalHouseConsumptionWatts > 0}"/>
             
             <!-- PV to Grid -->
             <line x1="250" y1="100" x2="285" y2="170" class="flow-line pv-to-grid" stroke-width="3"/>
-            <polygon points="285,170 274,162 285,157" class="flow-arrow" :class="{'active': meterActivePowerWatts > 0}"/>
+            <polygon points="285,170 274,162 285,157" class="flow-arrow" :class="{'active': solarProductionWatts > 0 && meterActivePowerWatts > 0}"/>
             
             <!-- Grid to Consumption (bidirectional base) -->
             <line x1="120" y1="240" x2="280" y2="240" class="flow-line grid-consumption" stroke-width="3"/>
@@ -733,6 +733,7 @@ export default defineComponent({
       totalsSectionExpanded,
       // Real-time
       solarProductionKw,
+      solarProductionWatts,
       totalHouseConsumptionKw,
       gridImportKw,
       gridExportKw,

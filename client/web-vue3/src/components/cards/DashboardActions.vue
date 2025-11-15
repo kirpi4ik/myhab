@@ -60,7 +60,7 @@
       </div>
       <!-- Heat Pump -->
       <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-        <heat-pump :deviceId="heatPumpDeviceId"/>
+        <nibe-heat-pump-widget :device-id="heatPumpDeviceId"/>
       </div>
     </div>
 
@@ -77,6 +77,7 @@ import ElectricMeter from "components/ElectricMeter";
 import HeatPump from "components/HeatPump";
 import MeteoStationCard from "components/MeteoStationCard.vue";
 import SolarPlantWidget from "components/SolarPlantWidget.vue";
+import NibeHeatPumpWidget from "components/NibeHeatPumpWidget.vue";
 import PeripheralLock from 'components/PeripheralLock.vue';
 import SprinklersDashComponent from "components/SprinklersDashComponent";
 import WaterPump from "components/WaterPump";
@@ -89,6 +90,7 @@ export default defineComponent({
     ElectricMeter,
     MeteoStationCard,
     SolarPlantWidget,
+    NibeHeatPumpWidget,
     PeripheralLock,
     SprinklersDashComponent
   },
