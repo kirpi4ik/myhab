@@ -177,6 +177,24 @@ export default defineComponent({
     });
 
     /**
+     * Initialize state from connectedTo port value
+     * This ensures peripheral.state is set correctly for peripheralService.toggle()
+     */
+    const initializeState = () => {
+      if (asset.value?.data?.connectedTo?.[0]?.value) {
+        const portValue = asset.value.data.connectedTo[0].value;
+        const newState = portValue === 'ON';
+        asset.value.state = newState;
+        if (asset.value.data) {
+          asset.value.data.state = newState;
+        }
+      }
+    };
+
+    // Initialize state when component mounts or peripheral changes
+    initializeState();
+
+    /**
      * Load peripheral details and expiration from cache
      */
     const loadDetails = async () => {
@@ -220,6 +238,10 @@ export default defineComponent({
           const newState = payload.p4 === 'ON';
           asset.value.value = payload.p4;
           asset.value.state = newState;
+          // Update the actual port value that we read from
+          if (asset.value.data?.connectedTo?.[0]) {
+            asset.value.data.connectedTo[0].value = payload.p4;
+          }
           if (asset.value.data) {
             asset.value.data.state = newState;
           }

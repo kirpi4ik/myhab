@@ -41,6 +41,14 @@ class UIMessageService implements EventPublisher {
     def receiveSwitchEvent(event) {
         handleSwitchEvent(event)
     }
+        /**
+     * Handle generic switch events
+     */
+    @Transactional
+    @Subscriber('evt_heat')
+    def receiveHeatEvent(event) {
+        handleSwitchEvent(event)
+    }
 
     /**
      * Common handler for switch/light events
@@ -149,7 +157,7 @@ class UIMessageService implements EventPublisher {
      * Handle heat control events
      */
     @Transactional
-    @Subscriber('evt_heat')
+   
     def heat(event) {
         if (!PERIPHERAL.isEqual(event.data.p1)) {
             return
