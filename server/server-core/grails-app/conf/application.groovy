@@ -109,7 +109,7 @@ environments {
     development {
         dataSource {
             dbCreate = "update"
-            url = "jdbc:postgresql://localhost:5432/madhouse"
+            url = "jdbc:postgresql://localhost:5432/madhouse?TimeZone=UTC"
             username = "myhab"
             password = "myhab"
             logSql = false
@@ -119,7 +119,8 @@ environments {
     production {
         dataSource {
             dbCreate = "update"
-            url = System.getenv("DB_URL")
+            // Append TimeZone=UTC to the connection URL if not already present
+            url = System.getenv("DB_URL")?.contains("TimeZone=") ? System.getenv("DB_URL") : "${System.getenv('DB_URL')}?TimeZone=UTC"
             username = System.getenv("DB_USERNAME")
             password = System.getenv("DB_PASSWORD")
             logSql = false

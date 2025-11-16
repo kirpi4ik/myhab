@@ -151,7 +151,8 @@ task versionTxt(dependsOn: syncVersions) {
         def entrypointFile = new File(dockerDir, "app-entrypoint.sh")
         entrypointFile.text = """#!/bin/sh
 set -e
-java -jar -Dgrails.env=\$GRAILS_ENV /app/myhab.jar \$@
+# Force JVM timezone to UTC for consistent timestamp handling
+java -jar -Dgrails.env=\$GRAILS_ENV -Duser.timezone=UTC /app/myhab.jar \$@
 """
         // Make the script executable (Unix-like systems)
         entrypointFile.setExecutable(true)
