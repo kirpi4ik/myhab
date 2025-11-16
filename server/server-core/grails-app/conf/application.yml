@@ -90,12 +90,12 @@ quartz:
     # Nibe heat pump data sync
     nibeInfoSync:
       enabled: true
-      interval: 120  # seconds
+      interval: 300  # seconds
     
     # Nibe OAuth token refresh
     nibeTokenRefresh:
-      enabled: false
-      interval: 500  # seconds
+      enabled: true
+      interval: 120  # seconds
     
     # Device controller state synchronization via HTTP
     deviceControllerStateSync:

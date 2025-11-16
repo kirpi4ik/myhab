@@ -122,6 +122,7 @@ export const DEVICE_GET_BY_ID_WITH_PORT_VALUES = gql`
       model
       name
       description
+      status
       ports {
         id
         name
