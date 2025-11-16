@@ -7,7 +7,16 @@
           <div class="text-h5 text-weight-medium text-grey-9">{{ $t('heat_pump.title') }}</div>
           <div class="text-caption text-grey-6">NIBE F1145-8 EM</div>
         </div>
-        <div class="col-auto">
+        <div class="col-auto row q-gutter-xs">
+          <!-- Device Status Badge -->
+          <q-chip 
+            :color="deviceStatusColor" 
+            text-color="white"
+            size="sm"
+            :icon="deviceStatusIcon">
+            {{ deviceStatusLabel }}
+          </q-chip>
+          <!-- Heating Status Badge -->
           <q-chip 
             :color="isHeating ? 'deep-orange-6' : 'grey-5'" 
             text-color="white"
@@ -354,6 +363,56 @@ export default defineComponent({
     });
 
     // ============================================================================
+    // DEVICE STATUS
+    // ============================================================================
+
+    /**
+     * Device connection status from backend
+     */
+    const deviceStatus = computed(() => {
+      return device.value?.status || 'OFFLINE';
+    });
+
+    const deviceStatusColor = computed(() => {
+      switch (deviceStatus.value) {
+        case 'ONLINE':
+          return 'positive';
+        case 'OFFLINE':
+          return 'negative';
+        case 'DISABLED':
+          return 'grey-6';
+        default:
+          return 'grey-6';
+      }
+    });
+
+    const deviceStatusIcon = computed(() => {
+      switch (deviceStatus.value) {
+        case 'ONLINE':
+          return 'mdi-check-circle';
+        case 'OFFLINE':
+          return 'mdi-alert-circle';
+        case 'DISABLED':
+          return 'mdi-cancel';
+        default:
+          return 'mdi-help-circle';
+      }
+    });
+
+    const deviceStatusLabel = computed(() => {
+      switch (deviceStatus.value) {
+        case 'ONLINE':
+          return 'Online';
+        case 'OFFLINE':
+          return 'Offline';
+        case 'DISABLED':
+          return 'Disabled';
+        default:
+          return 'Unknown';
+      }
+    });
+
+    // ============================================================================
     // SYSTEM STATUS
     // ============================================================================
 
@@ -517,6 +576,11 @@ export default defineComponent({
       returnTemp,
       brineInTemp,
       brineOutTemp,
+      // Device Status
+      deviceStatus,
+      deviceStatusColor,
+      deviceStatusIcon,
+      deviceStatusLabel,
       // Status
       isHeating,
       tempDiff,
