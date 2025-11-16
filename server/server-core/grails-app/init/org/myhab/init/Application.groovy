@@ -18,6 +18,10 @@ import org.springframework.context.annotation.FilterType
 @CompileStatic
 class Application extends GrailsAutoConfiguration {
     static void main(String[] args) {
+        // Set default timezone to UTC for the entire application
+        // This ensures all Date operations use UTC unless explicitly specified
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        
         GrailsApp.run(Application, args)
     }
 }
