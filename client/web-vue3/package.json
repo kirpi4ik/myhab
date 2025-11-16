@@ -43,7 +43,8 @@
         "vue-router": "^4.6.3",
         "vue3-slider": "^1.9.0",
         "vuedraggable": "^4.1.0",
-        "websocket": "^1.0.34"
+        "websocket": "^1.0.34",
+        "@vue-js-cron/light": "^2.0.0"
     },
     "devDependencies": {
         "@babel/core": "^7.22.17",

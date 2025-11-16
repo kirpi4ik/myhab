@@ -29,17 +29,9 @@ export const JOB_GET_BY_ID = gql`
   query ($id: Long!) {
     job(id: $id) {
       id
-      uid
       name
       description
       state
-      tsCreated
-      tsUpdated
-      scenario {
-        id
-        name
-        body
-      }
       cronTriggers {
         id
         expression
@@ -54,6 +46,13 @@ export const JOB_GET_BY_ID = gql`
       tags {
         id
         name
+      }
+      tsCreated
+      tsUpdated
+      scenario {
+        id
+        name
+        body
       }
     }
   }
@@ -63,14 +62,9 @@ export const JOB_EDIT_GET_BY_ID = gql`
   query ($id: Long!) {
     job(id: $id) {
       id
-      uid
       name
       description
       state
-      scenario {
-        id
-        name
-      }
       cronTriggers {
         id
         expression
@@ -83,6 +77,10 @@ export const JOB_EDIT_GET_BY_ID = gql`
         }
       }
       tags {
+        id
+        name
+      }
+      scenario {
         id
         name
       }
@@ -106,7 +104,6 @@ export const JOB_CREATE = gql`
   mutation jobCreate($job: JobCreate) {
     jobCreate(job: $job) {
       id
-      uid
     }
   }
 `;
@@ -140,6 +137,15 @@ export const JOB_SCHEDULE = gql`
 export const JOB_UNSCHEDULE = gql`
   mutation jobUnschedule($jobId: ID!) {
     jobUnschedule(jobId: $jobId) {
+      success
+      error
+    }
+  }
+`;
+
+export const JOB_TRIGGER = gql`
+  mutation jobTrigger($jobId: ID!) {
+    jobTrigger(jobId: $jobId) {
       success
       error
     }

@@ -37,7 +37,6 @@ class MQTTMessageHandler implements MessageHandler, EventPublisher {
                 log.trace("MQTT: device code = ${msg.deviceCode}, port type = ${msg.portType}, port code = ${msg.portCode}, value = ${msg.portStrValue}")
             }
 
-
         } catch (IOException e) {
             log.error("Failed to handle MQTT message", e)
         }

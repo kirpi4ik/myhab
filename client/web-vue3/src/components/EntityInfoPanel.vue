@@ -11,12 +11,6 @@
         <strong>ID:</strong> {{ entity.id }}
       </div>
 
-      <!-- UID -->
-      <div class="col-12 col-sm-6 col-md-4" v-if="entity.uid">
-        <q-icon name="mdi-key" class="q-mr-xs"/>
-        <strong>UID:</strong> {{ entity.uid }}
-      </div>
-
       <!-- Created Date -->
       <div class="col-12 col-sm-6 col-md-4" v-if="entity.tsCreated && showTimestamps">
         <q-icon name="mdi-calendar-plus" class="q-mr-xs"/>
@@ -56,7 +50,7 @@ export default defineComponent({
   name: 'EntityInfoPanel',
   props: {
     /**
-     * The entity object containing id, uid, timestamps, etc.
+     * The entity object containing id, timestamps, etc.
      */
     entity: {
       type: Object,

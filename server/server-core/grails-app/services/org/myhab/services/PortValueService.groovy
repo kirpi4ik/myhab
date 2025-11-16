@@ -45,12 +45,16 @@ class PortValueService implements EventPublisher {
         }
         if (devicePort != null) {
             def newVal = ValueParser.parser(devicePort).apply(event.data.p5)
+            
             if (devicePort.value != newVal) {
 
                 try {
                     PortValue newPortValue = new PortValue()
-                    newPortValue.portUid = devicePort.uid
+                    // Use id instead of uid (uid is deprecated)
                     newPortValue.portId = devicePort.id
+                    // Set portUid for backward compatibility with database NOT NULL constraint
+                    // beforeInsert will also set this, but set it here too to ensure it's never null
+                    newPortValue.portUid = devicePort.id?.toString() ?: ''
                     newPortValue.value = newVal
                     newPortValue.save(failOnError: false, flush: true)
 

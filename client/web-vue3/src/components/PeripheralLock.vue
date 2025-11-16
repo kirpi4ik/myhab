@@ -18,7 +18,11 @@
 						:loading="loading"
 						:disable="loading"
 						@click="showConfirmDialog"
-					/>
+					>
+						<template v-slot:loading>
+							<q-spinner-dots />
+						</template>
+					</q-btn>
 				</div>
 			</q-card-section>
 		</q-card>
@@ -59,7 +63,11 @@
 						:loading="unlocking"
 						:disable="unlocking"
 						@click="openDoor"
-					/>
+					>
+						<template v-slot:loading>
+							<q-spinner-dots />
+						</template>
+					</q-btn>
 				</q-card-actions>
 			</q-card>
 		</q-dialog>

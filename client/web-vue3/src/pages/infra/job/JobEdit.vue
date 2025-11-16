@@ -73,11 +73,22 @@
           <q-list bordered separator>
             <q-item v-for="(trigger, index) in cronTriggers" :key="index">
               <q-item-section>
-                <q-input v-model="trigger.expression" label="Cron Expression" dense hint="e.g., 0 0 * * * (every hour)">
-                  <template v-slot:prepend>
-                    <q-icon name="mdi-clock-outline"/>
-                  </template>
-                </q-input>
+                <div class="q-mb-sm">
+                  <div class="text-caption text-grey-7 q-mb-xs">Cron Expression</div>
+                  <cron-light 
+                    v-model="trigger.expression" 
+                    format="quartz"
+                    :locale="'en'"
+                    :flavor="'light'"
+                    @error="(error) => cronErrors[index] = error"
+                  />
+                  <div v-if="cronErrors[index]" class="text-negative text-caption q-mt-xs">
+                    {{ cronErrors[index] }}
+                  </div>
+                  <div v-else-if="trigger.expression" class="text-grey-6 text-caption q-mt-xs">
+                    Expression: {{ trigger.expression }}
+                  </div>
+                </div>
               </q-item-section>
               <q-item-section side>
                 <q-btn icon="mdi-delete" color="red" flat round @click="removeCronTrigger(index)">
@@ -157,12 +168,15 @@ import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
 import {JOB_EDIT_GET_BY_ID, JOB_UPDATE} from '@/graphql/queries';
 import _ from 'lodash';
+import '@vue-js-cron/light/dist/light.css';
+import { CronLight } from '@vue-js-cron/light';
 
 export default defineComponent({
   name: 'JobEdit',
   components: {
     EntityInfoPanel,
-    EntityFormActions
+    EntityFormActions,
+    CronLight
   },
   setup() {
     const $q = useQuasar();
@@ -175,6 +189,7 @@ export default defineComponent({
     const tagListFiltered = ref([]);
     const selectedTags = ref([]);
     const cronTriggers = ref([]);
+    const cronErrors = ref({});
     const jobStates = ['DRAFT', 'ACTIVE', 'DISABLED'];
 
     // Use CRUD composable
@@ -221,11 +236,24 @@ export default defineComponent({
     });
 
     const addCronTrigger = () => {
-      cronTriggers.value.push({ expression: '0 0 * * *' });
+      cronTriggers.value.push({ expression: '* * * * *' });
+      // Clear error for new trigger
+      cronErrors.value[cronTriggers.value.length - 1] = null;
     };
 
     const removeCronTrigger = (index) => {
       cronTriggers.value.splice(index, 1);
+      // Remove error for deleted trigger
+      const newErrors = {};
+      Object.keys(cronErrors.value).forEach(key => {
+        const keyNum = parseInt(key);
+        if (keyNum < index) {
+          newErrors[key] = cronErrors.value[key];
+        } else if (keyNum > index) {
+          newErrors[keyNum - 1] = cronErrors.value[key];
+        }
+      });
+      cronErrors.value = newErrors;
     };
 
     /**
@@ -309,6 +337,11 @@ export default defineComponent({
         // Load cron triggers
         if (job.value.cronTriggers && job.value.cronTriggers.length > 0) {
           cronTriggers.value = _.cloneDeep(job.value.cronTriggers);
+          // Initialize errors object
+          cronErrors.value = {};
+          cronTriggers.value.forEach((_, index) => {
+            cronErrors.value[index] = null;
+          });
         }
       }
     };
@@ -351,6 +384,7 @@ export default defineComponent({
       tagListFiltered,
       selectedTags,
       cronTriggers,
+      cronErrors,
       jobStates,
       addCronTrigger,
       removeCronTrigger,

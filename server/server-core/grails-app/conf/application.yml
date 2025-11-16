@@ -63,6 +63,20 @@ quartz:
   pluginEnabled: true
   autoStartup: true
   purgeQuartzTablesOnStartup: false
+  plugin:
+    jobHistory:
+      # {0} = Job name
+      # {1} = Job group
+      # {2} = Fire time
+      # {3} = Trigger name
+      # {4} = Trigger group
+      # {7} = Re-fire count
+      # {8} = Result/exception message
+      class: "org.quartz.plugins.history.LoggingJobHistoryPlugin"
+      jobSuccessMessage: "Job [{1}.{0}] execution complete and reports: {8}"
+      jobFailedMessage: "Job [{1}.{0}] execution failed with exception: {8}"
+      jobToBeFiredMessage: "Job [{1}.{0}] to be fired by trigger [{4}.{3}], re-fire: {7}"
+      jobWasVetoedMessage: "Job [{1}.{0}] was vetoed. It was to be fired by trigger [{4}.{3}] at: {2, date, yyyy-MM-dd HH:mm:ss.SSS}"
   threadPool:
     class: "org.quartz.simpl.SimpleThreadPool"
     threadCount: 25
@@ -70,13 +84,13 @@ quartz:
   jobs:
     # Huawei solar inverter sync
     huaweiInfoSync:
-      enabled: false
-      interval: 120  # seconds
+      enabled: true
+      interval: 300  # seconds
     
     # Nibe heat pump data sync
     nibeInfoSync:
-      enabled: false
-      interval: 60  # seconds
+      enabled: true
+      interval: 120  # seconds
     
     # Nibe OAuth token refresh
     nibeTokenRefresh:
@@ -132,6 +146,11 @@ quartz:
     eventLogReader:
       enabled: false
       interval: 60  # seconds
+    
+    # Meteo Station weather data sync
+    meteoStationSync:
+      enabled: true
+      interval: 1800  # seconds (1800 seconds = 30 minutes)
 
 ---
 grails:

@@ -38,9 +38,13 @@
         :rows="filteredItems" 
         :columns="columns" 
         :loading="loading"
-        v-model:pagination="pagination"
         row-key="id"
         flat
+        virtual-scroll
+        :rows-per-page-options="[0]"
+        hide-pagination
+        style="max-height: calc(100vh - 250px)"
+        class="sticky-header-table"
         @row-click="(evt, row) => viewItem(row)"
       >
         <template v-slot:body-cell-code="props">
@@ -69,6 +73,18 @@
         <template v-slot:body-cell-description="props">
           <q-td :props="props">
             {{ props.row.description ? (props.row.description.length > 50 ? props.row.description.substring(0, 50) + '...' : props.row.description) : '-' }}
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-patchPanel="props">
+          <q-td :props="props">
+            {{ props.row.patchPanel || '-' }}
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-tsCreated="props">
+          <q-td :props="props">
+            {{ formatDate(props.row.tsCreated) }}
           </q-td>
         </template>
 
@@ -111,7 +127,7 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, computed} from "vue";
+import {defineComponent, onMounted} from "vue";
 import {useEntityList} from '@/composables';
 import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
 import {format} from 'date-fns';
@@ -128,16 +144,24 @@ export default defineComponent({
       {name: 'description', label: 'Description', field: 'description', sortable: true, align: 'left'},
       {name: 'patchPanel', label: 'Panel Port', field: 'patchPanel', sortable: true, align: 'left'},
       {name: 'tsCreated', label: 'Created', field: 'tsCreated', sortable: true, align: 'left'},
-      {name: 'actions', label: 'Actions', field: '', sortable: false, align: 'right'}
+      {
+        name: 'actions', 
+        label: 'Actions', 
+        field: '', 
+        sortable: false, 
+        align: 'right',
+        headerClasses: 'bg-grey-2',
+        classes: 'bg-grey-1',
+        headerStyle: 'position: sticky; right: 0; z-index: 1',
+        style: 'position: sticky; right: 0'
+      }
     ];
 
     // Use the entity list composable
     const {
-      items,
       filteredItems,
       loading,
       filter,
-      pagination,
       fetchList,
       viewItem,
       editItem,
@@ -162,9 +186,6 @@ export default defineComponent({
         tsUpdated: cable.tsUpdated
       })
     });
-
-    // Set initial pagination
-    pagination.value.descending = true;
 
     /**
      * Format date for display
@@ -204,7 +225,6 @@ export default defineComponent({
       filteredItems,
       loading,
       filter,
-      pagination,
       columns,
       viewItem,
       editItem,

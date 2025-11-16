@@ -21,12 +21,15 @@
 </template>
 
 <script>
-import { defineComponent, ref, watch, shallowRef } from 'vue';
+import { defineComponent, ref, watch, shallowRef, onMounted } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { autocompletion } from '@codemirror/autocomplete';
 import { EditorView } from '@codemirror/view';
+import groovyCompletionsData from '../data/groovy-completions.json';
+import { useApolloClient } from '@vue/apollo-composable';
+import { PORT_LIST_HINTS } from '@/graphql/queries';
 
 export default defineComponent({
   name: 'CodeEditor',
@@ -83,12 +86,47 @@ export default defineComponent({
   setup(props, { emit }) {
     const code = ref(props.modelValue);
     const view = shallowRef();
+    const { client } = useApolloClient();
+    const portHints = ref([]);
 
     // Watch for external changes to modelValue
     watch(() => props.modelValue, (newVal) => {
       if (code.value !== newVal) {
         code.value = newVal;
       }
+    });
+
+    // Load completions from external JSON file
+    const loadedCompletions = [
+      ...(groovyCompletionsData.keywords || []),
+      ...(groovyCompletionsData.functions || []),
+      ...(groovyCompletionsData.dsl || []),
+      ...(groovyCompletionsData.scenarioMethods || [])
+    ];
+
+    // Fetch device ports for dynamic hints
+    const fetchPortHints = async () => {
+      try {
+        const { data } = await client.query({
+          query: PORT_LIST_HINTS,
+          fetchPolicy: 'network-only'
+        });
+
+        if (data?.devicePortList) {
+          portHints.value = data.devicePortList.map(port => ({
+            label: `${port.id}`,
+            type: 'constant',
+            info: `Port: ${port.name || port.internalRef} (${port.device?.code || 'Unknown'}) - ${port.description || 'No description'}`
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch port hints:', error);
+      }
+    };
+
+    // Fetch hints on mount
+    onMounted(() => {
+      fetchPortHints();
     });
 
     // Custom completions for Groovy/scripting
@@ -98,33 +136,12 @@ export default defineComponent({
         return null;
       }
 
+      // Combine loaded completions from JSON with custom completions from props and dynamic port hints
       const completions = [
-        // Groovy keywords
-        { label: 'def', type: 'keyword', info: 'Define a variable' },
-        { label: 'class', type: 'keyword', info: 'Define a class' },
-        { label: 'interface', type: 'keyword', info: 'Define an interface' },
-        { label: 'trait', type: 'keyword', info: 'Define a trait' },
-        { label: 'enum', type: 'keyword', info: 'Define an enum' },
-        { label: 'package', type: 'keyword', info: 'Package declaration' },
-        { label: 'import', type: 'keyword', info: 'Import statement' },
-        { label: 'extends', type: 'keyword', info: 'Class inheritance' },
-        { label: 'implements', type: 'keyword', info: 'Interface implementation' },
-        { label: 'return', type: 'keyword', info: 'Return statement' },
-        { label: 'if', type: 'keyword', info: 'Conditional statement' },
-        { label: 'else', type: 'keyword', info: 'Else clause' },
-        { label: 'for', type: 'keyword', info: 'For loop' },
-        { label: 'while', type: 'keyword', info: 'While loop' },
-        { label: 'switch', type: 'keyword', info: 'Switch statement' },
-        { label: 'case', type: 'keyword', info: 'Case clause' },
-        { label: 'break', type: 'keyword', info: 'Break statement' },
-        { label: 'continue', type: 'keyword', info: 'Continue statement' },
-        { label: 'try', type: 'keyword', info: 'Try block' },
-        { label: 'catch', type: 'keyword', info: 'Catch block' },
-        { label: 'finally', type: 'keyword', info: 'Finally block' },
-        { label: 'throw', type: 'keyword', info: 'Throw exception' },
-        { label: 'new', type: 'keyword', info: 'Create new instance' },
-        { label: 'println', type: 'function', info: 'Print line to console' },
-        { label: 'print', type: 'function', info: 'Print to console' },
+        ...loadedCompletions,
+        
+        // Add dynamic port ID hints
+        ...portHints.value,
         
         // Add custom completions from props
         ...props.customCompletions.map(item => ({

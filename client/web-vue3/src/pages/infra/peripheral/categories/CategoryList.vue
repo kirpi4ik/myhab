@@ -7,8 +7,12 @@
       :columns="columns"
       :loading="loading"
       :filter="filter"
-      :pagination="pagination"
       row-key="id"
+      virtual-scroll
+      :rows-per-page-options="[0]"
+      hide-pagination
+      style="max-height: calc(100vh - 250px)"
+      class="sticky-header-table"
       @row-click="onRowClick"
       @request="fetchData"
       binary-state-sort
@@ -72,14 +76,18 @@ export default defineComponent({
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
       {name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true},
-      {name: 'actions', label: 'Actions', field: 'actions'},
+      {
+        name: 'actions', 
+        label: 'Actions', 
+        field: 'actions',
+        align: 'right',
+        sortable: false,
+        headerClasses: 'bg-grey-2',
+        classes: 'bg-grey-1',
+        headerStyle: 'position: sticky; right: 0; z-index: 1',
+        style: 'position: sticky; right: 0'
+      },
     ];
-    const pagination = ref({
-      sortBy: 'code',
-      descending: false,
-      page: 1,
-      rowsPerPage: 10
-    })
     const fetchData = () => {
       loading.value = true;
       client.query({
@@ -108,7 +116,6 @@ export default defineComponent({
       rows,
       columns,
       filter,
-      pagination,
       loading,
       fetchData,
       confirmDelete,

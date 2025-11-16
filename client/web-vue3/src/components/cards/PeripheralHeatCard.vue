@@ -42,35 +42,13 @@
         <q-item-label>
           <q-btn-dropdown size="sm" flat round icon="settings" class="text-white">
             <q-list>
-              <!-- Timeout Options -->
-              <q-item-label header class="text-weight-bold">Set Timeout</q-item-label>
-              <q-item
-                v-for="item in timeoutOptions"
-                :key="item.value"
-                clickable
-                v-close-popup
-                @click="handleSetTimeout(item.value)"
-              >
-                <q-item-section>
-                  <q-item-label>{{ formatDuration(item.value * 1000) }}</q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- Timeout Selector -->
+              <timeout-selector
+                @set-timeout="handleSetTimeout"
+                @delete-timeout="handleDeleteTimeout"
+              />
 
               <q-separator/>
-
-              <!-- Delete Timeout -->
-              <q-item
-                clickable
-                v-close-popup
-                @click="handleDeleteTimeout"
-              >
-                <q-item-section avatar>
-                  <q-icon name="mdi-timer-off" color="negative"/>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>Remove Timeout</q-item-label>
-                </q-item-section>
-              </q-item>
 
               <!-- View Details -->
               <q-item
@@ -122,19 +100,21 @@ import {
   CONFIGURATION_SET_VALUE,
   PERIPHERAL_GET_BY_ID,
 } from '@/graphql/queries';
-import {heatService} from '@/_services/controls';
+import {peripheralService} from '@/_services/controls';
 
 import _ from 'lodash';
 import {format} from 'date-fns';
 import EventLogger from 'components/EventLogger.vue';
 import humanizeDuration from 'humanize-duration';
 import Toggle from '@vueform/toggle';
+import TimeoutSelector from 'components/TimeoutSelector.vue';
 
 export default defineComponent({
   name: 'PeripheralHeatCard',
   components: {
     Toggle,
     EventLogger,
+    TimeoutSelector,
   },
   props: {
     peripheral: {
@@ -147,19 +127,6 @@ export default defineComponent({
     const router = useRouter();
     const { client } = useApolloClient();
     const { peripheral: asset } = toRefs(props);
-
-    // Timeout options in seconds
-    const timeoutOptions = [
-      { value: 30, label: '30 seconds' },
-      { value: 60, label: '1 minute' },
-      { value: 300, label: '5 minutes' },
-      { value: 600, label: '10 minutes' },
-      { value: 1800, label: '30 minutes' },
-      { value: 3600, label: '1 hour' },
-      { value: 7200, label: '2 hours' },
-      { value: 10800, label: '3 hours' },
-      { value: 18000, label: '5 hours' },
-    ];
 
     /**
      * Get the port ID from connected ports
@@ -282,7 +249,7 @@ export default defineComponent({
      * Handle heat toggle
      */
     const handleToggle = () => {
-      heatService.toggle(asset.value);
+      peripheralService.toggle(asset.value, 'evt_heat');
     };
 
     /**
@@ -338,7 +305,6 @@ export default defineComponent({
       isHeatingOn,
       heatState,
       timeoutConfig,
-      timeoutOptions,
       portId,
       handleToggle,
       handleSetTimeout,

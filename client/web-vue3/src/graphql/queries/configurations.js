@@ -72,15 +72,6 @@ export const CONFIGURATION_REMOVE_CONFIG_BY_KEY = gql`
 		}
 	}
 `;
-export const CONFIGURATION_GET_VALUE = gql`
-	query configPropertyByKey($key: String!, $entityId: Long!, $entityType: EntityType!) {
-		configPropertyByKey(key: $key, entityId: $entityId, entityType: $entityType) {
-			id
-			key
-			value
-		}
-	}
-`;
 export const CONFIGURATION_GET_LIST_VALUE = gql`
 	query configListByKey($key: String!, $entityId: Long!, $entityType: EntityType!) {
 		configListByKey(key: $key, entityId: $entityId, entityType: $entityType) {
@@ -110,15 +101,6 @@ export const CACHE_GET_ALL_VALUES = gql`
 			cacheKey
 			cacheName
 			cachedValue
-		}
-	}
-`;
-2;
-export const CONFIGURATION_DELETE = gql`
-	mutation ($id: Long!) {
-		configurationDelete(id: $id) {
-			success
-			error
 		}
 	}
 `;

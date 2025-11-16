@@ -38,9 +38,13 @@
         :rows="filteredItems"
         :columns="columns"
         :loading="loading"
-        v-model:pagination="pagination"
         row-key="id"
         flat
+        virtual-scroll
+        :rows-per-page-options="[0]"
+        hide-pagination
+        style="max-height: calc(100vh - 250px)"
+        class="sticky-header-table"
         @row-click="(evt, row) => viewItem(row)"
       >
         <template v-slot:body-cell-name="props">
@@ -94,26 +98,27 @@
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
             <q-btn-group>
-              <!-- Play/Pause Button -->
+              <!-- Play/Pause Toggle Button -->
               <q-btn 
-                v-if="props.row.state === 'ACTIVE'" 
-                icon="mdi-pause" 
-                color="orange-7" 
-                @click.stop="toggleJobSchedule(props.row, false)" 
+                :icon="props.row.state === 'ACTIVE' ? 'mdi-power' : 'mdi-power-off'" 
+                :color="props.row.state === 'ACTIVE' ? 'green-7' : 'grey-7'" 
+                @click.stop="toggleJobSchedule(props.row, props.row.state !== 'ACTIVE')" 
                 flat
                 dense
               >
-                <q-tooltip>Pause Job</q-tooltip>
+                <q-tooltip>{{ props.row.state === 'ACTIVE' ? 'Pause Job' : 'Start Job' }}</q-tooltip>
               </q-btn>
+              
+              <!-- Run Button -->
               <q-btn 
-                v-else 
-                icon="mdi-play" 
-                color="green-7" 
-                @click.stop="toggleJobSchedule(props.row, true)" 
+                icon="mdi-play-circle" 
+                color="blue-7" 
+                @click.stop="runJob(props.row)" 
                 flat
                 dense
+                :disable="props.row.state !== 'ACTIVE'"
               >
-                <q-tooltip>Start Job</q-tooltip>
+                <q-tooltip>Run Job Now</q-tooltip>
               </q-btn>
               
               <q-btn 
@@ -157,7 +162,7 @@ import { format } from 'date-fns';
 import { useQuasar } from 'quasar';
 import { useApolloClient } from '@vue/apollo-composable';
 import { useEntityList } from '@/composables';
-import { JOB_DELETE_BY_ID, JOB_LIST_ALL, JOB_SCHEDULE, JOB_UNSCHEDULE } from '@/graphql/queries';
+import { JOB_DELETE_BY_ID, JOB_LIST_ALL, JOB_SCHEDULE, JOB_UNSCHEDULE, JOB_TRIGGER } from '@/graphql/queries';
 
 export default defineComponent({
   name: 'JobList',
@@ -173,7 +178,17 @@ export default defineComponent({
       { name: 'state', label: 'State', field: 'state', align: 'left', sortable: true },
       { name: 'tsCreated', label: 'Created', field: 'tsCreated', align: 'left', sortable: true },
       { name: 'tsUpdated', label: 'Updated', field: 'tsUpdated', align: 'left', sortable: true },
-      { name: 'actions', label: 'Actions', field: () => '', align: 'right', sortable: false }
+      { 
+        name: 'actions', 
+        label: 'Actions', 
+        field: () => '', 
+        align: 'right', 
+        sortable: false,
+        headerClasses: 'bg-grey-2',
+        classes: 'bg-grey-1',
+        headerStyle: 'position: sticky; right: 0; z-index: 1',
+        style: 'position: sticky; right: 0'
+      }
     ];
 
     /**
@@ -206,7 +221,6 @@ export default defineComponent({
       filteredItems,
       loading,
       filter,
-      pagination,
       fetchList,
       viewItem,
       editItem,
@@ -271,6 +285,52 @@ export default defineComponent({
       });
     };
 
+    /**
+     * Run job immediately
+     */
+    const runJob = (job) => {
+      if (job.state !== 'ACTIVE') {
+        $q.notify({
+          color: 'warning',
+          message: 'Job must be ACTIVE to run',
+          icon: 'mdi-alert-circle',
+          position: 'top'
+        });
+        return;
+      }
+
+      client.mutate({
+        mutation: JOB_TRIGGER,
+        variables: { jobId: job.id },
+        fetchPolicy: 'no-cache',
+      }).then(response => {
+        const result = response.data.jobTrigger;
+        if (result.success) {
+          $q.notify({
+            color: 'positive',
+            message: 'Job triggered successfully',
+            icon: 'mdi-play-circle',
+            position: 'top'
+          });
+        } else {
+          $q.notify({
+            color: 'negative',
+            message: result.error || 'Failed to trigger job',
+            icon: 'mdi-alert-circle',
+            position: 'top'
+          });
+        }
+      }).catch(error => {
+        $q.notify({
+          color: 'negative',
+          message: 'Failed to trigger job',
+          icon: 'mdi-alert-circle',
+          position: 'top'
+        });
+        console.error('Error triggering job:', error);
+      });
+    };
+
     onMounted(() => {
       fetchList();
     });
@@ -278,7 +338,6 @@ export default defineComponent({
     return {
       filteredItems,
       columns,
-      pagination,
       loading,
       filter,
       viewItem,
@@ -286,6 +345,7 @@ export default defineComponent({
       createItem,
       deleteItem,
       toggleJobSchedule,
+      runJob,
       getStateColor,
       formatDate
     };
