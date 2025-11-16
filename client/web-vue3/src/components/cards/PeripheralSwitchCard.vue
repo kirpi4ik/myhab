@@ -138,17 +138,25 @@ export default defineComponent({
 
     /**
      * Check if switch is currently on
+     * Reads from connectedTo[0].value which contains "ON" or "OFF"
      */
-    const isSwitchOn = computed(() => asset.value?.state === true);
+    const isSwitchOn = computed(() => {
+      const portValue = asset.value?.data?.connectedTo?.[0]?.value;
+      return portValue === 'ON';
+    });
 
     /**
      * Get/Set switch state for toggle
+     * Reads from connectedTo[0].value which contains "ON" or "OFF"
      */
     const switchState = computed({
-      get: () => asset.value?.data?.state === true,
+      get: () => {
+        const portValue = asset.value?.data?.connectedTo?.[0]?.value;
+        return portValue === 'ON';
+      },
       set: (value) => {
-        if (asset.value?.data) {
-          asset.value.data.state = value;
+        if (asset.value?.data?.connectedTo?.[0]) {
+          asset.value.data.connectedTo[0].value = value ? 'ON' : 'OFF';
         }
       }
     });
