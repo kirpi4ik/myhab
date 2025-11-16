@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit
  * - Heat pump status and operational parameters
  * 
  * Features:
- * - Integrated OAuth2 token refresh (replaces NibeTokenRefreshJob)
+ * - Uses OAuth2 tokens refreshed by NibeTokenRefreshJob (separation of concerns)
  * - Multi-step API data collection (systems, devices, firmware, points)
  * - Flexible parameter selection via database configuration
  * - Auto-creates ports only for configured parameters
@@ -105,9 +105,9 @@ class NibeInfoSyncJob implements Job {
         }
         
         try {
-            // Step 1: Refresh OAuth2 access token
-            if (!refreshAccessToken(device)) {
-                log.error("Failed to refresh access token, skipping sync")
+            // Step 1: Load OAuth2 access token (refreshed by NibeTokenRefreshJob)
+            if (!loadAccessToken(device)) {
+                log.error("Failed to load access token, skipping sync")
                 mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
@@ -143,102 +143,36 @@ class NibeInfoSyncJob implements Job {
     }
 
     /**
-     * Refresh OAuth2 access token using refresh token
-     * Replaces the old NibeTokenRefreshJob functionality
+     * Load OAuth2 access token from database
+     * Token is refreshed by NibeTokenRefreshJob every 5 minutes
+     * This method simply reads the current token without calling the API
      * 
      * @param device Nibe device
-     * @return true if token refresh succeeded, false otherwise
+     * @return true if token loaded successfully, false otherwise
      */
-    boolean refreshAccessToken(Device device) {
+    boolean loadAccessToken(Device device) {
         try {
-            log.debug("Attempting to refresh access token for device ${device.id}")
+            log.debug("Loading access token from database for device ${device.id}")
             
-            // Fetch configurations directly from database
-            def clientIdConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
-                device.id,
-                EntityType.DEVICE,
-                'cfg.key.device.oauth.client_id'
-            )
-            def clientSecretConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
-                device.id,
-                EntityType.DEVICE,
-                'cfg.key.device.oauth.client_secret'
-            )
-            def refreshTokenConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
-                device.id,
-                EntityType.DEVICE,
-                CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN.key()
-            )
-            
-            log.debug("Config lookup results: clientId=${clientIdConfig != null}, clientSecret=${clientSecretConfig != null}, refreshToken=${refreshTokenConfig != null}")
-            
-            def clientId = clientIdConfig?.value
-            def clientSecret = clientSecretConfig?.value
-            def refreshToken = refreshTokenConfig?.value
-            
-            log.debug("Config values: clientId=${clientId}, clientSecret=${clientSecret ? '***' : 'null'}, refreshToken=${refreshToken ? '***' : 'null'}")
-            
-            if (!clientId || !clientSecret || !refreshToken) {
-                log.error("OAuth credentials not configured for device ${device.id}")
-                log.error("Missing: clientId=${!clientId}, clientSecret=${!clientSecret}, refreshToken=${!refreshToken}")
-                // TODO: Add Telegram notification when sendMessage method is implemented
-                return false
-            }
-            
-            log.debug("Refreshing access token for device ${device.id}")
-            
-            HttpResponse<String> response = Unirest.post(API_OAUTH_TOKEN_URL)
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .field("grant_type", "refresh_token")
-                .field("client_id", clientId)
-                .field("client_secret", clientSecret)
-                .field("refresh_token", refreshToken)
-                .asString()
-            
-            if (response.status != 200) {
-                log.error("Token refresh failed with status ${response.status}: ${response.body}")
-                return false
-            }
-            
-            def tokenData = new JsonSlurper().parseText(response.body)
-            
-            // Update access token in memory and database
-            this.accessToken = tokenData.access_token
-            
-            def accTokenConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
+            def accessTokenConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
                 device.id,
                 EntityType.DEVICE,
                 CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key()
             )
-            if (!accTokenConfig) {
-                accTokenConfig = new Configuration(
-                    entityId: device.id,
-                    entityType: EntityType.DEVICE,
-                    key: CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key()
-                )
-            }
-            accTokenConfig.value = tokenData.access_token
-            accTokenConfig.save(flush: true)
             
-            // Update refresh token if provided (some OAuth2 servers rotate refresh tokens)
-            if (tokenData.refresh_token && tokenData.refresh_token != refreshToken) {
-                def newRefreshTokenConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
-                    device.id,
-                    EntityType.DEVICE,
-                    CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN.key()
-                )
-                if (newRefreshTokenConfig) {
-                    newRefreshTokenConfig.value = tokenData.refresh_token
-                    newRefreshTokenConfig.save(flush: true)
-                    log.debug("Refresh token was rotated and updated")
-                }
+            if (!accessTokenConfig?.value) {
+                log.error("Access token not found in database for device ${device.id}")
+                log.error("Ensure NibeTokenRefreshJob is enabled and running")
+                return false
             }
             
-            log.info("Access token refreshed successfully (expires in ${tokenData.expires_in}s)")
+            this.accessToken = accessTokenConfig.value
+            log.debug("Access token loaded successfully: ${accessToken?.take(20)}...")
+            
             return true
             
         } catch (Exception e) {
-            log.error("Exception during token refresh: ${e.message}", e)
+            log.error("Exception loading access token: ${e.message}", e)
             return false
         }
     }
