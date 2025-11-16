@@ -47,14 +47,20 @@ abstract class BaseEntity implements Serializable {
 
     void beforeInsert() {
         if (this.tsCreated == DomainUtil.NULL_DATE) {
-            def now = DateTime.now().toDate()
+            // Store timestamps in UTC
+            def now = DateTime.now(org.joda.time.DateTimeZone.UTC).toDate()
             this.tsCreated = now
+        }
+        // Also set ts_updated on insert for tables that never get updated
+        if (this.tsUpdated == DomainUtil.NULL_DATE) {
+            this.tsUpdated = this.tsCreated
         }
         log.trace 'Before inserting [' + this.entityType + ']... ' + (id ?: 'new')
     }
 
     void beforeUpdate() {
-        def now = DateTime.now().toDate()
+        // Store timestamps in UTC
+        def now = DateTime.now(org.joda.time.DateTimeZone.UTC).toDate()
         this.tsUpdated = now
         log.trace 'Before updating [' + this.entityType + ']... ' + (id ?: 'new')
     }

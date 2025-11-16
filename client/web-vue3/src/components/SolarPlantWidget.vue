@@ -120,8 +120,8 @@
               <div class="phase-header">{{ $t('solar.phase_a') }}</div>
               <div class="phase-power">
                 <q-icon 
-                  :name="phaseADirection === 'import' ? 'mdi-arrow-down-bold' : 'mdi-arrow-up-bold'" 
-                  :class="phaseADirection === 'import' ? 'text-red-6' : 'text-blue-6'"
+                  :name="phaseADirection === 'export' ? 'mdi-arrow-up-bold' : 'mdi-arrow-down-bold'" 
+                  :class="phaseADirection === 'export' ? 'text-blue-6' : 'text-red-6'"
                   size="xs"
                 />
                 {{ phaseAPower }}
@@ -134,8 +134,8 @@
               <div class="phase-header">{{ $t('solar.phase_b') }}</div>
               <div class="phase-power">
                 <q-icon 
-                  :name="phaseBDirection === 'import' ? 'mdi-arrow-down-bold' : 'mdi-arrow-up-bold'" 
-                  :class="phaseBDirection === 'import' ? 'text-red-6' : 'text-blue-6'"
+                  :name="phaseBDirection === 'export' ? 'mdi-arrow-up-bold' : 'mdi-arrow-down-bold'" 
+                  :class="phaseBDirection === 'export' ? 'text-blue-6' : 'text-red-6'"
                   size="xs"
                 />
                 {{ phaseBPower }}
@@ -148,8 +148,8 @@
               <div class="phase-header">{{ $t('solar.phase_c') }}</div>
               <div class="phase-power">
                 <q-icon 
-                  :name="phaseCDirection === 'import' ? 'mdi-arrow-down-bold' : 'mdi-arrow-up-bold'" 
-                  :class="phaseCDirection === 'import' ? 'text-red-6' : 'text-blue-6'"
+                  :name="phaseCDirection === 'export' ? 'mdi-arrow-up-bold' : 'mdi-arrow-down-bold'" 
+                  :class="phaseCDirection === 'export' ? 'text-blue-6' : 'text-red-6'"
                   size="xs"
                 />
                 {{ phaseCPower }}
@@ -487,25 +487,26 @@ export default defineComponent({
 
     /**
      * Phase power direction indicators
-     * Positive = import from grid (arrow down, red)
-     * Negative = export to grid (arrow up, blue)
+     * CORRECTED: Huawei meter convention:
+     * Positive value = EXPORT to grid (arrow up, blue)
+     * Negative value = IMPORT from grid (arrow down, red)
      */
     const phaseADirection = computed(() => {
       const watts = getFloatValue('meter.active_power_a', 0);
       if (watts === null) return 'neutral';
-      return Number.parseFloat(watts) >= 0 ? 'import' : 'export';
+      return Number.parseFloat(watts) >= 0 ? 'export' : 'import';
     });
 
     const phaseBDirection = computed(() => {
       const watts = getFloatValue('meter.active_power_b', 0);
       if (watts === null) return 'neutral';
-      return Number.parseFloat(watts) >= 0 ? 'import' : 'export';
+      return Number.parseFloat(watts) >= 0 ? 'export' : 'import';
     });
 
     const phaseCDirection = computed(() => {
       const watts = getFloatValue('meter.active_power_c', 0);
       if (watts === null) return 'neutral';
-      return Number.parseFloat(watts) >= 0 ? 'import' : 'export';
+      return Number.parseFloat(watts) >= 0 ? 'export' : 'import';
     });
 
     /**
