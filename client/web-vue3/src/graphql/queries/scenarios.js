@@ -75,7 +75,7 @@ export const SCENARIO_EDIT_GET_BY_ID = gql`
 `;
 
 export const SCENARIO_CREATE = gql`
-  mutation ($scenario: ScenarioCreate) {
+  mutation ($scenario: ScenarioUpdate!) {
     scenarioCreate(scenario: $scenario) {
       id
     }
