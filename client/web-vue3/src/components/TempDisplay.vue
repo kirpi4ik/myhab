@@ -11,13 +11,20 @@
     },
     setup(props) {
       let portIds = [];
-      props.zone.peripherals.forEach(function (peripheral, index) {
-        if (peripheral.category.name == 'TEMP') {
-          peripheral.connectedTo.forEach(function (port, index) {
-            portIds.push(port);
-          });
-        }
-      });
+      
+      // Add null checks for peripherals
+      if (props.zone?.peripherals) {
+        props.zone.peripherals.forEach(function (peripheral, index) {
+          if (peripheral?.category?.name === 'TEMP') {
+            if (peripheral.connectedTo) {
+              peripheral.connectedTo.forEach(function (port, index) {
+                portIds.push(port);
+              });
+            }
+          }
+        });
+      }
+      
       return {
         portIds
       }

@@ -53,7 +53,7 @@ export function usePeripheralState() {
     peripheral.portValue = port.value;
     peripheral.state = peripheral.portValue === 'ON';
     peripheral.portId = port.id;
-    peripheral.portUid = port.uid;
+    // portUid is deprecated, use portId instead
     peripheral.deviceStatus = port.device?.status;
   };
 

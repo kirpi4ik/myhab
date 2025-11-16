@@ -216,15 +216,6 @@
           </q-item-section>
         </q-item>
 
-        <q-item v-if="viewItem.uid">
-          <q-item-section>
-            <q-item-label class="text-h6">
-              <q-icon name="mdi-key" class="q-mr-sm"/>
-              UID
-            </q-item-label>
-            <q-item-label caption class="text-body2 text-grey-7">{{ viewItem.uid }}</q-item-label>
-          </q-item-section>
-        </q-item>
       </q-list>
 
       <q-separator/>

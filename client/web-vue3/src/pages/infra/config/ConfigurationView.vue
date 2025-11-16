@@ -311,7 +311,20 @@ export default defineComponent({
         },
         fetchPolicy: 'network-only',
       }).then(response => {
-        cfgList.value = [...response.data.configurationListByEntity];
+        // Create fully writable copies using JSON parse/stringify to ensure mutability
+        // This breaks any Apollo Client object freezing
+        const rawData = JSON.parse(JSON.stringify(response.data.configurationListByEntity));
+        cfgList.value = rawData.map(cfg => ({
+          ...cfg,
+          // Ensure all properties are explicitly writable
+          id: cfg.id,
+          key: cfg.key,
+          value: cfg.value || '',
+          description: cfg.description || '',
+          name: cfg.name || '',
+          entityType: cfg.entityType,
+          entityId: cfg.entityId
+        }));
         loading.value = false;
       }).catch(error => {
         loading.value = false;

@@ -4,35 +4,71 @@ import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
+import kong.unirest.HttpResponse
 import kong.unirest.Unirest
 import org.myhab.async.mqtt.MqttTopicService
 import org.myhab.config.CfgKey
+import org.myhab.domain.Configuration
+import org.myhab.domain.EntityType
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.port.DevicePort
+import org.myhab.domain.device.port.PortType
+import org.myhab.telegram.TelegramBotHandler
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
+import org.quartz.PersistJobDataAfterExecution
 
 import java.util.concurrent.TimeUnit
 
+/**
+ * Nibe Heat Pump myUplink API Sync Job
+ * 
+ * Fetches data from myUplink API v2 and publishes to MQTT for:
+ * - System information (connection state, firmware, alarms)
+ * - Device details (model, serial number, features)
+ * - Temperature sensors (outdoor, supply, return, hot water, brine, room)
+ * - Compressor parameters (frequency, state, operating times)
+ * - Energy consumption and production metrics
+ * - Heat pump status and operational parameters
+ * 
+ * Features:
+ * - Integrated OAuth2 token refresh (replaces NibeTokenRefreshJob)
+ * - Multi-step API data collection (systems, devices, firmware, points)
+ * - Flexible parameter selection via database configuration
+ * - Auto-creates ports only for configured parameters
+ * - Comprehensive error handling per API endpoint
+ * 
+ * API Documentation: https://dev.myuplink.com/
+ */
 @Slf4j
 @DisallowConcurrentExecution
+@PersistJobDataAfterExecution
 @Transactional
 class NibeInfoSyncJob implements Job {
-    public static final String API_URL = "https://api.nibeuplink.com/api/v1"
-    public static final String DEVICE_REF_ID = "78047"
+    
+    // myUplink API v2 Endpoints
+    public static final String API_BASE_URL = "https://api.myuplink.com/v2"
+    public static final String API_OAUTH_TOKEN_URL = "https://api.myuplink.com/oauth/token"
+    public static final String API_SYSTEMS_ME_URL = "${API_BASE_URL}/systems/me"
+    
     MqttTopicService mqttTopicService
-
+    TelegramBotHandler telegramBotHandler
+    
+    String accessToken
+    String deviceId
+    String systemId
 
     static triggers = {
         def config = Holders.grailsApplication?.config
         def enabled = config?.getProperty('quartz.jobs.nibeInfoSync.enabled', Boolean)
-        def interval = config?.getProperty('quartz.jobs.nibeInfoSync.interval', Integer) ?: 60
+        def interval = config?.getProperty('quartz.jobs.nibeInfoSync.interval', Integer) ?: 120
         
         if (enabled == null) {
+            log.debug "NibeInfoSyncJob: Configuration not found, defaulting to ENABLED"
             enabled = true  // Default to enabled for backward compatibility
         }
         
@@ -53,54 +89,471 @@ class NibeInfoSyncJob implements Job {
             enabled = true
         }
         
+        log.info("NibeInfoSyncJob execute() called - enabled: ${enabled}")
+        
         if (!enabled) {
             log.info("NibeInfoSyncJob is DISABLED via configuration, skipping execution")
             return
         }
+        
+        log.info("NibeInfoSyncJob is ENABLED, proceeding with execution")
+        
         def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
+        if (!device) {
+            log.error("Nibe device not found in database (model: NIBE_F1145_8_EM)")
+            return
+        }
+        
         try {
-            def accConfig = device.getConfigurationByKey(CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN)
-            if (accConfig && accConfig.value) {
-                def pumpResponse = Unirest.get("$API_URL/systems/$DEVICE_REF_ID/serviceinfo/categories").header("Authorization", "Bearer ${accConfig.value}").asString();
-                if (pumpResponse.status == 200) {
-                    new JsonSlurper().parseText(pumpResponse.getBody()).each { category ->
-                        readParameters(device, accConfig.value, category['categoryId'])
-                    }
-                } else {
-                    log.warn("Can't synca data - response status ${pumpResponse.status}")
-                    mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
-                }
-            } else {
-                log.warn("Can't synca data - there are no access tokens configured for device ${device.id}")
+            // Step 1: Refresh OAuth2 access token
+            if (!refreshAccessToken(device)) {
+                log.error("Failed to refresh access token, skipping sync")
                 mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
+                return
             }
-        } catch (Exception se) {
-            log.warn("Can't connect : ${se.message}")
+            
+            // Step 2: Fetch system information
+            def systemInfo = fetchSystemInfo(device)
+            if (!systemInfo) {
+                log.error("Failed to fetch system info, skipping sync")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
+                return
+            }
+            
+            // Step 3: Fetch and publish device firmware info
+            fetchDeviceFirmware(device)
+            
+            // Step 4: Fetch and publish device details
+            fetchDeviceDetails(device)
+            
+            // Step 5: Fetch and publish all sensor/parameter data points
+            fetchDevicePoints(device)
+            
+            // Mark device as online if everything succeeded
+            if (device.status == DeviceStatus.OFFLINE) {
+                mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
+            }
+            
+            log.info("NibeInfoSyncJob completed successfully")
+            
+        } catch (Exception e) {
+            log.error("NibeInfoSyncJob failed with exception: ${e.message}", e)
             mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 
-    void readParameters(device, bearerToken, category) {
-        def pumpResponse = Unirest.get("$API_URL/systems/$DEVICE_REF_ID/serviceinfo/categories/${category}").header("Authorization", "Bearer ${bearerToken}").asString();
+    /**
+     * Refresh OAuth2 access token using refresh token
+     * Replaces the old NibeTokenRefreshJob functionality
+     * 
+     * @param device Nibe device
+     * @return true if token refresh succeeded, false otherwise
+     */
+    boolean refreshAccessToken(Device device) {
+        try {
+            log.debug("Attempting to refresh access token for device ${device.id}")
+            
+            // Fetch configurations directly from database
+            def clientIdConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
+                device.id,
+                EntityType.DEVICE,
+                'cfg.key.device.oauth.client_id'
+            )
+            def clientSecretConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
+                device.id,
+                EntityType.DEVICE,
+                'cfg.key.device.oauth.client_secret'
+            )
+            def refreshTokenConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
+                device.id,
+                EntityType.DEVICE,
+                CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN.key()
+            )
+            
+            log.debug("Config lookup results: clientId=${clientIdConfig != null}, clientSecret=${clientSecretConfig != null}, refreshToken=${refreshTokenConfig != null}")
+            
+            def clientId = clientIdConfig?.value
+            def clientSecret = clientSecretConfig?.value
+            def refreshToken = refreshTokenConfig?.value
+            
+            log.debug("Config values: clientId=${clientId}, clientSecret=${clientSecret ? '***' : 'null'}, refreshToken=${refreshToken ? '***' : 'null'}")
+            
+            if (!clientId || !clientSecret || !refreshToken) {
+                log.error("OAuth credentials not configured for device ${device.id}")
+                log.error("Missing: clientId=${!clientId}, clientSecret=${!clientSecret}, refreshToken=${!refreshToken}")
+                // TODO: Add Telegram notification when sendMessage method is implemented
+                return false
+            }
+            
+            log.debug("Refreshing access token for device ${device.id}")
+            
+            HttpResponse<String> response = Unirest.post(API_OAUTH_TOKEN_URL)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .field("grant_type", "refresh_token")
+                .field("client_id", clientId)
+                .field("client_secret", clientSecret)
+                .field("refresh_token", refreshToken)
+                .asString()
+            
+            if (response.status != 200) {
+                log.error("Token refresh failed with status ${response.status}: ${response.body}")
+                return false
+            }
+            
+            def tokenData = new JsonSlurper().parseText(response.body)
+            
+            // Update access token in memory and database
+            this.accessToken = tokenData.access_token
+            
+            def accTokenConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
+                device.id,
+                EntityType.DEVICE,
+                CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key()
+            )
+            if (!accTokenConfig) {
+                accTokenConfig = new Configuration(
+                    entityId: device.id,
+                    entityType: EntityType.DEVICE,
+                    key: CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key()
+                )
+            }
+            accTokenConfig.value = tokenData.access_token
+            accTokenConfig.save(flush: true)
+            
+            // Update refresh token if provided (some OAuth2 servers rotate refresh tokens)
+            if (tokenData.refresh_token && tokenData.refresh_token != refreshToken) {
+                def newRefreshTokenConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
+                    device.id,
+                    EntityType.DEVICE,
+                    CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN.key()
+                )
+                if (newRefreshTokenConfig) {
+                    newRefreshTokenConfig.value = tokenData.refresh_token
+                    newRefreshTokenConfig.save(flush: true)
+                    log.debug("Refresh token was rotated and updated")
+                }
+            }
+            
+            log.info("Access token refreshed successfully (expires in ${tokenData.expires_in}s)")
+            return true
+            
+        } catch (Exception e) {
+            log.error("Exception during token refresh: ${e.message}", e)
+            return false
+        }
+    }
 
-        if (pumpResponse.status == 200) {
-            def parameters = new JsonSlurper().parseText(pumpResponse.getBody())
-            parameters.each { parameter ->
-                if (parameter['name']) {
-                    def port = device.ports.find { it.internalRef == parameter['name'] } as DevicePort
+    /**
+     * Fetch system information from /v2/systems/me
+     * Retrieves system ID, device ID, and basic system info
+     * 
+     * @param device Nibe device
+     * @return Map with system data or null on failure
+     */
+    Map fetchSystemInfo(Device device) {
+        try {
+            log.debug("Fetching system info from ${API_SYSTEMS_ME_URL}")
+            
+            HttpResponse<String> response = Unirest.get(API_SYSTEMS_ME_URL)
+                .header("Authorization", "Bearer ${accessToken}")
+                .asString()
+            
+            if (response.status != 200) {
+                log.error("Failed to fetch system info: HTTP ${response.status}")
+                return null
+            }
+            
+            def data = new JsonSlurper().parseText(response.body)
+            
+            if (!data.systems || data.systems.isEmpty()) {
+                log.error("No systems found in API response")
+                return null
+            }
+            
+            def system = data.systems[0]
+            this.systemId = system.systemId
+            
+            if (!system.devices || system.devices.isEmpty()) {
+                log.error("No devices found in system ${systemId}")
+                return null
+            }
+            
+            def deviceInfo = system.devices[0]
+            this.deviceId = deviceInfo.id
+            
+            log.info("System found: ${system.name} (ID: ${systemId}), Device: ${deviceId}")
+            
+            // Publish system-level status
+            publishToPort(device, 'system.connection_state', deviceInfo.connectionState)
+            publishToPort(device, 'system.has_alarm', system.hasAlarm ? '1' : '0')
+            
+            return [
+                systemId: systemId,
+                systemName: system.name,
+                deviceId: deviceId,
+                connectionState: deviceInfo.connectionState,
+                hasAlarm: system.hasAlarm
+            ]
+            
+        } catch (Exception e) {
+            log.error("Exception fetching system info: ${e.message}", e)
+            return null
+        }
+    }
+
+    /**
+     * Fetch device firmware information from /v2/devices/{deviceId}/firmware-info
+     * 
+     * @param device Nibe device
+     */
+    void fetchDeviceFirmware(Device device) {
+        try {
+            def url = "${API_BASE_URL}/devices/${deviceId}/firmware-info"
+            log.debug("Fetching firmware info from ${url}")
+            
+            HttpResponse<String> response = Unirest.get(url)
+                .header("Authorization", "Bearer ${accessToken}")
+                .asString()
+            
+            if (response.status != 200) {
+                log.warn("Failed to fetch firmware info: HTTP ${response.status}")
+                return
+            }
+            
+            def data = new JsonSlurper().parseText(response.body)
+            
+            publishToPort(device, 'system.firmware_version', data.currentFwVersion)
+            publishToPort(device, 'system.desired_firmware', data.desiredFwVersion ?: data.currentFwVersion)
+            
+            log.debug("Firmware: current=${data.currentFwVersion}, desired=${data.desiredFwVersion}")
+            
+        } catch (Exception e) {
+            log.warn("Exception fetching firmware info: ${e.message}")
+        }
+    }
+
+    /**
+     * Fetch device details from /v2/devices/{deviceId}
+     * 
+     * @param device Nibe device
+     */
+    void fetchDeviceDetails(Device device) {
+        try {
+            def url = "${API_BASE_URL}/devices/${deviceId}"
+            log.debug("Fetching device details from ${url}")
+            
+            HttpResponse<String> response = Unirest.get(url)
+                .header("Authorization", "Bearer ${accessToken}")
+                .asString()
+            
+            if (response.status != 200) {
+                log.warn("Failed to fetch device details: HTTP ${response.status}")
+                return
+            }
+            
+            def data = new JsonSlurper().parseText(response.body)
+            
+            publishToPort(device, 'system.connection_state', data.connectionState)
+            
+            if (data.firmware) {
+                publishToPort(device, 'system.firmware_version', data.firmware.currentFwVersion)
+                publishToPort(device, 'system.desired_firmware', data.firmware.desiredFwVersion)
+            }
+            
+            log.debug("Device details: ${data.product?.name}, connection=${data.connectionState}")
+            
+        } catch (Exception e) {
+            log.warn("Exception fetching device details: ${e.message}")
+        }
+    }
+
+    /**
+     * Fetch all device data points from /v2/devices/{deviceId}/points
+     * This is the main data collection method that retrieves all sensor values
+     * 
+     * @param device Nibe device
+     */
+    void fetchDevicePoints(Device device) {
+        try {
+            def url = "${API_BASE_URL}/devices/${deviceId}/points"
+            log.debug("Fetching device points from ${url}")
+            
+            HttpResponse<String> response = Unirest.get(url)
+                .header("Authorization", "Bearer ${accessToken}")
+                .asString()
+            
+            if (response.status != 200) {
+                log.error("Failed to fetch device points: HTTP ${response.status}")
+                return
+            }
+            
+            def points = new JsonSlurper().parseText(response.body)
+            
+            if (!points || !points instanceof List) {
+                log.error("Invalid points data received")
+                return
+            }
+            
+            log.info("Processing ${points.size()} data points")
+            
+            int publishedCount = 0
+            int skippedCount = 0
+            
+            points.each { point ->
+                if (point.parameterId) {
+                    def port = findOrCreatePort(device, point)
+                    
                     if (port) {
-                        mqttTopicService.publish(port, "${parameter['rawValue']}")
+                        // Use the raw value for publishing
+                        def value = point.value
+                        if (value != null) {
+                            try {
+                                mqttTopicService.publish(port, value.toString())
+                                publishedCount++
+                                
+                                // Add small delay to avoid overwhelming MQTT broker
+                                // Publishing 24 parameters every 30s needs throttling
+                                Thread.sleep(50) // 50ms delay between publishes
+                            } catch (Exception ex) {
+                                log.error("Failed to publish port ${port.internalRef}: ${ex.message}")
+                            }
+                        }
                     } else {
-                        // log.debug("Unknow port internal ref=[${parameter['name']}] for deviceId[${device.id}], mqtt publish event will be skipped")
+                        skippedCount++
                     }
                 }
             }
-            if (device.status == DeviceStatus.OFFLINE) {
-                mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
+            
+            log.info("Published ${publishedCount} points, skipped ${skippedCount} unconfigured points")
+            
+        } catch (Exception e) {
+            log.error("Exception fetching device points: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Find existing port or create new port for parameter
+     * Only creates ports for parameters configured in database
+     * 
+     * @param device Nibe device
+     * @param point Point data from API
+     * @return DevicePort or null if parameter not configured
+     */
+    DevicePort findOrCreatePort(Device device, Map point) {
+        def parameterId = point.parameterId
+        
+        // Find existing port by internal reference (parameterId)
+        def port = device.ports?.find { it.internalRef == parameterId }
+        
+        if (port) {
+            return port
+        }
+        
+        // Check if this parameter is configured for monitoring
+        def configuredParams = getConfiguredParameters(device)
+        
+        if (!configuredParams.contains(parameterId)) {
+            // Parameter not configured, skip port creation
+            return null
+        }
+        
+        // Auto-create port for configured parameter
+        try {
+            log.info("Auto-creating port for parameter ${parameterId}: ${point.parameterName}")
+            
+            // Build description with unit if available
+            def description = point.category ?: "Nibe parameter"
+            if (point.parameterUnit) {
+                description += " (${point.parameterUnit})"
             }
+            
+            port = new DevicePort(
+                device: device,
+                internalRef: parameterId,
+                name: point.parameterName ?: "Parameter ${parameterId}",
+                description: description,
+                type: determinePortType(point),
+                uid: "nibe-${device.id}-${parameterId}" // Unique identifier for backward compatibility
+            )
+            
+            port.save(flush: true, failOnError: true)
+            
+            // Refresh device ports collection
+            device.refresh()
+            
+            log.debug("Created port ${port.id} for parameter ${parameterId}")
+            return port
+            
+        } catch (Exception e) {
+            log.error("Failed to create port for parameter ${parameterId}: ${e.message}")
+            return null
+        }
+    }
+
+    /**
+     * Get list of all configured parameters for monitoring
+     * Reads from NIBE_*_PARAMS configurations
+     * 
+     * @param device Nibe device
+     * @return Set of parameter IDs
+     */
+    Set<String> getConfiguredParameters(Device device) {
+        def params = new HashSet<String>()
+        
+        // Get all parameter configuration keys
+        def paramConfigs = [
+            'NIBE_TEMP_PARAMS',
+            'NIBE_COMPRESSOR_PARAMS',
+            'NIBE_ENERGY_PARAMS',
+            'NIBE_STATUS_PARAMS'
+        ]
+        
+        paramConfigs.each { configKey ->
+            def config = Configuration.findByEntityIdAndEntityTypeAndKey(
+                device.id,
+                EntityType.DEVICE,
+                configKey
+            )
+            if (config?.value) {
+                // Split comma-separated parameter IDs
+                config.value.split(',').each { paramId ->
+                    params.add(paramId.trim())
+                }
+            }
+        }
+        
+        log.debug("Configured parameters (${params.size()}): ${params}")
+        return params
+    }
+
+    /**
+     * Determine port type based on parameter metadata
+     * 
+     * @param point Point data from API
+     * @return PortType enum value
+     */
+    PortType determinePortType(Map point) {
+        // All Nibe parameters are SENSOR type
+        // The actual data type (temperature, energy, etc.) is handled by the unit field
+        return PortType.SENSOR
+    }
+
+    /**
+     * Publish value to device port (finds port by internal reference)
+     * 
+     * @param device Nibe device
+     * @param internalRef Port internal reference
+     * @param value Value to publish
+     */
+    void publishToPort(Device device, String internalRef, String value) {
+        if (value == null) return
+        
+        def port = device.ports?.find { it.internalRef == internalRef }
+        
+        if (port) {
+            mqttTopicService.publish(port, value)
         } else {
-            log.warn("Can't synca data - response status ${pumpResponse.status}")
-            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
+            log.trace("Port not found for internal ref: ${internalRef}")
         }
     }
 }

@@ -18,6 +18,14 @@ import org.quartz.*
 
 import java.util.concurrent.TimeUnit
 
+/**
+ * @deprecated This job is deprecated and will be removed in a future version.
+ * Token refresh functionality has been integrated into NibeInfoSyncJob.
+ * 
+ * To disable this job, set in application.yml:
+ *   quartz.jobs.nibeTokenRefresh.enabled: false
+ */
+@Deprecated
 @Slf4j
 @DisallowConcurrentExecution
 @PersistJobDataAfterExecution
@@ -33,14 +41,15 @@ class NibeTokenRefreshJob implements Job {
         def interval = config?.getProperty('quartz.jobs.nibeTokenRefresh.interval', Integer) ?: 500
         
         if (enabled == null) {
-            enabled = true  // Default to enabled for backward compatibility
+            enabled = false  // Default to disabled (functionality moved to NibeInfoSyncJob)
         }
         
         if (enabled) {
-            log.debug "NibeTokenRefreshJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.warn "NibeTokenRefreshJob: ENABLED - This job is DEPRECATED. Token refresh is now handled by NibeInfoSyncJob."
+            log.warn "NibeTokenRefreshJob: Please set quartz.jobs.nibeTokenRefresh.enabled: false in application.yml"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            log.debug "NibeTokenRefreshJob: DISABLED - Not registering trigger"
+            log.debug "NibeTokenRefreshJob: DISABLED - Token refresh is handled by NibeInfoSyncJob"
         }
     }
 
@@ -51,13 +60,15 @@ class NibeTokenRefreshJob implements Job {
         def enabled = config?.getProperty('quartz.jobs.nibeTokenRefresh.enabled', Boolean)
         
         if (enabled == null) {
-            enabled = true
+            enabled = false
         }
         
         if (!enabled) {
-            log.info("NibeTokenRefreshJob is DISABLED via configuration, skipping execution")
+            log.info("NibeTokenRefreshJob is DISABLED via configuration (token refresh handled by NibeInfoSyncJob)")
             return
         }
+        
+        log.warn("NibeTokenRefreshJob is DEPRECATED - token refresh is now integrated into NibeInfoSyncJob")
         def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
         try {
             Configuration refreshKeyFromCfg = device.getConfigurationByKey(CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN) ?: new Configuration(entityId: device.id, entityType: EntityType.DEVICE, key: 'cfg.key.device.oauth.refresh_token')
@@ -71,7 +82,7 @@ class NibeTokenRefreshJob implements Job {
 //                log.debug("Acc token : ${tk['access_token']}")
             } else {
                 log.warn("There are no tokens configured for device ${device.id}")
-                telegramBotHandler.sendMessage(TelegramBotHandler.MSG_LEVEL.WARNING, "There are no tokens configured for device ${device.id}")
+                // TODO: Add Telegram notification when sendMessage method is implemented
             }
             if (device.status == DeviceStatus.OFFLINE) {
                 mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
@@ -83,7 +94,7 @@ class NibeTokenRefreshJob implements Job {
     }
 
     def getAuthTokens(device, authzCode) {
-        HttpResponse<String> response = Unirest.post("https://api.nibeuplink.com/oauth/token")
+        HttpResponse<String> response = Unirest.post("https://api.myuplink.com/oauth/token")
                 .header("content-type", "application/x-www-form-urlencoded")
                 .field("grant_type", "authorization_code")
                 .field("client_id", device.getConfigurationByKey('cfg.key.device.oauth.client_id').value)
@@ -95,7 +106,7 @@ class NibeTokenRefreshJob implements Job {
     }
 
     def regenerateTokens(device, refreshToken) {
-        HttpResponse<String> response = Unirest.post("https://api.nibeuplink.com/oauth/token")
+        HttpResponse<String> response = Unirest.post("https://api.myuplink.com/oauth/token")
                 .header("content-type", "application/x-www-form-urlencoded")
                 .field("grant_type", "refresh_token")
                 .field("client_id", device.getConfigurationByKey('cfg.key.device.oauth.client_id').value)

@@ -9,6 +9,11 @@ import org.myhab.domain.job.EventData
  * Avoid scanning this data, search only by keys
  */
 class PortValue extends BaseEntity implements EventPublisher {
+    /**
+     * @deprecated Use 'portId' instead. This field is kept for backward compatibility only.
+     * Will be removed in a future version.
+     */
+    @Deprecated
     String portUid
     Long portId
     String value
@@ -17,10 +22,26 @@ class PortValue extends BaseEntity implements EventPublisher {
     static constraints = {
         event nullable: true
         portId nullable: true
+        portUid nullable: true
     }
     static mapping = {
         table '`port_values`'
         version false
+        value sqlType: 'text'  // Support large values (e.g., JSON arrays for time-series data)
+    }
+
+    void beforeInsert() {
+        // Call parent beforeInsert
+        super.beforeInsert()
+        // Set portUid from portId for backward compatibility with database NOT NULL constraint
+        // Always set portUid - use portId if available, otherwise use empty string
+        if (!portUid) {
+            portUid = portId ? portId.toString() : ''
+        }
+    }
+
+    void afterInsert() {
+        // No longer needed - uid column is now nullable
     }
 
 //    void afterInsert() {

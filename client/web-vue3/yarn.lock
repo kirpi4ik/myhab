@@ -2366,6 +2366,20 @@
   resolved "https://registry.npmjs.org/@ungap/structured-clone/-/structured-clone-1.3.0.tgz"
   integrity sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==
 
+"@vue-js-cron/core@3.7.1":
+  version "3.7.1"
+  resolved "https://registry.yarnpkg.com/@vue-js-cron/core/-/core-3.7.1.tgz#94fe7bf2fe827210921ba2976832fd2dae59a480"
+  integrity sha512-aWCkbfCbwpEJwmptY0tRFlxH4ZaVtnmR2Q3f0L8SzSC58cn45VYMe2/eSK53221cBmk/w+18Hq563u+W7Jp9Eg==
+  dependencies:
+    mustache "^4.2.0"
+
+"@vue-js-cron/light@^2.0.0":
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/@vue-js-cron/light/-/light-2.3.3.tgz#e1c73bf9425e24ecf5648626215eaff702b226a5"
+  integrity sha512-4D7U2vQHtSAJ4AKj/x/40YwsIz8XRCUYhMkEIXaiVk1ROuzGDrBjp5XsS5UdopKhiKDLkB4ask3ZF6xbhzYwfg==
+  dependencies:
+    "@vue-js-cron/core" "3.7.1"
+
 "@vue/apollo-composable@^4.0.0-beta.11":
   version "4.0.0-beta.11"
   resolved "https://registry.npmjs.org/@vue/apollo-composable/-/apollo-composable-4.0.0-beta.11.tgz"
@@ -5931,6 +5945,11 @@ multicast-dns@^7.2.5:
   dependencies:
     dns-packet "^5.2.2"
     thunky "^1.0.2"
+
+mustache@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/mustache/-/mustache-4.2.0.tgz#e5892324d60a12ec9c2a73359edca52972bf6f64"
+  integrity sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==
 
 mute-stream@^1.0.0:
   version "1.0.0"

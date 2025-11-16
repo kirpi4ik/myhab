@@ -50,7 +50,8 @@ class MqttTopicService {
             [name: 'INVERTER', instance: new MQTTTopic.INVERTER()],
             [name: 'MEGA', instance: new MQTTTopic.MEGA()],
             [name: 'COMMON', instance: new MQTTTopic.COMMON()],
-            [name: 'ONVIF', instance: new MQTTTopic.ONVIF()]
+            [name: 'ONVIF', instance: new MQTTTopic.ONVIF()],
+            [name: 'METEO_STATION', instance: new MQTTTopic.METEO_STATION()]
         ]
         
         // READ topic types (incoming messages from devices)
@@ -81,7 +82,8 @@ class MqttTopicService {
             [model: DeviceModel.NIBE_F1145_8_EM, topic: new MQTTTopic.NIBE()],
             [model: DeviceModel.CAM_ONVIF, topic: new MQTTTopic.ONVIF()],
             [model: DeviceModel.HUAWEI_SUN2000_12KTL_M2, topic: new MQTTTopic.INVERTER()],
-            [model: DeviceModel.ELECTRIC_METER_DTS, topic: new MQTTTopic.ELECTRIC_METER_DTS()]
+            [model: DeviceModel.ELECTRIC_METER_DTS, topic: new MQTTTopic.ELECTRIC_METER_DTS()],
+            [model: DeviceModel.OPEN_METEO_API, topic: new MQTTTopic.METEO_STATION()]
         ]
         
         deviceMappings.each { mapping ->
@@ -178,6 +180,16 @@ class MqttTopicService {
                 )
             }
             
+            if (topicName ==~ TOPIC_PATTERNS.METEO_STATION_STATUS) {
+                matcher = topicName =~ TOPIC_PATTERNS.METEO_STATION_STATUS
+                return new MQTTMessage(
+                    deviceType: DeviceModel.OPEN_METEO_API,
+                    deviceCode: matcher[0][1],
+                    portStrValue: message.payload,
+                    eventType: TopicName.EVT_DEVICE_STATUS.id()
+                )
+            }
+            
             // ========== READ_SINGLE_VAL PATTERNS ==========
             if (topicName ==~ TOPIC_PATTERNS.ESP_READ) {
                 matcher = topicName =~ TOPIC_PATTERNS.ESP_READ
@@ -258,6 +270,17 @@ class MqttTopicService {
                 )
             }
             
+            if (topicName ==~ TOPIC_PATTERNS.METEO_STATION_READ) {
+                matcher = topicName =~ TOPIC_PATTERNS.METEO_STATION_READ
+                return new MQTTMessage(
+                    deviceType: DeviceModel.OPEN_METEO_API,
+                    deviceCode: matcher[0][1],
+                    portCode: matcher[0][2],
+                    portStrValue: message.payload,
+                    eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
+                )
+            }
+            
             // ========== STAT_IP PATTERNS ==========
             if (topicName ==~ TOPIC_PATTERNS.ESP_STAT_IP) {
                 matcher = topicName =~ TOPIC_PATTERNS.ESP_STAT_IP
@@ -318,6 +341,16 @@ class MqttTopicService {
                 )
             }
             
+            if (topicName ==~ TOPIC_PATTERNS.METEO_STATION_STAT_IP) {
+                matcher = topicName =~ TOPIC_PATTERNS.METEO_STATION_STAT_IP
+                return new MQTTMessage(
+                    deviceType: DeviceModel.OPEN_METEO_API,
+                    deviceCode: matcher[0][1],
+                    portStrValue: message.payload,
+                    eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
+                )
+            }
+            
             // ========== STAT_PORT PATTERNS ==========
             if (topicName ==~ TOPIC_PATTERNS.ESP_STAT_PORT) {
                 matcher = topicName =~ TOPIC_PATTERNS.ESP_STAT_PORT
@@ -372,6 +405,16 @@ class MqttTopicService {
             if (topicName ==~ TOPIC_PATTERNS.COMMON_STAT_PORT) {
                 matcher = topicName =~ TOPIC_PATTERNS.COMMON_STAT_PORT
                 return new MQTTMessage(
+                    deviceCode: matcher[0][1],
+                    portStrValue: message.payload,
+                    eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
+                )
+            }
+            
+            if (topicName ==~ TOPIC_PATTERNS.METEO_STATION_STAT_PORT) {
+                matcher = topicName =~ TOPIC_PATTERNS.METEO_STATION_STAT_PORT
+                return new MQTTMessage(
+                    deviceType: DeviceModel.OPEN_METEO_API,
                     deviceCode: matcher[0][1],
                     portStrValue: message.payload,
                     eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
@@ -457,6 +500,10 @@ class MqttTopicService {
                 
             case DeviceModel.ESP32:
                 return actions ? actions.first() : actions
+                
+            case DeviceModel.OPEN_METEO_API:
+                // Virtual device - values published directly, no command payload needed
+                return actions
                 
             case DeviceModel.NIBE_F1145_8_EM:
             default:

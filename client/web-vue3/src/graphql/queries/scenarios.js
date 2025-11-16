@@ -16,6 +16,7 @@ export const SCENARIO_LIST_ALL = gql`
       device {
         id
         name
+        code
       }
     }
   }
@@ -25,7 +26,6 @@ export const SCENARIO_GET_BY_ID = gql`
   query ($id: Long!) {
     scenario(id: $id) {
       id
-      uid
       name
       body
       tsCreated
@@ -48,7 +48,6 @@ export const SCENARIO_EDIT_GET_BY_ID = gql`
   query ($id: Long!) {
     scenario(id: $id) {
       id
-      uid
       name
       body
       ports {
@@ -58,6 +57,7 @@ export const SCENARIO_EDIT_GET_BY_ID = gql`
         device {
           id
           name
+          code
         }
       }
     }
@@ -68,6 +68,7 @@ export const SCENARIO_EDIT_GET_BY_ID = gql`
       device {
         id
         name
+        code
       }
     }
   }
@@ -77,7 +78,6 @@ export const SCENARIO_CREATE = gql`
   mutation ($scenario: ScenarioCreate) {
     scenarioCreate(scenario: $scenario) {
       id
-      uid
     }
   }
 `;
@@ -91,7 +91,7 @@ export const SCENARIO_UPDATE = gql`
 `;
 
 export const SCENARIO_DELETE_BY_ID = gql`
-  mutation ($id: Long!) {
+  mutation ($id: ID!) {
     scenarioDelete(id: $id) {
       error
       success

@@ -193,6 +193,7 @@ export default defineComponent({
     return {
       scenario,
       loading,
+      saving,
       portList,
       selectedPorts,
       groovyCompletions,

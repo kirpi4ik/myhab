@@ -7,6 +7,11 @@ import org.myhab.domain.common.BaseEntity
  *
  */
 class DeviceAccount extends BaseEntity {
+  /**
+   * @deprecated Use 'id' instead. This field is kept for backward compatibility only.
+   * Will be removed in a future version.
+   */
+  @Deprecated
   String uid = DomainUtil.NULL_UID
   String username
   String password

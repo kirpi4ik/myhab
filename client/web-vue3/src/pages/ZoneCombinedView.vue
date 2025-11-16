@@ -96,10 +96,12 @@ import {computed, defineComponent, ref, onMounted} from 'vue';
 import {useApolloClient, useQuery} from '@vue/apollo-composable';
 import {useRoute} from 'vue-router';
 
-import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID} from '@/graphql/queries';
+import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID_WITH_CATEGORY} from '@/graphql/queries';
 import {peripheralService} from '@/_services/controls';
 import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
 import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
+import PeripheralSwitchCard from '@/components/cards/PeripheralSwitchCard';
+import PeripheralTempCard from '@/components/cards/PeripheralTempCard';
 import TempChartCard from '@/components/cards/TempChartCard';
 import ZoneCard from '@/components/cards/ZoneCard';
 
@@ -113,6 +115,10 @@ const CATEGORY_CONFIG = {
     component: 'PeripheralLightCard',
     label: 'lights'
   },
+  SWITCH: {
+    component: 'PeripheralSwitchCard',
+    label: 'switches'
+  },
   HEAT: {
     component: 'PeripheralHeatCard',
     label: 'heating devices'
@@ -122,7 +128,7 @@ const CATEGORY_CONFIG = {
     label: 'sprinklers'
   },
   TEMP: {
-    component: null,
+    component: 'PeripheralTempCard',
     label: 'temperature sensors'
   }
 };
@@ -132,7 +138,9 @@ export default defineComponent({
   components: {
     ZoneCard,
     PeripheralLightCard,
+    PeripheralSwitchCard,
     PeripheralHeatCard,
+    PeripheralTempCard,
     TempChartCard
   },
   setup() {
@@ -226,13 +234,6 @@ export default defineComponent({
     });
 
     /**
-     * Filter peripherals by current category
-     */
-    const peripheralFilter = (peripheral) => {
-      return peripheral?.category?.name === category.value;
-    };
-
-    /**
      * Initialize a peripheral with cache data
      */
     const peripheralInitCallback = (peripheral) => {
@@ -246,6 +247,7 @@ export default defineComponent({
 
     /**
      * Load zone data and peripherals
+     * Uses optimized query with server-side category filtering for better performance
      */
     const loadZones = async () => {
       if (!route.params.zoneId) {
@@ -259,8 +261,11 @@ export default defineComponent({
         error.value = null;
 
         const queryResult = await client.query({
-          query: ZONE_GET_BY_ID,
-          variables: {id: route.params.zoneId},
+          query: ZONE_GET_BY_ID_WITH_CATEGORY,
+          variables: {
+            id: route.params.zoneId,
+            category: category.value // Pass category for server-side filtering
+          },
           fetchPolicy: 'network-only',
         });
 
@@ -269,13 +274,12 @@ export default defineComponent({
           currentZone.value = data.zoneById;
           peripheralList.value = [];
 
-          // Load peripherals
+          // Load peripherals - already filtered by server
           if (currentZone.value.peripherals) {
-            const filteredPeripherals = currentZone.value.peripherals
-              .filter(peripheralFilter)
+            const sortedPeripherals = currentZone.value.peripherals
               .sort((a, b) => a.name.localeCompare(b.name));
             
-            filteredPeripherals.forEach(peripheralInitCallback);
+            sortedPeripherals.forEach(peripheralInitCallback);
           }
 
           // Load child zones
