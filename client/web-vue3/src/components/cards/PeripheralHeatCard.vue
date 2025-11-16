@@ -140,17 +140,25 @@ export default defineComponent({
 
     /**
      * Check if heating is currently on
+     * Reads from connectedTo[0].value which contains "ON" or "OFF"
      */
-    const isHeatingOn = computed(() => asset.value?.state === true);
+    const isHeatingOn = computed(() => {
+      const portValue = asset.value?.data?.connectedTo?.[0]?.value;
+      return portValue === 'ON';
+    });
 
     /**
      * Get/Set heat state for toggle
+     * Reads from connectedTo[0].value which contains "ON" or "OFF"
      */
     const heatState = computed({
-      get: () => asset.value?.data?.state === true,
+      get: () => {
+        const portValue = asset.value?.data?.connectedTo?.[0]?.value;
+        return portValue === 'ON';
+      },
       set: (value) => {
-        if (asset.value?.data) {
-          asset.value.data.state = value;
+        if (asset.value?.data?.connectedTo?.[0]) {
+          asset.value.data.connectedTo[0].value = value ? 'ON' : 'OFF';
         }
       }
     });
@@ -169,6 +177,24 @@ export default defineComponent({
       get: () => props.peripheral,
       set: value => emit('onUpdate', value),
     });
+
+    /**
+     * Initialize state from connectedTo port value
+     * This ensures peripheral.state is set correctly for peripheralService.toggle()
+     */
+    const initializeState = () => {
+      if (asset.value?.data?.connectedTo?.[0]?.value) {
+        const portValue = asset.value.data.connectedTo[0].value;
+        const newState = portValue === 'ON';
+        asset.value.state = newState;
+        if (asset.value.data) {
+          asset.value.data.state = newState;
+        }
+      }
+    };
+
+    // Initialize state when component mounts or peripheral changes
+    initializeState();
 
     /**
      * Load peripheral details and expiration from cache
@@ -214,6 +240,10 @@ export default defineComponent({
           const newState = payload.p4 === 'ON';
           asset.value.value = payload.p4;
           asset.value.state = newState;
+          // Update the actual port value that we read from
+          if (asset.value.data?.connectedTo?.[0]) {
+            asset.value.data.connectedTo[0].value = payload.p4;
+          }
           if (asset.value.data) {
             asset.value.data.state = newState;
           }
