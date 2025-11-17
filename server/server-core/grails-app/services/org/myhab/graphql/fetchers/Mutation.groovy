@@ -50,6 +50,8 @@ class Mutation implements EventPublisher {
                 def cacheKey = environment.getArgument("cacheKey")
                 hazelcastInstance.getMap(CacheMap.EXPIRE.name).delete(String.valueOf(cacheKey))
                 hazelcastInstance.getMap(CacheMap.EXPIRE.name).flush()
+                log.info("Cache ${cacheName} ${cacheKey} deleted successfully")
+                log.info("Cache ${hazelcastInstance.getMap(CacheMap.EXPIRE.name).entrySet()}")
                 return [success: true]
             }
         }

@@ -149,7 +149,7 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
 const apolloClient = new ApolloClient({
   link: onErrorLink.concat(withAuthToken).concat(httpLink),
   cache: new InMemoryCache({
-    addTypename: false,
+    addTypename: true, // Enable __typename for proper object identification
     // Customize type policies to prevent normalization warnings
     typePolicies: {
       // Prevent Apollo from warning about data loss for simplified nested objects
@@ -167,8 +167,49 @@ const apolloClient = new ApolloClient({
           },
           zoneById: {
             merge: true,
+          },
+          // Cache queries should never be cached - always fetch fresh data
+          cache: {
+            read(existing, { args, toReference }) {
+              // Always return undefined to force a network request
+              return undefined;
+            }
+          },
+          cacheAll: {
+            read(existing, { args, toReference }) {
+              // Always return undefined to force a network request
+              return undefined;
+            }
           }
         }
+      },
+      // Type policy for DevicePeripheral to handle nested arrays
+      DevicePeripheral: {
+        keyFields: ["id"], // Use id as the cache key
+        fields: {
+          configurations: {
+            // Replace the entire array instead of trying to merge
+            merge(existing, incoming, { mergeObjects }) {
+              return incoming || [];
+            }
+          },
+          connectedTo: {
+            // Replace the entire array instead of trying to merge
+            merge(existing, incoming, { mergeObjects }) {
+              return incoming || [];
+            }
+          }
+        }
+      },
+      // Type policy for Configuration objects
+      Configuration: {
+        // Disable normalization - Configuration objects don't always have 'id'
+        // They can be nested in peripherals and only have 'key' and 'value'
+        keyFields: false,
+      },
+      // Type policy for DevicePort objects
+      DevicePort: {
+        keyFields: ["id"], // Use id as the cache key
       }
     },
     // Don't warn about missing fields or data loss
