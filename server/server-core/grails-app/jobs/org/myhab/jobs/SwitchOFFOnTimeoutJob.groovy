@@ -59,11 +59,12 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
         }
         checkCacheAndSwitchOffAfterTimeout(context)
         checkOnPeripheralAndSetTimeoutValueIfNeeded(context)
-
     }
 
     void checkOnPeripheralAndSetTimeoutValueIfNeeded(JobExecutionContext jobExecutionContext) {
-        DevicePort.findAllByValue("ON").each { port ->
+        def portsWithON = DevicePort.findAllByValue("ON")
+        
+        portsWithON.each { port ->
             boolean cached = false
             hazelcastInstance.getMap(CacheMap.EXPIRE.name).entrySet().each { candidateForExpiration ->
                 if (candidateForExpiration.key == String.valueOf(port.id)) {
@@ -71,14 +72,17 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
                     return true
                 }
             }
+            
             if (!cached) {
                 def peripheral = port.peripherals[0]
                 if (peripheral != null) {
                     def config = peripheral.configurations.find { it.key == ConfigKey.STATE_ON_TIMEOUT }
-                    if (config != null) {
-                        def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
-                        hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
-                    }
+                    
+                        if (config != null) {
+                            def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
+                            hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
+                            log.debug("Scheduled job created cache for port ${port.id}, expires at ${new Date(expireInMs)}, peripheral ${peripheral.id}, timeout ${config.value}s")
+                        }
                 }
             }
         }

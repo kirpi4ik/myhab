@@ -48,10 +48,17 @@ class Mutation implements EventPublisher {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def cacheName = environment.getArgument("cacheName")
                 def cacheKey = environment.getArgument("cacheKey")
-                hazelcastInstance.getMap(CacheMap.EXPIRE.name).delete(String.valueOf(cacheKey))
-                hazelcastInstance.getMap(CacheMap.EXPIRE.name).flush()
-                log.info("Cache ${cacheName} ${cacheKey} deleted successfully")
-                log.info("Cache ${hazelcastInstance.getMap(CacheMap.EXPIRE.name).entrySet()}")
+                def cacheKeyStr = String.valueOf(cacheKey)
+                
+                    // IMPORTANT: Use the cacheName argument, not hardcoded CacheMap.EXPIRE.name
+                    def cacheMap = hazelcastInstance.getMap(cacheName)
+                    
+                    // Delete the entry
+                    cacheMap.delete(cacheKeyStr)
+                    cacheMap.flush()
+                    
+                    log.debug("Cache entry deleted: name=${cacheName}, key=${cacheKeyStr}")
+                
                 return [success: true]
             }
         }

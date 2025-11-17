@@ -157,7 +157,8 @@ export default defineComponent({
      * Get timeout configuration
      */
     const timeoutConfig = computed(() => {
-      return asset.value?.data?.configurations?.find(cfg => cfg.key === 'key.on.timeout');
+      const config = asset.value?.data?.configurations?.find(cfg => cfg.key === 'key.on.timeout');
+      return config;
     });
 
     /**
@@ -225,7 +226,7 @@ export default defineComponent({
               assetRW.expiration = null;
             }
           } catch (error) {
-            console.warn('Failed to load cache expiration:', error);
+            console.error('Failed to load cache expiration:', error);
           }
         }
 
@@ -233,8 +234,7 @@ export default defineComponent({
         // The server doesn't return the 'state' property, so we must calculate it from portValue
         if (assetRW.connectedTo?.[0]?.value) {
           const portValue = assetRW.connectedTo[0].value;
-          const calculatedState = portValue === 'ON';
-          assetRW.state = calculatedState;
+          assetRW.state = portValue === 'ON';
         }
 
         compPeripheral.value = assetRW;
@@ -270,7 +270,9 @@ export default defineComponent({
       },
       {
         eventName: 'evt_cfg_value_changed',
-        callback: () => loadDetails(),
+        callback: (payload) => {
+          loadDetails();
+        },
         filter: (payload) => 
           asset.value.id === Number(payload.p3) && payload.p2 === 'PERIPHERAL'
       }
@@ -278,7 +280,9 @@ export default defineComponent({
 
     // Mutations
     const { mutate: setTimeoutMutation } = useMutation(CONFIGURATION_SET_VALUE, {
-      update: () => loadDetails(),
+      update: () => {
+        loadDetails();
+      },
     });
 
     const { mutate: deleteCacheMutation } = useMutation(CACHE_DELETE);

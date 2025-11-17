@@ -62,12 +62,22 @@ class Query {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 String cacheName = environment.getArgument("cacheName")
                 def result = []
-                CacheMap.values().each { cMap ->
-                    def cName = cacheName ?: cMap.name
-                    hazelcastInstance.getMap(cName).entrySet().each { entry ->
+                
+                if (cacheName) {
+                    // If specific cache name is provided, only query that cache
+                    hazelcastInstance.getMap(cacheName).entrySet().each { entry ->
                         // Return actual null instead of string "null" when cache is empty
                         def expireOn = entry.value ? entry.value["expireOn"] : null
-                        result << [cacheName: cName, cacheKey: entry.key, cachedValue: expireOn]
+                        result << [cacheName: cacheName, cacheKey: entry.key, cachedValue: expireOn]
+                    }
+                } else {
+                    // If no cache name provided, query all caches
+                    CacheMap.values().each { cMap ->
+                        hazelcastInstance.getMap(cMap.name).entrySet().each { entry ->
+                            // Return actual null instead of string "null" when cache is empty
+                            def expireOn = entry.value ? entry.value["expireOn"] : null
+                            result << [cacheName: cMap.name, cacheKey: entry.key, cachedValue: expireOn]
+                        }
                     }
                 }
                 return result
