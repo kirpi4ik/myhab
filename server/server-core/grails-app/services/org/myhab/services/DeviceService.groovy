@@ -106,9 +106,17 @@ class DeviceService implements EventPublisher {
     @Subscriber('evt_device_status')
     def deviceStatus(event) {
         def device = Device.findByCode(event.data.p2)
-        if (device != null && device.status != event.data.p5) {
-            device.status = DeviceStatus.fromValue(event.data.p5)
-            device.save(failOnError: false, flush: true)
+        if (device != null) {
+            def oldStatus = device.status
+            def newStatus = DeviceStatus.fromValue(event.data.p5)
+            
+            if (oldStatus != newStatus) {
+                device.status = newStatus
+                device.save(failOnError: false, flush: true)
+                log.info("Device status updated: deviceCode=${event.data.p2}, ${oldStatus} → ${newStatus}")
+            }
+        } else {
+            log.warn("Device not found for status update: deviceCode=${event.data.p2}")
         }
     }
 }

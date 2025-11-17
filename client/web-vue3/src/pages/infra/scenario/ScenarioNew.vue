@@ -99,7 +99,7 @@ export default defineComponent({
       excludeFields: ['__typename'],
       initialData: {
         name: '',
-        body: ''
+        body: '{\n\n}'
       },
       transformBeforeSave: (data) => {
         const transformed = {...data};

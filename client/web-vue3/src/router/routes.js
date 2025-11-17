@@ -319,52 +319,77 @@ const routes = [
       },
       {
         path: adminPrefix + '/scenarios',
-        component: () => import('pages/infra/scenario/ScenarioList'),
-      },
-      {
-        path: adminPrefix + '/scenarios/new',
-        component: () => import('pages/infra/scenario/ScenarioNew'),
+        component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "new"
-        }
-      },
-      {
-        path: adminPrefix + '/scenarios/:idPrimary/view',
-        component: () => import('pages/infra/scenario/ScenarioView'),
-        meta: {
-          name: "details"
-        }
-      },
-      {
-        path: adminPrefix + '/scenarios/:idPrimary/edit',
-        component: () => import('pages/infra/scenario/ScenarioEdit'),
-        meta: {
-          name: "edit"
-        }
+          name: "scenarios"
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/scenario/ScenarioList'),
+          },
+          {
+            path: adminPrefix + '/scenarios/new',
+            component: () => import('pages/infra/scenario/ScenarioNew'),
+            meta: {
+              name: "new"
+            }
+          },
+          {
+            path: adminPrefix + '/scenarios/:idPrimary/view',
+            component: () => import('pages/infra/scenario/ScenarioView'),
+            meta: {
+              name: "details"
+            }
+          },
+          {
+            path: adminPrefix + '/scenarios/:idPrimary/edit',
+            component: () => import('pages/infra/scenario/ScenarioEdit'),
+            meta: {
+              name: "edit"
+            }
+          },
+        ],
       },
       {
         path: adminPrefix + '/jobs',
-        component: () => import('pages/infra/job/JobList'),
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "jobs"
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/job/JobList'),
+          },
+          {
+            path: adminPrefix + '/jobs/new',
+            component: () => import('pages/infra/job/JobNew'),
+            meta: {
+              name: "new"
+            }
+          },
+          {
+            path: adminPrefix + '/jobs/:idPrimary/view',
+            component: () => import('pages/infra/job/JobView'),
+            meta: {
+              name: "details"
+            }
+          },
+          {
+            path: adminPrefix + '/jobs/:idPrimary/edit',
+            component: () => import('pages/infra/job/JobEdit'),
+            meta: {
+              name: "edit"
+            }
+          },
+        ],
       },
       {
-        path: adminPrefix + '/jobs/new',
-        component: () => import('pages/infra/job/JobNew'),
+        path: '/solar-reports',
+        component: () => import('pages/SolarReports'),
         meta: {
-          name: "new"
-        }
-      },
-      {
-        path: adminPrefix + '/jobs/:idPrimary/view',
-        component: () => import('pages/infra/job/JobView'),
-        meta: {
-          name: "details"
-        }
-      },
-      {
-        path: adminPrefix + '/jobs/:idPrimary/edit',
-        component: () => import('pages/infra/job/JobEdit'),
-        meta: {
-          name: "edit"
+          name: "Solar Reports"
         }
       },
     ],
