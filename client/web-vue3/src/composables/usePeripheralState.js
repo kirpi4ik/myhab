@@ -107,15 +107,22 @@ export function usePeripheralState() {
   const updatePeripheralFromEvent = (jsonPayload) => {
     try {
       const payload = JSON.parse(jsonPayload);
-      const connectedPeripherals = portToPeripheralMap.value[payload.p2];
+      const portId = payload.p2;
+      const portValue = payload.p4;
+      const connectedPeripherals = portToPeripheralMap.value[portId];
 
       if (!connectedPeripherals) return;
 
+      // Update each connected peripheral
       connectedPeripherals.forEach((peripheralId) => {
         const peripheral = peripherals.value[peripheralId];
         if (peripheral) {
-          peripheral.portValue = payload.p4;
-          peripheral.state = payload.p4 === 'ON';
+          // Create a new object to trigger Vue reactivity
+          peripherals.value[peripheralId] = {
+            ...peripheral,
+            portValue: portValue,
+            state: portValue === 'ON'
+          };
         }
       });
     } catch (err) {
