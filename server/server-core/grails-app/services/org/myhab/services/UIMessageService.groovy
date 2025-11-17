@@ -25,7 +25,8 @@ class UIMessageService implements EventPublisher {
     def intercomService
 
     /**
-     * Handle light switch events
+     * Handle light, switch, and heat events
+     * All use the same logic: get ports and execute power action
      */
     @Transactional
     @Subscriber('evt_light')
@@ -33,17 +34,12 @@ class UIMessageService implements EventPublisher {
         handleSwitchEvent(event)
     }
 
-    /**
-     * Handle generic switch events
-     */
     @Transactional
     @Subscriber('evt_switch')
     def receiveSwitchEvent(event) {
         handleSwitchEvent(event)
     }
-        /**
-     * Handle generic switch events
-     */
+
     @Transactional
     @Subscriber('evt_heat')
     def receiveHeatEvent(event) {
@@ -51,7 +47,7 @@ class UIMessageService implements EventPublisher {
     }
 
     /**
-     * Common handler for switch/light events
+     * Common handler for switch/light/heat events
      * Handles PERIPHERAL, PORT, and ZONE entity types
      */
     private void handleSwitchEvent(event) {
@@ -64,9 +60,10 @@ class UIMessageService implements EventPublisher {
         }
 
         def portIds = getPortIdsForEntity(entityType, event.data.p2)
+        
         if (portIds) {
             executeScenarioAction(action, [portIds: portIds])
-            publish(TopicName.EVT_LOG.id(), event.data)
+            publishEventLog(event.data)
         } else {
             log.warn("No port IDs found for entity type ${entityType} with ID ${event.data.p2}")
         }
@@ -120,15 +117,8 @@ class UIMessageService implements EventPublisher {
     @Transactional
     @Subscriber('evt_light_set_color')
     def receiveColorEvent(event) {
-        if (!PERIPHERAL.isEqual(event.data.p1)) {
-            return
-        }
-
-        def peripheral = DevicePeripheral.findById(event.data.p2)
-        if (!peripheral) {
-            log.warn("Peripheral not found with ID: ${event.data.p2}")
-            return
-        }
+        def peripheral = validatePeripheralEvent(event)
+        if (!peripheral) return
 
         try {
             def color = new JsonSlurper().parseText(event.data.p4)
@@ -154,86 +144,26 @@ class UIMessageService implements EventPublisher {
     }
 
     /**
-     * Handle heat control events
-     */
-    @Transactional
-   
-    def heat(event) {
-        if (!PERIPHERAL.isEqual(event.data.p1)) {
-            return
-        }
-
-        def peripheral = DevicePeripheral.findById(event.data.p2)
-        if (!peripheral) {
-            log.warn("Peripheral not found with ID: ${event.data.p2}")
-            return
-        }
-
-        if (peripheral.category?.name != "HEAT") {
-            log.debug("Ignoring heat event for non-heat peripheral: ${peripheral.id}")
-            return
-        }
-
-        // Check if any port needs to change state
-        def portsToChange = peripheral.getConnectedTo()?.findAll { port ->
-            !port.value.equalsIgnoreCase(event.data.p4)
-        }
-
-        if (!portsToChange) {
-            log.debug("No state change needed for peripheral ${peripheral.id}")
-            return
-        }
-
-        try {
-            switch (event.data.p4?.toLowerCase()) {
-                case "on":
-                    heatService.heatOn(peripheral)
-                    break
-                case "off":
-                    heatService.heatOff(peripheral)
-                    break
-                default:
-                    log.warn("Unknown heat action: ${event.data.p4}")
-                    return
-            }
-            publish(TopicName.EVT_LOG.id(), event.data)
-        } catch (Exception ex) {
-            log.error("Error handling heat event for peripheral ${peripheral.id}", ex)
-        }
-    }
-
-    /**
      * Handle door lock/unlock events
      */
     @Transactional
     @Subscriber('evt_intercom_door_lock')
     def evt_intercom_door_lock(event) {
-        if (!PERIPHERAL.isEqual(event.data.p1)) {
+        def peripheral = validatePeripheralEvent(event)
+        if (!peripheral) return
+
+        if (!validatePeripheralCategory(peripheral, "DOOR_LOCK")) {
             return
         }
 
-        def peripheral = DevicePeripheral.findById(event.data.p2)
-        if (!peripheral) {
-            log.warn("Peripheral not found with ID: ${event.data.p2}")
-            return
-        }
-
-        if (peripheral.category?.name != "DOOR_LOCK") {
-            log.debug("Ignoring door lock event for non-door-lock peripheral: ${peripheral.id}")
-            return
-        }
-
-        def connectedPort = peripheral.getConnectedTo()?.first()
-        if (!connectedPort) {
-            log.warn("No connected port found for door lock peripheral ${peripheral.id}")
-            return
-        }
+        def connectedPort = getFirstConnectedPort(peripheral)
+        if (!connectedPort) return
 
         try {
             switch (event.data.p4?.toLowerCase()) {
                 case "open":
                     intercomService.doorOpen(connectedPort.deviceId, connectedPort)
-                    publish(TopicName.EVT_LOG.id(), event.data)
+                    publishEventLog(event.data)
                     break
                 default:
                     log.warn("Unknown door lock action: ${event.data.p4}")
@@ -250,17 +180,10 @@ class UIMessageService implements EventPublisher {
     @Transactional
 //    @Subscriber('evt_presence')
     def presence(event) {
-        if (!PERIPHERAL.isEqual(event.data.p1)) {
-            return
-        }
+        def peripheral = validatePeripheralEvent(event)
+        if (!peripheral) return
 
-        def peripheral = DevicePeripheral.findById(event.data.p2 as Long)
-        if (!peripheral) {
-            log.warn("Peripheral not found with ID: ${event.data.p2}")
-            return
-        }
-
-        if (peripheral.category?.name != "PRESENCE") {
+        if (!validatePeripheralCategory(peripheral, "PRESENCE")) {
             return
         }
 
@@ -275,7 +198,7 @@ class UIMessageService implements EventPublisher {
                 default:
                     log.warn("Unknown presence action: ${event.data.p4}")
             }
-            publish(TopicName.EVT_LOG.id(), event.data)
+            publishEventLog(event.data)
         } catch (Exception ex) {
             log.error("Error handling presence event for peripheral ${peripheral.id}", ex)
         }
@@ -358,7 +281,7 @@ class UIMessageService implements EventPublisher {
         }
 
         port.peripherals?.each { peripheral ->
-            if (peripheral.category?.name == "ACCESS_CONTROL") {
+            if (validatePeripheralCategory(peripheral, "ACCESS_CONTROL", false)) {
                 handleAccessControlEvent(peripheral, event.data)
             }
         }
@@ -420,6 +343,63 @@ class UIMessageService implements EventPublisher {
         } catch (Exception ex) {
             log.error("Failed to publish door unlock event for peripheral ${peripheral.id}", ex)
         }
+    }
+
+    // ========== HELPER METHODS ==========
+
+    /**
+     * Validate peripheral event and retrieve peripheral
+     * @param event Event data containing entity type and peripheral ID
+     * @return DevicePeripheral instance or null if validation fails
+     */
+    private DevicePeripheral validatePeripheralEvent(event) {
+        if (!PERIPHERAL.isEqual(event.data.p1)) {
+            return null
+        }
+
+        def peripheral = DevicePeripheral.findById(event.data.p2 as Long)
+        if (!peripheral) {
+            log.warn("Peripheral not found with ID: ${event.data.p2}")
+        }
+        return peripheral
+    }
+
+    /**
+     * Validate peripheral category matches expected category
+     * @param peripheral The peripheral to validate
+     * @param expectedCategory Expected category name (e.g., "DOOR_LOCK", "PRESENCE")
+     * @param logMismatch Whether to log when category doesn't match (default: true)
+     * @return true if category matches, false otherwise
+     */
+    private boolean validatePeripheralCategory(DevicePeripheral peripheral, String expectedCategory, boolean logMismatch = true) {
+        if (peripheral.category?.name != expectedCategory) {
+            if (logMismatch) {
+                log.debug("Ignoring event for non-${expectedCategory} peripheral: ${peripheral.id}")
+            }
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Get first connected port from peripheral with null safety
+     * @param peripheral The peripheral to get connected port from
+     * @return First connected DevicePort or null if none found
+     */
+    private DevicePort getFirstConnectedPort(DevicePeripheral peripheral) {
+        def connectedPort = peripheral.getConnectedTo()?.first()
+        if (!connectedPort) {
+            log.warn("No connected port found for peripheral ${peripheral.id}")
+        }
+        return connectedPort
+    }
+
+    /**
+     * Publish event to event log
+     * @param eventData Event data to publish (can be EventData or Map)
+     */
+    private void publishEventLog(def eventData) {
+        publish(TopicName.EVT_LOG.id(), eventData)
     }
 
 }
