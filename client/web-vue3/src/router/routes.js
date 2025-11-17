@@ -367,6 +367,13 @@ const routes = [
           name: "edit"
         }
       },
+      {
+        path: '/solar-reports',
+        component: () => import('pages/SolarReports'),
+        meta: {
+          name: "Solar Reports"
+        }
+      },
     ],
     meta: {authorize: [Role.Admin, Role.User]},
   },

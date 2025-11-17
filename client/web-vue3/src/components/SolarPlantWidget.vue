@@ -7,7 +7,7 @@
           <div class="text-h5 text-weight-medium text-grey-9">{{ $t('solar.title') }}</div>
           <div class="text-caption text-grey-6">{{ $t('solar.subtitle') }}</div>
         </div>
-        <div class="col-auto row q-gutter-xs">
+        <div class="col-auto row q-gutter-xs items-center">
           <!-- Device Status Badge -->
           <q-chip 
             :color="deviceStatusColor" 
@@ -24,6 +24,17 @@
             :icon="systemHealth === 3 ? 'mdi-check-circle' : systemHealth === 2 ? 'mdi-alert' : 'mdi-alert-circle'">
             {{ systemHealth === 3 ? $t('solar.status_ok') : systemHealth === 2 ? $t('solar.status_warning') : $t('solar.status_error') }}
           </q-chip>
+          <!-- Reports Button -->
+          <q-btn
+            round
+            flat
+            color="primary"
+            icon="mdi-chart-box-outline"
+            size="sm"
+            @click="openReports"
+          >
+            <q-tooltip>View Reports & History</q-tooltip>
+          </q-btn>
         </div>
       </div>
     </q-card-section>
@@ -323,6 +334,7 @@
 <script>
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import { useApolloClient } from "@vue/apollo-composable";
+import { useRouter } from 'vue-router';
 import { useWebSocketListener } from "@/composables";
 import { DEVICE_GET_BY_ID_WITH_PORT_VALUES } from '@/graphql/queries';
 import _ from "lodash";
@@ -343,6 +355,7 @@ export default defineComponent({
   },
   setup(props) {
     const { client } = useApolloClient();
+    const router = useRouter();
     const { deviceId, meterDeviceId } = toRefs(props);
     
     const device = ref({});
@@ -352,6 +365,13 @@ export default defineComponent({
     // Expansion state for collapsible sections
     const dailySectionExpanded = ref(false);
     const totalsSectionExpanded = ref(false);
+
+    /**
+     * Open solar reports page
+     */
+    const openReports = () => {
+      router.push('/solar-reports');
+    };
 
     /**
      * Get port value by internal reference
@@ -791,6 +811,8 @@ export default defineComponent({
       // UI state
       dailySectionExpanded,
       totalsSectionExpanded,
+      // Actions
+      openReports,
       // Real-time
       solarProductionKw,
       solarProductionWatts,
