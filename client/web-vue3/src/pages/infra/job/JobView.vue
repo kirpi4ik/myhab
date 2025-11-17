@@ -113,12 +113,17 @@
         <div class="text-h6 q-mb-md">
           <q-icon name="mdi-clock-outline" class="q-mr-sm"/>
           Cron Triggers
+          <div class="text-caption text-grey-6 text-weight-normal">Expressions are in UTC timezone</div>
         </div>
         <q-list bordered separator>
           <q-item v-for="trigger in viewItem.cronTriggers" :key="trigger.id">
             <q-item-section>
               <q-item-label>
                 <q-badge color="info" :label="trigger.expression"/>
+                <span class="q-ml-md text-grey-7">
+                  Next run: <span class="text-primary text-weight-medium">{{ getNextRunTime(trigger.expression) }}</span>
+                  <span class="text-caption">(local time)</span>
+                </span>
               </q-item-label>
             </q-item-section>
           </q-item>
@@ -182,6 +187,7 @@ import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
 import {useQuasar} from "quasar";
+import { Cron } from 'croner';
 
 import {JOB_GET_BY_ID} from "@/graphql/queries";
 
@@ -211,6 +217,51 @@ export default defineComponent({
       if (!dateString) return '-';
       const date = new Date(dateString);
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    };
+
+    const getNextRunTime = (cronExpression) => {
+      try {
+        if (!cronExpression) return '-';
+        
+        // Quartz format has 6-7 fields: second minute hour day month weekday (year)
+        // Standard cron has 5 fields: minute hour day month weekday
+        // Check field count and convert if needed
+        const fields = cronExpression.trim().split(/\s+/);
+        
+        let cronForCroner = cronExpression;
+        
+        // If it's a 5-field expression, add seconds field at the beginning for Quartz format
+        if (fields.length === 5) {
+          cronForCroner = '0 ' + cronExpression;
+        }
+        // If it's 7 fields (with year), remove the year field as croner doesn't support it
+        else if (fields.length === 7) {
+          cronForCroner = fields.slice(0, 6).join(' ');
+        }
+        
+        // Parse cron expression in UTC timezone (cron expressions are in UTC)
+        // The cron job will be scheduled based on UTC time
+        const job = new Cron(cronForCroner, { timezone: 'UTC' });
+        const nextRun = job.nextRun();
+        
+        if (!nextRun) return 'No upcoming runs';
+        
+        // Convert UTC time to browser local time for display
+        // toLocaleString automatically converts from the Date object's UTC representation
+        // to the user's browser local timezone
+        return nextRun.toLocaleString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+      } catch (error) {
+        console.error('Error parsing cron expression:', cronExpression, error);
+        return 'Invalid cron expression';
+      }
     };
 
     const fetchData = () => {
@@ -244,7 +295,8 @@ export default defineComponent({
       viewItem,
       loading,
       getStateColor,
-      formatDate
+      formatDate,
+      getNextRunTime
     };
   }
 });

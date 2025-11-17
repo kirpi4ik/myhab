@@ -23,6 +23,7 @@ export const ZONES_GET_ALL = gql`
           name
         }
         connectedTo {
+          id
           value
         }
       }

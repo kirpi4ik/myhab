@@ -46,8 +46,11 @@ class Query {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def cacheName = environment.getArgument("cacheName")
                 def cacheKey = environment.getArgument("cacheKey")
-                def cachedValue = hazelcastInstance.getMap(cacheName).get(cacheKey)
-                return [cacheName: cacheName, cacheKey: cacheKey, cachedValue: "${cachedValue ? cachedValue["expireOn"] : null}"]
+                // Convert cacheKey to String to match mutation's String.valueOf()
+                def cachedValue = hazelcastInstance.getMap(cacheName).get(String.valueOf(cacheKey))
+                // Return actual null instead of string "null" when cache is empty
+                def expireOn = cachedValue ? cachedValue["expireOn"] : null
+                return [cacheName: cacheName, cacheKey: cacheKey, cachedValue: expireOn]
 
             }
         }
@@ -59,10 +62,22 @@ class Query {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 String cacheName = environment.getArgument("cacheName")
                 def result = []
-                CacheMap.values().each { cMap ->
-                    def cName = cacheName ?: cMap.name
-                    hazelcastInstance.getMap(cName).entrySet().each { entry ->
-                        result << [cacheName: cName, cacheKey: entry.key, cachedValue: "${entry.value ? entry.value["expireOn"] : null}"]
+                
+                if (cacheName) {
+                    // If specific cache name is provided, only query that cache
+                    hazelcastInstance.getMap(cacheName).entrySet().each { entry ->
+                        // Return actual null instead of string "null" when cache is empty
+                        def expireOn = entry.value ? entry.value["expireOn"] : null
+                        result << [cacheName: cacheName, cacheKey: entry.key, cachedValue: expireOn]
+                    }
+                } else {
+                    // If no cache name provided, query all caches
+                    CacheMap.values().each { cMap ->
+                        hazelcastInstance.getMap(cMap.name).entrySet().each { entry ->
+                            // Return actual null instead of string "null" when cache is empty
+                            def expireOn = entry.value ? entry.value["expireOn"] : null
+                            result << [cacheName: cMap.name, cacheKey: entry.key, cachedValue: expireOn]
+                        }
                     }
                 }
                 return result

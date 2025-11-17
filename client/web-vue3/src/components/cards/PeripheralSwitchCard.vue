@@ -19,15 +19,18 @@
       <q-item-section>
         <q-item-label class="text-weight-medium text-h5">
           {{ asset.data?.name || 'Unknown Switch' }}
+          <q-badge v-if="isDeviceOffline" color="red-7" class="q-ml-sm">
+            OFFLINE
+          </q-badge>
         </q-item-label>
         <q-item-label class="text-weight-light text-blue-grey-3">
           {{ asset.data?.description || '' }}
         </q-item-label>
-        <q-item-label v-if="timeoutConfig || asset.expiration" class="text-weight-light text-teal-2 text-caption">
+        <q-item-label v-if="timeoutConfig || (isSwitchOn && asset.expiration)" class="text-weight-light text-teal-2 text-caption">
           <span v-if="timeoutConfig">
             [ timer: {{ formatDuration(Number(timeoutConfig.value) * 1000) }}
           </span>
-          <span v-if="asset.expiration" class="text-weight-light text-blue-grey-3">
+          <span v-if="isSwitchOn && asset.expiration" class="text-weight-light text-blue-grey-3">
             | off at: {{ formatTime(asset.expiration) }}
           </span>
           <span v-if="timeoutConfig">]</span>
@@ -75,17 +78,21 @@
     <q-card-section>
       <div class="q-pa-sm text-grey-8">
         <toggle 
-          v-model="switchState" 
-          @change="handleToggle" 
+          :model-value="switchState" 
+          @update:model-value="handleToggle" 
           :id="String(peripheral.id)"
+          :disabled="isDeviceOffline"
         />
+        <div v-if="isDeviceOffline" class="text-center text-caption text-red-3 q-mt-sm">
+          Device is offline - controls disabled
+        </div>
       </div>
     </q-card-section>
   </q-card>
 </template>
 
 <script>
-import {computed, defineComponent, toRefs} from 'vue';
+import {computed, defineComponent, toRefs, watch, onMounted} from 'vue';
 import {useRouter} from 'vue-router';
 
 import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
@@ -137,6 +144,15 @@ export default defineComponent({
     });
 
     /**
+     * Check if device is offline
+     * Device status comes from connectedTo[0].device.status
+     */
+    const isDeviceOffline = computed(() => {
+      const deviceStatus = asset.value?.data?.connectedTo?.[0]?.device?.status;
+      return deviceStatus === 'OFFLINE' || deviceStatus === 'DISABLED';
+    });
+
+    /**
      * Check if switch is currently on
      * Reads from connectedTo[0].value which contains "ON" or "OFF"
      */
@@ -146,19 +162,12 @@ export default defineComponent({
     });
 
     /**
-     * Get/Set switch state for toggle
+     * Get switch state for toggle (read-only)
      * Reads from connectedTo[0].value which contains "ON" or "OFF"
      */
-    const switchState = computed({
-      get: () => {
-        const portValue = asset.value?.data?.connectedTo?.[0]?.value;
-        return portValue === 'ON';
-      },
-      set: (value) => {
-        if (asset.value?.data?.connectedTo?.[0]) {
-          asset.value.data.connectedTo[0].value = value ? 'ON' : 'OFF';
-        }
-      }
+    const switchState = computed(() => {
+      const portValue = asset.value?.data?.connectedTo?.[0]?.value;
+      return portValue === 'ON';
     });
 
     /**
@@ -191,8 +200,17 @@ export default defineComponent({
       }
     };
 
-    // Initialize state when component mounts or peripheral changes
+    // Initialize state when component mounts
     initializeState();
+
+    // Watch for prop changes from parent and re-initialize state
+    watch(
+      () => props.peripheral,
+      () => {
+        initializeState();
+      },
+      { deep: true }
+    );
 
     /**
      * Load peripheral details and expiration from cache
@@ -216,12 +234,23 @@ export default defineComponent({
               fetchPolicy: 'network-only',
             });
 
-            if (cacheData.data?.cache?.cachedValue) {
-              assetRW.expiration = cacheData.data.cache.cachedValue;
+            const cachedValue = cacheData.data?.cache?.cachedValue;
+            // Only set expiration if cachedValue exists and is not null/empty
+            if (cachedValue && cachedValue !== 'null') {
+              assetRW.expiration = cachedValue;
+            } else {
+              assetRW.expiration = null;
             }
           } catch (error) {
-            console.warn('Failed to load cache expiration:', error);
+            console.error('Failed to load cache expiration:', error);
           }
+        }
+
+        // IMPORTANT: Initialize state in assetRW BEFORE assignment
+        // The server doesn't return the 'state' property, so we must calculate it from portValue
+        if (assetRW.connectedTo?.[0]?.value) {
+          const portValue = assetRW.connectedTo[0].value;
+          assetRW.state = portValue === 'ON';
         }
 
         compPeripheral.value = assetRW;
@@ -238,6 +267,7 @@ export default defineComponent({
           const newState = payload.p4 === 'ON';
           asset.value.value = payload.p4;
           asset.value.state = newState;
+          
           // Update the actual port value that we read from
           if (asset.value.data?.connectedTo?.[0]) {
             asset.value.data.connectedTo[0].value = payload.p4;
@@ -245,7 +275,12 @@ export default defineComponent({
           if (asset.value.data) {
             asset.value.data.state = newState;
           }
-          loadDetails();
+          
+          // Refresh details to get latest cache (expiration, etc.)
+          // Use setTimeout to avoid race condition with state updates
+          setTimeout(() => {
+            loadDetails();
+          }, 100);
         },
         filter: (payload) => portId.value === Number(payload.p2)
       },
@@ -328,8 +363,14 @@ export default defineComponent({
       }
     };
 
+    // Lifecycle hook: Load details on mount
+    onMounted(() => {
+      loadDetails();
+    });
+
     return {
       asset,
+      isDeviceOffline,
       isSwitchOn,
       switchState,
       timeoutConfig,

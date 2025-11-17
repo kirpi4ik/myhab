@@ -11,6 +11,7 @@
     >
       <swiper-slide v-for="svgPage in svgPages" :key="svgPage.id">
         <inline-svg
+          :key="`${svgPage.id}-${svgRefreshKey}`"
           :src="svgPage.svgContent"
           :transform-source="(svg) => transformSvg(svg, svgPage.id)"
           :fill-opacity="svgPage.fillOpacity"
@@ -110,6 +111,7 @@ const svgPages = ref([
 
 const currentPageIndex = ref(0);
 const swiperInstance = ref(null);
+const svgRefreshKey = ref(0);
 
 // Composables
 const { notifyError, notifySuccess } = useNotifications();
@@ -259,6 +261,8 @@ const initialize = async () => {
 watch(stompMessage, (newVal) => {
   if (newVal?.eventName === 'evt_port_value_persisted') {
     updatePeripheralFromEvent(newVal.jsonPayload);
+    // Force SVG re-render by incrementing the key
+    svgRefreshKey.value++;
   }
 });
 
