@@ -73,11 +73,22 @@
           <q-list bordered separator>
             <q-item v-for="(trigger, index) in cronTriggers" :key="index">
               <q-item-section>
-                <q-input v-model="trigger.expression" label="Cron Expression" dense hint="e.g., 0 0 * * * (every hour)">
-                  <template v-slot:prepend>
-                    <q-icon name="mdi-clock-outline"/>
-                  </template>
-                </q-input>
+                <div class="q-mb-sm">
+                  <div class="text-caption text-grey-7 q-mb-xs">Cron Expression (UTC timezone)</div>
+                  <cron-light 
+                    v-model="trigger.expression" 
+                    locale="en"
+                    @error="(error) => cronErrors[index] = error"
+                  />
+                  <div v-if="cronErrors[index]" class="text-negative text-caption q-mt-xs">
+                    {{ cronErrors[index] }}
+                  </div>
+                  <div v-else-if="trigger.expression" class="text-grey-6 text-caption q-mt-xs">
+                    Expression: {{ trigger.expression }}
+                    <br>
+                    Next run: <span class="text-primary text-weight-medium">{{ getNextRunTime(trigger.expression) }}</span> (local time)
+                  </div>
+                </div>
               </q-item-section>
               <q-item-section side>
                 <q-btn icon="mdi-delete" color="red" flat round @click="removeCronTrigger(index)">
@@ -136,11 +147,15 @@ import {useQuasar} from 'quasar';
 import {useEntityCRUD} from '@/composables';
 import EntityFormActions from '@/components/EntityFormActions.vue';
 import {JOB_LIST_ALL, JOB_CREATE} from '@/graphql/queries';
+import '@vue-js-cron/light/dist/light.css';
+import { CronLight } from '@vue-js-cron/light';
+import { Cron } from 'croner';
 
 export default defineComponent({
   name: 'JobNew',
   components: {
-    EntityFormActions
+    EntityFormActions,
+    CronLight
   },
   setup() {
     const $q = useQuasar();
@@ -151,6 +166,7 @@ export default defineComponent({
     const tagListFiltered = ref([]);
     const selectedTags = ref([]);
     const cronTriggers = ref([]);
+    const cronErrors = ref({});
     const jobStates = ['DRAFT', 'ACTIVE', 'DISABLED'];
 
     const {
@@ -254,6 +270,54 @@ export default defineComponent({
       });
     };
 
+    /**
+     * Get next run time from cron expression
+     */
+    const getNextRunTime = (cronExpression) => {
+      try {
+        if (!cronExpression) return '-';
+        
+        // Quartz format has 6-7 fields: second minute hour day month weekday (year)
+        // Standard cron has 5 fields: minute hour day month weekday
+        // Check field count and convert if needed
+        const fields = cronExpression.trim().split(/\s+/);
+        
+        let cronForCroner = cronExpression;
+        
+        // If it's a 5-field expression, add seconds field at the beginning for Quartz format
+        if (fields.length === 5) {
+          cronForCroner = '0 ' + cronExpression;
+        }
+        // If it's 7 fields (with year), remove the year field as croner doesn't support it
+        else if (fields.length === 7) {
+          cronForCroner = fields.slice(0, 6).join(' ');
+        }
+        
+        // Parse cron expression in UTC timezone (cron expressions are in UTC)
+        // The cron job will be scheduled based on UTC time
+        const job = new Cron(cronForCroner, { timezone: 'UTC' });
+        const nextRun = job.nextRun();
+        
+        if (!nextRun) return 'No upcoming runs';
+        
+        // Convert UTC time to browser local time for display
+        // toLocaleString automatically converts from the Date object's UTC representation
+        // to the user's browser local timezone
+        return nextRun.toLocaleString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+      } catch (error) {
+        console.error('Error parsing cron expression:', cronExpression, error);
+        return 'Invalid cron expression';
+      }
+    };
+
     const onSave = async () => {
       if (saving.value) return;
       
@@ -284,11 +348,13 @@ export default defineComponent({
       tagListFiltered,
       selectedTags,
       cronTriggers,
+      cronErrors,
       jobStates,
       addCronTrigger,
       removeCronTrigger,
       filterTagFn,
       createNewTag,
+      getNextRunTime,
       saving,
       onSave
     };
