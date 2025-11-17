@@ -47,7 +47,6 @@ class PortValueService implements EventPublisher {
             def newVal = ValueParser.parser(devicePort).apply(event.data.p5)
             
             if (devicePort.value != newVal) {
-
                 try {
                     PortValue newPortValue = new PortValue()
                     // Use id instead of uid (uid is deprecated)
@@ -71,7 +70,7 @@ class PortValueService implements EventPublisher {
                         it
                     })
                 } catch (Exception ex) {
-                    log.error(ex.message)
+                    log.error("Error saving port value: ${ex.message}", ex)
                 }
                 publish(TopicName.EVT_UI_UPDATE_PORT_VALUE.id(), new Event().with {
                     p0 = TopicName.EVT_PORT_VALUE_PERSISTED.id()
@@ -88,8 +87,6 @@ class PortValueService implements EventPublisher {
 
     @Subscriber("evt_mqtt_port_value_changed")
     def updateExpirationTime(event) {
-        log.debug("evt_mqtt_port_value_changed received: device=${event.data.p2}, ref=${event.data.p4}, value=${event.data.p5}")
-        
         def port = Device.findByCode(event.data.p2, [lock: true])?.ports?.find {
             port -> port.internalRef == event.data.p4
         }
@@ -105,10 +102,8 @@ class PortValueService implements EventPublisher {
                 if (config != null && newVal == PortAction.ON.name()) {
                     def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
                     hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
-                    log.debug("Cache created for port ${port.id}, expires at ${new Date(expireInMs)}, peripheral ${peripheral.id}")
                 } else if (newVal == PortAction.OFF.name()) {
                     hazelcastInstance.getMap(CacheMap.EXPIRE.name).remove(String.valueOf(port.id))
-                    log.debug("Cache removed for port ${port.id}")
                 }
                 }
             }
@@ -125,7 +120,6 @@ class PortValueService implements EventPublisher {
             if (firstPort.value == PortAction.ON.name()) {
                 def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(event.data.p5)).toDate().time
                 hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(firstPort.id), [expireOn: expireInMs, peripheralId: peripheral.id])
-                log.debug("Cache updated for port ${firstPort.id} due to config change, expires at ${new Date(expireInMs)}, peripheral ${peripheral.id}")
             }
             }
         }
