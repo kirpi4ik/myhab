@@ -234,7 +234,14 @@ export default defineComponent({
     // Listen for WebSocket events
     useWebSocketListener('evt_port_value_persisted', (payload) => {
       if (portIds.value.includes(Number(payload.p2))) {
-        deviceDetails.value[payload.p3].value = payload.p4
+        const portRef = deviceDetails.value[payload.p3];
+        if (portRef) {
+          // Update the port object inside the ref, not the ref itself
+          portRef.value = {
+            ...portRef.value,
+            value: payload.p4
+          };
+        }
       }
     });
     

@@ -10,7 +10,16 @@
 
       <q-card-section class="row items-center">
         <div class="column">
-          <div class="text-h4 text-secondary">{{ viewItem.code || 'Unnamed Device' }}</div>
+          <div class="row items-center q-gutter-sm">
+            <div class="text-h4 text-secondary">{{ viewItem.code || 'Unnamed Device' }}</div>
+            <q-badge 
+              v-if="viewItem.status"
+              :color="getStatusColor(viewItem.status)"
+              :label="getStatusLabel(viewItem.status)"
+              :icon="getStatusIcon(viewItem.status)"
+              class="q-ml-sm"
+            />
+          </div>
           <div class="text-subtitle2 text-grey-7">{{ viewItem.name || 'No name specified' }}</div>
         </div>
         <q-space/>
@@ -323,6 +332,50 @@ export default defineComponent({
     };
 
     /**
+     * Get status badge color based on device status
+     */
+    const getStatusColor = (status) => {
+      if (!status) return 'grey';
+      const statusUpper = status.toUpperCase();
+      switch (statusUpper) {
+        case 'ONLINE':
+          return 'positive';
+        case 'OFFLINE':
+          return 'negative';
+        case 'DISABLED':
+          return 'warning';
+        default:
+          return 'grey';
+      }
+    };
+
+    /**
+     * Get status badge label
+     */
+    const getStatusLabel = (status) => {
+      if (!status) return 'Unknown';
+      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    };
+
+    /**
+     * Get status badge icon
+     */
+    const getStatusIcon = (status) => {
+      if (!status) return 'mdi-help-circle';
+      const statusUpper = status.toUpperCase();
+      switch (statusUpper) {
+        case 'ONLINE':
+          return 'mdi-check-circle';
+        case 'OFFLINE':
+          return 'mdi-close-circle';
+        case 'DISABLED':
+          return 'mdi-pause-circle';
+        default:
+          return 'mdi-help-circle';
+      }
+    };
+
+    /**
      * Fetch device data from server
      */
     const fetchData = () => {
@@ -436,7 +489,10 @@ export default defineComponent({
       onRowClick,
       newPort,
       viewZone,
-      formatDate
+      formatDate,
+      getStatusColor,
+      getStatusLabel,
+      getStatusIcon
     };
   }
 });

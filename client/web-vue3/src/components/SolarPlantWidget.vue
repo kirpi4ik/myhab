@@ -800,7 +800,11 @@ export default defineComponent({
       if (portIds.value.includes(Number(payload.p2))) {
         const portInternalRef = payload.p3;
         if (deviceDetails.value[portInternalRef]) {
-          deviceDetails.value[portInternalRef].value = payload.p4;
+          // Update the port object inside the ref, not the ref itself
+          deviceDetails.value[portInternalRef].value = {
+            ...deviceDetails.value[portInternalRef].value,
+            value: payload.p4
+          };
         }
       }
     });
