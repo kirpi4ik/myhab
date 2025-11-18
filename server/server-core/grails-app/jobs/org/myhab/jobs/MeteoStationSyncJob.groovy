@@ -15,6 +15,7 @@ import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortState
 import org.myhab.domain.device.port.PortType
+import org.myhab.utils.HttpErrorUtil
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -147,7 +148,8 @@ class MeteoStationSyncJob implements Job {
                 mqttTopicService.publishStatus(device, DeviceStatus.ONLINE)
                 log.info("Weather data synced successfully for device: ${device.name}")
             } else {
-                log.error("Failed to fetch weather data. Status: ${response.status}, Body: ${response.body}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body ?: "")
+                log.error("Failed to fetch weather data: ${errorMsg}")
                 mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
             }
         } catch (Exception ex) {

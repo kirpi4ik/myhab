@@ -137,6 +137,17 @@ export const PERIPHERAL_GET_BY_ID = gql`
         name
         description
       }
+      cables {
+        id
+        code
+        codeNew
+        codeOld
+        description
+        category {
+          id
+          name
+        }
+      }
     }
     deviceList {
       id

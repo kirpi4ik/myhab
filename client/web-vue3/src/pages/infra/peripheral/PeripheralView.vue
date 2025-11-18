@@ -183,6 +183,53 @@
       </div>
 
       <q-separator/>
+
+      <!-- Connected Cables Table -->
+      <div class="q-pa-md">
+        <div class="text-h6 text-grey-8 q-mb-md">
+          <q-icon name="mdi-cable-data" class="q-mr-sm"/>
+          Connected Cables
+        </div>
+        
+        <q-table
+          v-if="viewItem.cables && viewItem.cables.length > 0"
+          :rows="viewItem.cables"
+          :columns="cableColumns"
+          @row-click="onCableRowClick"
+          v-model:pagination="pagination"
+          row-key="id"
+          flat
+          bordered
+        >
+          <template v-slot:body="props">
+            <q-tr :props="props" @click="onCableRowClick(props.row)" style="cursor: pointer;">
+              <q-td key="id" style="max-width: 50px">
+                {{ props.row.id }}
+              </q-td>
+              <q-td key="code">
+                <q-badge color="info" :label="props.row.code || '-'"/>
+              </q-td>
+              <q-td key="codeNew">
+                {{ props.row.codeNew || '-' }}
+              </q-td>
+              <q-td key="description">
+                {{ props.row.description || '-' }}
+              </q-td>
+              <q-td key="category">
+                <q-badge v-if="props.row.category" color="secondary" :label="props.row.category.name"/>
+                <span v-else class="text-grey-6">-</span>
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+
+        <div v-else class="text-center text-grey-6 q-pa-md">
+          <q-icon name="mdi-cable-data" size="md"/>
+          <div>No cables connected</div>
+        </div>
+      </div>
+
+      <q-separator/>
       <q-list>
         <q-separator class="q-my-md"/>
 
@@ -272,6 +319,14 @@ export default defineComponent({
       {name: 'device', label: 'Device', field: row => row.device?.code || '-', align: 'left', sortable: true},
     ];
 
+    const cableColumns = [
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
+      {name: 'codeNew', label: 'Code New', field: 'codeNew', align: 'left', sortable: true},
+      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+      {name: 'category', label: 'Category', field: row => row.category?.name || '-', align: 'left', sortable: true},
+    ];
+
     /**
      * Format date for display
      */
@@ -359,6 +414,13 @@ export default defineComponent({
       router.push({path: `/admin/ports/${row.id}/view`});
     };
 
+    /**
+     * Navigate to cable view
+     */
+    const onCableRowClick = (row) => {
+      router.push({path: `/admin/cables/${row.id}/view`});
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -371,8 +433,10 @@ export default defineComponent({
       pagination,
       zoneColumns,
       portColumns,
+      cableColumns,
       viewZone,
       onPortRowClick,
+      onCableRowClick,
       formatDate,
       getCategoryColor,
       getCategoryIcon

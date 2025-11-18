@@ -12,7 +12,10 @@ import org.myhab.domain.common.BaseEntity
 import org.myhab.domain.common.Configurable
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.infra.Zone
+import org.myhab.domain.device.CablePeripheralJoin
+import groovy.util.logging.Slf4j
 
+@Slf4j
 class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripheral> {
     String name
     String model
@@ -21,10 +24,11 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
     PeripheralCategory category
     Set<DevicePort> connectedTo
     Set<Zone> zones
+    Set<Cable> cables
     Set<PeripheralAccessToken> accessTokens
 
     static belongsTo = [DevicePort, Zone, PeripheralCategory]
-    static hasMany = [connectedTo: DevicePort, zones: Zone, accessTokens: PeripheralAccessToken]
+    static hasMany = [connectedTo: DevicePort, zones: Zone, cables: Cable, accessTokens: PeripheralAccessToken]
     static hasOne = [category: PeripheralCategory]
 
     static constraints = {
@@ -38,6 +42,7 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
         sort name: "asc"
         connectedTo joinTable: [name: "device_ports_peripherals_join", key: 'peripheral_id'], cascade: "all"
         zones joinTable: [name: "zones_peripherals_join", key: 'peripheral_id'], cascade: "all"
+        cables joinTable: [name: "cables_peripherals_join", key: 'peripheral_id'], cascade: "all"
         accessTokens joinTable: [name: "peripherals_access_tokens_join", key: 'peripheral_id'], cascade: "all"
         sort name: "asc"
     }
@@ -87,6 +92,11 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
                         peripheral.connectedTo.each { port ->
                             if (dbExistingPeripheral.connectedTo.find { p -> p.id == port.id } == null) {
                                 dbExistingPeripheral.addToConnectedTo(DevicePort.get(port.id))
+                            }
+                        }
+                        peripheral.cables?.each { cable ->
+                            if (dbExistingPeripheral.cables.find { c -> c.id == cable.id } == null) {
+                                dbExistingPeripheral.addToCables(Cable.get(cable.id))
                             }
                         }
                         dbExistingPeripheral.save(failOnError: true, flush: true)
@@ -147,7 +157,62 @@ class DevicePeripheral extends BaseEntity implements Configurable<DevicePeripher
                                 dbExistingPeripheral.addToConnectedTo(DevicePort.get(port.id))
                             }
                         }
+
+                        // Process cables - handle both Map and object access
+                        def cablesInput = peripheral.cables ?: peripheral.get('cables')
+                        if (cablesInput != null) {
+                            // Force load the cables collection by accessing it
+                            def existingCables = dbExistingPeripheral.cables ?: []
+                            
+                            // Create a list of cable IDs from input for easier comparison
+                            def inputCableIds = cablesInput.collect { c -> 
+                                def id = c.id ?: c.get('id')
+                                id != null ? Long.valueOf(id) : null
+                            }.findAll { it != null }
+                            
+                            // Remove cables that are not in the input - use explicit join entity
+                            existingCables.each { dbCable ->
+                                def cableExists = cablesInput.find { c -> 
+                                    def cableId = c.id ?: c.get('id')
+                                    def matches = cableId == dbCable.id || (cableId != null && Long.valueOf(cableId) == dbCable.id)
+                                    matches
+                                }
+                                if (cableExists == null) {
+                                    // Use explicit join entity deletion
+                                    def join = CablePeripheralJoin.get(dbCable.id, peripheralId)
+                                    if (join) {
+                                        join.delete(failOnError: true, flush: true)
+                                    }
+                                }
+                            }
+                            
+                            // Add new cables that are not already in the collection - use explicit join entity
+                            def existingCableIds = existingCables*.id
+                            inputCableIds.each { cableIdLong ->
+                                if (!existingCableIds.contains(cableIdLong)) {
+                                    def cableEntity = Cable.get(cableIdLong)
+                                    if (cableEntity) {
+                                        // Check if join already exists
+                                        def existingJoin = CablePeripheralJoin.get(cableIdLong, peripheralId)
+                                        if (existingJoin == null) {
+                                            // Create explicit join entity
+                                            new CablePeripheralJoin(
+                                                cable: cableEntity,
+                                                peripheral: dbExistingPeripheral
+                                            ).save(failOnError: true, flush: true)
+                                        }
+                                    } else {
+                                        log.warn("updatePeripheral: Cable with id ${cableIdLong} not found in database")
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Save the peripheral with all changes
                         dbExistingPeripheral.save(failOnError: true, flush: true)
+                        
+                        // Refresh to ensure collection is properly loaded
+                        dbExistingPeripheral.refresh()
                     }
                     return [success: true, error: null]
                 }
