@@ -16,6 +16,7 @@ import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortType
 import org.myhab.telegram.TelegramBotHandler
+import org.myhab.utils.HttpErrorUtil
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -193,7 +194,8 @@ class NibeInfoSyncJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.error("Failed to fetch system info: HTTP ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.error("Failed to fetch system info: ${errorMsg}")
                 return null
             }
             
@@ -250,7 +252,8 @@ class NibeInfoSyncJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.warn("Failed to fetch firmware info: HTTP ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.warn("Failed to fetch firmware info: ${errorMsg}")
                 return
             }
             
@@ -281,7 +284,8 @@ class NibeInfoSyncJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.warn("Failed to fetch device details: HTTP ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.warn("Failed to fetch device details: ${errorMsg}")
                 return
             }
             
@@ -317,7 +321,8 @@ class NibeInfoSyncJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.error("Failed to fetch device points: HTTP ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.error("Failed to fetch device points: ${errorMsg}")
                 return
             }
             

@@ -116,6 +116,21 @@
 
         <q-separator/>
 
+        <!-- Cable Connections -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">Cable Connections</div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <CableSelector
+            v-model="peripheral.cables"
+            label="Cables"
+            hint="Select cables connected to this peripheral"
+          />
+        </q-card-section>
+
+        <q-separator/>
+
         <!-- Port Connections -->
         <PortConnectCard
           v-model="peripheral.connectedTo"
@@ -132,7 +147,8 @@
           icon="mdi-devices"
           :extra-info="[
             { icon: 'mdi-ethernet', label: 'Ports', value: peripheral.connectedTo?.length || 0 },
-            { icon: 'mdi-map-marker', label: 'Zones', value: peripheral.zones?.length || 0 }
+            { icon: 'mdi-map-marker', label: 'Zones', value: peripheral.zones?.length || 0 },
+            { icon: 'mdi-cable-data', label: 'Cables', value: peripheral.cables?.length || 0 }
           ]"
         />
 
@@ -163,6 +179,7 @@ import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
 import PortConnectCard from '@/components/cards/PortConnectCard.vue';
 import LocationSelector from '@/components/selectors/LocationSelector.vue';
+import CableSelector from '@/components/selectors/CableSelector.vue';
 
 import {
   PERIPHERAL_CATEGORIES,
@@ -178,7 +195,8 @@ export default defineComponent({
     EntityInfoPanel,
     EntityFormActions,
     PortConnectCard,
-    LocationSelector
+    LocationSelector,
+    CableSelector
   },
   setup() {
     const route = useRoute();
@@ -213,6 +231,11 @@ export default defineComponent({
         // Clean zones array - keep only id
         if (transformed.zones && Array.isArray(transformed.zones)) {
           transformed.zones = transformed.zones.map(zone => ({ id: zone.id }));
+        }
+        
+        // Clean cables array - keep only id
+        if (transformed.cables && Array.isArray(transformed.cables)) {
+          transformed.cables = transformed.cables.map(cable => ({ id: cable.id }));
         }
         
         // Clean category - keep only id
