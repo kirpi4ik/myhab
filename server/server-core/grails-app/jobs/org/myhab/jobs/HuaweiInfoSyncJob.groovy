@@ -349,8 +349,7 @@ class HuaweiInfoSyncJob implements Job {
                                     state: PortState.ACTIVE,
                                     internalRef: internalRef,
                                     name: formatPortName(paramName),
-                                    description: "Auto-created ${prefix} parameter: ${paramName}",
-                                    uid: null
+                                    description: "Auto-created ${prefix} parameter: ${paramName}"
                                 )
                                 newPort.save(flush: true, failOnError: true)
                                 return newPort

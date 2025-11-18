@@ -324,7 +324,7 @@ export default defineComponent({
       updateMutation: USER_VALUE_UPDATE,
       updateMutationKey: 'userUpdate',
       updateVariableName: 'user',
-      excludeFields: ['__typename', 'id', 'name', 'uid', 'tsCreated', 'tsUpdated', 'roles'],
+      excludeFields: ['__typename', 'id', 'name', 'tsCreated', 'tsUpdated', 'roles'],
       transformBeforeSave: (data) => {
         const transformed = {...data};
         // Remove password if empty (keep existing password)

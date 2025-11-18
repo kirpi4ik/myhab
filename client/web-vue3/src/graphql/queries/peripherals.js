@@ -24,8 +24,9 @@ export const PERIPHERAL_CATEGORY_CREATE = gql`
 `;
 export const PERIPHERAL_DELETE = gql`
   mutation ($id: Long!) {
-    devicePeripheralDelete(id: $id) {
+    deleteDevicePeripheral(id: $id) {
       success
+      error
     }
   }
 `;

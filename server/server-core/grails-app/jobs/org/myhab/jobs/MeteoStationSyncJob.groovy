@@ -236,8 +236,7 @@ class MeteoStationSyncJob implements Job {
                         state: PortState.ACTIVE,
                         internalRef: internalRef,
                         name: formatPortName(internalRef),
-                        description: "Auto-created weather parameter",
-                        uid: null  // Set to null instead of empty string to avoid unique constraint violations
+                        description: "Auto-created weather parameter"
                     )
                     newPort.save(flush: true, failOnError: true)
                     return newPort
