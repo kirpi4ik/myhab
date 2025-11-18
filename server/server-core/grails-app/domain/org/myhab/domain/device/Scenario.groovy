@@ -17,7 +17,6 @@ class Scenario extends BaseEntity {
   Set<DevicePort> ports
 
   static hasMany = [ports: DevicePort]
-  static belongsTo = DevicePort
 
   static constraints = {
     name nullable: true
@@ -26,7 +25,7 @@ class Scenario extends BaseEntity {
 
   static mapping = {
     table '`scenarios`'
-    ports joinTable: [name: "device_ports_scenarios_join", key: 'scenario_id']
+    ports joinTable: [name: "device_ports_scenarios_join", key: 'scenario_id'], cascade: "all"
   }
 
   static graphql = GraphQLMapping.lazy {
@@ -46,16 +45,24 @@ class Scenario extends BaseEntity {
               }
             }
             
-            // Add ports
+            // Save first to get the ID
+            dbScenario.save(failOnError: true, flush: true)
+            
+            // Add ports using explicit join entities
             if (scenario.ports) {
               scenario.ports.each { port ->
-                if (dbScenario.ports.find { p -> p.id == port.id } == null) {
-                  dbScenario.addToPorts(DevicePort.get(port.id))
+                def portId = port.id as Long
+                if (portId) {
+                  def portEntity = DevicePort.get(portId)
+                  if (portEntity) {
+                    def existingJoin = PortScenarioJoin.get(portId, dbScenario.id)
+                    if (existingJoin == null) {
+                      new PortScenarioJoin(port: portEntity, scenario: dbScenario).save(failOnError: true, flush: true)
+                    }
+                  }
                 }
               }
             }
-            
-            dbScenario.save(failOnError: true, flush: true)
           }
           return dbScenario
         }
@@ -86,7 +93,7 @@ class Scenario extends BaseEntity {
               }
             }
             
-            // Update only specific properties (exclude uid, id, timestamps)
+            // Update only specific properties (exclude id, timestamps)
             if (scenario.name != null) existingScenario.name = scenario.name
             if (scenario.body != null) existingScenario.body = scenario.body
             

@@ -418,8 +418,7 @@ class NibeInfoSyncJob implements Job {
                 internalRef: parameterId,
                 name: point.parameterName ?: "Parameter ${parameterId}",
                 description: description,
-                type: determinePortType(point),
-                uid: "nibe-${device.id}-${parameterId}" // Unique identifier for backward compatibility
+                type: determinePortType(point)
             )
             
             port.save(flush: true, failOnError: true)

@@ -209,7 +209,7 @@ export default defineComponent({
       updateMutation: JOB_UPDATE,
       updateMutationKey: 'jobUpdate',
       updateVariableName: 'job',
-      excludeFields: ['__typename', 'id', 'uid', 'tsCreated', 'tsUpdated', 'entityType', 'cronTriggers', 'eventTriggers', 'tags', 'scenario'],
+      excludeFields: ['__typename', 'id', 'tsCreated', 'tsUpdated', 'entityType', 'cronTriggers', 'eventTriggers', 'tags', 'scenario'],
       transformBeforeSave: (data) => {
         const transformed = {...data};
         

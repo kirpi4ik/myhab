@@ -124,7 +124,7 @@ export default defineComponent({
       updateMutation: SCENARIO_UPDATE,
       updateMutationKey: 'updateScenario',
       updateVariableName: 'scenario',
-      excludeFields: ['__typename', 'id', 'uid', 'tsCreated', 'tsUpdated', 'entityType'],
+      excludeFields: ['__typename', 'id', 'tsCreated', 'tsUpdated', 'entityType'],
       transformBeforeSave: (data) => {
         const transformed = {...data};
         // Set ports to selected ports (only IDs)

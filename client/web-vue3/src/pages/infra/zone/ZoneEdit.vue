@@ -176,7 +176,7 @@ export default defineComponent({
       getQuery: ZONE_GET_BY_ID_MINIMAL,
       updateMutation: ZONE_VALUE_UPDATE,
       getQueryKey: 'zoneById',
-      excludeFields: ['__typename', 'uid', 'tsCreated', 'tsUpdated']
+      excludeFields: ['__typename', 'tsCreated', 'tsUpdated']
     });
     
     // Compute available sub-zones (exclude current zone, parent zone, and already selected zones)

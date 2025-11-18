@@ -99,7 +99,7 @@ export default defineComponent({
       getQueryKey: 'deviceCategory',
       updateMutation: DEVICE_CATEGORY_UPDATE,
       updateMutationKey: 'deviceCategoryUpdate',
-      excludeFields: ['__typename', 'entityType', 'id', 'uid', 'tsCreated', 'tsUpdated']
+      excludeFields: ['__typename', 'entityType', 'id', 'tsCreated', 'tsUpdated']
     });
 
     /**

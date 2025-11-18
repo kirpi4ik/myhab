@@ -28,24 +28,18 @@ class Zone extends BaseEntity implements Configurable<Zone> {
     Set<Cable> cables
 
     static belongsTo = [parent: Zone]
-    static hasOne = [parent: Zone]
     static hasMany = [cables: Cable, peripherals: DevicePeripheral, devices: Device, zones: Zone]
 
 
     static mapping = {
         table '`zones`'
         sort name: "asc"
-        zones sort: "name"
-        devices joinTable: [name: "zones_devices_join", key: 'zone_id']
-        peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id']
-        cables joinTable: [name: "zones_cables_join", key: 'zone_id']
-
+        zones sort: "name", cascade: "save-update"
+        devices joinTable: [name: "zones_devices_join", key: 'zone_id'], cascade: "save-update"
+        peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id'], cascade: "save-update"
+        cables joinTable: [name: "zones_cables_join", key: 'zone_id'], cascade: "save-update"
     }
     static constraints = {
-        devices cascade: 'save-update'
-        peripherals cascade: 'save-update'
-        cables cascade: 'save-update'
-        zones cascade: 'save-update'
     }
 
     static graphql = GraphQLMapping.lazy {
@@ -72,7 +66,7 @@ class Zone extends BaseEntity implements Configurable<Zone> {
                     throw new RuntimeException("Zone not found with id: ${id}")
                 }
                 
-                Zone.withTransaction { status ->
+                Zone.withTransaction {
                     // Update basic fields
                     if (zoneData.name != null) existingZone.name = zoneData.name
                     if (zoneData.description != null) existingZone.description = zoneData.description

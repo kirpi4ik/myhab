@@ -8,6 +8,8 @@ import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.UpdateEntityDataFetcher
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.infra.Zone
+import org.myhab.domain.device.CablePeripheralJoin
+import org.myhab.domain.device.DevicePeripheral
 
 class Cable extends BaseEntity {
     String code
@@ -46,9 +48,9 @@ class Cable extends BaseEntity {
     static mapping = {
         table '`cables`'
         sort code: "asc"
-        zones joinTable: [name: "zones_cables_join", key: 'cable_id']
-        connectedTo joinTable: [name: "device_ports_cables_join", key: 'cable_id']
-        peripherals joinTable: [name: "cables_peripherals_join", key: 'cable_id']
+        zones joinTable: [name: "zones_cables_join", key: 'cable_id'], cascade: "all"
+        connectedTo joinTable: [name: "device_ports_cables_join", key: 'cable_id'], cascade: "all"
+        peripherals joinTable: [name: "cables_peripherals_join", key: 'cable_id'], cascade: "all"
     }
 
     static graphql = GraphQLMapping.lazy {
@@ -96,6 +98,16 @@ class Cable extends BaseEntity {
                                 CableZoneJoin.get(cableId, zn.id).delete(failOnError: true, flush: true)
                             }
                         }
+                        //cleanup peripherals
+                        existingCable.peripherals.each { periph ->
+                            def peripheralExistInUpdate = cable.peripherals?.find { newPeriph ->
+                                newPeriph.id == periph.id
+                            }
+                            if (peripheralExistInUpdate == null) {
+                                //delete from db
+                                CablePeripheralJoin.get(cableId, periph.id).delete(failOnError: true, flush: true)
+                            }
+                        }
 
                         //copy cable
                         existingCable.properties = cable
@@ -110,6 +122,12 @@ class Cable extends BaseEntity {
                         existingCable.zones.each {
                             if (CableZoneJoin.get(cableId, it.id) == null) {
                                 new CableZoneJoin(cable: existingCable, zone: Zone.get(it.id)).save()
+                            }
+                        }
+                        //save peripherals
+                        existingCable.peripherals?.each {
+                            if (CablePeripheralJoin.get(cableId, it.id) == null) {
+                                new CablePeripheralJoin(cable: existingCable, peripheral: DevicePeripheral.get(it.id)).save()
                             }
                         }
 
