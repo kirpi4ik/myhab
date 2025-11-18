@@ -83,7 +83,7 @@
       "edit": "Editeaza",
       "create": "Port nou"
     },
-    "zones": "Locatii",
+    "zones": "Localizari",
     "zone": {
       "details": "Detalii",
       "edit": "Editeaza",
@@ -113,7 +113,7 @@
       "edit": "Editeaza",
       "create": "Scenariu nou"
     },
-    "jobs": "Sarcini",
+    "jobs": "Sarcini programate",
     "job": {
       "details": "Detalii",
       "edit": "Editeaza",

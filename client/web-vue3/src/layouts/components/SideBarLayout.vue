@@ -114,21 +114,22 @@
               </q-item-section>
             </q-item>
             
-            <q-item to="/admin/scenarios" active-class="q-item-no-link-highlighting">
-              <q-item-section avatar>
-                <q-icon name="mdi-script-text"/>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ $t('navigation.scenarios') }}</q-item-label>
-              </q-item-section>
-            </q-item>
-            
+          
             <q-item to="/admin/jobs" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="mdi-briefcase-clock"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.jobs') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item to="/admin/scenarios" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-script-text"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.scenarios') }}</q-item-label>
               </q-item-section>
             </q-item>
             
