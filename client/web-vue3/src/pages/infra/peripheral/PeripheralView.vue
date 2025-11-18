@@ -140,33 +140,7 @@
         <div>No ports connected</div>
       </div>
 
-      <q-list>
-        <q-separator class="q-my-md"/>
-
-        <!-- Timestamps Section -->
-        <q-item-label header class="text-h6 text-grey-8">Timestamps</q-item-label>
-
-        <q-item v-if="viewItem.tsCreated">
-          <q-item-section>
-            <q-item-label class="text-h6">
-              <q-icon name="mdi-calendar-plus" class="q-mr-sm"/>
-              Created
-            </q-item-label>
-            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsCreated) }}</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-item v-if="viewItem.tsUpdated">
-          <q-item-section>
-            <q-item-label class="text-h6">
-              <q-icon name="mdi-calendar-edit" class="q-mr-sm"/>
-              Last Updated
-            </q-item-label>
-            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsUpdated) }}</q-item-label>
-          </q-item-section>
-        </q-item>
-
-      </q-list>
+     
 
       <q-separator/>
 
@@ -209,7 +183,33 @@
       </div>
 
       <q-separator/>
+      <q-list>
+        <q-separator class="q-my-md"/>
 
+        <!-- Timestamps Section -->
+        <q-item-label header class="text-h6 text-grey-8">Timestamps</q-item-label>
+
+        <q-item v-if="viewItem.tsCreated">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-calendar-plus" class="q-mr-sm"/>
+              Created
+            </q-item-label>
+            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsCreated) }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="viewItem.tsUpdated">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-calendar-edit" class="q-mr-sm"/>
+              Last Updated
+            </q-item-label>
+            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsUpdated) }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+      </q-list>
       <!-- Actions -->
       <q-card-actions>
         <q-btn color="primary" :to="uri +'/'+ $route.params.idPrimary+'/edit'" icon="mdi-pencil">
