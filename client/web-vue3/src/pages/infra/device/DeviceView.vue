@@ -186,6 +186,10 @@
               <q-td key="description">
                 {{ props.row.description ? (props.row.description.length > 50 ? props.row.description.substring(0, 50) + '...' : props.row.description) : '-' }}
               </q-td>
+              <q-td key="value">
+                <q-badge v-if="props.row.value" color="primary" :label="props.row.value"/>
+                <span v-else class="text-grey-6">-</span>
+              </q-td>
               <q-td key="actions">
                 <q-btn 
                   icon="mdi-delete" 
@@ -309,6 +313,7 @@ export default defineComponent({
       {name: 'internalRef', label: 'Ref ID', field: 'internalRef', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
       {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+      {name: 'value', label: 'Value', field: 'value', align: 'left', sortable: true},
       {name: 'actions', label: 'Actions', field: row => '', align: 'right', sortable: false}
     ];
 

@@ -47,9 +47,27 @@
         class="sticky-header-table"
         @row-click="(evt, row) => viewItem(row)"
       >
+        <template v-slot:body-cell-device="props">
+          <q-td :props="props">
+            {{ props.row.deviceName ? (props.row.deviceName.length > 20 ? props.row.deviceName.substring(0, 20) + '...' : props.row.deviceName) : '-' }}
+          </q-td>
+        </template>
+
         <template v-slot:body-cell-internalRef="props">
           <q-td :props="props">
             <q-badge color="primary" :label="props.row.internalRef"/>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-name="props">
+          <q-td :props="props">
+            {{ props.row.name ? (props.row.name.length > 20 ? props.row.name.substring(0, 20) + '...' : props.row.name) : '-' }}
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-description="props">
+          <q-td :props="props">
+            {{ props.row.description ? (props.row.description.length > 20 ? props.row.description.substring(0, 20) + '...' : props.row.description) : '-' }}
           </q-td>
         </template>
 
@@ -63,6 +81,13 @@
         <template v-slot:body-cell-state="props">
           <q-td :props="props">
             <q-badge v-if="props.row.state" :color="getStateColor(props.row.state)" :label="props.row.state"/>
+            <span v-else class="text-grey-6">-</span>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-value="props">
+          <q-td :props="props">
+            <q-badge v-if="props.row.value" color="primary" :label="props.row.value"/>
             <span v-else class="text-grey-6">-</span>
           </q-td>
         </template>
@@ -116,10 +141,10 @@ export default defineComponent({
     // Define columns for the table
     const columns = [
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true, style: 'max-width: 60px'},
-      {name: 'device', label: 'Device', field: 'deviceName', align: 'left', sortable: true},
+      {name: 'device', label: 'Device', field: 'deviceName', align: 'left', sortable: true, style: 'max-width: 200px'},
       {name: 'internalRef', label: 'Ref ID', field: 'internalRef', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true, style: 'max-width: 200px'},
+      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true, style: 'max-width: 200px'},
       {name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true},
       {name: 'state', label: 'State', field: 'state', align: 'left', sortable: true},
       {name: 'value', label: 'Value', field: 'value', align: 'left', sortable: true},
@@ -138,7 +163,6 @@ export default defineComponent({
 
     // Use the entity list composable
     const {
-      items,
       filteredItems,
       loading,
       filter,
