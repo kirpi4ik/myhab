@@ -180,6 +180,7 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
         description
         type
         state
+        value
       }
       authAccounts {
         id
