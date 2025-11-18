@@ -16,6 +16,7 @@ import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortType
 import org.myhab.telegram.TelegramBotHandler
+import org.myhab.utils.HttpErrorUtil
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -193,7 +194,8 @@ class NibeInfoSyncJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.error("Failed to fetch system info: HTTP ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.error("Failed to fetch system info: ${errorMsg}")
                 return null
             }
             
@@ -250,7 +252,9 @@ class NibeInfoSyncJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.warn("Failed to fetch firmware info: HTTP ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.error("Failed to fetch firmware info: ${errorMsg}")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
             
@@ -262,7 +266,8 @@ class NibeInfoSyncJob implements Job {
             log.debug("Firmware: current=${data.currentFwVersion}, desired=${data.desiredFwVersion}")
             
         } catch (Exception e) {
-            log.warn("Exception fetching firmware info: ${e.message}")
+            log.error("Exception fetching firmware info: ${e.message}", e)
+            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 
@@ -281,7 +286,9 @@ class NibeInfoSyncJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.warn("Failed to fetch device details: HTTP ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.error("Failed to fetch device details: ${errorMsg}")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
             
@@ -297,7 +304,8 @@ class NibeInfoSyncJob implements Job {
             log.debug("Device details: ${data.product?.name}, connection=${data.connectionState}")
             
         } catch (Exception e) {
-            log.warn("Exception fetching device details: ${e.message}")
+            log.error("Exception fetching device details: ${e.message}", e)
+            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 
@@ -317,7 +325,9 @@ class NibeInfoSyncJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.error("Failed to fetch device points: HTTP ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.error("Failed to fetch device points: ${errorMsg}")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
             
@@ -325,6 +335,7 @@ class NibeInfoSyncJob implements Job {
             
             if (!points || !points instanceof List) {
                 log.error("Invalid points data received")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
             
@@ -362,6 +373,7 @@ class NibeInfoSyncJob implements Job {
             
         } catch (Exception e) {
             log.error("Exception fetching device points: ${e.message}", e)
+            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 
@@ -406,8 +418,7 @@ class NibeInfoSyncJob implements Job {
                 internalRef: parameterId,
                 name: point.parameterName ?: "Parameter ${parameterId}",
                 description: description,
-                type: determinePortType(point),
-                uid: "nibe-${device.id}-${parameterId}" // Unique identifier for backward compatibility
+                type: determinePortType(point)
             )
             
             port.save(flush: true, failOnError: true)

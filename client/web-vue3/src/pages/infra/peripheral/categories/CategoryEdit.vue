@@ -115,7 +115,7 @@ export default defineComponent({
       getQueryKey: 'peripheralCategory',
       updateMutation: PERIPHERAL_CATEGORY_UPDATE,
       updateMutationKey: 'peripheralCategoryUpdate',
-      excludeFields: ['__typename', 'id', 'peripherals', 'cables', 'entityType', 'uid', 'tsCreated', 'tsUpdated']
+      excludeFields: ['__typename', 'id', 'peripherals', 'cables', 'entityType', 'tsCreated', 'tsUpdated']
     });
 
     /**

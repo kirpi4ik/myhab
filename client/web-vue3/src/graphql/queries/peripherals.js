@@ -24,8 +24,9 @@ export const PERIPHERAL_CATEGORY_CREATE = gql`
 `;
 export const PERIPHERAL_DELETE = gql`
   mutation ($id: Long!) {
-    devicePeripheralDelete(id: $id) {
+    deleteDevicePeripheral(id: $id) {
       success
+      error
     }
   }
 `;
@@ -111,6 +112,8 @@ export const PERIPHERAL_GET_BY_ID = gql`
       description
       model
       maxAmp
+      tsCreated
+      tsUpdated
       category {
         id
         name
@@ -134,6 +137,17 @@ export const PERIPHERAL_GET_BY_ID = gql`
         id
         name
         description
+      }
+      cables {
+        id
+        code
+        codeNew
+        codeOld
+        description
+        category {
+          id
+          name
+        }
       }
     }
     deviceList {

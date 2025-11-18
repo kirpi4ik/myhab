@@ -16,6 +16,7 @@ import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortType
 import org.myhab.domain.device.port.PortState
+import org.myhab.utils.HttpErrorUtil
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -177,7 +178,8 @@ class HuaweiInfoSyncJob implements Job {
                     return false
                 }
             } else {
-                log.error("Login failed: ${response.status} - ${response.body?.toPrettyString()}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body?.toString() ?: "")
+                log.error("Login failed: ${errorMsg}")
                 mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return false
             }
@@ -208,7 +210,8 @@ class HuaweiInfoSyncJob implements Job {
                     .asString()
                     
             if (!response.success) {
-                log.error("Station API failed: ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body ?: "")
+                log.error("Station API failed: ${errorMsg}")
                 return
             }
             
@@ -276,7 +279,8 @@ class HuaweiInfoSyncJob implements Job {
                     .asString()
                     
             if (!response.success) {
-                log.error("${prefix.capitalize()} API failed: ${response.status}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body ?: "")
+                log.error("${prefix.capitalize()} API failed: ${errorMsg}")
                 return
             }
             
@@ -345,8 +349,7 @@ class HuaweiInfoSyncJob implements Job {
                                     state: PortState.ACTIVE,
                                     internalRef: internalRef,
                                     name: formatPortName(paramName),
-                                    description: "Auto-created ${prefix} parameter: ${paramName}",
-                                    uid: null
+                                    description: "Auto-created ${prefix} parameter: ${paramName}"
                                 )
                                 newPort.save(flush: true, failOnError: true)
                                 return newPort

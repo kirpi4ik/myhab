@@ -153,6 +153,9 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
       model
       name
       description
+      status
+      tsCreated
+      tsUpdated
       type {
         name
       }
