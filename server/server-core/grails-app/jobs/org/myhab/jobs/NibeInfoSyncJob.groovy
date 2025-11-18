@@ -253,7 +253,8 @@ class NibeInfoSyncJob implements Job {
             
             if (response.status != 200) {
                 String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
-                log.warn("Failed to fetch firmware info: ${errorMsg}")
+                log.error("Failed to fetch firmware info: ${errorMsg}")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
             
@@ -265,7 +266,8 @@ class NibeInfoSyncJob implements Job {
             log.debug("Firmware: current=${data.currentFwVersion}, desired=${data.desiredFwVersion}")
             
         } catch (Exception e) {
-            log.warn("Exception fetching firmware info: ${e.message}")
+            log.error("Exception fetching firmware info: ${e.message}", e)
+            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 
@@ -285,7 +287,8 @@ class NibeInfoSyncJob implements Job {
             
             if (response.status != 200) {
                 String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
-                log.warn("Failed to fetch device details: ${errorMsg}")
+                log.error("Failed to fetch device details: ${errorMsg}")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
             
@@ -301,7 +304,8 @@ class NibeInfoSyncJob implements Job {
             log.debug("Device details: ${data.product?.name}, connection=${data.connectionState}")
             
         } catch (Exception e) {
-            log.warn("Exception fetching device details: ${e.message}")
+            log.error("Exception fetching device details: ${e.message}", e)
+            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 
@@ -323,6 +327,7 @@ class NibeInfoSyncJob implements Job {
             if (response.status != 200) {
                 String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
                 log.error("Failed to fetch device points: ${errorMsg}")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
             
@@ -330,6 +335,7 @@ class NibeInfoSyncJob implements Job {
             
             if (!points || !points instanceof List) {
                 log.error("Invalid points data received")
+                mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
                 return
             }
             
@@ -367,6 +373,7 @@ class NibeInfoSyncJob implements Job {
             
         } catch (Exception e) {
             log.error("Exception fetching device points: ${e.message}", e)
+            mqttTopicService.publishStatus(device, DeviceStatus.OFFLINE)
         }
     }
 
