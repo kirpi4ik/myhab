@@ -72,6 +72,8 @@ export const CABLE_BY_ID = gql`
       rackRowNr
       orderInRow
       maxAmp
+      tsCreated
+      tsUpdated
       patchPanel {
         id
         name

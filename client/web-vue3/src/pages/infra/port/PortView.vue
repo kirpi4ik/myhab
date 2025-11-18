@@ -127,7 +127,73 @@
           </q-item-section>
         </q-item>
 
+        <q-separator class="q-my-md"/>
+
+        <!-- Timestamps Section -->
+        <q-item-label header class="text-h6 text-grey-8">Timestamps</q-item-label>
+
+        <q-item v-if="viewItem.tsCreated">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-calendar-plus" class="q-mr-sm"/>
+              Created
+            </q-item-label>
+            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsCreated) }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="viewItem.tsUpdated">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-calendar-edit" class="q-mr-sm"/>
+              Last Updated
+            </q-item-label>
+            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsUpdated) }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
       </q-list>
+
+      <q-separator/>
+
+      <!-- Connected Peripherals Table -->
+      <div class="q-pa-md" v-if="viewItem.peripherals && viewItem.peripherals.length > 0">
+        <q-table
+          title="Connected Peripherals"
+          :rows="viewItem.peripherals"
+          :columns="peripheralColumns"
+          @row-click="onPeripheralRowClick"
+          :pagination="pagination"
+          row-key="id"
+          flat
+          bordered
+        >
+          <template v-slot:body="props">
+            <q-tr :props="props" @click="onPeripheralRowClick(props.row)" style="cursor: pointer;">
+              <q-td key="id">
+                {{ props.row.id }}
+              </q-td>
+              <q-td key="name">
+                <q-badge color="primary" :label="props.row.name || 'Unnamed'"/>
+              </q-td>
+              <q-td key="model">
+                {{ props.row.model || '-' }}
+              </q-td>
+              <q-td key="category">
+                <q-badge v-if="props.row.category" color="secondary" :label="props.row.category.name"/>
+                <span v-else class="text-grey-6">-</span>
+              </q-td>
+              <q-td key="description">
+                {{ props.row.description || '-' }}
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+      </div>
+      <div v-else class="q-pa-md text-center text-grey-6">
+        <q-icon name="mdi-power-socket-au" size="md"/>
+        <div>No peripherals connected to this port</div>
+      </div>
 
       <q-separator/>
 
@@ -193,6 +259,8 @@ import {useQuasar} from "quasar";
 
 import {PORT_GET_BY_ID} from "@/graphql/queries";
 
+import {format} from 'date-fns';
+
 export default defineComponent({
   name: 'PortView',
   setup() {
@@ -214,6 +282,27 @@ export default defineComponent({
       {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
       {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
     ];
+    
+    const peripheralColumns = [
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+      {name: 'model', label: 'Model', field: 'model', align: 'left', sortable: true},
+      {name: 'category', label: 'Category', field: row => row.category?.name || '-', align: 'left', sortable: true},
+      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+    ];
+
+    /**
+     * Format date for display
+     */
+    const formatDate = (dateString) => {
+      if (!dateString) return '-';
+      try {
+        const date = new Date(dateString);
+        return format(date, 'dd/MM/yyyy HH:mm');
+      } catch (error) {
+        return '-';
+      }
+    };
 
     const getStateColor = (state) => {
       const stateColors = {
@@ -258,9 +347,14 @@ export default defineComponent({
       loading,
       pagination,
       cableColumns,
+      peripheralColumns,
       getStateColor,
+      formatDate,
       onCableRowClick: (row) => {
         router.push({path: `/admin/cables/${row.id}/view`});
+      },
+      onPeripheralRowClick: (row) => {
+        router.push({path: `/admin/peripherals/${row.id}/view`});
       }
     };
   }

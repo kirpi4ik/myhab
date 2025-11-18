@@ -40,6 +40,9 @@ class Job extends BaseEntity {
     static graphql = true
 
     void beforeUpdate() {
+        // Call parent to update timestamps
+        super.beforeUpdate()
+        
         // Store the previous state before update
         if (id && isDirty('state')) {
             // Get the original value from the database
