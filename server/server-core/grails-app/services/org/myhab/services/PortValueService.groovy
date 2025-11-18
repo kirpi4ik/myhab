@@ -47,7 +47,6 @@ class PortValueService implements EventPublisher {
             def newVal = ValueParser.parser(devicePort).apply(event.data.p5)
             
             if (devicePort.value != newVal) {
-
                 try {
                     PortValue newPortValue = new PortValue()
                     // Use id instead of uid (uid is deprecated)
@@ -71,7 +70,7 @@ class PortValueService implements EventPublisher {
                         it
                     })
                 } catch (Exception ex) {
-                    log.error(ex.message)
+                    log.error("Error saving port value: ${ex.message}", ex)
                 }
                 publish(TopicName.EVT_UI_UPDATE_PORT_VALUE.id(), new Event().with {
                     p0 = TopicName.EVT_PORT_VALUE_PERSISTED.id()

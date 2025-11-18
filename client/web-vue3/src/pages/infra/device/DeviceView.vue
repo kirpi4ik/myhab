@@ -207,6 +207,46 @@
 
       <q-separator/>
 
+      <!-- Zones Table -->
+      <div class="q-pa-md">
+        <div class="text-h6 text-grey-8 q-mb-md">
+          <q-icon name="mdi-map-marker-multiple" class="q-mr-sm"/>
+          Located in Zones
+        </div>
+        
+        <q-table
+          v-if="viewItem.zones && viewItem.zones.length > 0"
+          :rows="viewItem.zones"
+          :columns="zoneColumns"
+          @row-click="viewZone"
+          v-model:pagination="pagination"
+          row-key="id"
+          flat
+          bordered
+        >
+          <template v-slot:body="props">
+            <q-tr :props="props" @click="viewZone(props.row)" style="cursor: pointer;">
+              <q-td key="id" style="max-width: 50px">
+                {{ props.row.id }}
+              </q-td>
+              <q-td key="name">
+                <q-badge color="secondary" :label="props.row.name || 'Unnamed'"/>
+              </q-td>
+              <q-td key="description">
+                {{ props.row.description || '-' }}
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+
+        <div v-else class="text-center text-grey-6 q-pa-md">
+          <q-icon name="mdi-map-marker-off" size="md"/>
+          <div>Not assigned to any zones</div>
+        </div>
+      </div>
+
+      <q-separator/>
+
       <!-- Actions -->
       <q-card-actions>
         <q-btn color="primary" :to="uri +'/'+ $route.params.idPrimary+'/edit'" icon="mdi-pencil">
@@ -261,6 +301,12 @@ export default defineComponent({
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
       {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
       {name: 'actions', label: 'Actions', field: row => '', align: 'right', sortable: false}
+    ];
+
+    const zoneColumns = [
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
     ];
 
     /**
@@ -367,6 +413,13 @@ export default defineComponent({
       router.push({path: `/admin/ports/new`, query: {deviceId: route.params.idPrimary}});
     };
 
+    /**
+     * Navigate to zone view
+     */
+    const viewZone = (row) => {
+      router.push({path: `/admin/zones/${row.id}/view`});
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -378,9 +431,11 @@ export default defineComponent({
       loading,
       removeItem,
       portColumns,
+      zoneColumns,
       pagination,
       onRowClick,
       newPort,
+      viewZone,
       formatDate
     };
   }

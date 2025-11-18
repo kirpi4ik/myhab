@@ -19,6 +19,9 @@
       <q-item-section>
         <q-item-label class="text-weight-medium text-h5">
           {{ asset.data?.name || 'Unknown Light' }}
+          <q-badge v-if="isDeviceOffline" color="red-7" class="q-ml-sm">
+            OFFLINE
+          </q-badge>
         </q-item-label>
         <q-item-label class="text-weight-light text-blue-grey-3">
           {{ asset.data?.description || '' }}
@@ -78,7 +81,11 @@
           :model-value="lightState" 
           @update:model-value="handleToggle" 
           :id="String(peripheral.id)"
+          :disabled="isDeviceOffline"
         />
+        <div v-if="isDeviceOffline" class="text-center text-caption text-red-3 q-mt-sm">
+          Device is offline - controls disabled
+        </div>
       </div>
     </q-card-section>
   </q-card>
@@ -133,6 +140,15 @@ export default defineComponent({
         return asset.value.data.connectedTo[0].id;
       }
       return -1;
+    });
+
+    /**
+     * Check if device is offline
+     * Device status comes from connectedTo[0].device.status
+     */
+    const isDeviceOffline = computed(() => {
+      const deviceStatus = asset.value?.data?.connectedTo?.[0]?.device?.status;
+      return deviceStatus === 'OFFLINE' || deviceStatus === 'DISABLED';
     });
 
     /**
@@ -358,6 +374,7 @@ export default defineComponent({
 
     return {
       asset,
+      isDeviceOffline,
       isLightOn,
       lightState,
       timeoutConfig,

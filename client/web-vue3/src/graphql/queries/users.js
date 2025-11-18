@@ -40,6 +40,8 @@ export const USER_GET_BY_ID_WITH_ROLES = gql`
 			lastName
 			phoneNr
 			telegramUsername
+			tsCreated
+			tsUpdated
 		}
 		userRolesForUser(userId: $id) {
 			userId
