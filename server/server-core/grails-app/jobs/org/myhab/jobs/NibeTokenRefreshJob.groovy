@@ -14,6 +14,7 @@ import org.myhab.domain.EntityType
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
 import org.myhab.telegram.TelegramBotHandler
+import org.myhab.utils.HttpErrorUtil
 import org.quartz.*
 
 import java.util.concurrent.TimeUnit
@@ -207,7 +208,8 @@ class NibeTokenRefreshJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.error("Failed to get initial tokens: HTTP ${response.status} - ${response.body}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.error("Failed to get initial tokens: ${errorMsg}")
                 return null
             }
             
@@ -253,7 +255,8 @@ class NibeTokenRefreshJob implements Job {
                 .asString()
             
             if (response.status != 200) {
-                log.error("Failed to regenerate tokens: HTTP ${response.status} - ${response.body}")
+                String errorMsg = HttpErrorUtil.extractErrorMessage(response.status, response.body)
+                log.error("Failed to regenerate tokens: ${errorMsg}")
                 return null
             }
             

@@ -72,7 +72,7 @@ class Device extends BaseEntity implements Configurable<Device> {
                     throw new RuntimeException("Device not found with id: ${id}")
                 }
                 
-                Device.withTransaction { status ->
+                Device.withTransaction {
                     // Update basic fields
                     if (deviceData.code != null) existingDevice.code = deviceData.code
                     if (deviceData.name != null) existingDevice.name = deviceData.name

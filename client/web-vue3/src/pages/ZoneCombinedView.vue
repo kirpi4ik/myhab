@@ -305,10 +305,13 @@ export default defineComponent({
         });
 
         if (index !== -1) {
-          peripheralList.value[index] = peripheralService.peripheralInit(
-            null, 
+          // Initialize with cache map to preserve expiration data
+          const initialized = peripheralService.peripheralInit(
+            cacheMap.value, 
             updatedPeripheral
           );
+          
+          peripheralList.value[index] = initialized;
         } else {
           console.warn('Peripheral not found for update:', updatedPeripheral.id);
         }

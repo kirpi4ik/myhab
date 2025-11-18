@@ -19,30 +19,12 @@ abstract class BaseEntity implements Serializable {
 //    @GenericGenerator(name = "uuid2", strategy = "uuid2")
 //    private UUID id;
 
-    /**
-     * @deprecated Use 'id' instead. This field is kept for backward compatibility only.
-     * Will be removed in a future version.
-     */
-    @Deprecated
-    String uid = DomainUtil.NULL_UID
     Date tsCreated = DomainUtil.NULL_DATE
     Date tsUpdated = DomainUtil.NULL_DATE
     EntityType entityType = EntityType.get(this)
 
     EntityType getEntityType() {
         return entityType
-    }
-
-    /**
-     * Backward-compatible getter for uid that returns id.toString()
-     * @deprecated Use 'id' instead
-     */
-    @Deprecated
-    String getUid() {
-        if (id) {
-            return id.toString()
-        }
-        return uid ?: DomainUtil.NULL_UID
     }
 
     void beforeInsert() {
@@ -70,7 +52,6 @@ abstract class BaseEntity implements Serializable {
 //  }
 
     static constraints = {
-        uid column: "uid", nullable: true
         tsCreated column: "ts_created", nullable: true
         tsUpdated column: "ts_updated", nullable: true
         entityType column: "en_type", nullable: true

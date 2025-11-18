@@ -100,65 +100,47 @@
         <!-- Connected Ports Section -->
         <q-item-label header class="text-h6 text-grey-8">Connected Ports</q-item-label>
 
-        <q-item v-if="viewItem.connectedTo && viewItem.connectedTo.length > 0">
-          <q-item-section>
-            <div class="q-gutter-sm">
-              <div v-for="port in viewItem.connectedTo" :key="port.id" class="row items-center q-mb-sm">
-                <q-badge color="info" class="q-mr-sm">
-                  <q-icon name="mdi-ethernet" class="q-mr-xs"/>
-                  {{ port.internalRef || port.id }}
-                </q-badge>
-                <span class="text-body2 q-mr-sm">{{ port.name || 'Unnamed Port' }}</span>
-                <q-btn 
-                  icon="mdi-eye" 
-                  :to="'/admin/ports/'+port.id+'/view'" 
-                  size="sm" 
-                  flat 
-                  dense 
-                  color="blue-6"
-                >
-                  <q-tooltip>View Port</q-tooltip>
-                </q-btn>
-              </div>
-            </div>
-          </q-item-section>
-        </q-item>
-
-        <q-item v-else>
-          <q-item-section>
-            <q-item-label caption class="text-grey-6 text-center q-pa-md">
-              <q-icon name="mdi-ethernet-off" size="md" class="q-mb-sm"/>
-              <div>No ports connected</div>
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-separator class="q-my-md"/>
-
-        <!-- Timestamps Section -->
-        <q-item-label header class="text-h6 text-grey-8">Timestamps</q-item-label>
-
-        <q-item v-if="viewItem.tsCreated">
-          <q-item-section>
-            <q-item-label class="text-h6">
-              <q-icon name="mdi-calendar-plus" class="q-mr-sm"/>
-              Created
-            </q-item-label>
-            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsCreated) }}</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-item v-if="viewItem.tsUpdated">
-          <q-item-section>
-            <q-item-label class="text-h6">
-              <q-icon name="mdi-calendar-edit" class="q-mr-sm"/>
-              Last Updated
-            </q-item-label>
-            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsUpdated) }}</q-item-label>
-          </q-item-section>
-        </q-item>
-
       </q-list>
+
+      <!-- Connected Ports Table -->
+      <div class="q-pa-md" v-if="viewItem.connectedTo && viewItem.connectedTo.length > 0">
+        <q-table
+          :rows="viewItem.connectedTo"
+          :columns="portColumns"
+          @row-click="onPortRowClick"
+          v-model:pagination="pagination"
+          row-key="id"
+          flat
+          bordered
+        >
+          <template v-slot:body="props">
+            <q-tr :props="props" @click="onPortRowClick(props.row)" style="cursor: pointer;">
+              <q-td key="id">
+                {{ props.row.id }}
+              </q-td>
+              <q-td key="internalRef">
+                <q-badge color="info" :label="props.row.internalRef || '-'"/>
+              </q-td>
+              <q-td key="name">
+                <q-badge color="primary" :label="props.row.name || 'Unnamed'"/>
+              </q-td>
+              <q-td key="value">
+                {{ props.row.value || '-' }}
+              </q-td>
+              <q-td key="device">
+                {{ props.row.device?.code || '-' }}
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+      </div>
+      
+      <div v-else class="q-pa-md text-center text-grey-6">
+        <q-icon name="mdi-ethernet-off" size="md"/>
+        <div>No ports connected</div>
+      </div>
+
+     
 
       <q-separator/>
 
@@ -202,6 +184,79 @@
 
       <q-separator/>
 
+      <!-- Connected Cables Table -->
+      <div class="q-pa-md">
+        <div class="text-h6 text-grey-8 q-mb-md">
+          <q-icon name="mdi-cable-data" class="q-mr-sm"/>
+          Connected Cables
+        </div>
+        
+        <q-table
+          v-if="viewItem.cables && viewItem.cables.length > 0"
+          :rows="viewItem.cables"
+          :columns="cableColumns"
+          @row-click="onCableRowClick"
+          v-model:pagination="pagination"
+          row-key="id"
+          flat
+          bordered
+        >
+          <template v-slot:body="props">
+            <q-tr :props="props" @click="onCableRowClick(props.row)" style="cursor: pointer;">
+              <q-td key="id" style="max-width: 50px">
+                {{ props.row.id }}
+              </q-td>
+              <q-td key="code">
+                <q-badge color="info" :label="props.row.code || '-'"/>
+              </q-td>
+              <q-td key="codeNew">
+                {{ props.row.codeNew || '-' }}
+              </q-td>
+              <q-td key="description">
+                {{ props.row.description || '-' }}
+              </q-td>
+              <q-td key="category">
+                <q-badge v-if="props.row.category" color="secondary" :label="props.row.category.name"/>
+                <span v-else class="text-grey-6">-</span>
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+
+        <div v-else class="text-center text-grey-6 q-pa-md">
+          <q-icon name="mdi-cable-data" size="md"/>
+          <div>No cables connected</div>
+        </div>
+      </div>
+
+      <q-separator/>
+      <q-list>
+        <q-separator class="q-my-md"/>
+
+        <!-- Timestamps Section -->
+        <q-item-label header class="text-h6 text-grey-8">Timestamps</q-item-label>
+
+        <q-item v-if="viewItem.tsCreated">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-calendar-plus" class="q-mr-sm"/>
+              Created
+            </q-item-label>
+            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsCreated) }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="viewItem.tsUpdated">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-calendar-edit" class="q-mr-sm"/>
+              Last Updated
+            </q-item-label>
+            <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsUpdated) }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+      </q-list>
       <!-- Actions -->
       <q-card-actions>
         <q-btn color="primary" :to="uri +'/'+ $route.params.idPrimary+'/edit'" icon="mdi-pencil">
@@ -254,6 +309,22 @@ export default defineComponent({
       {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
       {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+    ];
+
+    const portColumns = [
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'internalRef', label: 'Internal Ref', field: 'internalRef', align: 'left', sortable: true},
+      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+      {name: 'value', label: 'Value', field: 'value', align: 'left', sortable: true},
+      {name: 'device', label: 'Device', field: row => row.device?.code || '-', align: 'left', sortable: true},
+    ];
+
+    const cableColumns = [
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
+      {name: 'codeNew', label: 'Code New', field: 'codeNew', align: 'left', sortable: true},
+      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+      {name: 'category', label: 'Category', field: row => row.category?.name || '-', align: 'left', sortable: true},
     ];
 
     /**
@@ -336,6 +407,20 @@ export default defineComponent({
       router.push({path: `/admin/zones/${row.id}/view`});
     };
 
+    /**
+     * Navigate to port view
+     */
+    const onPortRowClick = (row) => {
+      router.push({path: `/admin/ports/${row.id}/view`});
+    };
+
+    /**
+     * Navigate to cable view
+     */
+    const onCableRowClick = (row) => {
+      router.push({path: `/admin/cables/${row.id}/view`});
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -347,7 +432,11 @@ export default defineComponent({
       loading,
       pagination,
       zoneColumns,
+      portColumns,
+      cableColumns,
       viewZone,
+      onPortRowClick,
+      onCableRowClick,
       formatDate,
       getCategoryColor,
       getCategoryIcon

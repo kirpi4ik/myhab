@@ -50,11 +50,23 @@ export const PORT_GET_BY_ID = gql`
       type
       state
       value
+      tsCreated
+      tsUpdated
       device {
         id
         code
         name
         description
+      }
+      peripherals {
+        id
+        name
+        model
+        description
+        category {
+          id
+          name
+        }
       }
       cables {
         id

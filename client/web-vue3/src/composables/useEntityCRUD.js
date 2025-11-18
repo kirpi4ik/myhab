@@ -43,7 +43,7 @@ export function useEntityCRUD(options) {
     updateVariableName,
     deleteMutation,
     deleteMutationKey,
-    excludeFields = ['__typename', 'entityType', 'uid', 'tsCreated', 'tsUpdated', 'version'],
+    excludeFields = ['__typename', 'entityType', 'tsCreated', 'tsUpdated', 'version'],
     transformBeforeSave,
     transformAfterLoad,
     initialData = null
