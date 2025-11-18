@@ -37,21 +37,11 @@
             :custom-completions="groovyCompletions"
           />
 
-          <q-select v-model="selectedPorts"
-                    :options="portList"
-                    option-label="label"
-                    option-value="id"
-                    label="Connected Ports"
-                    hint="Select ports for this scenario"
-                    multiple
-                    clearable
-                    use-chips
-                    filled
-                    dense>
-            <template v-slot:prepend>
-              <q-icon name="mdi-ethernet"/>
-            </template>
-          </q-select>
+          <PortSelector
+            v-model="selectedPorts"
+            label="Connected Ports"
+            hint="Select ports for this scenario"
+          />
         </q-card-section>
 
         <q-separator/>
@@ -61,7 +51,7 @@
           :entity="scenario"
           icon="mdi-script-text"
           :extra-info="[
-            { icon: 'mdi-ethernet', label: 'Connected Ports', value: selectedPorts.length }
+            { icon: 'mdi-ethernet', label: 'Connected Ports', value: selectedPorts?.length || 0 }
           ]"
         />
 
@@ -85,13 +75,12 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, ref, computed} from 'vue';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute} from "vue-router/dist/vue-router";
+import {defineComponent, onMounted, ref} from 'vue';
 import {useEntityCRUD} from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
 import CodeEditor from '@/components/CodeEditor.vue';
+import PortSelector from '@/components/selectors/PortSelector.vue';
 import {SCENARIO_EDIT_GET_BY_ID, SCENARIO_UPDATE} from '@/graphql/queries';
 
 export default defineComponent({
@@ -99,13 +88,10 @@ export default defineComponent({
   components: {
     CodeEditor,
     EntityInfoPanel,
-    EntityFormActions
+    EntityFormActions,
+    PortSelector
   },
   setup() {
-    const {client} = useApolloClient();
-    const route = useRoute();
-    
-    const portListRaw = ref([]);
     const selectedPorts = ref([]);
 
     // Use CRUD composable
@@ -128,17 +114,9 @@ export default defineComponent({
       transformBeforeSave: (data) => {
         const transformed = {...data};
         // Set ports to selected ports (only IDs)
-        transformed.ports = selectedPorts.value.map(port => ({id: port.id}));
+        transformed.ports = (selectedPorts.value || []).map(port => ({id: port.id}));
         return transformed;
       }
-    });
-
-    const portList = computed(() => {
-      return portListRaw.value.map(port => ({
-        id: port.id,
-        label: `${port.internalRef} - ${port.name} (${port.device ? port.device.name : 'No device'})`,
-        value: port
-      }));
     });
 
     // Custom Groovy completions for code editor
@@ -154,20 +132,15 @@ export default defineComponent({
     ];
 
     /**
-     * Fetch scenario data and port list
+     * Fetch scenario data and pre-select ports
      */
     const fetchData = async () => {
       const response = await fetchEntity();
       
-      if (response) {
-        portListRaw.value = response.devicePortList || [];
-        
+      if (response && scenario.value.ports && scenario.value.ports.length > 0) {
         // Pre-select ports that are already connected
-        if (scenario.value.ports && scenario.value.ports.length > 0) {
-          selectedPorts.value = scenario.value.ports.map(port => {
-            return portList.value.find(p => p.id === port.id);
-          }).filter(Boolean);
-        }
+        // The PortSelector will load all ports, so we just need to set the IDs
+        selectedPorts.value = scenario.value.ports.map(port => ({id: port.id}));
       }
     };
 
@@ -194,7 +167,6 @@ export default defineComponent({
       scenario,
       loading,
       saving,
-      portList,
       selectedPorts,
       groovyCompletions,
       onSave
