@@ -100,6 +100,7 @@ import {CACHE_GET_ALL_VALUES, ZONE_GET_BY_ID_WITH_CATEGORY} from '@/graphql/quer
 import {peripheralService} from '@/_services/controls';
 import PeripheralHeatCard from '@/components/cards/PeripheralHeatCard';
 import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
+import PeripheralSprinklerCard from '@/components/cards/PeripheralSprinklerCard';
 import PeripheralSwitchCard from '@/components/cards/PeripheralSwitchCard';
 import PeripheralTempCard from '@/components/cards/PeripheralTempCard';
 import TempChartCard from '@/components/cards/TempChartCard';
@@ -124,7 +125,7 @@ const CATEGORY_CONFIG = {
     label: 'heating devices'
   },
   SPRINKLER: {
-    component: 'PeripheralLightCard', // Uses light card for sprinklers
+    component: 'PeripheralSprinklerCard',
     label: 'sprinklers'
   },
   TEMP: {
@@ -138,6 +139,7 @@ export default defineComponent({
   components: {
     ZoneCard,
     PeripheralLightCard,
+    PeripheralSprinklerCard,
     PeripheralSwitchCard,
     PeripheralHeatCard,
     PeripheralTempCard,
