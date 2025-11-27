@@ -427,6 +427,7 @@ export default defineComponent({
     return {
       job,
       loading,
+      saving,
       scenarioList,
       selectedScenario,
       tagList,
