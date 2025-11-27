@@ -231,7 +231,7 @@ export default defineComponent({
       entityPath: '/admin/jobs',
       listQuery: JOB_LIST_ALL,
       deleteMutation: JOB_DELETE_BY_ID,
-      deleteKey: 'jobDelete',
+      deleteKey: 'jobDeleteCascade',
       columns,
       transformAfterLoad: (job) => ({
         id: job.id,

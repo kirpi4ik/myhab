@@ -118,7 +118,7 @@ export const JOB_UPDATE = gql`
 
 export const JOB_DELETE_BY_ID = gql`
   mutation ($id: Long!) {
-    jobDelete(id: $id) {
+    jobDeleteCascade(id: $id) {
       error
       success
     }
