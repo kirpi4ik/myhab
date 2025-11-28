@@ -5,10 +5,15 @@ import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import groovy.util.logging.Slf4j
 import org.myhab.services.dsl.action.DslCommand
+import grails.events.EventPublisher
 import org.springframework.context.ApplicationContext
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import org.myhab.domain.EntityType
+import org.myhab.domain.events.TopicName
+import org.myhab.domain.job.EventData
+import grails.plugin.springsecurity.SpringSecurityService
 
 /**
  * ScenarioService provides DSL methods for scenario execution in MyHAB automation system.
@@ -46,9 +51,10 @@ import java.time.ZonedDateTime
  */
 @Slf4j
 @Transactional
-class ScenarioService {
+class ScenarioService implements EventPublisher{
 
     def powerService
+    SpringSecurityService springSecurityService
 
     /**
      * Check if current time in UTC+2 timezone is evening (after 18:00).
@@ -112,8 +118,10 @@ class ScenarioService {
      * @see org.myhab.services.dsl.action.PowerService#execute(java.util.Map)
      */
     def switchOn(args) {
+        args.topic = "switch_on"
         args.action = PortAction.ON
         powerService.execute(args)
+        publishEventLog(args)
     }
 
     /**
@@ -149,8 +157,10 @@ class ScenarioService {
      * @see org.myhab.services.dsl.action.PowerService#execute(java.util.Map)
      */
     def switchOff(args) {
+        args.topic = "switch_off"
         args.action = PortAction.OFF
         powerService.execute(args)
+        publishEventLog(args)
     }
 
     /**
@@ -186,8 +196,10 @@ class ScenarioService {
      * @see org.myhab.services.dsl.action.PowerService#execute(java.util.Map)
      */
     def switchToggle(args) {
+        args.topic = "switch_toggle"
         args.action = PortAction.TOGGLE
         powerService.execute(args)
+        publishEventLog(args)
     }
 
     /**
@@ -241,7 +253,70 @@ class ScenarioService {
         log.debug("missing method : ${methodName}")
         return dslCommand
     }
-
+    /**
+     * Publish event log for DSL actions.
+     * 
+     * <p>Creates and publishes separate EventData for each port and peripheral that was acted upon.
+     * This allows proper tracking of individual device actions in the event log.</p>
+     * 
+     * @param args Map containing:
+     *             <ul>
+     *               <li><b>action</b> - The PortAction performed (ON, OFF, TOGGLE)</li>
+     *               <li><b>portIds</b> - Optional list of port IDs that were acted upon</li>
+     *               <li><b>peripheralIds</b> - Optional list of peripheral IDs that were acted upon</li>
+     *             </ul>
+     */
+    private void publishEventLog(def args) {
+        if (args.data !=null) {
+            publish(TopicName.EVT_LOG.id(), args.data)
+            return
+        }
+        // Get current username from Spring Security context
+        String username = "SYSTEM"
+        
+        try {
+            def principal = springSecurityService?.principal
+            if (principal && principal != "anonymousUser") {
+                username = principal.username ?: "SYSTEM"
+            }
+        } catch (Exception e) {
+            log.debug("Could not retrieve current user from security context: ${e.message}")
+        }
+        
+        // Publish event for each portId
+        if (args.portIds) {
+            args.portIds.each { portId ->
+                def eventData = new EventData().with {
+                    p0 = args.topic
+                    p1 = EntityType.PORT.name()
+                    p2 = "${portId}"
+                    p3 = "scenario_service"
+                    p4 = args.action?.toString()
+                    p6 = username
+                    it
+                }
+                publish(TopicName.EVT_LOG.id(), eventData)
+                log.debug("Published event log for port ${portId}, action: ${args.action}, user: ${username}")
+            }
+        }
+        
+        // Publish event for each peripheralId
+        if (args.peripheralIds) {
+            args.peripheralIds.each { peripheralId ->
+                def eventData = new EventData().with {
+                    p0 = TopicName.EVT_LOG.id()
+                    p1 = EntityType.PERIPHERAL.name()
+                    p2 = "${peripheralId}"
+                    p3 = "scenario_service"
+                    p4 = args.action?.toString()
+                    p6 = username
+                    it
+                }
+                publish(TopicName.EVT_LOG.id(), eventData)
+                log.debug("Published event log for peripheral ${peripheralId}, action: ${args.action}, user: ${username}")
+            }
+        }
+    }
 /*  
     /**
      * Handle dynamic property access for DSL.

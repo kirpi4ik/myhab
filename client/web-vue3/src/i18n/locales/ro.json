@@ -259,5 +259,43 @@
     "total_grid_export": "Export Rețea Total",
     "total_grid_import": "Import Rețea Total",
     "not_available": "N/A"
+  },
+  "timeout_selector": {
+    "title": "Cronometru Oprire Automată",
+    "description": "Selectați durata înainte de oprirea automată",
+    "current": "Curent",
+    "quick_options": "Opțiuni Rapide",
+    "extended_durations": "Durate Extinse",
+    "remove_timeout": "Elimină Cronometru",
+    "keep_running": "Menține activ pe durată nedeterminată",
+    "durations": {
+      "quick": "Cronometru rapid",
+      "short": "Durată scurtă",
+      "medium": "Durată medie",
+      "long": "Durată lungă"
+    }
+  },
+  "zone_card": {
+    "location": "Locație",
+    "item": "element",
+    "items": "elemente"
+  },
+  "light_card": {
+    "on": "PORNIT",
+    "off": "OPRIT",
+    "details": "Detalii",
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
+  },
+  "heat_card": {
+    "on": "CALD",
+    "off": "RECE",
+    "details": "Detalii",
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
+  },
+  "switch_card": {
+    "on": "PORNIT",
+    "off": "OPRIT",
+    "details": "Detalii",
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   }
 }
