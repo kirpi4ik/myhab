@@ -291,5 +291,11 @@
     "off": "RECE",
     "details": "Detalii",
     "device_offline": "Dispozitivul este offline - comenzi dezactivate"
+  },
+  "switch_card": {
+    "on": "PORNIT",
+    "off": "OPRIT",
+    "details": "Detalii",
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   }
 }

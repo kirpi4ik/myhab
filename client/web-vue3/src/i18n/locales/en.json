@@ -271,5 +271,11 @@
 		"off": "COLD",
 		"details": "Details",
 		"device_offline": "Device is offline - controls disabled"
+	},
+	"switch_card": {
+		"on": "POWER ON",
+		"off": "POWER OFF",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
 	}
 }
