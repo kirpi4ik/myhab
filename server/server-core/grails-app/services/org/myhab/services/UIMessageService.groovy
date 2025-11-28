@@ -4,6 +4,7 @@ import org.myhab.ConfigKey
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DevicePeripheral
 import org.myhab.domain.device.port.DevicePort
+import org.myhab.domain.device.port.PortAction
 import org.myhab.domain.events.TopicName
 import org.myhab.domain.infra.Zone
 import org.myhab.domain.job.EventData
@@ -20,7 +21,7 @@ import static org.myhab.domain.EntityType.*
 @Slf4j
 class UIMessageService implements EventPublisher {
 
-    def scenarioService
+    def powerService
     def heatService
     def intercomService
 
@@ -61,8 +62,8 @@ class UIMessageService implements EventPublisher {
 
         def portIds = getPortIdsForEntity(entityType, event.data.p2)
         
-        if (portIds) {
-            executeScenarioAction(action, [portIds: portIds])
+        if (portIds?.isEmpty() == false) {
+            executePowerAction(action, portIds)
             publishEventLog(event.data)
         } else {
             log.warn("No port IDs found for entity type ${entityType} with ID ${event.data.p2}")
@@ -71,19 +72,23 @@ class UIMessageService implements EventPublisher {
 
     /**
      * Get port IDs based on entity type
+     * 
+     * @param entityType The type of entity (PERIPHERAL, PORT, or ZONE)
+     * @param entityId The ID of the entity
+     * @return List of port IDs, or empty list if none found
      */
     private List<Long> getPortIdsForEntity(entityType, entityId) {
         switch (entityType) {
             case PERIPHERAL:
-                def peripheral = DevicePeripheral.findById(entityId as Integer)
+                def peripheral = DevicePeripheral.findById(entityId as Long)
                 return peripheral?.getConnectedTo()?.collect { it.id } ?: []
 
             case PORT:
-                return [entityId]
+                return [entityId as Long]
 
             case ZONE:
-                def zone = Zone.findById(entityId)
-                return zone ? fromZone([], zone) : []
+                def zone = Zone.findById(entityId as Long)
+                return zone ? collectPortIdsFromZone(zone) : []
 
             default:
                 log.warn("Unsupported entity type: ${entityType}")
@@ -92,21 +97,39 @@ class UIMessageService implements EventPublisher {
     }
 
     /**
-     * Execute scenario action based on command
+     * Execute power action based on command using PowerService
+     * 
+     * @param action The action string (on/off/rev)
+     * @param portIds List of port IDs to execute the action on
      */
-    private void executeScenarioAction(String action, Map args) {
+    private void executePowerAction(String action, List<Long> portIds) {
+        PortAction portAction = mapActionToPortAction(action)
+        
+        if (!portAction) {
+            log.warn("Unknown or unsupported action: ${action}")
+            return
+        }
+        
+        powerService.execute([portIds: portIds, action: portAction])
+    }
+
+    /**
+     * Map action string to PortAction enum
+     * 
+     * @param action The action string (on/off/rev)
+     * @return Corresponding PortAction or null if unknown
+     */
+    private PortAction mapActionToPortAction(String action) {
         switch (action?.toLowerCase()) {
             case "on":
-                scenarioService.switchOn(args)
-                break
+                return PortAction.ON
             case "off":
-                scenarioService.switchOff(args)
-                break
+                return PortAction.OFF
             case "rev":
-                scenarioService.switchToggle(args)
-                break
+            case "toggle":
+                return PortAction.TOGGLE
             default:
-                log.warn("Unknown action: ${action}")
+                return null
         }
     }
 
@@ -205,29 +228,66 @@ class UIMessageService implements EventPublisher {
     }
 
     /**
-     * Recursively collect port IDs from a zone and its sub-zones
-     * @param portIds List to collect port IDs into
-     * @param zone Zone to extract port IDs from
-     * @return List of port IDs
+     * Collect all port IDs from a zone, including all peripherals in the zone 
+     * and all child zones recursively.
+     * 
+     * <p>This method traverses the entire zone hierarchy starting from the given zone,
+     * collecting port IDs from all peripherals found in each zone and sub-zone.</p>
+     * 
+     * @param zone The root zone to start collecting from
+     * @return List of unique port IDs from all peripherals in the zone hierarchy
      */
-    private List<Long> fromZone(List<Long> portIds, Zone zone) {
+    private List<Long> collectPortIdsFromZone(Zone zone) {
         if (!zone) {
-            return portIds
+            log.debug("Zone is null, returning empty port list")
+            return []
         }
 
-        // Process sub-zones recursively
-        zone.zones?.each { subZone ->
-            fromZone(portIds, subZone)
+        List<Long> portIds = []
+        collectPortIdsRecursively(zone, portIds)
+        
+        // Remove duplicates in case a port is referenced multiple times
+        List<Long> uniquePortIds = portIds.unique()
+        
+        log.debug("Collected ${uniquePortIds.size()} unique port(s) from zone '${zone.name}' (id: ${zone.id}) and its children")
+        return uniquePortIds
+    }
+
+    /**
+     * Recursively collect port IDs from a zone and all its child zones
+     * 
+     * @param zone Current zone to process
+     * @param portIds Accumulator list for port IDs
+     */
+    private void collectPortIdsRecursively(Zone zone, List<Long> portIds) {
+        if (!zone) {
+            return
         }
 
-        // Collect port IDs from peripherals in this zone
-        zone.getPeripherals()?.each { peripheral ->
-            peripheral.getConnectedTo()?.each { port ->
-                portIds << port.id
+        // Collect port IDs from all peripherals directly in this zone
+        zone.peripherals?.each { peripheral ->
+            if (peripheral) {
+                def connectedPorts = peripheral.connectedTo
+                if (connectedPorts) {
+                    connectedPorts.each { port ->
+                        if (port?.id) {
+                            portIds << port.id
+                            log.trace("Added port ${port.id} from peripheral '${peripheral.name}' in zone '${zone.name}'")
+                        }
+                    }
+                } else {
+                    log.trace("Peripheral '${peripheral.name}' (id: ${peripheral.id}) in zone '${zone.name}' has no connected ports")
+                }
             }
         }
 
-        return portIds
+        // Recursively process all child zones
+        zone.zones?.each { childZone ->
+            if (childZone) {
+                log.trace("Processing child zone '${childZone.name}' (id: ${childZone.id}) of parent '${zone.name}'")
+                collectPortIdsRecursively(childZone, portIds)
+            }
+        }
     }
 
     /**
@@ -313,35 +373,44 @@ class UIMessageService implements EventPublisher {
     }
 
     /**
-     * Check if access token is valid
+     * Check if access token is valid (matches token value and not expired)
+     * 
+     * @param accessToken The access token to validate
+     * @param tokenValue The token value to check against
+     * @return true if token is valid and not expired, false otherwise
      */
     private boolean isValidAccessToken(accessToken, tokenValue) {
-        if (accessToken.token != tokenValue) {
+        if (!accessToken || accessToken.token != tokenValue) {
             return false
         }
 
-        // Check expiration
-        return accessToken.tsExpiration == null || 
-               accessToken.tsExpiration.after(DateTime.now().toDate())
+        // Check expiration - null means no expiration
+        return !accessToken.tsExpiration || accessToken.tsExpiration.after(DateTime.now().toDate())
     }
 
     /**
-     * Publish door unlock event
+     * Publish door unlock event for access control
+     * 
+     * @param peripheral The peripheral being unlocked
+     * @param unlockCode The access code used for unlocking
+     * @param userName Name of the user who unlocked
      */
     private void publishDoorUnlockEvent(DevicePeripheral peripheral, String unlockCode, String userName) {
         try {
-            publish(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), new EventData().with {
+            def eventData = new EventData().with {
                 p0 = TopicName.EVT_INTERCOM_DOOR_LOCK.id()
                 p1 = PERIPHERAL.name()
-                p2 = peripheral.id
+                p2 = "${peripheral.id}"
                 p3 = "access control"
                 p4 = "open"
-                p5 = '{"unlockCode": "' + unlockCode + '"}'
+                p5 = "{\"unlockCode\": \"${unlockCode}\"}"
                 p6 = userName
                 it
-            })
+            }
+            publish(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), eventData)
+            log.debug("Published door unlock event for peripheral ${peripheral.id}, user: ${userName}")
         } catch (Exception ex) {
-            log.error("Failed to publish door unlock event for peripheral ${peripheral.id}", ex)
+            log.error("Failed to publish door unlock event for peripheral ${peripheral?.id}", ex)
         }
     }
 
@@ -349,11 +418,18 @@ class UIMessageService implements EventPublisher {
 
     /**
      * Validate peripheral event and retrieve peripheral
+     * 
      * @param event Event data containing entity type and peripheral ID
      * @return DevicePeripheral instance or null if validation fails
      */
     private DevicePeripheral validatePeripheralEvent(event) {
-        if (!PERIPHERAL.isEqual(event.data.p1)) {
+        if (!PERIPHERAL.isEqual(event.data?.p1)) {
+            log.debug("Event is not a peripheral event, p1: ${event.data?.p1}")
+            return null
+        }
+
+        if (!event.data.p2) {
+            log.warn("Peripheral ID (p2) is missing in event data")
             return null
         }
 
@@ -366,31 +442,35 @@ class UIMessageService implements EventPublisher {
 
     /**
      * Validate peripheral category matches expected category
+     * 
      * @param peripheral The peripheral to validate
      * @param expectedCategory Expected category name (e.g., "DOOR_LOCK", "PRESENCE")
      * @param logMismatch Whether to log when category doesn't match (default: true)
      * @return true if category matches, false otherwise
      */
     private boolean validatePeripheralCategory(DevicePeripheral peripheral, String expectedCategory, boolean logMismatch = true) {
-        if (peripheral.category?.name != expectedCategory) {
-            if (logMismatch) {
-                log.debug("Ignoring event for non-${expectedCategory} peripheral: ${peripheral.id}")
-            }
-            return false
+        boolean matches = peripheral?.category?.name == expectedCategory
+        
+        if (!matches && logMismatch) {
+            log.debug("Peripheral ${peripheral?.id} category mismatch. Expected: ${expectedCategory}, Actual: ${peripheral?.category?.name}")
         }
-        return true
+        
+        return matches
     }
 
     /**
      * Get first connected port from peripheral with null safety
+     * 
      * @param peripheral The peripheral to get connected port from
      * @return First connected DevicePort or null if none found
      */
     private DevicePort getFirstConnectedPort(DevicePeripheral peripheral) {
-        def connectedPort = peripheral.getConnectedTo()?.first()
+        def connectedPort = peripheral?.connectedTo?.find()
+        
         if (!connectedPort) {
-            log.warn("No connected port found for peripheral ${peripheral.id}")
+            log.warn("No connected port found for peripheral ${peripheral?.id}")
         }
+        
         return connectedPort
     }
 

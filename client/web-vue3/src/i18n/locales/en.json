@@ -239,5 +239,43 @@
 		"total_grid_export": "Total Grid Export",
 		"total_grid_import": "Total Grid Import",
 		"not_available": "N/A"
+	},
+	"timeout_selector": {
+		"title": "Auto-Off Timer",
+		"description": "Select duration before automatic shutdown",
+		"current": "Current",
+		"quick_options": "Quick Options",
+		"extended_durations": "Extended Durations",
+		"remove_timeout": "Remove Timeout",
+		"keep_running": "Keep running indefinitely",
+		"durations": {
+			"quick": "Quick timeout",
+			"short": "Short duration",
+			"medium": "Medium duration",
+			"long": "Long duration"
+		}
+	},
+	"zone_card": {
+		"location": "Location",
+		"item": "item",
+		"items": "items"
+	},
+	"light_card": {
+		"on": "ON",
+		"off": "OFF",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
+	},
+	"heat_card": {
+		"on": "WARM",
+		"off": "COLD",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
+	},
+	"switch_card": {
+		"on": "POWER ON",
+		"off": "POWER OFF",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
 	}
 }
