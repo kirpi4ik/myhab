@@ -121,9 +121,22 @@ class Job extends BaseEntity {
     }
 
     void afterUpdate() {
-        // Only process if state actually changed
-        if (previousState != state) {
-            handleStateChange()
+        try {
+            // Check if state changed
+            boolean stateChanged = previousState != state
+            
+            // Handle state change or reschedule if ACTIVE job was updated
+            if (stateChanged) {
+                handleStateChange()
+            } else if (state == JobState.ACTIVE) {
+                // Job is ACTIVE and was updated (e.g., name, triggers, etc.)
+                // Reschedule to apply changes
+                log.info("Job ${id} updated while ACTIVE, rescheduling to apply changes")
+                rescheduleInQuartz()
+            }
+        } catch (Exception e) {
+            log.error("Error handling job update for job ${id}: ${e.message}", e)
+            // Don't throw exception to avoid breaking the save operation
         }
     }
 
@@ -134,6 +147,9 @@ class Job extends BaseEntity {
         }
     }
 
+    /**
+     * Handle job state changes (ACTIVE, DISABLED, DRAFT)
+     */
     private void handleStateChange() {
         try {
             def schedulerService = Holders.grailsApplication.mainContext.getBean('schedulerService')
@@ -149,6 +165,24 @@ class Job extends BaseEntity {
             }
         } catch (Exception e) {
             log.error("Error handling state change for job ${id}: ${e.message}", e)
+            // Don't throw exception to avoid breaking the save operation
+        }
+    }
+
+    /**
+     * Reschedule an ACTIVE job in Quartz
+     * 
+     * <p>This is used when job details or cron triggers are updated while the job is ACTIVE.
+     * It unschedules all existing triggers and reschedules them with the updated configuration.</p>
+     */
+    private void rescheduleInQuartz() {
+        try {
+            def schedulerService = Holders.grailsApplication.mainContext.getBean('schedulerService')
+            schedulerService.unscheduleJobFromQuartz(id)
+            schedulerService.scheduleJobInQuartz(id)
+            log.info("Job ${id} rescheduled successfully in Quartz")
+        } catch (Exception e) {
+            log.error("Error rescheduling job ${id} in Quartz: ${e.message}", e)
             // Don't throw exception to avoid breaking the save operation
         }
     }
