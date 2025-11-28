@@ -285,5 +285,11 @@
     "off": "OPRIT",
     "details": "Detalii",
     "device_offline": "Dispozitivul este offline - comenzi dezactivate"
+  },
+  "heat_card": {
+    "on": "CALD",
+    "off": "RECE",
+    "details": "Detalii",
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   }
 }

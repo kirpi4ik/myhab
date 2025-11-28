@@ -265,5 +265,11 @@
 		"off": "OFF",
 		"details": "Details",
 		"device_offline": "Device is offline - controls disabled"
+	},
+	"heat_card": {
+		"on": "WARM",
+		"off": "COLD",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
 	}
 }
