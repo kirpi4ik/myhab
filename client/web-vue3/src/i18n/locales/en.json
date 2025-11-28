@@ -259,5 +259,11 @@
 		"location": "Location",
 		"item": "item",
 		"items": "items"
+	},
+	"light_card": {
+		"on": "ON",
+		"off": "OFF",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
 	}
 }
