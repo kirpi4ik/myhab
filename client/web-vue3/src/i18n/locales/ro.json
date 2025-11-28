@@ -279,5 +279,11 @@
     "location": "Locație",
     "item": "element",
     "items": "elemente"
+  },
+  "light_card": {
+    "on": "PORNIT",
+    "off": "OPRIT",
+    "details": "Detalii",
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   }
 }
