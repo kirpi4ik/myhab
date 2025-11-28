@@ -438,7 +438,14 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+// CSS Custom Properties for easier theming and maintenance
 .peripheral-light-card {
+  // Define custom properties for reusability
+  --card-border-radius: 12px;
+  --card-padding: 16px;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-duration: 0.3s;
+  
   background: 
     radial-gradient(3px 3px at 20% 30%, rgba(255, 255, 255, 0.4), transparent),
     radial-gradient(2px 2px at 60% 70%, rgba(255, 255, 255, 0.35), transparent),
@@ -455,14 +462,15 @@ export default defineComponent({
     linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
   background-size: 200% 200%;
   background-position: 50% 50%;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-duration) var(--transition-timing);
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: var(--card-border-radius);
   overflow: hidden;
   position: relative;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 
               0 2px 4px -1px rgba(0, 0, 0, 0.2),
               inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  will-change: transform; // Performance optimization for animations
 
   // Add a moon icon for OFF state
   &.light-off::before {
@@ -511,6 +519,17 @@ export default defineComponent({
     }
   }
 
+  // Reduce motion for users who prefer it (accessibility)
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   .status-indicator {
     position: absolute;
     top: 12px;
@@ -523,7 +542,7 @@ export default defineComponent({
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
 
     &.indicator-on {
       background: rgba(251, 191, 36, 0.3);
@@ -537,15 +556,16 @@ export default defineComponent({
   }
 
   .card-content {
-    padding: 48px 16px 16px;
+    padding: 48px var(--card-padding) var(--card-padding);
     min-height: 120px;
   }
 
   .light-avatar {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-duration) var(--transition-timing);
     border: 3px solid rgba(255, 255, 255, 0.2);
     position: relative;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    will-change: transform; // Performance optimization
 
     &.avatar-on {
       background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
@@ -569,7 +589,7 @@ export default defineComponent({
   }
 
   .light-name {
-    transition: color 0.3s ease;
+    transition: color var(--transition-duration) ease;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     letter-spacing: 0.3px;
   }
@@ -583,11 +603,11 @@ export default defineComponent({
   }
 
   .offline-badge {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn var(--transition-duration) ease-out;
   }
 
   .timer-chip {
-    animation: fadeInUp 0.3s ease-out;
+    animation: fadeInUp var(--transition-duration) ease-out;
     font-size: 0.75rem;
     font-weight: 600;
     border: 2px solid rgba(255, 255, 255, 0.5);
@@ -617,7 +637,7 @@ export default defineComponent({
   }
 
   .toggle-section {
-    padding: 6px 16px 10px;
+    padding: 6px var(--card-padding) 10px;
     background: rgba(0, 0, 0, 0.1);
     margin-bottom: 6px;
   }
@@ -646,7 +666,7 @@ export default defineComponent({
     gap: 2px;
     padding: 5px 8px;
     border-radius: 8px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-duration) var(--transition-timing);
     opacity: 0.5;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid transparent;
@@ -692,8 +712,8 @@ export default defineComponent({
     justify-content: center;
     color: #fca5a5;
     font-size: 0.875rem;
-    animation: fadeIn 0.3s ease-out;
-    padding: 8px 16px;
+    animation: fadeIn var(--transition-duration) ease-out;
+    padding: 8px var(--card-padding);
     background: rgba(220, 38, 38, 0.15);
     border-radius: 8px;
     border: 1px solid rgba(220, 38, 38, 0.3);
@@ -709,7 +729,7 @@ export default defineComponent({
       transparent 0%, 
       rgba(255, 255, 255, 0.3) 50%, 
       transparent 100%);
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
 
     &.accent-active {
       background: linear-gradient(90deg, 
@@ -721,6 +741,7 @@ export default defineComponent({
     }
   }
 
+  // Animations - optimized with will-change
   @keyframes pulse {
     0%, 100% {
       opacity: 1;
@@ -806,6 +827,14 @@ export default defineComponent({
       .toggle-handle {
         transform: translateX(2rem);
       }
+    }
+  }
+  
+  // Reduce motion for accessibility
+  @media (prefers-reduced-motion: reduce) {
+    .toggle-container,
+    .toggle-handle {
+      transition: none;
     }
   }
 }
