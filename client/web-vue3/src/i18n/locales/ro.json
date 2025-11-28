@@ -274,5 +274,10 @@
       "medium": "Durată medie",
       "long": "Durată lungă"
     }
+  },
+  "zone_card": {
+    "location": "Locație",
+    "item": "element",
+    "items": "elemente"
   }
 }
