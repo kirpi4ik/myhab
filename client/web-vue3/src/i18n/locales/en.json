@@ -239,5 +239,20 @@
 		"total_grid_export": "Total Grid Export",
 		"total_grid_import": "Total Grid Import",
 		"not_available": "N/A"
+	},
+	"timeout_selector": {
+		"title": "Auto-Off Timer",
+		"description": "Select duration before automatic shutdown",
+		"current": "Current",
+		"quick_options": "Quick Options",
+		"extended_durations": "Extended Durations",
+		"remove_timeout": "Remove Timeout",
+		"keep_running": "Keep running indefinitely",
+		"durations": {
+			"quick": "Quick timeout",
+			"short": "Short duration",
+			"medium": "Medium duration",
+			"long": "Long duration"
+		}
 	}
 }
