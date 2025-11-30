@@ -231,6 +231,51 @@
 
       <q-separator/>
 
+      <!-- Port Values History Table -->
+      <div class="q-pa-md">
+        <div class="text-h6 text-grey-8 q-mb-md">
+          <q-icon name="mdi-history" class="q-mr-sm"/>
+          Recent Value History (Last 20 Records)
+        </div>
+        <q-table
+          :rows="portValues"
+          :columns="portValueColumns"
+          :loading="portValuesLoading"
+          row-key="id"
+          flat
+          bordered
+          virtual-scroll
+          :rows-per-page-options="[0]"
+          style="max-height: 400px"
+          class="sticky-header-table"
+        >
+          <template v-slot:body-cell-value="props">
+            <q-td :props="props">
+              <div class="text-mono text-grey-9" style="max-width: 400px; word-break: break-all;">
+                {{ props.row.value }}
+              </div>
+            </q-td>
+          </template>
+
+          <template v-slot:body-cell-tsCreated="props">
+            <q-td :props="props">
+              <div class="text-grey-7">
+                {{ formatDateWithSeconds(props.row.tsCreated) }}
+              </div>
+            </q-td>
+          </template>
+
+          <template v-slot:no-data>
+            <div class="full-width row flex-center text-grey-6 q-gutter-sm q-pa-md">
+              <q-icon size="2em" name="mdi-database-off"/>
+              <span>No value history available for this port</span>
+            </div>
+          </template>
+        </q-table>
+      </div>
+
+      <q-separator/>
+
       <!-- Actions -->
       <q-card-actions>
         <q-btn color="primary" :to="uri +'/'+ $route.params.idPrimary+'/edit'" icon="mdi-pencil">
@@ -257,7 +302,7 @@ import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
 import {useQuasar} from "quasar";
 
-import {PORT_GET_BY_ID} from "@/graphql/queries";
+import {PORT_GET_BY_ID, PORT_VALUES_RECENT} from "@/graphql/queries";
 
 import {format} from 'date-fns';
 
@@ -268,6 +313,8 @@ export default defineComponent({
     const $q = useQuasar();
     const viewItem = ref();
     const loading = ref(false);
+    const portValues = ref([]);
+    const portValuesLoading = ref(false);
     const {client} = useApolloClient();
     const router = useRouter();
     const route = useRoute();
@@ -291,6 +338,12 @@ export default defineComponent({
       {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
     ];
 
+    const portValueColumns = [
+      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
+      {name: 'value', label: 'Value', field: 'value', align: 'left', sortable: false},
+      {name: 'tsCreated', label: 'Timestamp', field: 'tsCreated', align: 'left', sortable: true},
+    ];
+
     /**
      * Format date for display
      */
@@ -299,6 +352,19 @@ export default defineComponent({
       try {
         const date = new Date(dateString);
         return format(date, 'dd/MM/yyyy HH:mm');
+      } catch (error) {
+        return '-';
+      }
+    };
+
+    /**
+     * Format date with seconds for display
+     */
+    const formatDateWithSeconds = (dateString) => {
+      if (!dateString) return '-';
+      try {
+        const date = new Date(dateString);
+        return format(date, 'dd/MM/yyyy HH:mm:ss');
       } catch (error) {
         return '-';
       }
@@ -324,6 +390,9 @@ export default defineComponent({
       }).then(response => {
         viewItem.value = response.data.devicePort;
         loading.value = false;
+        
+        // Fetch port values after port data is loaded
+        fetchPortValues();
       }).catch(error => {
         loading.value = false;
         $q.notify({
@@ -336,6 +405,25 @@ export default defineComponent({
       });
     };
 
+    /**
+     * Fetch recent port values
+     */
+    const fetchPortValues = () => {
+      portValuesLoading.value = true;
+      client.query({
+        query: PORT_VALUES_RECENT,
+        variables: {portId: Number.parseInt(route.params.idPrimary), limit: 20},
+        fetchPolicy: 'network-only',
+      }).then(response => {
+        portValues.value = response.data.recentPortValues || [];
+        portValuesLoading.value = false;
+      }).catch(error => {
+        portValuesLoading.value = false;
+        console.error('Error fetching port values:', error);
+        // Don't show notification for port values error - it's not critical
+      });
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -345,11 +433,15 @@ export default defineComponent({
       fetchData,
       viewItem,
       loading,
+      portValues,
+      portValuesLoading,
       pagination,
       cableColumns,
       peripheralColumns,
+      portValueColumns,
       getStateColor,
       formatDate,
+      formatDateWithSeconds,
       onCableRowClick: (row) => {
         router.push({path: `/admin/cables/${row.id}/view`});
       },
@@ -361,3 +453,25 @@ export default defineComponent({
 });
 
 </script>
+
+<style scoped>
+.sticky-header-table {
+  /* Make table headers sticky */
+  :deep(thead tr th) {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #f5f5f5;
+  }
+
+  /* Ensure table body is scrollable */
+  :deep(.q-table__middle) {
+    max-height: 400px;
+  }
+}
+
+.text-mono {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+}
+</style>
