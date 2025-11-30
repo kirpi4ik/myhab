@@ -83,10 +83,10 @@ class HuaweiInfoSyncJob implements Job {
             enabled = false
         }
         
-        log.info("HuaweiInfoSyncJob execute() called - enabled: ${enabled}")
+        log.trace("HuaweiInfoSyncJob execute() called - enabled: ${enabled}")
         
         if (!enabled) {
-            log.info("HuaweiInfoSyncJob is DISABLED via configuration, skipping execution")
+            log.trace("HuaweiInfoSyncJob is DISABLED via configuration, skipping execution")
             return
         }
         
