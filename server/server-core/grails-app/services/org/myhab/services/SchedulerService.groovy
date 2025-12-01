@@ -254,6 +254,7 @@ class SchedulerService {
      * Normalize cron expression to Quartz format (6 or 7 fields)
      * Converts 5-field Unix cron format to 6-field Quartz format by adding seconds field
      * Note: Quartz requires that either day-of-month OR day-of-week must be '?' (not both '*')
+     * Note: Quartz day-of-week is 1-7 (1=SUN), Unix cron is 0-6 (0=SUN)
      */
     private String normalizeCronExpression(String expression) {
         if (!expression) {
@@ -278,6 +279,9 @@ class SchedulerService {
             String month = fields[3]
             String dayOfWeek = fields[4]
             
+            // Convert Unix cron day-of-week (0-6) to Quartz day-of-week (1-7)
+            dayOfWeek = convertUnixDayOfWeekToQuartz(dayOfWeek)
+            
             // If both day-of-month and day-of-week are '*', change day-of-week to '?'
             if (dayOfMonth == '*' && dayOfWeek == '*') {
                 dayOfWeek = '?'
@@ -300,6 +304,10 @@ class SchedulerService {
                 String dayOfMonth = fields[3]  // 4th field (0-indexed: 3)
                 String dayOfWeek = fields[5]  // 6th field (0-indexed: 5)
                 
+                // Convert Unix cron day-of-week (0-6) to Quartz day-of-week (1-7)
+                dayOfWeek = convertUnixDayOfWeekToQuartz(dayOfWeek)
+                fields[5] = dayOfWeek
+                
                 // Quartz rule: day-of-month and day-of-week cannot both be '*', one must be '?'
                 // If both are '*', change day-of-week to '?'
                 if (dayOfMonth == '*' && dayOfWeek == '*') {
@@ -317,9 +325,69 @@ class SchedulerService {
                     return fields.join(' ')
                 }
             }
-            return expression
+            return fields.join(' ')
         } else {
             throw new IllegalArgumentException("Invalid cron expression format: '${expression}'. Expected 5, 6, or 7 fields, got ${fields.length}")
+        }
+    }
+
+    /**
+     * Convert Unix cron day-of-week (0-6, 0=Sunday) to Quartz day-of-week (1-7, 1=Sunday)
+     * Handles ranges, lists, and combinations (e.g., "0-1,3,5")
+     * 
+     * Examples:
+     * - "0" -> "1" (Sunday)
+     * - "0-5" -> "1-6" (Sunday to Friday)
+     * - "1-5" -> "2-6" (Monday to Friday)
+     * - "0,6" -> "1,7" (Sunday and Saturday)
+     * - "0-1,3,5" -> "1-2,4,6" (Sunday-Monday, Wednesday, Friday)
+     * - "*" -> "*" (unchanged)
+     * - "?" -> "?" (unchanged)
+     */
+    private String convertUnixDayOfWeekToQuartz(String dayOfWeek) {
+        if (!dayOfWeek || dayOfWeek == '*' || dayOfWeek == '?') {
+            return dayOfWeek
+        }
+        
+        // Split by comma first to handle combinations like "0-1,3,5"
+        if (dayOfWeek.contains(',')) {
+            def values = dayOfWeek.split(',').collect { segment ->
+                convertSingleDaySegment(segment.trim())
+            }
+            return values.join(',')
+        }
+        
+        // Handle single segment (range or value)
+        return convertSingleDaySegment(dayOfWeek)
+    }
+    
+    /**
+     * Convert a single day-of-week segment (either a range like "0-5" or a single value like "0")
+     */
+    private String convertSingleDaySegment(String segment) {
+        // Handle ranges (e.g., "0-5", "1-6")
+        if (segment.contains('-')) {
+            def parts = segment.split('-')
+            if (parts.length == 2) {
+                try {
+                    int start = Integer.parseInt(parts[0])
+                    int end = Integer.parseInt(parts[1])
+                    // Convert: 0->1, 1->2, 2->3, 3->4, 4->5, 5->6, 6->7
+                    return "${start + 1}-${end + 1}"
+                } catch (NumberFormatException e) {
+                    // Not numeric, return as-is (might be SUN-FRI format)
+                    return segment
+                }
+            }
+        }
+        
+        // Handle single value (e.g., "0", "5")
+        try {
+            int day = Integer.parseInt(segment)
+            return String.valueOf(day + 1)
+        } catch (NumberFormatException e) {
+            // Not numeric, return as-is (might be SUN, MON, etc.)
+            return segment
         }
     }
 }

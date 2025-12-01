@@ -136,3 +136,13 @@ export const PORT_CREATE = gql`
 		}
 	}
 `;
+
+export const PORT_VALUES_RECENT = gql`
+  query ($portId: Long!, $limit: Int) {
+    recentPortValues(portId: $portId, limit: $limit) {
+      id
+      value
+      tsCreated
+    }
+  }
+`;

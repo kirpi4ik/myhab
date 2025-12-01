@@ -41,7 +41,7 @@
         </q-item-label>
 
         <!-- Timer Info -->
-        <q-item-label v-if="timeoutConfig || (isSwitchOn && asset.expiration)" class="q-mt-xs">
+        <q-item-label v-if="timeoutConfig || (isSwitchOn && expirationTime)" class="q-mt-xs">
           <q-chip
             size="sm"
             :color="isSwitchOn ? 'green-9' : 'blue-grey-8'"
@@ -52,9 +52,12 @@
             <span v-if="timeoutConfig" class="timer-text">
               {{ formatDuration(Number(timeoutConfig.value) * 1000) }}
             </span>
-            <span v-if="isSwitchOn && asset.expiration" class="timer-text">
-              <q-icon name="mdi-clock-outline" size="14px" class="q-mr-xs"/>
-              {{ formatTime(asset.expiration) }}
+            <span v-if="timeoutConfig && isSwitchOn && expirationTime" class="timer-separator">
+              •
+            </span>
+            <span v-if="isSwitchOn && expirationTime" class="timer-text">
+              <q-icon name="mdi-timer-sand" size="14px" class="q-mr-xs"/>
+              {{ formatTime(expirationTime) }}
             </span>
           </q-chip>
         </q-item-label>
@@ -140,7 +143,7 @@
 </template>
 
 <script>
-import {computed, defineComponent, toRefs, watch, onMounted} from 'vue';
+import {computed, defineComponent, toRefs, watch, onMounted, ref} from 'vue';
 import {useRouter} from 'vue-router';
 
 import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
@@ -180,6 +183,9 @@ export default defineComponent({
     const router = useRouter();
     const { client } = useApolloClient();
     const { peripheral: asset } = toRefs(props);
+
+    // Dedicated reactive ref for expiration (fixes reactivity on initial load)
+    const expirationTime = ref(null);
 
     /**
      * Get the port ID from connected ports
@@ -273,21 +279,27 @@ export default defineComponent({
 
         let assetRW = _.cloneDeep(data.devicePeripheral);
 
+        // Get port ID from the fresh data
+        const freshPortId = assetRW?.connectedTo?.[0]?.id || -1;
+
         // Load expiration from cache
-        if (portId.value !== -1) {
+        if (freshPortId !== -1) {
           try {
             const cacheData = await client.query({
               query: CACHE_GET_VALUE,
-              variables: { cacheName: 'expiring', cacheKey: portId.value },
+              variables: { cacheName: 'expiring', cacheKey: freshPortId },
               fetchPolicy: 'network-only',
             });
 
             const cachedValue = cacheData.data?.cache?.cachedValue;
+            
             // Only set expiration if cachedValue exists and is not null/empty
             if (cachedValue && cachedValue !== 'null') {
               assetRW.expiration = cachedValue;
+              expirationTime.value = cachedValue;
             } else {
               assetRW.expiration = null;
+              expirationTime.value = null;
             }
           } catch (error) {
             console.error('Failed to load cache expiration:', error);
@@ -301,6 +313,14 @@ export default defineComponent({
           assetRW.state = portValue === 'ON';
         }
 
+        // Update local state directly for immediate UI update
+        asset.value.expiration = assetRW.expiration;
+        asset.value.state = assetRW.state;
+        if (asset.value.data) {
+          asset.value.data = assetRW;
+        }
+        
+        // Emit to parent
         compPeripheral.value = assetRW;
       } catch (error) {
         console.error('Failed to load peripheral details:', error);
@@ -422,6 +442,7 @@ export default defineComponent({
       isSwitchOn,
       switchState,
       timeoutConfig,
+      expirationTime,
       portId,
       handleToggle,
       handleSetTimeout,
@@ -606,6 +627,11 @@ export default defineComponent({
     .timer-text {
       font-weight: 600;
       letter-spacing: 0.3px;
+    }
+
+    .timer-separator {
+      margin: 0 8px;
+      opacity: 0.6;
     }
   }
 
