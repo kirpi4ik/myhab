@@ -43,6 +43,11 @@ import java.util.concurrent.TimeUnit
  * - Auto-creates ports only for configured parameters
  * - Comprehensive error handling per API endpoint
  * 
+ * Job Registration:
+ *   This is a STATIC job registered by Spring in resources.groovy.
+ *   Configured in application.yml:
+ *     quartz.jobs.nibeInfoSync.interval: 60  # seconds
+ * 
  * API Documentation: https://dev.myuplink.com/
  */
 @Slf4j
@@ -63,6 +68,10 @@ class NibeInfoSyncJob implements Job {
     String deviceId
     String systemId
 
+    // DISABLED: Grails Quartz plugin auto-scheduling has been replaced
+    // This job is now registered as a Spring bean in resources.groovy
+    // Configuration is in application.yml: quartz.jobs.nibeInfoSync.*
+    /*
     static triggers = {
         def config = Holders.grailsApplication?.config
         def enabled = config?.getProperty('quartz.jobs.nibeInfoSync.enabled', Boolean)
@@ -80,6 +89,7 @@ class NibeInfoSyncJob implements Job {
             log.info "NibeInfoSyncJob: DISABLED - Not registering trigger"
         }
     }
+    */
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {

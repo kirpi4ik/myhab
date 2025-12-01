@@ -60,27 +60,6 @@ management:
       enabled: true
 
 quartz:
-  pluginEnabled: true
-  autoStartup: true
-  purgeQuartzTablesOnStartup: false
-  plugin:
-    jobHistory:
-      # {0} = Job name
-      # {1} = Job group
-      # {2} = Fire time
-      # {3} = Trigger name
-      # {4} = Trigger group
-      # {7} = Re-fire count
-      # {8} = Result/exception message
-      class: "org.quartz.plugins.history.LoggingJobHistoryPlugin"
-      jobSuccessMessage: "Job [{1}.{0}] execution complete and reports: {8}"
-      jobFailedMessage: "Job [{1}.{0}] execution failed with exception: {8}"
-      jobToBeFiredMessage: "Job [{1}.{0}] to be fired by trigger [{4}.{3}], re-fire: {7}"
-      jobWasVetoedMessage: "Job [{1}.{0}] was vetoed. It was to be fired by trigger [{4}.{3}] at: {2, date, yyyy-MM-dd HH:mm:ss.SSS}"
-  threadPool:
-    class: "org.quartz.simpl.SimpleThreadPool"
-    threadCount: 25
-    threadPriority: 5
   jobs:
     # Huawei solar inverter sync
     huaweiInfoSync:
@@ -141,6 +120,11 @@ quartz:
     randomColors:
       enabled: false
       interval: 5  # seconds
+    
+    # Rainbow RGB (demo/testing)
+    rainbowRGB:
+      enabled: false
+      interval: 80  # seconds
     
     # Event log reader
     eventLogReader:
@@ -212,8 +196,6 @@ hibernate:
 
 environments:
   development:
-    quartz:
-      jobStore: false
     logging:
       jul:
         usebridge: true
@@ -222,13 +204,6 @@ environments:
         debug:
           useFilter: true
   production:
-    quartz:
-      jobStore: true
-      class: "org.quartz.impl.jdbcjobstore.JobStoreTX"
-      driverDelegateClass: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
-      useProperties: false
-      dataSource: "production"
-      tablePrefix: "qrtz_"
     logging:
       jul:
         usebridge: true

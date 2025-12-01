@@ -31,10 +31,14 @@ import java.util.concurrent.TimeUnit
  */
 @Slf4j
 @DisallowConcurrentExecution
+@Transactional
 class MeteoStationSyncJob implements Job {
     
     MqttTopicService mqttTopicService
 
+    // DISABLED: Grails auto-scheduling conflicts with SchedulerService
+    // Jobs are now managed via SchedulerService and database-backed triggers
+    /*
     static triggers = {
         // Read configuration for job enablement and interval
         def config = Holders.grailsApplication?.config
@@ -54,6 +58,7 @@ class MeteoStationSyncJob implements Job {
             log.debug "MeteoStationSyncJob: DISABLED - Not registering trigger"
         }
     }
+    */
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {

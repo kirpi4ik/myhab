@@ -27,6 +27,9 @@ import java.util.concurrent.TimeUnit
 class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
     HazelcastInstance hazelcastInstance;
 
+    // DISABLED: Grails auto-scheduling conflicts with SchedulerService
+    // Jobs are now managed via SchedulerService and database-backed triggers
+    /*
     static triggers = {
         def config = Holders.grailsApplication?.config
         def enabled = config?.getProperty('quartz.jobs.switchOffOnTimeout.enabled', Boolean)
@@ -43,6 +46,7 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
             log.debug "SwitchOFFOnTimeoutJob: DISABLED - Not registering trigger"
         }
     }
+    */
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {

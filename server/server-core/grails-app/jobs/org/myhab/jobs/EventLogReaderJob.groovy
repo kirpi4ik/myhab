@@ -12,6 +12,9 @@ import java.util.concurrent.TimeUnit
 @Slf4j
 @DisallowConcurrentExecution
 class EventLogReaderJob implements Job {
+  // DISABLED: Grails auto-scheduling conflicts with SchedulerService
+  // Jobs are now managed via SchedulerService and database-backed triggers
+  /*
   static triggers = {
     def config = Holders.grailsApplication?.config
     def enabled = config?.getProperty('quartz.jobs.eventLogReader.enabled', Boolean)
@@ -28,6 +31,7 @@ class EventLogReaderJob implements Job {
       log.debug "EventLogReaderJob: DISABLED - Not registering trigger"
     }
   }
+  */
   def eventRouter
 
   def execute() {

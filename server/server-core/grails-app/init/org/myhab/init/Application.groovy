@@ -10,6 +10,7 @@ import org.springframework.context.annotation.FilterType
 
 @ComponentScan(basePackages = [
         "org.myhab.init.cache",
+        "org.myhab.config", // Keep scanning for CustomPostgreSQLDelegate
         "org.myhab.async.socket",
         "org.myhab.async.mqtt",
         "org.myhab.async.mqtt.handlers",
