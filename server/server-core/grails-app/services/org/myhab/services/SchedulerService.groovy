@@ -27,26 +27,38 @@ class SchedulerService {
             return false
         }
         
+        // Use job ID as the unique identifier for Quartz
+        String quartzJobId = "job_${jobId}"
+        String quartzGroupId = "job_group_${jobId}"
+        JobKey jobKey = JobKey.jobKey(quartzJobId, quartzGroupId)
+        
+        // Create JobDetail once (outside the loop)
+        JobDetail jobDetails = JobBuilder.newJob(DSLJob.class)
+                .withIdentity(quartzJobId, quartzGroupId)
+                .withDescription(job.description)
+                .storeDurably()
+                .requestRecovery()
+                .usingJobData(DSLJob.JOB_ID, job.id) // Keep UID for backward compatibility in job execution
+                .usingJobData("jobId", jobId)
+                .build()
+        
+        // Check if job already exists in Quartz, if not, add it
+        boolean jobExists = quartzScheduler.checkExists(jobKey)
+        if (!jobExists) {
+            quartzScheduler.addJob(jobDetails, false)
+            log.debug("Created job ${quartzJobId} in Quartz")
+        }
+        
+        // Now schedule each trigger
         job.cronTriggers.each { jobTrigger ->
-            // Use job ID as the unique identifier for Quartz
-            String quartzJobId = "job_${jobId}"
             String quartzTriggerId = "trigger_${jobTrigger.id}"
-            String quartzGroupId = "job_group_${jobId}"
             
             // Convert 5-field cron expression to 6-field (Quartz format)
             String cronExpression = normalizeCronExpression(jobTrigger.expression)
             
-            JobDetail jobDetails = JobBuilder.newJob(DSLJob.class)
-                    .withIdentity(quartzJobId, quartzGroupId)
-                    .withDescription(job.description)
-                    .storeDurably()
-                    .requestRecovery()
-                    .usingJobData(DSLJob.JOB_ID, job.id) // Keep UID for backward compatibility in job execution
-                    .usingJobData("jobId", jobId)
-                    .build()
-                    
             def trigger = TriggerBuilder.newTrigger()
                     .withIdentity(quartzTriggerId, quartzGroupId)
+                    .forJob(quartzJobId, quartzGroupId)
                     .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
                     .withDescription(job.description)
                     .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))
@@ -55,18 +67,17 @@ class SchedulerService {
             TriggerKey triggerKey = TriggerKey.triggerKey(quartzTriggerId, quartzGroupId)
             
             if (quartzScheduler.checkExists(triggerKey)) {
+                // Trigger exists, reschedule it
                 quartzScheduler.rescheduleJob(triggerKey, trigger)
+                log.debug("Rescheduled trigger ${quartzTriggerId} for job ${jobId}")
             } else {
-                try {
-                    quartzScheduler.scheduleJob(jobDetails, trigger)
-                } catch (ObjectAlreadyExistsException alreadyExistsException) {
-                    quartzScheduler.resumeJob(jobDetails.key)
-                    log.warn(alreadyExistsException.message)
-                }
+                // Trigger doesn't exist, schedule it
+                quartzScheduler.scheduleJob(trigger)
+                log.debug("Scheduled new trigger ${quartzTriggerId} for job ${jobId}")
             }
         }
         
-        log.info("Job ${jobId} scheduled in Quartz")
+        log.info("Job ${jobId} scheduled in Quartz with ${job.cronTriggers.size()} trigger(s)")
         return true
     }
 
