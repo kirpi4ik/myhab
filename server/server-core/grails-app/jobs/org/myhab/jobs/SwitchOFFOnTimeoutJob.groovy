@@ -62,7 +62,7 @@ class SwitchOFFOnTimeoutJob implements Job, EventPublisher {
     }
 
     void checkOnPeripheralAndSetTimeoutValueIfNeeded(JobExecutionContext jobExecutionContext) {
-        def portsWithON = DevicePort.findAllByValue("ON")
+        def portsWithON = DevicePort.where { value ==~ 'ON' }.list()
         
         portsWithON.each { port ->
             boolean cached = false

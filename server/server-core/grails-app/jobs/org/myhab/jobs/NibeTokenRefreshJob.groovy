@@ -52,15 +52,15 @@ class NibeTokenRefreshJob implements Job {
         def interval = config?.getProperty('quartz.jobs.nibeTokenRefresh.interval', Integer) ?: 300  // Default 5 minutes
         
         if (enabled == null) {
-            log.debug "NibeTokenRefreshJob: Configuration not found, defaulting to ENABLED"
+            log.info "NibeTokenRefreshJob: Configuration not found, defaulting to ENABLED"
             enabled = true  // Default to enabled for token refresh
         }
         
         if (enabled) {
-            log.debug "NibeTokenRefreshJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.info "NibeTokenRefreshJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            log.debug "NibeTokenRefreshJob: DISABLED - Not registering trigger"
+            log.info "NibeTokenRefreshJob: DISABLED - Not registering trigger"
         }
     }
 
@@ -74,10 +74,10 @@ class NibeTokenRefreshJob implements Job {
             enabled = true
         }
         
-        log.info("NibeTokenRefreshJob execute() called - enabled: ${enabled}")
+        log.trace("NibeTokenRefreshJob execute() called - enabled: ${enabled}")
         
         if (!enabled) {
-            log.info("NibeTokenRefreshJob is DISABLED via configuration, skipping execution")
+            log.trace("NibeTokenRefreshJob is DISABLED via configuration, skipping execution")
             return
         }
         
@@ -112,13 +112,13 @@ class NibeTokenRefreshJob implements Job {
                 CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key()
             )
             
-            log.debug("Config lookup results: clientId=${clientIdConfig != null}, clientSecret=${clientSecretConfig != null}, refreshToken=${refreshTokenConfig != null}")
+            log.trace("Config lookup results: clientId=${clientIdConfig != null}, clientSecret=${clientSecretConfig != null}, refreshToken=${refreshTokenConfig != null}")
             
             def clientId = clientIdConfig?.value
             def clientSecret = clientSecretConfig?.value
             def refreshToken = refreshTokenConfig?.value
             
-            log.debug("Config values: clientId=${clientId}, clientSecret=${clientSecret ? '***' : 'null'}, refreshToken=${refreshToken ? '***' : 'null'}")
+            log.trace("Config values: clientId=${clientId}, clientSecret=${clientSecret ? '***' : 'null'}, refreshToken=${refreshToken ? '***' : 'null'}")
             
             if (!clientId || !clientSecret || !refreshToken) {
                 log.error("OAuth credentials not configured for device ${device.id}")
@@ -131,7 +131,7 @@ class NibeTokenRefreshJob implements Job {
                 return
             }
             
-            log.debug("Refreshing OAuth tokens for device ${device.id}")
+            log.trace("Refreshing OAuth tokens for device ${device.id}")
             
             // Call the token refresh method
             def tokens = regenerateTokens(clientId, clientSecret, refreshToken)
@@ -165,8 +165,8 @@ class NibeTokenRefreshJob implements Job {
             accessTokenConfig.save(flush: true)
             
             log.info("OAuth tokens refreshed successfully (expires in ${tokens.expires_in}s)")
-            log.debug("New refresh token saved: ${tokens.refresh_token?.take(20)}...")
-            log.debug("New access token saved: ${tokens.access_token?.take(20)}...")
+            log.trace("New refresh token saved: ${tokens.refresh_token?.take(20)}...")
+            log.trace("New access token saved: ${tokens.access_token?.take(20)}...")
             
             // Mark device as online if it was offline
             if (device.status == DeviceStatus.OFFLINE) {
@@ -196,7 +196,7 @@ class NibeTokenRefreshJob implements Job {
      */
     Map getAuthTokens(String clientId, String clientSecret, String authzCode, String redirectUri) {
         try {
-            log.debug("Getting initial tokens with authorization code")
+            log.trace("Getting initial tokens with authorization code")
             
             HttpResponse<String> response = Unirest.post("https://api.myuplink.com/oauth/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -244,7 +244,7 @@ class NibeTokenRefreshJob implements Job {
      */
     Map regenerateTokens(String clientId, String clientSecret, String refreshToken) {
         try {
-            log.debug("Regenerating tokens with refresh token")
+            log.trace("Regenerating tokens with refresh token")
             
             HttpResponse<String> response = Unirest.post("https://api.myuplink.com/oauth/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -269,7 +269,7 @@ class NibeTokenRefreshJob implements Job {
             }
             
             log.info("Tokens regenerated successfully")
-            log.debug("Token details: expires_in=${tokens.expires_in}s, token_type=${tokens.token_type}, scope=${tokens.scope}")
+            log.trace("Token details: expires_in=${tokens.expires_in}s, token_type=${tokens.token_type}, scope=${tokens.scope}")
             
             return tokens
             

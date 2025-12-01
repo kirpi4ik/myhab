@@ -52,7 +52,7 @@ class PortValueSyncTriggerJob implements Job, EventPublisher {
         }
         
         if (!enabled) {
-            log.info("PortValueSyncTriggerJob is DISABLED via configuration, skipping execution")
+            log.trace("PortValueSyncTriggerJob is DISABLED via configuration, skipping execution")
             return
         }
         log.trace("PortValueReaderJob reader execute")

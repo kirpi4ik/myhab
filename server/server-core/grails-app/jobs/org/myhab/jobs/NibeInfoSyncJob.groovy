@@ -69,15 +69,15 @@ class NibeInfoSyncJob implements Job {
         def interval = config?.getProperty('quartz.jobs.nibeInfoSync.interval', Integer) ?: 120
         
         if (enabled == null) {
-            log.debug "NibeInfoSyncJob: Configuration not found, defaulting to ENABLED"
+            log.info "NibeInfoSyncJob: Configuration not found, defaulting to ENABLED"
             enabled = true  // Default to enabled for backward compatibility
         }
         
         if (enabled) {
-            log.debug "NibeInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
+            log.info "NibeInfoSyncJob: ENABLED - Registering trigger with interval ${interval}s"
             simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
         } else {
-            log.debug "NibeInfoSyncJob: DISABLED - Not registering trigger"
+            log.info "NibeInfoSyncJob: DISABLED - Not registering trigger"
         }
     }
 
@@ -90,10 +90,10 @@ class NibeInfoSyncJob implements Job {
             enabled = true
         }
         
-        log.info("NibeInfoSyncJob execute() called - enabled: ${enabled}")
+        log.trace("NibeInfoSyncJob execute() called - enabled: ${enabled}")
         
         if (!enabled) {
-            log.info("NibeInfoSyncJob is DISABLED via configuration, skipping execution")
+            log.trace("NibeInfoSyncJob is DISABLED via configuration, skipping execution")
             return
         }
         
@@ -153,7 +153,7 @@ class NibeInfoSyncJob implements Job {
      */
     boolean loadAccessToken(Device device) {
         try {
-            log.debug("Loading access token from database for device ${device.id}")
+            log.trace("Loading access token from database for device ${device.id}")
             
             def accessTokenConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
                 device.id,
@@ -168,7 +168,7 @@ class NibeInfoSyncJob implements Job {
             }
             
             this.accessToken = accessTokenConfig.value
-            log.debug("Access token loaded successfully: ${accessToken?.take(20)}...")
+            log.trace("Access token loaded successfully: ${accessToken?.take(20)}...")
             
             return true
             
@@ -187,7 +187,7 @@ class NibeInfoSyncJob implements Job {
      */
     Map fetchSystemInfo(Device device) {
         try {
-            log.debug("Fetching system info from ${API_SYSTEMS_ME_URL}")
+            log.trace("Fetching system info from ${API_SYSTEMS_ME_URL}")
             
             HttpResponse<String> response = Unirest.get(API_SYSTEMS_ME_URL)
                 .header("Authorization", "Bearer ${accessToken}")
@@ -245,7 +245,7 @@ class NibeInfoSyncJob implements Job {
     void fetchDeviceFirmware(Device device) {
         try {
             def url = "${API_BASE_URL}/devices/${deviceId}/firmware-info"
-            log.debug("Fetching firmware info from ${url}")
+            log.trace("Fetching firmware info from ${url}")
             
             HttpResponse<String> response = Unirest.get(url)
                 .header("Authorization", "Bearer ${accessToken}")
@@ -263,7 +263,7 @@ class NibeInfoSyncJob implements Job {
             publishToPort(device, 'system.firmware_version', data.currentFwVersion)
             publishToPort(device, 'system.desired_firmware', data.desiredFwVersion ?: data.currentFwVersion)
             
-            log.debug("Firmware: current=${data.currentFwVersion}, desired=${data.desiredFwVersion}")
+            log.trace("Firmware: current=${data.currentFwVersion}, desired=${data.desiredFwVersion}")
             
         } catch (Exception e) {
             log.error("Exception fetching firmware info: ${e.message}", e)
@@ -279,7 +279,7 @@ class NibeInfoSyncJob implements Job {
     void fetchDeviceDetails(Device device) {
         try {
             def url = "${API_BASE_URL}/devices/${deviceId}"
-            log.debug("Fetching device details from ${url}")
+            log.trace("Fetching device details from ${url}")
             
             HttpResponse<String> response = Unirest.get(url)
                 .header("Authorization", "Bearer ${accessToken}")
@@ -301,7 +301,7 @@ class NibeInfoSyncJob implements Job {
                 publishToPort(device, 'system.desired_firmware', data.firmware.desiredFwVersion)
             }
             
-            log.debug("Device details: ${data.product?.name}, connection=${data.connectionState}")
+            log.trace("Device details: ${data.product?.name}, connection=${data.connectionState}")
             
         } catch (Exception e) {
             log.error("Exception fetching device details: ${e.message}", e)
@@ -318,7 +318,7 @@ class NibeInfoSyncJob implements Job {
     void fetchDevicePoints(Device device) {
         try {
             def url = "${API_BASE_URL}/devices/${deviceId}/points"
-            log.debug("Fetching device points from ${url}")
+            log.trace("Fetching device points from ${url}")
             
             HttpResponse<String> response = Unirest.get(url)
                 .header("Authorization", "Bearer ${accessToken}")
@@ -426,7 +426,7 @@ class NibeInfoSyncJob implements Job {
             // Refresh device ports collection
             device.refresh()
             
-            log.debug("Created port ${port.id} for parameter ${parameterId}")
+            log.trace("Created port ${port.id} for parameter ${parameterId}")
             return port
             
         } catch (Exception e) {
@@ -467,7 +467,7 @@ class NibeInfoSyncJob implements Job {
             }
         }
         
-        log.debug("Configured parameters (${params.size()}): ${params}")
+        log.trace("Configured parameters (${params.size()}): ${params}")
         return params
     }
 

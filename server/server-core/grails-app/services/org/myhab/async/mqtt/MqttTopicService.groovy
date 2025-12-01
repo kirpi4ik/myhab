@@ -101,7 +101,7 @@ class MqttTopicService {
                 log.warn("Failed to compile pattern for ${key}: ${topicPattern}", e)
             }
         } else {
-            log.debug("No topic pattern defined for ${key}")
+            log.trace("No topic pattern defined for ${key}")
         }
     }
 
@@ -421,7 +421,7 @@ class MqttTopicService {
                 )
             }
             
-            log.debug("No matching read pattern for topic: ${topicName} (this may be normal for unsupported device types)")
+            log.trace("No matching read pattern for topic: ${topicName} (this may be normal for unsupported device types)")
             return null
             
         } catch (Exception e) {
