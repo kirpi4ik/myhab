@@ -33,9 +33,11 @@ import java.util.concurrent.TimeUnit
  * 2. Saves both tokens to device configuration
  * 3. NibeInfoSyncJob uses these tokens for API calls
  * 
- * Configuration:
- *   quartz.jobs.nibeTokenRefresh.enabled: true
- *   quartz.jobs.nibeTokenRefresh.interval: 300  # 5 minutes
+ * Job Registration:
+ *   This is a STATIC job registered by StaticJobsService at startup.
+ *   Configured in application.yml:
+ *     quartz.jobs.nibeTokenRefresh.enabled: true
+ *     quartz.jobs.nibeTokenRefresh.interval: 300  # 5 minutes
  */
 @Slf4j
 @DisallowConcurrentExecution
@@ -46,6 +48,10 @@ class NibeTokenRefreshJob implements Job {
     MqttTopicService mqttTopicService
     TelegramBotHandler telegramBotHandler
     
+    // DISABLED: Grails Quartz plugin auto-scheduling has been replaced
+    // This job is now registered by StaticJobsService at startup
+    // Configuration is in application.yml: quartz.jobs.nibeTokenRefresh.*
+    /*
     static triggers = {
         def config = Holders.grailsApplication?.config
         def enabled = config?.getProperty('quartz.jobs.nibeTokenRefresh.enabled', Boolean)
@@ -63,25 +69,12 @@ class NibeTokenRefreshJob implements Job {
             log.info "NibeTokenRefreshJob: DISABLED - Not registering trigger"
         }
     }
+    */
 
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-        def config = Holders.grailsApplication?.config
-        def enabled = config?.getProperty('quartz.jobs.nibeTokenRefresh.enabled', Boolean)
-        
-        if (enabled == null) {
-            enabled = true
-        }
-        
-        log.trace("NibeTokenRefreshJob execute() called - enabled: ${enabled}")
-        
-        if (!enabled) {
-            log.trace("NibeTokenRefreshJob is DISABLED via configuration, skipping execution")
-            return
-        }
-        
-        log.info("NibeTokenRefreshJob is ENABLED, proceeding with token refresh")
+        log.debug("NibeTokenRefreshJob executing - refreshing OAuth tokens")
         
         def device = Device.findByModel(DeviceModel.NIBE_F1145_8_EM)
         if (!device) {

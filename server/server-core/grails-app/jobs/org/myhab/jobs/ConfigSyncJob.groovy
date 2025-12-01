@@ -2,47 +2,39 @@ package org.myhab.jobs
 
 import grails.util.Holders
 import groovy.util.logging.Slf4j
+import grails.gorm.transactions.Transactional
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
+import org.myhab.config.ConfigProvider
+import org.springframework.beans.factory.annotation.Autowired
 
 import java.util.concurrent.TimeUnit
 
+/**
+ * Configuration Synchronization Job
+ *
+ * Asynchronously reloads application configuration from the database.
+ * Ensures configuration changes are picked up without requiring application restart.
+ *
+ * This job is now managed by Spring IoC via `resources.groovy` and configured in `application.yml`.
+ * It is no longer auto-registered by the Grails Quartz plugin.
+ *
+ * Configuration:
+ * - quartz.jobs.configSync.enabled: true/false (default: true)
+ * - quartz.jobs.configSync.interval: seconds (default: 60)
+ */
 @Slf4j
 @DisallowConcurrentExecution
+@Transactional
 class ConfigSyncJob implements Job {
-    static triggers = {
-        def config = Holders.grailsApplication?.config
-        def enabled = config?.getProperty('quartz.jobs.configSync.enabled', Boolean)
-        def interval = config?.getProperty('quartz.jobs.configSync.interval', Integer) ?: 60
-        
-        if (enabled == null) {
-            enabled = true  // Default to enabled for backward compatibility
-        }
-        
-        if (enabled) {
-            log.debug "ConfigSyncJob: ENABLED - Registering trigger with interval ${interval}s"
-            simple repeatInterval: TimeUnit.SECONDS.toMillis(interval)
-        } else {
-            log.debug "ConfigSyncJob: DISABLED - Not registering trigger"
-        }
-    }
-    def configProvider
+    
+    @Autowired
+    ConfigProvider configProvider
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-        def config = Holders.grailsApplication?.config
-        def enabled = config?.getProperty('quartz.jobs.configSync.enabled', Boolean)
-        
-        if (enabled == null) {
-            enabled = true
-        }
-        
-        if (!enabled) {
-            log.info("ConfigSyncJob is DISABLED via configuration, skipping execution")
-            return
-        }
         configProvider.asyncLoad({ loaded ->
             if (loaded) {
                 log.debug "Configuration updated"
