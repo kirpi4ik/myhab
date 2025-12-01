@@ -35,6 +35,20 @@ import org.quartz.SimpleTrigger
 // Read configuration for static jobs
 def config = Holders.grailsApplication?.config
 
+// Get database connection details for Quartz (environment-aware)
+def environment = grails.util.Environment.current.name
+def dbUrl, dbUsername, dbPassword
+if (environment == 'production') {
+    dbUrl = System.getenv("DB_URL")?.contains("TimeZone=") ? System.getenv("DB_URL") : "${System.getenv('DB_URL')}?TimeZone=UTC"
+    dbUsername = System.getenv("DB_USERNAME")
+    dbPassword = System.getenv("DB_PASSWORD")
+} else {
+    // Development/Test environment
+    dbUrl = 'jdbc:postgresql://localhost:5432/madhouse?TimeZone=UTC'
+    dbUsername = 'myhab'
+    dbPassword = 'myhab'
+}
+
 // Job intervals
 def nibeTokenRefreshInterval = config?.getProperty('quartz.jobs.nibeTokenRefresh.interval', Integer, 300)
 def nibeInfoSyncInterval = config?.getProperty('quartz.jobs.nibeInfoSync.interval', Integer, 60)
@@ -370,11 +384,11 @@ beans = {
             'org.quartz.jobStore.isClustered': 'false',
             'org.quartz.jobStore.useProperties': 'false',
             'org.quartz.jobStore.dataSource': 'quartzDS',
-            // Quartz's own dataSource
+            // Quartz's own dataSource (environment-aware)
             'org.quartz.dataSource.quartzDS.driver': 'org.postgresql.Driver',
-            'org.quartz.dataSource.quartzDS.URL': 'jdbc:postgresql://localhost:5432/madhouse?TimeZone=UTC',
-            'org.quartz.dataSource.quartzDS.user': 'myhab',
-            'org.quartz.dataSource.quartzDS.password': 'myhab',
+            'org.quartz.dataSource.quartzDS.URL': dbUrl,
+            'org.quartz.dataSource.quartzDS.user': dbUsername,
+            'org.quartz.dataSource.quartzDS.password': dbPassword,
             'org.quartz.dataSource.quartzDS.maxConnections': '5',
             'org.quartz.dataSource.quartzDS.validationQuery': 'SELECT 1'
         ]
