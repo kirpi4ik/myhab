@@ -9,32 +9,45 @@
           class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
         >
           <!-- Standard action card -->
-          <q-card v-if="card.actions" class="dashboard-card small-card">
-            <q-card-section :class="`${card.bgColor} text-white text-h6`">
-              <div class="row items-center">
-                <div class="col">{{ card.title }}</div>
-                <div class="col-auto">
-                  <q-icon :name="card.icon" size="40px"/>
+          <q-card v-if="card.actions" class="dashboard-card small-card" :class="card.cardClass">
+            <div class="card-header-wrapper">
+              <q-card-section class="card-header">
+                <div class="header-content">
+                  <div class="header-icon-wrapper">
+                    <q-icon :name="card.icon" size="32px" class="header-icon"/>
+                    <div class="icon-glow"></div>
+                  </div>
+                  <div class="header-title">
+                    {{ card.title }}
+                  </div>
                 </div>
-              </div>
-            </q-card-section>
-            <q-card-actions align="around" class="q-pa-md">
+              </q-card-section>
+            </div>
+            
+            <q-card-actions class="card-actions">
               <template v-for="(action, index) in card.actions" :key="action.label">
                 <q-btn 
-                  flat 
-                  class="text-h6 text-grey-14" 
+                  flat
+                  class="action-btn" 
                   no-caps 
                   :to="action.route"
                 >
-                  {{ action.label }}
+                  <div class="action-btn-content">
+                    <q-icon v-if="action.icon" :name="action.icon" size="20px" class="q-mr-xs"/>
+                    <span class="action-label">{{ action.label }}</span>
+                  </div>
                 </q-btn>
-                <q-separator 
+                <div 
                   v-if="index < card.actions.length - 1" 
-                  vertical 
-                  class="q-mx-md"
-                />
+                  class="action-divider"
+                >
+                  <q-separator vertical class="action-separator"/>
+                </div>
               </template>
             </q-card-actions>
+            
+            <!-- Bottom accent bar -->
+            <div class="accent-bar"></div>
           </q-card>
           
           <!-- Component card -->
@@ -132,59 +145,67 @@ export default defineComponent({
       {
         title: 'Iluminat',
         icon: 'fas fa-lightbulb',
-        bgColor: 'bg-orange-5',
+        cardClass: 'card-light',
         actions: [
           {
             label: 'Interior',
+            icon: 'mdi-home-outline',
             route: `/zones/${zoneIntId}?category=LIGHT`
           },
           {
             label: 'Exterior',
+            icon: 'mdi-home-city-outline',
             route: `/zones/${zoneExtId}?category=LIGHT`
-          }
-        ]
-      },
-      {
-        title: 'Switches',
-        icon: 'mdi-electric-switch',
-        bgColor: 'bg-green-6',
-        actions: [
-          {
-            label: 'Interior',
-            route: `/zones/${zoneIntId}?category=SWITCH`
-          },
-          {
-            label: 'Exterior',
-            route: `/zones/${zoneExtId}?category=SWITCH`
           }
         ]
       },
       {
         title: 'Climatizare',
         icon: 'fas fa-fire',
-        bgColor: 'bg-deep-orange-8',
+        cardClass: 'card-heat',
         actions: [
           {
             label: 'Parter',
+            icon: 'mdi-stairs-down',
             route: `/zones/${zoneParterId}?category=HEAT`
           },
           {
             label: 'Etaj',
+            icon: 'mdi-stairs-up',
             route: `/zones/${zoneEtajId}?category=HEAT`
+          }
+        ]
+      },
+      {
+        title: 'Switches',
+        icon: 'mdi-electric-switch',
+        cardClass: 'card-switch',
+        actions: [
+          {
+            label: 'Interior',
+            icon: 'mdi-home-outline',
+            route: `/zones/${zoneIntId}?category=SWITCH`
+          },
+          {
+            label: 'Exterior',
+            icon: 'mdi-home-city-outline',
+            route: `/zones/${zoneExtId}?category=SWITCH`
           }
         ]
       },
       {
         title: 'Temperatura',
         icon: 'fas fa-temperature-high',
-        bgColor: 'bg-blue-5',
+        cardClass: 'card-temp',
         actions: [
           {
             label: 'Interior',
+            icon: 'mdi-home-thermometer-outline',
             route: `/zones/${zoneIntId}?category=TEMP`
           },
           {
             label: 'Exterior',
+            icon: 'mdi-thermometer',
             route: `/zones/${zoneExtId}?category=TEMP`
           }
         ]
@@ -225,24 +246,347 @@ export default defineComponent({
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .dashboard-layout {
   width: 100%;
 }
 
 .dashboard-card {
-  background-color: white;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 
+              0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  will-change: transform;
+
+  &:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 
+                0 6px 12px rgba(0, 0, 0, 0.08);
+
+    .header-icon {
+      transform: scale(1.15) rotate(5deg);
+    }
+
+    .icon-glow {
+      opacity: 0.8;
+      transform: scale(1.3);
+    }
+
+    .accent-bar {
+      opacity: 1;
+    }
+  }
+
+  // Reduce motion for accessibility
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
-.dashboard-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.card-header-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%);
+  position: relative;
+  z-index: 1;
+  min-height: 52px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon-wrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.header-icon {
+  position: relative;
+  z-index: 2;
+  font-size: 24px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.icon-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 10px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.header-title {
+  flex: 1;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.card-actions {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 0;
+  background: #ffffff;
+}
+
+.action-btn {
+  flex: 1;
+  min-height: 52px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #475569;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.04) 100%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    color: #0f172a;
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.action-divider {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  &::before {
+    left: 4px;
+    transform: translateY(-50%);
+  }
+
+  &::after {
+    right: 4px;
+    transform: translateY(-50%);
+  }
+}
+
+.action-separator {
+  height: 40px;
+  width: 2px;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(0, 0, 0, 0.15) 20%,
+    rgba(0, 0, 0, 0.15) 80%,
+    transparent 100%);
+}
+
+.action-btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.action-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.accent-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.1) 50%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+// Theme-specific colors
+.card-light {
+  .card-header {
+    background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+  }
+
+  .header-icon-wrapper {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+  }
+
+  .header-icon {
+    color: #ffffff;
+  }
+
+  .icon-glow {
+    background: radial-gradient(circle, rgba(217, 119, 6, 0.5) 0%, transparent 70%);
+  }
+
+  .header-title {
+    color: #78350f;
+  }
+
+  .accent-bar {
+    background: linear-gradient(90deg, transparent 0%, #d97706 50%, transparent 100%);
+  }
+
+  &:hover .accent-bar {
+    box-shadow: 0 0 12px rgba(217, 119, 6, 0.6);
+  }
+}
+
+.card-switch {
+  .card-header {
+    background: linear-gradient(135deg, #86efac 0%, #4ade80 100%);
+  }
+
+  .header-icon-wrapper {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.4);
+  }
+
+  .header-icon {
+    color: #ffffff;
+  }
+
+  .icon-glow {
+    background: radial-gradient(circle, rgba(4, 120, 87, 0.5) 0%, transparent 70%);
+  }
+
+  .header-title {
+    color: #064e3b;
+  }
+
+  .accent-bar {
+    background: linear-gradient(90deg, transparent 0%, #047857 50%, transparent 100%);
+  }
+
+  &:hover .accent-bar {
+    box-shadow: 0 0 12px rgba(4, 120, 87, 0.6);
+  }
+}
+
+.card-heat {
+  .card-header {
+    background: linear-gradient(135deg, #fdba74 0%, #fb923c 100%);
+  }
+
+  .header-icon-wrapper {
+    background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  }
+
+  .header-icon {
+    color: #ffffff;
+  }
+
+  .icon-glow {
+    background: radial-gradient(circle, rgba(220, 38, 38, 0.5) 0%, transparent 70%);
+  }
+
+  .header-title {
+    color: #7c2d12;
+  }
+
+  .accent-bar {
+    background: linear-gradient(90deg, transparent 0%, #dc2626 50%, transparent 100%);
+  }
+
+  &:hover .accent-bar {
+    box-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+  }
+}
+
+.card-temp {
+  .card-header {
+    background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+  }
+
+  .header-icon-wrapper {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.4);
+  }
+
+  .header-icon {
+    color: #ffffff;
+  }
+
+  .icon-glow {
+    background: radial-gradient(circle, rgba(29, 78, 216, 0.5) 0%, transparent 70%);
+  }
+
+  .header-title {
+    color: #1e3a8a;
+  }
+
+  .accent-bar {
+    background: linear-gradient(90deg, transparent 0%, #1d4ed8 50%, transparent 100%);
+  }
+
+  &:hover .accent-bar {
+    box-shadow: 0 0 12px rgba(29, 78, 216, 0.6);
+  }
 }
 
 .small-card {
   height: 100%;
-  min-height: 120px;
+  min-height: 140px;
 }
 
 /* Mobile optimization - stack cards vertically */
@@ -253,6 +597,41 @@ export default defineComponent({
   
   .small-card {
     margin-bottom: 8px;
+  }
+
+  .action-btn {
+    min-height: 56px;
+  }
+
+  .action-label {
+    font-size: 1rem;
+  }
+
+  .header-title {
+    font-size: 1rem;
+  }
+
+  .card-header {
+    min-height: 56px;
+  }
+
+  .header-icon-wrapper {
+    width: 44px;
+    height: 44px;
+  }
+
+  .header-icon {
+    font-size: 26px !important;
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
   }
 }
 </style>
