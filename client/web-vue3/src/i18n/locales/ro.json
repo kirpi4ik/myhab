@@ -297,5 +297,11 @@
     "off": "OPRIT",
     "details": "Detalii",
     "device_offline": "Dispozitivul este offline - comenzi dezactivate"
+  },
+  "sprinkler_card": {
+    "on": "PORNIT",
+    "off": "OPRIT",
+    "details": "Detalii",
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   }
 }
