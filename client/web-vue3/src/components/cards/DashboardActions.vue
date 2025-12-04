@@ -24,27 +24,29 @@
               </q-card-section>
             </div>
             
-            <q-card-actions class="card-actions">
-              <template v-for="(action, index) in card.actions" :key="action.label">
-                <q-btn 
-                  flat
-                  class="action-btn" 
-                  no-caps 
-                  :to="action.route"
-                >
-                  <div class="action-btn-content">
-                    <q-icon v-if="action.icon" :name="action.icon" size="20px" class="q-mr-xs"/>
-                    <span class="action-label">{{ action.label }}</span>
+            <div class="card-actions-wrapper">
+              <q-card-actions class="card-actions">
+                <template v-for="(action, index) in card.actions" :key="action.label">
+                  <q-btn 
+                    flat
+                    class="action-btn" 
+                    no-caps 
+                    :to="action.route"
+                  >
+                    <div class="action-btn-content">
+                      <q-icon v-if="action.icon" :name="action.icon" size="20px" class="q-mr-xs"/>
+                      <span class="action-label">{{ action.label }}</span>
+                    </div>
+                  </q-btn>
+                  <div 
+                    v-if="index < card.actions.length - 1" 
+                    class="action-divider"
+                  >
+                    <q-separator vertical class="action-separator"/>
                   </div>
-                </q-btn>
-                <div 
-                  v-if="index < card.actions.length - 1" 
-                  class="action-divider"
-                >
-                  <q-separator vertical class="action-separator"/>
-                </div>
-              </template>
-            </q-card-actions>
+                </template>
+              </q-card-actions>
+            </div>
             
             <!-- Bottom accent bar -->
             <div class="accent-bar"></div>
@@ -177,7 +179,7 @@ export default defineComponent({
         ]
       },
       {
-        title: 'Switches',
+        title: 'Prize',
         icon: 'mdi-electric-switch',
         cardClass: 'card-switch',
         actions: [
@@ -261,6 +263,8 @@ export default defineComponent({
               0 1px 3px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.05);
   will-change: transform;
+  display: flex;
+  flex-direction: column;
 
   &:hover {
     transform: translateY(-4px) scale(1.01);
@@ -296,6 +300,15 @@ export default defineComponent({
 .card-header-wrapper {
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
+}
+
+.card-actions-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #ffffff;
 }
 
 .card-header {
@@ -357,7 +370,7 @@ export default defineComponent({
   align-items: center;
   justify-content: space-around;
   gap: 0;
-  background: #ffffff;
+  background: transparent;
 }
 
 .action-btn {
