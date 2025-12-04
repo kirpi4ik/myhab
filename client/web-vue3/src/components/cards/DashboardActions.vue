@@ -215,11 +215,11 @@ export default defineComponent({
         component: 'peripheral-lock'
       },
       {
-        component: 'water-pump',
+        component: 'sprinklers-dash-component',
         props: { peripheral: { state: true } }
       },
       {
-        component: 'sprinklers-dash-component',
+        component: 'water-pump',
         props: { peripheral: { state: true } }
       }
     ]);
