@@ -32,11 +32,24 @@ task serve(type: YarnTask, dependsOn: ['yarnInstall']) {
     args = ['serve']
 }
 
+task pwaDev(type: YarnTask, dependsOn: ['yarnInstall']) {
+    group = 'application'
+    description = 'Run the client app in PWA development mode'
+    args = ['run', 'pwa:dev']
+}
+
 task build(type: YarnTask, dependsOn: 'yarn') {
     group = 'build'
     description = 'Build the client bundle'
     args = ['run', 'build']
 }
+
+task pwaBuild(type: YarnTask, dependsOn: 'yarn') {
+    group = 'build'
+    description = 'Build the client PWA bundle for production'
+    args = ['run', 'pwa:build']
+}
+
 task lint(type: YarnTask, dependsOn: 'yarn') {
     group = 'build'
     description = 'Run eslint'
