@@ -15,6 +15,7 @@
     transition-show="jump-up" 
     transition-hide="jump-down"
     :maximized="$q.platform.is.mobile"
+    @escape-key="visible = false"
   >
     <q-card class="event-logger-card" :style="cardStyle">
       <!-- Header -->
