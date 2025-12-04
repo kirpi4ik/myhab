@@ -607,14 +607,23 @@ export default defineComponent({
   max-width: 100%;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 
+              0 2px 8px rgba(244, 67, 54, 0.08);
+  background: linear-gradient(135deg, #fff3f0 0%, #ffe8e1 30%, #ffffff 100%);
+  border: 2px solid rgba(244, 67, 54, 0.12);
+  transition: all 0.3s ease;
+}
+
+.nibe-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15), 
+              0 3px 12px rgba(244, 67, 54, 0.12);
+  transform: translateY(-2px);
 }
 
 /* Header Section */
 .header-section {
-  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, #ffe8e1 0%, #fff3f0 50%, #ffffff 100%);
+  border-bottom: 1px solid rgba(244, 67, 54, 0.15);
 }
 
 /* Section Titles */
@@ -627,7 +636,7 @@ export default defineComponent({
 
 /* ========== STATUS SECTION ========== */
 .status-section {
-  background: linear-gradient(to bottom, #fafbfc 0%, #ffffff 100%);
+  background: linear-gradient(to bottom, #fffaf8 0%, #ffffff 100%);
 }
 
 .temp-card {
@@ -701,14 +710,15 @@ export default defineComponent({
 
 /* ========== FLOW SECTION ========== */
 .flow-section {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.03) 0%, rgba(255, 152, 0, 0.03) 100%);
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.06) 0%, rgba(255, 152, 0, 0.05) 50%, rgba(33, 150, 243, 0.05) 100%);
 }
 
 .flow-container {
   padding: 20px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 12px;
-  border: 1px solid rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.15);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.08);
 }
 
 .flow-metric {
@@ -746,7 +756,7 @@ export default defineComponent({
 
 /* ========== COMPRESSOR SECTION ========== */
 .compressor-section {
-  background: #fafbfc;
+  background: linear-gradient(to bottom, #fffaf8 0%, #ffffff 100%);
 }
 
 .status-card {
@@ -799,7 +809,7 @@ export default defineComponent({
 
 /* ========== BRINE SECTION ========== */
 .brine-section {
-  background: linear-gradient(to bottom, #ffffff 0%, #f5f7fa 100%);
+  background: linear-gradient(to bottom, #ffffff 0%, #fffaf8 100%);
 }
 
 .brine-metric {
@@ -832,7 +842,7 @@ export default defineComponent({
 
 /* ========== ENERGY SECTION ========== */
 .energy-section {
-  background: linear-gradient(to bottom, #fafbfc 0%, #ffffff 100%);
+  background: linear-gradient(to bottom, #fffaf8 0%, #fff3f0 100%);
 }
 
 .energy-card {

@@ -83,37 +83,39 @@
       </q-card-section>
     </div>
 
-    <q-card-actions class="card-actions">
-      <!-- Gazon (Lawn) Action -->
-      <q-btn 
-        flat
-        class="action-btn" 
-        no-caps 
-        :to="`/zones/${zoneLanId}?category=SPRINKLER`"
-      >
-        <div class="action-btn-content">
-          <q-icon name="mdi-grass" size="20px" class="q-mr-xs"/>
-          <span class="action-label">Gazon</span>
+    <div class="card-actions-wrapper">
+      <q-card-actions class="card-actions">
+        <!-- Gazon (Lawn) Action -->
+        <q-btn 
+          flat
+          class="action-btn" 
+          no-caps 
+          :to="`/zones/${zoneLanId}?category=SPRINKLER`"
+        >
+          <div class="action-btn-content">
+            <q-icon name="mdi-grass" size="20px" class="q-mr-xs"/>
+            <span class="action-label">Gazon</span>
+          </div>
+        </q-btn>
+        
+        <div class="action-divider">
+          <q-separator vertical class="action-separator"/>
         </div>
-      </q-btn>
-      
-      <div class="action-divider">
-        <q-separator vertical class="action-separator"/>
-      </div>
-      
-      <!-- Gradina (Garden) Action -->
-      <q-btn 
-        flat
-        class="action-btn" 
-        no-caps 
-        :to="`/zones/${zoneGardenId}?category=SPRINKLER`"
-      >
-        <div class="action-btn-content">
-          <q-icon name="mdi-flower" size="20px" class="q-mr-xs"/>
-          <span class="action-label">Grădină</span>
-        </div>
-      </q-btn>
-    </q-card-actions>
+        
+        <!-- Gradina (Garden) Action -->
+        <q-btn 
+          flat
+          class="action-btn" 
+          no-caps 
+          :to="`/zones/${zoneGardenId}?category=SPRINKLER`"
+        >
+          <div class="action-btn-content">
+            <q-icon name="mdi-flower" size="20px" class="q-mr-xs"/>
+            <span class="action-label">Grădină</span>
+          </div>
+        </q-btn>
+      </q-card-actions>
+    </div>
 
     <!-- Bottom Accent Bar -->
     <div class="accent-bar" :class="{ 'accent-active': isSystemActive }"></div>
@@ -262,7 +264,7 @@ export default defineComponent({
   --transition-duration: 0.3s;
   
   // Sprinkler theme - green/teal nature/garden colors
-  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 50%, #0f766e 100%);
+  background: linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%);
   transition: all var(--transition-duration) var(--transition-timing);
   border-radius: var(--card-border-radius);
   overflow: hidden;
@@ -271,6 +273,8 @@ export default defineComponent({
               0 1px 3px rgba(0, 0, 0, 0.06);
   border: 2px solid rgba(255, 255, 255, 0.1);
   will-change: transform;
+  display: flex;
+  flex-direction: column;
 
   &:hover {
     transform: translateY(-4px) scale(1.01);
@@ -324,11 +328,20 @@ export default defineComponent({
 .card-header-wrapper {
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
+}
+
+.card-actions-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #ffffff;
 }
 
 .card-header {
   padding: 12px 16px;
-  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 100%);
+  background: linear-gradient(135deg, #16a89cdf 10%, #11bdaf 50%, #14b8a6 100%);
   position: relative;
   z-index: 1;
   min-height: 52px;
@@ -424,7 +437,7 @@ export default defineComponent({
   align-items: center;
   justify-content: space-around;
   gap: 0;
-  background: #ffffff;
+  background: transparent;
 }
 
 .action-btn {
