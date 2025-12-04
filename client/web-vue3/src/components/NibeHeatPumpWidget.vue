@@ -282,7 +282,7 @@ export default defineComponent({
         devicePorts.value = _.reduce(
           data.data.device.ports,
           (hash, port) => {
-            hash[port.internalRef] = port;
+            hash[port.internalRef] = structuredClone(port);
             return hash;
           },
           {}
