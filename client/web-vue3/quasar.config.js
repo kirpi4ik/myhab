@@ -24,7 +24,7 @@ export default configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-webpack/boot-files
-    boot: ['error-handler', 'i18n', 'axios', 'graphql'],
+    boot: ['error-handler', 'i18n', 'axios', 'graphql', 'pwa'],
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#sourcefiles
     sourceFiles: {
@@ -175,53 +175,117 @@ export default configure(function (ctx) {
 
     // https://v2.quasar.dev/quasar-cli-webpack/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'generateSW', // or 'injectManifest'
+      workboxMode: 'GenerateSW', // or 'injectManifest'
       injectPwaMetaTags: true,
       swFilename: 'sw.js',
       manifestFilename: 'manifest.json',
       useCredentialsForManifestTag: false,
-      // useFilenameHashes: true,
-      // extendGenerateSWOptions (cfg) {}
-      // extendInjectManifestOptions (cfg) {},
-      // extendManifestJson (json) {}
-      // extendPWACustomSWConf (esbuildConf) {}
+      extendGenerateSWOptions(cfg) {
+        cfg.skipWaiting = true;
+        cfg.clientsClaim = true;
+        cfg.cleanupOutdatedCaches = true;
+        
+        // Disable verbose logging in development
+        if (process.env.DEV) {
+          cfg.mode = 'production'; // This reduces console logs
+        }
+        
+        cfg.runtimeCaching = [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          }
+        ];
+      },
 
       manifest: {
-        name: `Quasar App`,
-        short_name: `Quasar App`,
-        description: `A Quasar Framework app`,
+        name: 'myHAB - Smart Home Automation',
+        short_name: 'myHAB',
+        description: 'myHAB AI - Smart Home Automation System',
         display: 'standalone',
-        orientation: 'portrait',
+        orientation: 'any',
         background_color: '#ffffff',
-        theme_color: '#027be3',
+        theme_color: '#7a98ad',
+        start_url: '/',
+        scope: '/',
+        categories: ['productivity', 'utilities', 'lifestyle'],
         icons: [
           {
-            src: 'icons/icon-128x128.png',
+            src: 'icons/favicon-128x128.png',
             sizes: '128x128',
             type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'icons/icon-192x192.png',
-            sizes: '192x192',
+            src: 'icons/favicon-128x128.png',
+            sizes: '128x128',
             type: 'image/png',
+            purpose: 'maskable'
           },
           {
-            src: 'icons/icon-256x256.png',
-            sizes: '256x256',
+            src: 'icons/favicon-96x96.png',
+            sizes: '96x96',
             type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'icons/icon-384x384.png',
-            sizes: '384x384',
+            src: 'icons/favicon-32x32.png',
+            sizes: '32x32',
             type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'icons/icon-512x512.png',
-            sizes: '512x512',
+            src: 'icons/favicon-16x16.png',
+            sizes: '16x16',
             type: 'image/png',
-          },
+            purpose: 'any'
+          }
         ],
-      },
+        shortcuts: [
+          {
+            name: 'Dashboard',
+            short_name: 'Dashboard',
+            description: 'Open myHAB Dashboard',
+            url: '/',
+            icons: [{ src: 'icons/favicon-96x96.png', sizes: '96x96' }]
+          }
+        ]
+      }
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/developing-cordova-apps/configuring-cordova

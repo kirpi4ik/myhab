@@ -160,12 +160,25 @@ java -jar -Dgrails.env=\$GRAILS_ENV -Duser.timezone=UTC /app/myhab.jar \$@
 }
 task serve(dependsOn: ':web-vue3:serve') {
     group = 'application'
-    description = 'Run the Quasar development server for the web client'
+    description = 'Run the Quasar development server for the web client (SPA mode)'
 }
 
-task copyClientResources(dependsOn: [':web-vue3:build']) { // <1>
+task servePWA(dependsOn: ':web-vue3:pwaDev') {
+    group = 'application'
+    description = 'Run the Quasar development server for the web client (PWA mode)'
+}
+
+//tag::buildClientPWA[]
+/**
+ * Build and bundle client resources for production
+ * - Uses PWA mode for installable app with offline support
+ * - Generates service worker for caching
+ * - Creates manifest.json for app metadata
+ * - Output: dist/pwa/ directory
+ */
+task copyClientResources(dependsOn: [':web-vue3:pwaBuild']) { // <1> Changed to pwaBuild for PWA support
     group = 'build'
-    description = 'Copy client resources into server'
+    description = 'Copy PWA client resources into server for production'
     doLast {
         copy {
             from project(':web-vue3').buildDir.absolutePath
@@ -173,6 +186,7 @@ task copyClientResources(dependsOn: [':web-vue3:build']) { // <1>
         }
     }
 }
+//end::buildClientPWA[]
 
 task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':server-core:assemble']) { // <2>
     group = 'build'
@@ -189,10 +203,12 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':
 }
 
 copyClientResources.doFirst { // <4>
+    // Copy PWA build output (includes Service Worker, manifest.json, and all assets)
     copy {
-        from "${project(':web-vue3').projectDir}/dist/spa"
+        from "${project(':web-vue3').projectDir}/dist/pwa" // Changed from spa to pwa
         into "${project(':server-core').buildDir}/resources/main/public"
     }
+    logger.quiet "✅ Copied PWA client resources from dist/pwa to server public directory"
 }
 
 task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
@@ -266,4 +282,49 @@ task removeImage(type: DockerRemoveImage) {
     group = dockerBuildGroup
     targetImageId { dockerTag }
 }
+
+/**
+ * BUILD WORKFLOW SUMMARY
+ * ======================
+ * 
+ * Development:
+ * ------------
+ * gradle serve          - Run SPA dev server (standard mode)
+ * gradle servePWA       - Run PWA dev server (with Service Worker)
+ * gradle bootRun        - Run Grails backend server
+ * 
+ * Production Build:
+ * -----------------
+ * 1. gradle assembleServerAndClient
+ *    ├── syncVersions (sync version across all files)
+ *    ├── :web-vue3:pwaBuild (build PWA with Service Worker)
+ *    ├── copyClientResources (copy dist/pwa to server public/)
+ *    └── :server-core:assemble (build JAR with embedded PWA)
+ * 
+ * 2. gradle buildImage
+ *    ├── prepareDocker (prepare Docker context)
+ *    ├── createDockerfile (generate Dockerfile)
+ *    └── buildImage (build Docker image)
+ * 
+ * 3. gradle pushImage (push to Docker registry)
+ * 
+ * PWA Features in Production:
+ * ---------------------------
+ * ✓ Installable app (Chrome/Edge/Safari)
+ * ✓ Offline support via Service Worker
+ * ✓ Auto-updates with user notification
+ * ✓ App manifest for metadata
+ * ✓ Optimized caching strategies
+ * ✓ Push notification ready
+ * 
+ * Docker Image Contents:
+ * ----------------------
+ * - Java 17 JRE
+ * - Grails backend application
+ * - Vue 3 PWA frontend (in /public)
+ * - Service Worker (sw.js)
+ * - PWA Manifest (manifest.json)
+ * - App icons and assets
+ */
+
 //apply from: "${commonBuild}/common-publishing.gradle"
