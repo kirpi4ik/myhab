@@ -4,6 +4,7 @@ import org.myhab.domain.job.Job
 import org.myhab.domain.job.JobState
 import org.myhab.jobs.DSLJob
 import grails.gorm.transactions.Transactional
+import org.springframework.transaction.annotation.Propagation
 import org.quartz.*
 import org.quartz.impl.StdScheduler
 
@@ -27,46 +28,72 @@ class SchedulerService {
             return false
         }
         
+        // Use job ID as the unique identifier for Quartz
+        String quartzJobId = "job_${jobId}"
+        String quartzGroupId = "job_group_${jobId}"
+        JobKey jobKey = JobKey.jobKey(quartzJobId, quartzGroupId)
+        
+        // Create JobDetail once (outside the loop)
+        // NOTE: Don't use .usingJobData() here - job_data is ALWAYS BYTEA and will serialize
+        // Instead, store data at trigger level where useProperties=true works
+        JobDetail jobDetails = JobBuilder.newJob(DSLJob.class)
+                .withIdentity(quartzJobId, quartzGroupId)
+                .withDescription(job.description)
+                .storeDurably()
+                .requestRecovery()
+                .build()
+        
+        // Check if job already exists in Quartz, if not, add it
+        boolean jobExists = quartzScheduler.checkExists(jobKey)
+        if (!jobExists) {
+            log.debug("Adding job ${quartzJobId} to Quartz JobStore...")
+            quartzScheduler.addJob(jobDetails, false)
+            log.debug("Created job ${quartzJobId} in Quartz")
+            
+            // Verify it was persisted
+            boolean exists = quartzScheduler.checkExists(jobKey)
+            log.info("Job ${quartzJobId} exists after add: ${exists}")
+        } else {
+            log.debug("Job ${quartzJobId} already exists in Quartz")
+        }
+        
+        // Now schedule each trigger
         job.cronTriggers.each { jobTrigger ->
-            // Use job ID as the unique identifier for Quartz
-            String quartzJobId = "job_${jobId}"
             String quartzTriggerId = "trigger_${jobTrigger.id}"
-            String quartzGroupId = "job_group_${jobId}"
             
             // Convert 5-field cron expression to 6-field (Quartz format)
             String cronExpression = normalizeCronExpression(jobTrigger.expression)
             
-            JobDetail jobDetails = JobBuilder.newJob(DSLJob.class)
-                    .withIdentity(quartzJobId, quartzGroupId)
-                    .withDescription(job.description)
-                    .storeDurably()
-                    .requestRecovery()
-                    .usingJobData(DSLJob.JOB_ID, job.id) // Keep UID for backward compatibility in job execution
-                    .usingJobData("jobId", jobId)
-                    .build()
-                    
+            // Store job data at TRIGGER level where useProperties=true works
             def trigger = TriggerBuilder.newTrigger()
                     .withIdentity(quartzTriggerId, quartzGroupId)
+                    .forJob(quartzJobId, quartzGroupId)
                     .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
                     .withDescription(job.description)
+                    .usingJobData(DSLJob.JOB_ID, jobId.toString())  // Store at trigger level as String
                     .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))
                     .build()
                     
             TriggerKey triggerKey = TriggerKey.triggerKey(quartzTriggerId, quartzGroupId)
             
             if (quartzScheduler.checkExists(triggerKey)) {
+                // Trigger exists, reschedule it
+                log.debug("Rescheduling existing trigger ${quartzTriggerId}...")
                 quartzScheduler.rescheduleJob(triggerKey, trigger)
+                log.debug("Rescheduled trigger ${quartzTriggerId} for job ${jobId}")
             } else {
-                try {
-                    quartzScheduler.scheduleJob(jobDetails, trigger)
-                } catch (ObjectAlreadyExistsException alreadyExistsException) {
-                    quartzScheduler.resumeJob(jobDetails.key)
-                    log.warn(alreadyExistsException.message)
-                }
+                // Trigger doesn't exist, schedule it
+                log.debug("Scheduling new trigger ${quartzTriggerId}...")
+                def scheduledDate = quartzScheduler.scheduleJob(trigger)
+                log.debug("Scheduled new trigger ${quartzTriggerId} for job ${jobId}, first fire time: ${scheduledDate}")
+                
+                // Verify it was persisted
+                boolean exists = quartzScheduler.checkExists(triggerKey)
+                log.info("Trigger ${quartzTriggerId} exists after schedule: ${exists}")
             }
         }
         
-        log.info("Job ${jobId} scheduled in Quartz")
+        log.info("Job ${jobId} scheduled in Quartz with ${job.cronTriggers.size()} trigger(s)")
         return true
     }
 
@@ -217,21 +244,25 @@ class SchedulerService {
     /**
      * Start all ACTIVE jobs in Quartz scheduler
      * Called on application startup to restore scheduled jobs
+     * REQUIRES_NEW: Create a NEW, independent transaction that commits immediately
+     * This ensures data is visible to Quartz's background threads after this method completes
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     def startAll() {
         def activeJobs = Job.findAllByState(JobState.ACTIVE)
-        log.info("Found ${activeJobs.size()} ACTIVE jobs to schedule")
+        log.info("Scheduling ${activeJobs.size()} ACTIVE jobs in Quartz")
         
         int successCount = 0
         int failureCount = 0
         
         activeJobs.each { job ->
             try {
-                // Only schedule in Quartz, don't modify job state (already ACTIVE)
                 if (scheduleJobInQuartz(job.id)) {
                     successCount++
+                    log.debug("Scheduled job ${job.id} (${job.name}) in Quartz")
                 } else {
                     failureCount++
+                    log.warn("Failed to schedule job ${job.id} in Quartz")
                 }
             } catch (Exception e) {
                 log.error("Failed to schedule job ${job.id} (${job.name}): ${e.message}", e)

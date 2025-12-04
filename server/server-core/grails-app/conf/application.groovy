@@ -79,6 +79,7 @@ grails.plugin.springsecurity.filterChain.chainMap = [
         [pattern: '/**', filters: 'JOINED_FILTERS,-statelessSecurityContextPersistenceFilter,-oauth2ProviderFilter,-clientCredentialsTokenEndpointFilter,-oauth2BasicAuthenticationFilter,-oauth2ExceptionTranslationFilter']
 ]
 
+// Common DataSource configuration
 dataSource {
     driverClassName = "org.postgresql.Driver"
     dialect = "org.hibernate.dialect.PostgreSQL95Dialect"
@@ -89,7 +90,7 @@ dataSource {
         minIdle = 5
         maxIdle = 25
         maxWait = 10000
-        maxAge = 60000
+        maxAge = 10 * 60 * 1000 // 10 minutes
         timeBetweenEvictionRunsMillis = 5000
         minEvictableIdleTimeMillis = 60000
         validationQuery = "SELECT 1"
@@ -99,12 +100,17 @@ dataSource {
         testWhileIdle = true
         testOnReturn = false
         jdbcInterceptors = "ConnectionState"
-        defaultTransactionIsolation = 2 //# TRANSACTION_READ_COMMITTED
+        defaultTransactionIsolation = 2 // TRANSACTION_READ_COMMITTED
         removeAbandoned = true
         removeAbandonedTimeout = 120
         logAbandoned = false
     }
 }
+
+// Quartz Scheduler Configuration
+// Using native Quartz library (not the Grails plugin)
+// Configuration is done in org.myhab.config.QuartzConfiguration
+
 environments {
     development {
         dataSource {
@@ -115,6 +121,7 @@ environments {
             logSql = false
             formatSql = false
         }
+        
     }
     production {
         dataSource {

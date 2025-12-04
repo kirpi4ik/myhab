@@ -9,6 +9,7 @@ import java.security.KeyStore
 class BootStrap {
     def telegramBotHandler
     def schedulerService
+    def quartzScheduler  // Inject Quartz Scheduler
     
     def init = { servletContext ->
 //        telegramBotHandler.sendMessage("INFO", "\uD83D\uDE80 Salut! sistemul myHAB tocmai a pornit")
@@ -26,13 +27,45 @@ class BootStrap {
                 .verifySsl(false)
                 .clientCertificateStore(keystore, password)
         
-        // Auto-start all ACTIVE jobs in Quartz scheduler
+        // Clean up old Grails auto-registered jobs
         try {
-            log.info("Initializing Quartz scheduler: Starting all ACTIVE jobs...")
-            schedulerService.startAll()
-            log.info("Quartz scheduler initialized successfully")
+            def oldGrailsJobs = quartzScheduler.getJobKeys(
+                org.quartz.impl.matchers.GroupMatcher.jobGroupEquals('GRAILS_JOBS')
+            )
+            def oldInternalJobs = quartzScheduler.getJobKeys(
+                org.quartz.impl.matchers.GroupMatcher.jobGroupEquals('Internal')
+            )
+            
+            int deletedCount = 0
+            (oldGrailsJobs + oldInternalJobs).each { jobKey ->
+                if (jobKey.name.startsWith('org.myhab.jobs.')) {
+                    quartzScheduler.deleteJob(jobKey)
+                    deletedCount++
+                }
+            }
+            if (deletedCount > 0) {
+                log.info("Cleaned up ${deletedCount} old Grails jobs from Quartz")
+            }
         } catch (Exception e) {
-            log.error("Failed to initialize Quartz scheduler: ${e.message}", e)
+            log.error("Failed to clean up old Grails jobs: ${e.message}", e)
+        }
+        
+        // Schedule all ACTIVE jobs
+        try {
+            schedulerService.startAll()
+        } catch (Exception e) {
+            log.error("Failed to schedule jobs: ${e.message}", e)
+        }
+        
+        // Start the Quartz scheduler
+        // Static jobs (NibeTokenRefreshJob, NibeInfoSyncJob) are auto-registered by Spring
+        try {
+            if (!quartzScheduler.isStarted()) {
+                quartzScheduler.start()
+                log.info("Quartz scheduler started successfully")
+            }
+        } catch (Exception e) {
+            log.error("Failed to start Quartz scheduler: ${e.message}", e)
         }
     }
     

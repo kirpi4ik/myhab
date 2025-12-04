@@ -20,7 +20,9 @@ class DSLJob implements Job {
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
-        def jobId = context.getMergedJobDataMap().get(JOB_ID)
+        // Get jobId from the merged job data map (includes both job and trigger data)
+        def jobIdStr = context.getMergedJobDataMap().getString(JOB_ID)
+        def jobId = jobIdStr ? Long.parseLong(jobIdStr) : null
         def job = org.myhab.domain.job.Job.findById(jobId)
 
         if (job == null) {
