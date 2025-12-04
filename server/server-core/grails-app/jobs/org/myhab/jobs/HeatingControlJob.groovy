@@ -29,7 +29,11 @@ import static org.myhab.ConfigKey.CONFIG_TEMP_ALL_DAY
  */
 @Slf4j
 @DisallowConcurrentExecution
+@Transactional
 class HeatingControlJob implements Job, EventPublisher {
+    // DISABLED: Grails auto-scheduling conflicts with SchedulerService
+    // Jobs are now managed via SchedulerService and database-backed triggers
+    /*
     static triggers = {
         def config = Holders.grailsApplication?.config
         def enabled = config?.getProperty('quartz.jobs.heatingControl.enabled', Boolean)
@@ -46,6 +50,7 @@ class HeatingControlJob implements Job, EventPublisher {
             log.debug "HeatingControlJob: DISABLED - Not registering trigger"
         }
     }
+    */
     public static final String PERIPHERAL_HEAT_CTRL_CATEGORY = "HEAT"
     public static final String PERIPHERAL_TEMPERATURE_SENSOR_CATEGORY = 'TEMP'
     def configProvider

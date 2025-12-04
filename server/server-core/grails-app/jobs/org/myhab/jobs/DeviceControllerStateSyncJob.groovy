@@ -16,12 +16,17 @@ import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
 
 import java.util.concurrent.TimeUnit
+import grails.gorm.transactions.Transactional
 
 @Slf4j
 @DisallowConcurrentExecution
+@Transactional
 class DeviceControllerStateSyncJob implements Job, EventPublisher {
     def deviceService
     def portValueService
+    // DISABLED: Grails auto-scheduling conflicts with SchedulerService
+    // Jobs are now managed via SchedulerService and database-backed triggers
+    /*
     static triggers = {
         def config = Holders.grailsApplication?.config
         def enabled = config?.getProperty('quartz.jobs.deviceControllerStateSync.enabled', Boolean)
@@ -38,6 +43,7 @@ class DeviceControllerStateSyncJob implements Job, EventPublisher {
             log.debug "DeviceControllerStateSyncJob: DISABLED - Not registering trigger"
         }
     }
+    */
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
