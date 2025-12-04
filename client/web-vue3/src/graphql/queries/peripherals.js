@@ -202,3 +202,19 @@ export const PERIPHERAl_EVENT_LOGS = gql`
     }
   }
 `;
+
+export const PERIPHERAL_EVENT_LOGS_MULTIPLE = gql`
+  query eventsByP2List($p2List: [String!]!, $count: Int!, $offset: Int!) {
+    eventsByP2List(p2List: $p2List, count: $count, offset: $offset) {
+      id
+      tsCreated
+      entityType
+      p4
+      p6
+      p2
+      p3
+      p1
+      p0
+    }
+  }
+`;

@@ -12,15 +12,15 @@
     <q-item class="card-content">
       <!-- Sprinkler Avatar -->
       <q-item-section avatar>
-        <q-avatar
-          size="60px"
+        <q-avatar 
+          size="60px" 
           class="sprinkler-avatar"
           :class="isSprinklerOn ? 'avatar-on' : 'avatar-off'"
         >
-          <q-icon
-            :name="isSprinklerOn ? 'mdi-sprinkler' : 'mdi-sprinkler-variant'"
+          <q-icon 
+            :name="isSprinklerOn ? 'mdi-sprinkler' : 'mdi-sprinkler-variant'" 
             :color="isSprinklerOn ? 'light-blue-1' : 'green-1'"
-            size="40px"
+            size="40px" 
           />
           <div v-if="isSprinklerOn" class="sprinkler-glow"></div>
         </q-avatar>
@@ -54,11 +54,11 @@
             </span>
             <span v-if="timeoutConfig && showExpiration" class="timer-separator">
               •
-            </span>
+          </span>
             <span v-if="showExpiration" class="timer-text">
               <q-icon name="mdi-timer-sand" size="14px" class="q-mr-xs"/>
               {{ formatTime(expirationTime) }}
-            </span>
+          </span>
           </q-chip>
         </q-item-label>
       </q-item-section>
@@ -80,13 +80,13 @@
                 @set-timeout="handleSetTimeout"
                 @delete-timeout="handleDeleteTimeout"
               />
-
+              
               <q-separator/>
-
+              
               <!-- View Details -->
-              <q-item
-                clickable
-                v-close-popup
+              <q-item 
+                clickable 
+                v-close-popup 
                 @click="viewDetails"
               >
                 <q-item-section avatar>
@@ -106,7 +106,7 @@
     </q-item>
 
     <q-separator :class="isSprinklerOn ? 'separator-glow' : ''" />
-
+    
     <!-- Toggle Switch -->
     <q-card-section class="toggle-section">
       <div class="toggle-container">
@@ -116,11 +116,11 @@
             <span class="label-text">{{ $t('sprinkler_card.off') }}</span>
           </div>
           
-          <toggle
-            :model-value="sprinklerState"
-            @update:model-value="handleToggle"
-            :id="String(peripheral.id)"
-            :disabled="isDeviceOffline"
+        <toggle 
+          :model-value="sprinklerState" 
+          @update:model-value="handleToggle" 
+          :id="String(peripheral.id)"
+          :disabled="isDeviceOffline"
             class="sprinkler-toggle"
           />
           
@@ -524,7 +524,7 @@ export default defineComponent({
   }
 
   &:hover {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
     box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.2), 
                 0 6px 10px -5px rgba(0, 0, 0, 0.1);
 
