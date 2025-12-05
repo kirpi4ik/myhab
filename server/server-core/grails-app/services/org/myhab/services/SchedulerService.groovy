@@ -68,7 +68,8 @@ class SchedulerService {
             def trigger = TriggerBuilder.newTrigger()
                     .withIdentity(quartzTriggerId, quartzGroupId)
                     .forJob(quartzJobId, quartzGroupId)
-                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
+                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)
+                            .withMisfireHandlingInstructionDoNothing())  // Don't fire immediately on misfire/reschedule
                     .withDescription(job.description)
                     .usingJobData(DSLJob.JOB_ID, jobId.toString())  // Store at trigger level as String
                     .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))

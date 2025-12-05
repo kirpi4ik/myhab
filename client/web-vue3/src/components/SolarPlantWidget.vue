@@ -196,60 +196,50 @@
           <div class="col-6 col-md-4">
             <div class="stat-card yield-card">
               <div class="stat-icon">
-                <q-icon name="mdi-solar-power" size="lg"/>
+                <q-icon name="mdi-solar-power" size="lg" color="white"/>
               </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ dailyYield }}</div>
-                <div class="stat-label">{{ $t('solar.daily_yield') }}</div>
-              </div>
+              <div class="stat-value">{{ dailyYield }}</div>
+              <div class="stat-label">{{ $t('solar.daily_yield') }}</div>
             </div>
           </div>
 
           <div class="col-6 col-md-4">
             <div class="stat-card consumption-card">
               <div class="stat-icon">
-                <q-icon name="mdi-home-import-outline" size="lg"/>
+                <q-icon name="mdi-home-import-outline" size="lg" color="white"/>
               </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ dailyTotalConsumption }}</div>
-                <div class="stat-label">{{ $t('solar.daily_total_consumption') }}</div>
-              </div>
+              <div class="stat-value">{{ dailyTotalConsumption }}</div>
+              <div class="stat-label">{{ $t('solar.daily_total_consumption') }}</div>
             </div>
           </div>
 
           <div class="col-6 col-md-4">
             <div class="stat-card solar-usage-card">
               <div class="stat-icon">
-                <q-icon name="mdi-home-lightning-bolt-outline" size="lg"/>
+                <q-icon name="mdi-home-lightning-bolt-outline" size="lg" color="white"/>
               </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ dailySolarUsage }}</div>
-                <div class="stat-label">{{ $t('solar.daily_solar_usage') }}</div>
-              </div>
+              <div class="stat-value">{{ dailySolarUsage }}</div>
+              <div class="stat-label">{{ $t('solar.daily_solar_usage') }}</div>
             </div>
           </div>
 
           <div class="col-6 col-md-6">
             <div class="stat-card export-card">
               <div class="stat-icon">
-                <q-icon name="mdi-transmission-tower-export" size="lg"/>
+                <q-icon name="mdi-transmission-tower-export" size="lg" color="white"/>
               </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ dailyGridExport }}</div>
-                <div class="stat-label">{{ $t('solar.daily_grid_export') }}</div>
-              </div>
+              <div class="stat-value">{{ dailyGridExport }}</div>
+              <div class="stat-label">{{ $t('solar.daily_grid_export') }}</div>
             </div>
           </div>
 
           <div class="col-6 col-md-6">
             <div class="stat-card import-card">
               <div class="stat-icon">
-                <q-icon name="mdi-transmission-tower-import" size="lg"/>
+                <q-icon name="mdi-transmission-tower-import" size="lg" color="white"/>
               </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ dailyGridImport }}</div>
-                <div class="stat-label">{{ $t('solar.daily_grid_import') }}</div>
-              </div>
+              <div class="stat-value">{{ dailyGridImport }}</div>
+              <div class="stat-label">{{ $t('solar.daily_grid_import') }}</div>
             </div>
           </div>
         </div>
@@ -869,14 +859,23 @@ export default defineComponent({
   max-width: 100%;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 
+              0 2px 8px rgba(255, 193, 7, 0.08);
+  background: linear-gradient(135deg, #fffbf0 0%, #fff8e1 30%, #ffffff 100%);
+  border: 2px solid rgba(255, 193, 7, 0.15);
+  transition: all 0.3s ease;
+}
+
+.solar-plant-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15), 
+              0 3px 12px rgba(255, 193, 7, 0.12);
+  transform: translateY(-2px);
 }
 
 /* Header Section */
 .header-section {
-  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 50%, #ffffff 100%);
+  border-bottom: 1px solid rgba(255, 193, 7, 0.15);
 }
 
 /* Section Titles */
@@ -889,14 +888,15 @@ export default defineComponent({
 
 /* ========== REAL-TIME SECTION ========== */
 .realtime-section {
-  background: linear-gradient(to bottom, #fafbfc 0%, #ffffff 100%);
+  background: linear-gradient(to bottom, #fffbf5 0%, #ffffff 100%);
 }
 
 /* Power Flow Diagram */
 .power-flow-container {
   padding: 20px 0;
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.03) 0%, rgba(33, 150, 243, 0.03) 100%);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 152, 0, 0.05) 50%, rgba(33, 150, 243, 0.05) 100%);
   border-radius: 16px;
+  border: 1px solid rgba(255, 193, 7, 0.1);
 }
 
 .flow-diagram {
@@ -1094,9 +1094,10 @@ export default defineComponent({
 .phases-container {
   margin-top: 24px;
   padding: 16px;
-  background: rgba(255, 193, 7, 0.04);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 193, 7, 0.04) 100%);
   border-radius: 12px;
-  border: 1px solid rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.08);
 }
 
 .phase-card {
@@ -1144,10 +1145,12 @@ export default defineComponent({
 .stat-card {
   background: #ffffff;
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px 16px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  text-align: center;
+  gap: 10px;
   border: 1px solid rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1158,12 +1161,12 @@ export default defineComponent({
 .stat-card::before {
   content: '';
   position: absolute;
-  left: 0;
   top: 0;
-  bottom: 0;
-  width: 4px;
+  left: 0;
+  right: 0;
+  height: 4px;
   background: currentColor;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .stat-card:hover {
@@ -1173,28 +1176,27 @@ export default defineComponent({
 
 .stat-icon {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 12px;
   background: currentColor;
-  color: white;
-  opacity: 0.9;
-}
-
-.stat-content {
-  flex: 1;
-  text-align: left;
+  opacity: 1;
+  
+  .q-icon {
+    color: white !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  }
 }
 
 .stat-value {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   color: #212121;
-  margin-bottom: 2px;
   letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
 .stat-label {
@@ -1203,6 +1205,7 @@ export default defineComponent({
   text-transform: uppercase;
   letter-spacing: 0.3px;
   font-weight: 500;
+  line-height: 1.3;
 }
 
 .yield-card {
