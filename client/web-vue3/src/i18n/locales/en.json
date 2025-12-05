@@ -277,5 +277,11 @@
 		"off": "POWER OFF",
 		"details": "Details",
 		"device_offline": "Device is offline - controls disabled"
+	},
+	"sprinkler_card": {
+		"on": "ON",
+		"off": "OFF",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
 	}
 }

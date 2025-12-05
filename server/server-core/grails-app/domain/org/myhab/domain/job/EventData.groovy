@@ -39,5 +39,23 @@ class EventData extends Event  {
                 }
             })
         }
+        query('eventsByP2List', [EventData]) {
+            argument('p2List', [String])
+            argument('count', Integer)
+            argument('offset', Integer)
+            dataFetcher(new DataFetcher() {
+                @Override
+                Object get(DataFetchingEnvironment environment) {
+                    def p2List = environment.getArgument('p2List') as List<String>
+                    if (!p2List || p2List.isEmpty()) {
+                        return []
+                    }
+                    EventData.createCriteria().list(max: environment.getArgument('count'), offset: environment.getArgument('offset')) {
+                        'in'("p2", p2List)
+                        order("tsCreated", "desc")
+                    }
+                }
+            })
+        }
     }
 }
