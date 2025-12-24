@@ -228,9 +228,13 @@ class SchedulerService {
                 scheduleJobInQuartz(jobId)
             }
             
-            // Now trigger the job
+            // Now trigger the job with JobDataMap containing the jobId
+            // NOTE: triggerJob(jobKey) creates a one-time trigger with EMPTY JobDataMap
+            // We must pass the jobId explicitly since it's stored at trigger level, not job level
             if (quartzScheduler.checkExists(jobKey)) {
-                quartzScheduler.triggerJob(jobKey)
+                JobDataMap jobDataMap = new JobDataMap()
+                jobDataMap.put(DSLJob.JOB_ID, jobId.toString())
+                quartzScheduler.triggerJob(jobKey, jobDataMap)
                 log.info("Job ${jobId} triggered successfully")
             } else {
                 log.warn("Failed to schedule job ${jobId} before triggering")
