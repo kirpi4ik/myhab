@@ -2,6 +2,8 @@ import {boot} from 'quasar/wrappers';
 import {createI18n} from 'vue-i18n';
 
 const i18n = createI18n({
+	legacy: false, // Use Composition API mode (v11+ recommended)
+	globalInjection: true, // Inject $t, $d, $n, $tm globally (allows $t() in templates)
 	locale: process.env.VUE_APP_I18N_LOCALE || 'en',
 	fallbackLocale: process.env.VUE_APP_I18N_FALLBACK_LOCALE || 'en',
 	messages: loadLocaleMessages(),
