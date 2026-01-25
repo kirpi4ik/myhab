@@ -149,7 +149,7 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
 const apolloClient = new ApolloClient({
   link: onErrorLink.concat(withAuthToken).concat(httpLink),
   cache: new InMemoryCache({
-    addTypename: true, // Enable __typename for proper object identification
+    // Note: addTypename is always true by default in Apollo Client 3.14+
     // Customize type policies to prevent normalization warnings
     typePolicies: {
       // Prevent Apollo from warning about data loss for simplified nested objects
@@ -166,6 +166,9 @@ const apolloClient = new ApolloClient({
             merge: true,
           },
           zoneById: {
+            merge: true,
+          },
+          navigation: {
             merge: true,
           },
           // Cache queries should never be cached - always fetch fresh data
@@ -210,6 +213,17 @@ const apolloClient = new ApolloClient({
       // Type policy for DevicePort objects
       DevicePort: {
         keyFields: ["id"], // Use id as the cache key
+        fields: {
+          device: {
+            merge: true,
+          }
+        }
+      },
+      // Type policy for Device objects
+      // Some Device objects don't include 'id' in all queries (only code/status)
+      // Disable normalization to avoid "Missing field 'id'" errors
+      Device: {
+        keyFields: false,
       }
     },
     // Don't warn about missing fields or data loss
@@ -223,7 +237,9 @@ const apolloClient = new ApolloClient({
       return null;
     }
   }),
-  connectToDevTools: process.env.DEV,
+  devtools: {
+    enabled: process.env.DEV,
+  },
   // Suppress warnings about data loss during normalization
   defaultOptions: {
     watchQuery: {
