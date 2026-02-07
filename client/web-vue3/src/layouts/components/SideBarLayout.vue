@@ -142,6 +142,14 @@
               </q-item-section>
             </q-item>
             <q-item-label header class="text-weight-bolder text-white">{{ $t('navigation.settings') }}</q-item-label>
+            <q-item to="/admin/appconfig" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-cog-sync"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>App Configuration</q-item-label>
+              </q-item-section>
+            </q-item>
             <q-item to="/maintenance" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="settings"/>

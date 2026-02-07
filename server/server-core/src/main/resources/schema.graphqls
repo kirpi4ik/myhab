@@ -4,8 +4,15 @@ type Query{
     cache(cacheName: String!, cacheKey: String!): CacheResult
     cacheAll(cacheName: String): [CacheResult]
     config(key: String!): String
+    appConfigList: [AppConfigEntry]
     deviceModelList:[String!]!
     jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
+}
+
+type AppConfigEntry {
+    key: String!
+    value: String
+    type: String
 }
 
 type JobExecutionHistoryResult {
@@ -63,6 +70,8 @@ type Mutation {
     jobUnschedule(jobId: ID!): MutationResponse
     jobTrigger(jobId: ID!): MutationResponse
     scenarioDelete(id: ID!): MutationResponse
+    appConfigUpdate(key: String!, value: String!, commitMessage: String): MutationResponse
+    appConfigRefresh: MutationResponse
 }
 
 type EventDataResponse {

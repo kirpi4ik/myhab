@@ -8,6 +8,7 @@ import groovy.util.logging.Slf4j
 import org.myhab.init.cache.CacheMap
 import org.myhab.services.UserService
 import org.myhab.services.SchedulerService
+import org.myhab.config.ConfigProvider
 import org.myhab.domain.device.Scenario
 import org.myhab.domain.job.Job
 import org.myhab.domain.job.EventSubscription
@@ -29,6 +30,8 @@ class Mutation implements EventPublisher {
     HazelcastInstance hazelcastInstance
     @Autowired
     SchedulerService schedulerService
+    @Autowired
+    ConfigProvider configProvider
 
 
     DataFetcher pushEvent() {
@@ -175,6 +178,57 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("Failed to delete scenario", e)
                     return [success: false, error: e.message ?: "Failed to delete scenario"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Update an application configuration value and commit to GIT
+     */
+    DataFetcher appConfigUpdate() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    String key = environment.getArgument("key")
+                    String value = environment.getArgument("value")
+                    String commitMessage = environment.getArgument("commitMessage")
+                    
+                    if (!key || key.trim().isEmpty()) {
+                        return [success: false, error: "Configuration key is required"]
+                    }
+                    
+                    boolean success = configProvider.setAndCommit(key, value, commitMessage)
+                    
+                    if (success) {
+                        log.info("App config updated: ${key} = ${value}")
+                        return [success: true, error: null]
+                    } else {
+                        return [success: false, error: "Failed to update configuration"]
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to update app config", e)
+                    return [success: false, error: e.message ?: "Failed to update configuration"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Refresh application configuration from GIT (pull latest changes)
+     */
+    DataFetcher appConfigRefresh() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    boolean success = configProvider.refresh()
+                    log.info("App config refreshed from GIT")
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to refresh app config", e)
+                    return [success: false, error: e.message ?: "Failed to refresh configuration"]
                 }
             }
         }

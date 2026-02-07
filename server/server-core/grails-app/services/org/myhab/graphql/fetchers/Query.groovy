@@ -101,6 +101,18 @@ class Query {
         }
     }
 
+    /**
+     * Get all application configuration entries from GIT
+     */
+    def appConfigList() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                return configProvider.getAll()
+            }
+        }
+    }
+
     def deviceModelList() {
         return new DataFetcher() {
             @Override

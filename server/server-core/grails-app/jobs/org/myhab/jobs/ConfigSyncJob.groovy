@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Configuration Synchronization Job
  *
- * Asynchronously reloads application configuration from the database.
+ * Asynchronously reloads application configuration from the GIT.
  * Ensures configuration changes are picked up without requiring application restart.
  *
  * This job is now managed by Spring IoC via `resources.groovy` and configured in `application.yml`.

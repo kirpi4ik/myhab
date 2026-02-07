@@ -386,6 +386,19 @@ const routes = [
         ],
       },
       {
+        path: adminPrefix + '/appconfig',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "appconfig"
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/appconfig/AppConfigView'),
+          }
+        ],
+      },
+      {
         path: '/solar-reports',
         component: () => import('pages/SolarReports'),
         meta: {
