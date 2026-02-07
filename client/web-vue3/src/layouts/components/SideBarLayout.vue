@@ -24,6 +24,7 @@
           </q-item-section>
         </q-item>
         <q-expansion-item
+          v-if="isAdmin"
           v-model="expanded"
           icon="mdi-clipboard-edit-outline"
           :label="$t('navigation.infrastructure')"
@@ -180,11 +181,10 @@
   </q-drawer>
 </template>
 <script>
-import {defineComponent, ref} from 'vue';
-
+import {defineComponent, ref, computed} from 'vue';
 import {useUiState} from '@/composables';
-
-
+import {authzService} from '@/_services';
+import {Role} from '@/_helpers/role';
 
 export default defineComponent({
   name: 'SideBarLayout',
@@ -193,13 +193,26 @@ export default defineComponent({
     const prjVersion = process.env.PRJ_VERSION;
     const graphiqlUrl = (process.env.BCK_SERVER_URL || '') + '/graphql/browser';
 
-    const expanded = ref(true)
+    const expanded = ref(true);
+    
+    /**
+     * Check if current user has admin role
+     */
+    const isAdmin = computed(() => {
+      const currentUser = authzService.currentUserValue;
+      if (!currentUser?.permissions) {
+        return false;
+      }
+      return currentUser.permissions.includes(Role.Admin);
+    });
+    
     return {
       expanded,
       isSidebarOpen,
       isSidebarMini,
       prjVersion,
       graphiqlUrl,
+      isAdmin,
       drawerClick(e) {
         if (isSidebarMini.value) {
           isSidebarMini.value = false
