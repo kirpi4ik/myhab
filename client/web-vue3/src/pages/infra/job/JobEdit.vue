@@ -74,6 +74,21 @@
             <q-item v-for="(trigger, index) in cronTriggers" :key="index">
               <q-item-section>
                 <div class="q-mb-sm">
+                  <q-input 
+                    v-model="trigger.description"
+                    label="Trigger Description"
+                    hint="Optional description explaining why/when this trigger runs"
+                    clearable
+                    clear-icon="close"
+                    color="blue"
+                    filled
+                    dense
+                    class="q-mb-md"
+                  >
+                    <template v-slot:prepend>
+                      <q-icon name="mdi-text-short"/>
+                    </template>
+                  </q-input>
                   <div class="text-caption text-grey-7 q-mb-xs">Cron Expression(UTC timezone)</div>
                   <cron-light 
                     v-model="trigger.expression" 
@@ -219,7 +234,8 @@ export default defineComponent({
         // Set cron triggers
         transformed.cronTriggers = cronTriggers.value.map(t => ({
           id: t.id,
-          expression: t.expression
+          expression: t.expression,
+          description: t.description || null
         }));
         
         // Set tags: handle both existing tags (with IDs) and new tags (without IDs)
@@ -237,7 +253,7 @@ export default defineComponent({
     });
 
     const addCronTrigger = () => {
-      cronTriggers.value.push({ expression: '* * * * *' });
+      cronTriggers.value.push({ expression: '* * * * *', description: '' });
       // Clear error for new trigger
       cronErrors.value[cronTriggers.value.length - 1] = null;
     };

@@ -35,6 +35,7 @@ export const JOB_GET_BY_ID = gql`
       cronTriggers {
         id
         expression
+        description
       }
       eventTriggers {
         id
@@ -68,6 +69,7 @@ export const JOB_EDIT_GET_BY_ID = gql`
       cronTriggers {
         id
         expression
+        description
       }
       eventTriggers {
         id

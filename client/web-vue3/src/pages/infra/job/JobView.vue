@@ -118,6 +118,9 @@
         <q-list bordered separator>
           <q-item v-for="trigger in viewItem.cronTriggers" :key="trigger.id">
             <q-item-section>
+              <q-item-label v-if="trigger.description" class="text-weight-medium q-mb-xs">
+                {{ trigger.description }}
+              </q-item-label>
               <q-item-label>
                 <q-badge color="info" :label="trigger.expression"/>
                 <span class="q-ml-md text-grey-7">
@@ -234,9 +237,23 @@
           <!-- Trigger column -->
           <template v-slot:body-cell-triggerName="props">
             <q-td :props="props">
-              <span v-if="props.row.triggerName">
-                {{ props.row.triggerName }}
-              </span>
+              <template v-if="props.row.triggerName">
+                <template v-if="getTriggerInfo(props.row.triggerName)">
+                  <span v-if="getTriggerInfo(props.row.triggerName).description" class="text-weight-medium">
+                    {{ getTriggerInfo(props.row.triggerName).description }}
+                  </span>
+                  <span v-else>
+                    {{ getTriggerInfo(props.row.triggerName).expression }}
+                  </span>
+                  <q-tooltip max-width="300px">
+                    <div><strong>Expression:</strong> {{ getTriggerInfo(props.row.triggerName).expression }}</div>
+                    <div v-if="getTriggerInfo(props.row.triggerName).description">
+                      <strong>Description:</strong> {{ getTriggerInfo(props.row.triggerName).description }}
+                    </div>
+                  </q-tooltip>
+                </template>
+                <span v-else>{{ props.row.triggerName }}</span>
+              </template>
               <span v-else class="text-grey-5">Manual/Unknown</span>
             </q-td>
           </template>
@@ -383,6 +400,35 @@ export default defineComponent({
       if (text.length <= maxLength) return text;
       return text.substring(0, maxLength) + '...';
     };
+    
+    /**
+     * Get trigger display info from trigger name
+     * Trigger name format is "trigger_{id}" where id is the CronTrigger id
+     * Returns object with description and expression if found
+     */
+    const getTriggerInfo = (triggerName) => {
+      if (!triggerName || !viewItem.value?.cronTriggers) {
+        return null;
+      }
+      
+      // Extract trigger ID from name format "trigger_{id}"
+      const match = triggerName.match(/^trigger_(\d+)$/);
+      if (!match) {
+        return null;
+      }
+      
+      const triggerId = match[1];
+      const cronTrigger = viewItem.value.cronTriggers.find(t => String(t.id) === triggerId);
+      
+      if (cronTrigger) {
+        return {
+          description: cronTrigger.description,
+          expression: cronTrigger.expression
+        };
+      }
+      
+      return null;
+    };
 
     const getNextRunTime = (cronExpression) => {
       try {
@@ -491,7 +537,8 @@ export default defineComponent({
       fetchExecutionHistory,
       getExecutionStatusColor,
       formatDuration,
-      truncateText
+      truncateText,
+      getTriggerInfo
     };
   }
 });

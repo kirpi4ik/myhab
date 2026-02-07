@@ -14,6 +14,7 @@ import org.quartz.TriggerKey
 @Slf4j
 class CronTrigger extends BaseEntity {
   String expression
+  String description
   Job job
 
   static belongsTo = [Job]
@@ -21,6 +22,11 @@ class CronTrigger extends BaseEntity {
 
   static mapping = {
     table '`job_triggers_cron`'
+  }
+
+  static constraints = {
+    expression nullable: false
+    description nullable: true, maxSize: 500
   }
 
   static graphql = true

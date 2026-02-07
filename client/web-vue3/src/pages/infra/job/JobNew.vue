@@ -74,6 +74,21 @@
             <q-item v-for="(trigger, index) in cronTriggers" :key="index">
               <q-item-section>
                 <div class="q-mb-sm">
+                  <q-input 
+                    v-model="trigger.description"
+                    label="Trigger Description"
+                    hint="Optional description explaining why/when this trigger runs"
+                    clearable
+                    clear-icon="close"
+                    color="blue"
+                    filled
+                    dense
+                    class="q-mb-md"
+                  >
+                    <template v-slot:prepend>
+                      <q-icon name="mdi-text-short"/>
+                    </template>
+                  </q-input>
                   <div class="text-caption text-grey-7 q-mb-xs">Cron Expression (UTC timezone)</div>
                   <cron-light 
                     v-model="trigger.expression" 
@@ -193,7 +208,10 @@ export default defineComponent({
           transformed.scenario = { id: selectedScenario.value.id };
         }
         // Add cron triggers
-        transformed.cronTriggers = cronTriggers.value.map(t => ({ expression: t.expression }));
+        transformed.cronTriggers = cronTriggers.value.map(t => ({ 
+          expression: t.expression,
+          description: t.description || null
+        }));
         // Add tags (existing and new)
         transformed.tags = selectedTags.value.map(tag => {
           if (tag.id) {
@@ -207,7 +225,7 @@ export default defineComponent({
     });
 
     const addCronTrigger = () => {
-      cronTriggers.value.push({ expression: '0 0 * * *' });
+      cronTriggers.value.push({ expression: '0 0 * * *', description: '' });
     };
 
     const removeCronTrigger = (index) => {
