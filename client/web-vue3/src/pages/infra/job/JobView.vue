@@ -162,6 +162,97 @@
 
       <q-separator/>
 
+      <!-- Execution History -->
+      <div class="q-pa-md">
+        <div class="text-h6 q-mb-md row items-center">
+          <q-icon name="mdi-history" class="q-mr-sm"/>
+          Execution History
+          <q-space/>
+          <q-btn 
+            flat 
+            dense 
+            icon="mdi-refresh" 
+            color="primary" 
+            @click="fetchExecutionHistory"
+            :loading="historyLoading"
+          >
+            <q-tooltip>Refresh history</q-tooltip>
+          </q-btn>
+        </div>
+        
+        <q-table
+          :rows="executionHistory"
+          :columns="historyColumns"
+          row-key="id"
+          :loading="historyLoading"
+          :pagination="historyPagination"
+          dense
+          flat
+          bordered
+          :rows-per-page-options="[10, 25, 50]"
+        >
+          <!-- Status column with colored badge -->
+          <template v-slot:body-cell-status="props">
+            <q-td :props="props">
+              <q-badge 
+                :color="getExecutionStatusColor(props.row.status)" 
+                :label="props.row.status"
+              />
+            </q-td>
+          </template>
+          
+          <!-- Start time column formatted -->
+          <template v-slot:body-cell-startTime="props">
+            <q-td :props="props">
+              {{ formatDate(props.row.startTime) }}
+            </q-td>
+          </template>
+          
+          <!-- Duration column formatted -->
+          <template v-slot:body-cell-durationMs="props">
+            <q-td :props="props">
+              <span v-if="props.row.durationMs !== null">
+                {{ formatDuration(props.row.durationMs) }}
+              </span>
+              <span v-else class="text-grey-5">-</span>
+            </q-td>
+          </template>
+          
+          <!-- Error message column with tooltip for long messages -->
+          <template v-slot:body-cell-errorMessage="props">
+            <q-td :props="props">
+              <span v-if="props.row.errorMessage" class="text-negative cursor-pointer">
+                {{ truncateText(props.row.errorMessage, 50) }}
+                <q-tooltip v-if="props.row.errorMessage.length > 50" max-width="400px">
+                  {{ props.row.errorMessage }}
+                </q-tooltip>
+              </span>
+              <span v-else class="text-grey-5">-</span>
+            </q-td>
+          </template>
+          
+          <!-- Trigger column -->
+          <template v-slot:body-cell-triggerName="props">
+            <q-td :props="props">
+              <span v-if="props.row.triggerName">
+                {{ props.row.triggerName }}
+              </span>
+              <span v-else class="text-grey-5">Manual/Unknown</span>
+            </q-td>
+          </template>
+          
+          <!-- No data message -->
+          <template v-slot:no-data>
+            <div class="full-width row flex-center text-grey-6 q-pa-md">
+              <q-icon name="mdi-information-outline" size="sm" class="q-mr-sm"/>
+              No execution history found for this job
+            </div>
+          </template>
+        </q-table>
+      </div>
+
+      <q-separator/>
+
       <!-- Actions -->
       <q-card-actions>
         <q-btn color="primary" :to="uri +'/'+ $route.params.idPrimary+'/edit'" icon="mdi-pencil">
@@ -189,7 +280,7 @@ import {useRoute, useRouter} from "vue-router/dist/vue-router";
 import {useQuasar} from "quasar";
 import { Cron } from 'croner';
 
-import {JOB_GET_BY_ID} from "@/graphql/queries";
+import {JOB_GET_BY_ID, JOB_EXECUTION_HISTORY} from "@/graphql/queries";
 
 export default defineComponent({
   name: 'JobView',
@@ -201,6 +292,55 @@ export default defineComponent({
     const {client} = useApolloClient();
     const router = useRouter();
     const route = useRoute();
+    
+    // Execution history state
+    const executionHistory = ref([]);
+    const historyLoading = ref(false);
+    const historyPagination = ref({
+      sortBy: 'startTime',
+      descending: true,
+      page: 1,
+      rowsPerPage: 10
+    });
+    
+    // Execution history table columns
+    const historyColumns = [
+      {
+        name: 'status',
+        label: 'Status',
+        field: 'status',
+        align: 'left',
+        sortable: true
+      },
+      {
+        name: 'startTime',
+        label: 'Start Time',
+        field: 'startTime',
+        align: 'left',
+        sortable: true
+      },
+      {
+        name: 'durationMs',
+        label: 'Duration',
+        field: 'durationMs',
+        align: 'left',
+        sortable: true
+      },
+      {
+        name: 'triggerName',
+        label: 'Trigger',
+        field: 'triggerName',
+        align: 'left',
+        sortable: true
+      },
+      {
+        name: 'errorMessage',
+        label: 'Error',
+        field: 'errorMessage',
+        align: 'left',
+        sortable: false
+      }
+    ];
 
     const getStateColor = (state) => {
       const stateColors = {
@@ -212,11 +352,36 @@ export default defineComponent({
       };
       return stateColors[state] || 'grey';
     };
+    
+    const getExecutionStatusColor = (status) => {
+      const statusColors = {
+        'COMPLETED': 'positive',
+        'FAILED': 'negative',
+        'STARTED': 'info',
+        'VETOED': 'warning'
+      };
+      return statusColors[status] || 'grey';
+    };
 
     const formatDate = (dateString) => {
       if (!dateString) return '-';
       const date = new Date(dateString);
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    };
+    
+    const formatDuration = (ms) => {
+      if (ms === null || ms === undefined) return '-';
+      if (ms < 1000) return `${ms}ms`;
+      if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+      const minutes = Math.floor(ms / 60000);
+      const seconds = ((ms % 60000) / 1000).toFixed(0);
+      return `${minutes}m ${seconds}s`;
+    };
+    
+    const truncateText = (text, maxLength) => {
+      if (!text) return '';
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength) + '...';
     };
 
     const getNextRunTime = (cronExpression) => {
@@ -273,6 +438,8 @@ export default defineComponent({
       }).then(response => {
         viewItem.value = response.data.job;
         loading.value = false;
+        // Also fetch execution history
+        fetchExecutionHistory();
       }).catch(error => {
         loading.value = false;
         $q.notify({
@@ -282,6 +449,25 @@ export default defineComponent({
           position: 'top'
         });
         console.error('Error fetching job:', error);
+      });
+    };
+    
+    const fetchExecutionHistory = () => {
+      historyLoading.value = true;
+      client.query({
+        query: JOB_EXECUTION_HISTORY,
+        variables: {
+          jobId: route.params.idPrimary,
+          limit: 50
+        },
+        fetchPolicy: 'network-only',
+      }).then(response => {
+        executionHistory.value = response.data.jobExecutionHistoryByJobId || [];
+        historyLoading.value = false;
+      }).catch(error => {
+        historyLoading.value = false;
+        console.error('Error fetching execution history:', error);
+        // Don't show error notification - history is optional
       });
     };
 
@@ -296,7 +482,16 @@ export default defineComponent({
       loading,
       getStateColor,
       formatDate,
-      getNextRunTime
+      getNextRunTime,
+      // Execution history
+      executionHistory,
+      historyLoading,
+      historyColumns,
+      historyPagination,
+      fetchExecutionHistory,
+      getExecutionStatusColor,
+      formatDuration,
+      truncateText
     };
   }
 });

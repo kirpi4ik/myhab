@@ -152,3 +152,28 @@ export const JOB_TRIGGER = gql`
   }
 `;
 
+export const JOB_EXECUTION_HISTORY = gql`
+  query jobExecutionHistoryByJobId($jobId: ID!, $limit: Int) {
+    jobExecutionHistoryByJobId(jobId: $jobId, limit: $limit) {
+      id
+      jobId
+      jobName
+      jobGroup
+      triggerName
+      triggerGroup
+      fireInstanceId
+      startTime
+      endTime
+      durationMs
+      status
+      errorMessage
+      exceptionClass
+      recovering
+      refireCount
+      scheduledFireTime
+      actualFireTime
+      tsCreated
+    }
+  }
+`;
+

@@ -3,6 +3,7 @@ package org.myhab.graphql.fetchers
 import com.hazelcast.core.HazelcastInstance
 import org.myhab.config.ConfigProvider
 import org.myhab.domain.User
+import org.myhab.domain.job.JobExecutionHistory
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 
+import java.text.SimpleDateFormat
+
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 @Transactional
@@ -21,6 +24,8 @@ class Query {
     HazelcastInstance hazelcastInstance;
     @Autowired
     ConfigProvider configProvider
+    
+    private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
     def userRolesForUser() {
         return new DataFetcher() {
@@ -101,6 +106,57 @@ class Query {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
                 return DeviceModel.values()
+            }
+        }
+    }
+
+    /**
+     * Fetch job execution history for a specific job ID.
+     * Returns execution history ordered by start time descending (most recent first).
+     */
+    def jobExecutionHistoryByJobId() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def jobId = environment.getArgument("jobId")
+                def limit = environment.getArgument("limit") ?: 50
+                
+                if (!jobId) {
+                    return []
+                }
+                
+                // Query by job_id (for dynamic jobs) or by jobName pattern (for dynamic jobs without job reference)
+                def historyList = JobExecutionHistory.createCriteria().list(max: limit) {
+                    or {
+                        eq('job.id', Long.parseLong(jobId.toString()))
+                        like('jobName', "job_${jobId}")
+                    }
+                    order('startTime', 'desc')
+                }
+                
+                return historyList.collect { history ->
+                    [
+                        id: history.id,
+                        jobId: history.job?.id,
+                        jobName: history.jobName,
+                        jobGroup: history.jobGroup,
+                        triggerName: history.triggerName,
+                        triggerGroup: history.triggerGroup,
+                        fireInstanceId: history.fireInstanceId,
+                        startTime: history.startTime ? ISO_DATE_FORMAT.format(history.startTime) : null,
+                        endTime: history.endTime ? ISO_DATE_FORMAT.format(history.endTime) : null,
+                        durationMs: history.durationMs,
+                        status: history.status?.name(),
+                        errorMessage: history.errorMessage,
+                        exceptionClass: history.exceptionClass,
+                        recovering: history.recovering,
+                        refireCount: history.refireCount,
+                        scheduledFireTime: history.scheduledFireTime ? ISO_DATE_FORMAT.format(history.scheduledFireTime) : null,
+                        actualFireTime: history.actualFireTime ? ISO_DATE_FORMAT.format(history.actualFireTime) : null,
+                        tsCreated: history.tsCreated ? ISO_DATE_FORMAT.format(history.tsCreated) : null,
+                        tsUpdated: history.tsUpdated ? ISO_DATE_FORMAT.format(history.tsUpdated) : null
+                    ]
+                }
             }
         }
     }

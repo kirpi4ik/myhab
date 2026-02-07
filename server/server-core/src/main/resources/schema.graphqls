@@ -5,6 +5,29 @@ type Query{
     cacheAll(cacheName: String): [CacheResult]
     config(key: String!): String
     deviceModelList:[String!]!
+    jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
+}
+
+type JobExecutionHistoryResult {
+    id: ID!
+    jobId: ID
+    jobName: String!
+    jobGroup: String
+    triggerName: String
+    triggerGroup: String
+    fireInstanceId: String
+    startTime: String
+    endTime: String
+    durationMs: Int
+    status: String!
+    errorMessage: String
+    exceptionClass: String
+    recovering: Boolean
+    refireCount: Int
+    scheduledFireTime: String
+    actualFireTime: String
+    tsCreated: String
+    tsUpdated: String
 }
 
 type CacheResult {

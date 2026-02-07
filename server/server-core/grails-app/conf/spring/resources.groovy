@@ -30,6 +30,7 @@ import org.myhab.jobs.PortValueSyncTriggerJob
 import org.myhab.jobs.SwitchOFFOnTimeoutJob
 import org.myhab.jobs.RandomColorsJob
 import org.myhab.jobs.RainbowRGB
+import org.myhab.listener.quartz.JobHistoryListener
 import org.quartz.SimpleTrigger
 
 // Read configuration for static jobs
@@ -357,6 +358,12 @@ beans = {
     quartzJobFactory(AutowiringSpringBeanJobFactory) { bean ->
         bean.autowire = 'byName'
     }
+    
+    // ===========================
+    // Quartz Job History Listener
+    // ===========================
+    // Records job execution history to the database
+    jobHistoryListener(JobHistoryListener)
 
     // ===========================
     // Quartz Scheduler Configuration
@@ -367,6 +374,9 @@ beans = {
         overwriteExistingJobs = true
         waitForJobsToCompleteOnShutdown = true
         autoStartup = false  // Don't auto-start; BootStrap will start it after scheduling dynamic jobs
+        
+        // Register job listeners for execution history tracking
+        globalJobListeners = [ref('jobHistoryListener')]
         
         // Register only enabled static job triggers
         triggers = enabledTriggers.collect { triggerName -> ref(triggerName) }
