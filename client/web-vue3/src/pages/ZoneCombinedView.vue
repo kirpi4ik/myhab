@@ -47,11 +47,18 @@
 
     <!-- Content -->
     <div v-else>
-      <div class="row q-col-gutter-lg">
+      <TransitionGroup 
+        name="peripheral-fade" 
+        tag="div" 
+        class="row q-col-gutter-lg peripheral-grid"
+        @before-leave="onBeforeLeave"
+        @leave="onLeave"
+        @after-leave="onAfterLeave"
+      >
         <!-- Child Zones -->
         <div 
           v-for="zone in childZones" 
-          :key="zone.id"
+          :key="'zone-' + zone.id"
           class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
         >
           <zone-card :zone="zone" />
@@ -60,8 +67,8 @@
         <!-- Peripherals -->
         <div 
           v-for="peripheral in filteredPeripheralList"
-          :key="peripheral.id"
-          class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
+          :key="'peripheral-' + peripheral.id"
+          class="col-lg-4 col-md-4 col-sm-12 col-xs-12 peripheral-item"
         >
           <component 
             :is="getPeripheralComponent(peripheral)"
@@ -69,7 +76,7 @@
             @onUpdate="handlePeripheralUpdate"
           />
         </div>
-      </div>
+      </TransitionGroup>
 
       <!-- Temperature Chart (for TEMP category) -->
       <div v-if="showTempChart" class="row q-mt-lg">
@@ -322,6 +329,48 @@ export default defineComponent({
       }
     };
 
+    /**
+     * TransitionGroup hooks for leave animation
+     */
+    const onBeforeLeave = (el) => {
+      // Store the element's current dimensions and position before leaving
+      const rect = el.getBoundingClientRect();
+      el.style.width = rect.width + 'px';
+      el.style.height = rect.height + 'px';
+      el.style.left = el.offsetLeft + 'px';
+      el.style.top = el.offsetTop + 'px';
+    };
+
+    const onLeave = (el, done) => {
+      // Force a reflow to ensure the transition starts from current state
+      el.offsetHeight; // eslint-disable-line no-unused-expressions
+      
+      // Apply leave styles
+      el.style.position = 'absolute';
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0.85)';
+      el.style.filter = 'blur(12px)';
+      el.style.transition = 'opacity 0.5s ease-in, transform 0.5s ease-in, filter 0.5s ease-in';
+      el.style.pointerEvents = 'none';
+      
+      // Wait for animation to complete
+      setTimeout(done, 500);
+    };
+
+    const onAfterLeave = (el) => {
+      // Clean up styles after leave animation
+      el.style.position = '';
+      el.style.width = '';
+      el.style.height = '';
+      el.style.left = '';
+      el.style.top = '';
+      el.style.opacity = '';
+      el.style.transform = '';
+      el.style.filter = '';
+      el.style.transition = '';
+      el.style.pointerEvents = '';
+    };
+
     // Load data on mount
     onMounted(() => {
       loadZones();
@@ -347,6 +396,9 @@ export default defineComponent({
       // Methods
       getPeripheralComponent,
       handlePeripheralUpdate,
+      onBeforeLeave,
+      onLeave,
+      onAfterLeave,
     };
   },
 });
@@ -357,5 +409,71 @@ export default defineComponent({
 .filter-toggle {
   min-width: 300px;
   max-width: 400px;
+}
+</style>
+
+<!-- Non-scoped styles for transitions (scoped CSS breaks leave animations) -->
+<style>
+/* Grid container needs relative positioning for absolute children */
+.peripheral-grid {
+  position: relative;
+}
+
+/* Base state for peripheral items - ensure they can be transitioned */
+.peripheral-grid .peripheral-item {
+  filter: blur(0);
+  opacity: 1;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Enter transition - fade in (0.5 seconds) */
+.peripheral-fade-enter-active {
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out, filter 0.5s ease-out;
+  z-index: 1;
+}
+
+/* Leave transition - fade out with blur (0.5 seconds) */
+.peripheral-fade-leave-active {
+  transition: opacity 0.5s ease-in, transform 0.5s ease-in, filter 0.5s ease-in;
+  position: absolute !important;
+  z-index: 0;
+  pointer-events: none;
+  /* Maintain width when position becomes absolute */
+  width: calc(33.333% - 24px);
+}
+
+/* Starting state for enter - blurred and invisible */
+.peripheral-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+  filter: blur(4px);
+}
+
+/* Normal visible state after enter completes */
+.peripheral-fade-enter-to {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* Starting state for leave - fully visible, no blur */
+.peripheral-fade-leave-from {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+/* Ending state for leave - fade out with blur */
+.peripheral-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
+  filter: blur(12px);
+}
+
+/* Smooth reflow for remaining items when one is removed */
+.peripheral-fade-move {
+  transition: transform 0.5s ease;
 }
 </style>
