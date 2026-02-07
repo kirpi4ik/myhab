@@ -1,7 +1,15 @@
 package org.myhab.async.mqtt
 
+import grails.util.Holders
+
 enum MQTTTopic {
-    public static final String MYHAB_PREFIX = "myhab"
+    // Get prefix from configuration, fallback to "myhab" if not configured
+    private static String getMqttPrefix() {
+        return Holders.grailsApplication?.config?.getProperty('mqtt.topic.prefix', String, 'myhab') ?: 'myhab'
+    }
+    
+    public static final String MYHAB_PREFIX = getMqttPrefix()
+    
     class COMMON implements DeviceTopic {
         static String topic(TopicTypes topicType) {
             switch (topicType) {
@@ -163,6 +171,33 @@ enum MQTTTopic {
                     return 'onvif2mqtt/#'
                 case TopicTypes.READ_SINGLE_VAL:
                     return 'onvif2mqtt/(\\w+|_+)/motion'
+                default: return null
+            }
+        }
+
+        @Override
+        String topicByType(TopicTypes topicTypes) {
+            return topic(topicTypes)
+        }
+    }
+
+    class METEO_STATION implements DeviceTopic {
+        static String topic(TopicTypes topicType) {
+            switch (topicType) {
+                case TopicTypes.LISTEN:
+                    return "$MYHAB_PREFIX/#"
+                case TopicTypes.READ_SINGLE_VAL:
+                    return "$MYHAB_PREFIX/(\\w+)/sensor/([\\w._]+)/value"
+                case TopicTypes.WRITE_SINGLE_VAL:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/\$map.portCode/value"
+                case TopicTypes.STAT_IP:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/ip_address/value"
+                case TopicTypes.STAT_PORT:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/sensor/port/value"
+                case TopicTypes.STATUS:
+                    return "$MYHAB_PREFIX/(\\w+)/status"
+                case TopicTypes.STATUS_WRITE:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/status"
                 default: return null
             }
         }

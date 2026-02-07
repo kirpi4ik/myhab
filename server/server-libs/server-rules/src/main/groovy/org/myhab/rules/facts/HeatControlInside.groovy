@@ -1,9 +1,11 @@
 package org.myhab.rules.facts
 
 
+import groovy.util.logging.Slf4j
 import org.jeasy.rules.api.Facts
 import org.jeasy.rules.core.BasicRule
 
+@Slf4j
 class HeatControlInside extends BasicRule {
     String name
 
@@ -17,7 +19,7 @@ class HeatControlInside extends BasicRule {
 
     public void execute(Facts facts) throws Exception {
 //        heatService.heatOn(facts["zoneId"])
-        println "XYZ:::$name::" + facts[name]
+        log.debug "XYZ:::$name::" + facts[name]
     }
 
 }

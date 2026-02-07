@@ -4,7 +4,37 @@ type Query{
     cache(cacheName: String!, cacheKey: String!): CacheResult
     cacheAll(cacheName: String): [CacheResult]
     config(key: String!): String
+    appConfigList: [AppConfigEntry]
     deviceModelList:[String!]!
+    jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
+}
+
+type AppConfigEntry {
+    key: String!
+    value: String
+    type: String
+}
+
+type JobExecutionHistoryResult {
+    id: ID!
+    jobId: ID
+    jobName: String!
+    jobGroup: String
+    triggerName: String
+    triggerGroup: String
+    fireInstanceId: String
+    startTime: String
+    endTime: String
+    durationMs: Int
+    status: String!
+    errorMessage: String
+    exceptionClass: String
+    recovering: Boolean
+    refireCount: Int
+    scheduledFireTime: String
+    actualFireTime: String
+    tsCreated: String
+    tsUpdated: String
 }
 
 type CacheResult {
@@ -36,6 +66,12 @@ type Mutation {
     pushEvent(input:EventDatInput) : EventDataResponse
     cacheDelete(cacheName:String!, cacheKey:String!) : MutationResponse
     userRolesSave(input: SaveUserRoles): MutationResponse
+    jobSchedule(jobId: ID!): MutationResponse
+    jobUnschedule(jobId: ID!): MutationResponse
+    jobTrigger(jobId: ID!): MutationResponse
+    scenarioDelete(id: ID!): MutationResponse
+    appConfigUpdate(key: String!, value: String!, commitMessage: String): MutationResponse
+    appConfigRefresh: MutationResponse
 }
 
 type EventDataResponse {
@@ -47,7 +83,6 @@ type EventDataResponse {
     p4: String
     p5: String
     p6: String
-    uid: String
 }
 
 input EventDatInput {

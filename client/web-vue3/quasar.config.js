@@ -1,0 +1,334 @@
+/*
+ * This file runs in a Node context (it's NOT transpiled by Babel), so use only
+ * the ES6 features that are supported by your Node version. https://node.green/
+ */
+
+// Configuration for your app
+// https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js
+
+import ESLintPlugin from 'eslint-webpack-plugin';
+import {configure} from 'quasar/wrappers';
+import path from 'path';
+import {fileURLToPath} from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default configure(function (ctx) {
+  return {
+    // https://v2.quasar.dev/quasar-cli-webpack/supporting-ts
+    supportTS: false,
+
+    // https://v2.quasar.dev/quasar-cli-webpack/prefetch-feature
+    // preFetch: true,
+
+    // app boot file (/src/boot)
+    // --> boot files are part of "main.js"
+    // https://v2.quasar.dev/quasar-cli-webpack/boot-files
+    boot: ['error-handler', 'i18n', 'axios', 'graphql', 'pwa'],
+
+    // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#sourcefiles
+    sourceFiles: {
+      router: 'src/router/index',
+      store: 'src/store/index'
+    },
+
+    // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#css
+    css: ['app.css'],
+
+    // https://github.com/quasarframework/quasar/tree/dev/extras
+    extras: [
+      // 'ionicons-v4',
+      'mdi-v6',
+      'fontawesome-v6',
+      // 'eva-icons',
+      // 'themify',
+      // 'line-awesome',
+      // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
+
+      'roboto-font', // optional, you are not bound to it
+      'material-icons', // optional, you are not bound to it
+    ],
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#build
+    build: {
+      vueRouterMode: 'history', // available values: 'hash', 'history'
+      publicPath: '/',
+      // transpile: false,
+      // publicPath: '/',
+
+      // Add dependencies for transpiling with Babel (Array of string/regex)
+      // (from node_modules, which are by default not transpiled).
+      // Applies only if "transpile" is set to true.
+      // transpileDependencies: [],
+
+      // rtl: false, // https://v2.quasar.dev/options/rtl-support
+      // preloadChunks: true,
+      showProgress: true,
+      // gzip: true,
+      // analyze: true,
+
+      // Options below are automatically set depending on the env, set them if you want to override
+      // extractCSS: false,
+
+      // Quasar CLI v4 automatically loads .env files
+      // All variables from .env will be available via process.env
+
+      // https://v2.quasar.dev/quasar-cli-webpack/handling-webpack
+      // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
+      extendWebpack(cfg) {
+        cfg.resolve.alias = {
+          ...cfg.resolve.alias,
+          '@': path.resolve(__dirname, './src'),
+        };
+        cfg.module.rules.push({
+          test: /\.(graphql|gql)$/,
+          use: 'graphql-tag/loader',
+        });
+      },
+      chainWebpack(chain) {
+        chain.plugin('eslint-webpack-plugin').use(ESLintPlugin, [{extensions: ['js', 'vue']}]);
+      },
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#devServer
+    devServer: {
+      // https: true,
+      port: 10002,
+      open: true, // opens browser window automatically
+      client: {
+        overlay: {
+          warnings: false,
+          errors: true,
+          runtimeErrors: (error) => {
+            const ignoreErrors = [
+              'ResizeObserver loop completed with undelivered notifications',
+              'ResizeObserver loop limit exceeded',
+            ];
+            if (ignoreErrors.some((e) => error.message.includes(e))) {
+              return false;
+            }
+            return true;
+          },
+        },
+      },
+    },
+
+    // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#framework
+    framework: {
+      config: {
+        brand: {
+          primary: '#7a98ad',
+          secondary: '#353e5a',
+          // secondary: '#26a69a'
+          accent: '#9C27B0',
+          dark: '#1D1D1D',
+          positive: '#21BA45',
+          negative: '#C10015',
+          info: '#31CCEC',
+          warning: '#F2C037'
+        },
+      },
+
+      // iconSet: 'material-icons', // Quasar icon set
+      // lang: 'en-US', // Quasar language pack
+
+      // For special cases outside of where the auto-import strategy can have an impact
+      // (like functional components as one of the examples),
+      // you can manually specify Quasar components/directives to be available everywhere:
+      //
+      // components: [],
+      // directives: [],
+
+      // Quasar plugins
+      plugins: ['AppFullscreen', 'Loading', 'Notify', 'LocalStorage', 'BottomSheet', 'Meta', 'Dialog'],
+    },
+
+    // animations: 'all', // --- includes all animations
+    // https://v2.quasar.dev/options/animations
+    animations: 'all',
+
+    // https://v2.quasar.dev/quasar-cli-webpack/developing-ssr/configuring-ssr
+    ssr: {
+      pwa: false,
+
+      // manualStoreHydration: true,
+      // manualPostHydrationTrigger: true,
+
+      prodPort: 3000, // The default port that the production server should use
+                      // (gets superseded if process.env.PORT is specified at runtime)
+
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+        // Tell browser when a file from the server should expire from cache (in ms)
+
+
+      chainWebpackWebserver (chain) {
+        chain.plugin('eslint-webpack-plugin')
+          .use(ESLintPlugin, [{ extensions: [ 'js' ] }])
+      },
+
+
+      middlewares: [
+        ctx.prod ? 'compression' : '',
+        'render' // keep this as last one
+      ]
+    },
+
+    // https://v2.quasar.dev/quasar-cli-webpack/developing-pwa/configuring-pwa
+    pwa: {
+      workboxMode: 'GenerateSW', // or 'injectManifest'
+      injectPwaMetaTags: true,
+      swFilename: 'sw.js',
+      manifestFilename: 'manifest.json',
+      useCredentialsForManifestTag: false,
+      extendGenerateSWOptions(cfg) {
+        cfg.skipWaiting = true;
+        cfg.clientsClaim = true;
+        cfg.cleanupOutdatedCaches = true;
+        
+        // Disable verbose logging in development
+        if (process.env.DEV) {
+          cfg.mode = 'production'; // This reduces console logs
+        }
+        
+        cfg.runtimeCaching = [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          }
+        ];
+      },
+
+      manifest: {
+        name: 'myHAB - Smart Home Automation',
+        short_name: 'myHAB',
+        description: 'myHAB AI - Smart Home Automation System',
+        display: 'standalone',
+        orientation: 'any',
+        background_color: '#ffffff',
+        theme_color: '#7a98ad',
+        start_url: '/',
+        scope: '/',
+        categories: ['productivity', 'utilities', 'lifestyle'],
+        icons: [
+          {
+            src: 'icons/favicon-128x128.png',
+            sizes: '128x128',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'icons/favicon-128x128.png',
+            sizes: '128x128',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'icons/favicon-96x96.png',
+            sizes: '96x96',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'icons/favicon-32x32.png',
+            sizes: '32x32',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'icons/favicon-16x16.png',
+            sizes: '16x16',
+            type: 'image/png',
+            purpose: 'any'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Dashboard',
+            short_name: 'Dashboard',
+            description: 'Open myHAB Dashboard',
+            url: '/',
+            icons: [{ src: 'icons/favicon-96x96.png', sizes: '96x96' }]
+          }
+        ]
+      }
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/developing-cordova-apps/configuring-cordova
+    cordova: {
+      // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/developing-capacitor-apps/configuring-capacitor
+    capacitor: {
+      hideSplashscreen: true,
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/developing-electron-apps/configuring-electron
+    electron: {
+      bundler: 'packager', // 'packager' or 'builder'
+
+      packager: {
+        // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
+        // OS X / Mac App Store
+        // appBundleId: '',
+        // appCategoryType: '',
+        // osxSign: '',
+        // protocol: 'myapp://path',
+        // Windows only
+        // win32metadata: { ... }
+      },
+
+      builder: {
+        // https://www.electron.build/configuration/configuration
+
+        appId: 'myHAB',
+      },
+
+      // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
+      chainWebpackMain(chain) {
+        chain.plugin('eslint-webpack-plugin').use(ESLintPlugin, [{extensions: ['js']}]);
+      },
+
+      // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
+      chainWebpackPreload(chain) {
+        chain.plugin('eslint-webpack-plugin').use(ESLintPlugin, [{extensions: ['js']}]);
+      },
+    },
+  };
+});
+

@@ -1,0 +1,76 @@
+{
+  // Java Configuration
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "d:\\software\\jdk\\coretto-17",
+      "default": true
+    }
+  ],
+  "java.home": "d:\\software\\jdk\\coretto-17",
+  "java.jdt.ls.java.home": "d:\\software\\jdk\\coretto-17",
+  
+  // Gradle Configuration
+  "java.import.gradle.java.home": "d:\\software\\jdk\\coretto-17",
+  "java.import.gradle.home": "${workspaceFolder}\\gradle",
+  "java.import.gradle.wrapper.enabled": true,
+  
+  // File Associations
+  "files.associations": {
+    "*.gradle": "groovy",
+    "*.gsp": "html",
+    "*.gson": "json"
+  },
+  
+  // File Exclusions (for better performance)
+  "files.exclude": {
+    "**/.gradle": true,
+    "**/node_modules": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/.idea": true
+  },
+  
+  // Search Exclusions
+  "search.exclude": {
+    "**/build": true,
+    "**/dist": true,
+    "**/.gradle": true,
+    "**/node_modules": true,
+    "**/yarn.lock": true,
+    "**/.git": true
+  },
+  
+  // File Watcher Exclusions (to prevent high CPU usage)
+  "files.watcherExclude": {
+    "**/.gradle/**": true,
+    "**/build/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true
+  },
+  
+  // Editor Configuration
+  "editor.formatOnSave": false,
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  
+  // Groovy/Grails specific
+  "[groovy]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  
+  // Terminal Configuration
+  "terminal.integrated.env.windows": {
+    "JAVA_HOME": "d:\\software\\jdk\\coretto-17"
+  },
+  
+  // Language Server
+  "groovy.language-server.enabled": true,
+  
+  // Git Configuration
+  "git.ignoreLimitWarning": true
+}
+

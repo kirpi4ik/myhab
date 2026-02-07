@@ -4,7 +4,8 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+        // Temporarily commented out to resolve cache corruption issue
+        // classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
         classpath "com.bmuschko:gradle-docker-plugin:7.2.0"
         classpath 'commons-io:commons-io:2.6'
         classpath 'joda-time:joda-time:2.10.13'
@@ -70,40 +71,126 @@ subprojects { project ->
         isBuildSnapshot = version.toString().endsWith("-SNAPSHOT")
 
     }
+    
+    // Configure Java toolchain to use Java 17 for all Java/Groovy projects
+    afterEvaluate {
+        // Apply to all projects that use Java/Groovy
+        if (plugins.hasPlugin('java') || plugins.hasPlugin('groovy') || plugins.hasPlugin('java-library') || plugins.hasPlugin('org.grails.grails-web')) {
+            // Use Java toolchain (requires Java 17 to be available)
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(17)
+                }
+            }
+        }
+    }
 }
 
-task versionTxt() {
+task syncVersionToPackageJson() {
+    description = 'Sync version from gradle.properties to package.json'
+    group = 'versioning'
+    
     doLast {
-        new File("${projectDir}/src/main/docker", "version.txt").text = "${projectVersion}"
-        def var = new Properties()
-        def vueEnv = new File("${projectDir}/client/web-vue/.env")
-        var.load(vueEnv.newDataInputStream())
-        var.setProperty("VUE_APP_CONF_VERSION", "${projectVersion}")
-        var.setProperty("VUE_APP_CONF_VERSION_BUILD_DATE", "${DateTime.now().toString("YYYY-MM-dd'T'HH:mm")}")
-        def writer = new PrintWriter(new FileOutputStream(vueEnv))
-        var.list(writer)
-        writer.close()
-        writer.flush()
+        def packageJsonFile = new File("${projectDir}/client/web-vue3/package.json")
+        if (packageJsonFile.exists()) {
+            def packageJson = new groovy.json.JsonSlurper().parseText(packageJsonFile.text)
+            packageJson.version = "${projectVersion}"
+            packageJsonFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(packageJson))
+            logger.quiet "Updated package.json version to ${projectVersion}"
+        }
     }
 }
-task copyClientResources(dependsOn: [':web-vue:build', ':web-vue3:build']) { // <1>
-    group = 'build'
-    description = 'Copy client resources into server'
+
+task syncVersionToEnvFiles() {
+    description = 'Sync version from gradle.properties to .env and .env.prod'
+    group = 'versioning'
+    
     doLast {
-        copy {
-            from project(':web-vue').buildDir.absolutePath
-            into "${project(':server-core').buildDir}/resources/main/public"
+        // Update .env file
+        def envFile = new File("${projectDir}/client/web-vue3/.env")
+        if (envFile.exists()) {
+            def envContent = envFile.text
+            envContent = envContent.replaceAll(/PRJ_VERSION=.*/, "PRJ_VERSION=${projectVersion}")
+            envFile.text = envContent
+            logger.quiet "Updated .env version to ${projectVersion}"
         }
+        
+        // Update .env.prod file
+        def envProdFile = new File("${projectDir}/client/web-vue3/.env.prod")
+        if (envProdFile.exists()) {
+            def envProdContent = envProdFile.text
+            envProdContent = envProdContent.replaceAll(/PRJ_VERSION=.*/, "PRJ_VERSION=${projectVersion}")
+            envProdFile.text = envProdContent
+            logger.quiet "Updated .env.prod version to ${projectVersion}"
+        }
+    }
+}
+
+task syncVersions(dependsOn: [syncVersionToPackageJson, syncVersionToEnvFiles]) {
+    description = 'Sync version from gradle.properties to all project files'
+    group = 'versioning'
+    
+    doLast {
+        logger.quiet "✅ All versions synchronized to ${projectVersion}"
+    }
+}
+
+task versionTxt(dependsOn: syncVersions) {
+    doLast {
+        // Create docker directory if it doesn't exist
+        def dockerDir = new File("${projectDir}/src/main/docker")
+        if (!dockerDir.exists()) {
+            dockerDir.mkdirs()
+            logger.quiet "Created directory: ${dockerDir.absolutePath}"
+        }
+        
+        // Generate version.txt
+        new File(dockerDir, "version.txt").text = "${projectVersion}"
+        
+        // Generate app-entrypoint.sh
+        def entrypointFile = new File(dockerDir, "app-entrypoint.sh")
+        entrypointFile.text = """#!/bin/sh
+set -e
+# Force JVM timezone to UTC for consistent timestamp handling
+java -jar -Dgrails.env=\$GRAILS_ENV -Duser.timezone=UTC /app/myhab.jar \$@
+"""
+        // Make the script executable (Unix-like systems)
+        entrypointFile.setExecutable(true)
+    }
+}
+task serve(dependsOn: ':web-vue3:serve') {
+    group = 'application'
+    description = 'Run the Quasar development server for the web client (SPA mode)'
+}
+
+task servePWA(dependsOn: ':web-vue3:pwaDev') {
+    group = 'application'
+    description = 'Run the Quasar development server for the web client (PWA mode)'
+}
+
+//tag::buildClientPWA[]
+/**
+ * Build and bundle client resources for production
+ * - Uses PWA mode for installable app with offline support
+ * - Generates service worker for caching
+ * - Creates manifest.json for app metadata
+ * - Output: dist/pwa/ directory
+ */
+task copyClientResources(dependsOn: [':web-vue3:pwaBuild']) { // <1> Changed to pwaBuild for PWA support
+    group = 'build'
+    description = 'Copy PWA client resources into server for production'
+    doLast {
         copy {
             from project(':web-vue3').buildDir.absolutePath
-            into "${project(':server-core').buildDir}/resources/main/public/nx"
+            into "${project(':server-core').buildDir}/resources/main/public"
         }
     }
 }
+//end::buildClientPWA[]
 
 task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':server-core:assemble']) { // <2>
     group = 'build'
-    description = 'Build combined server & web-vue JAR/WAR'
+    description = 'Build combined server & web-vue3 JAR/WAR'
 
     doLast {
         copy {
@@ -111,21 +198,18 @@ task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':
             into "${buildDir}"
         }
 
-        logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue projects."
+        logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue3 projects."
     }
 }
 
 copyClientResources.doFirst { // <4>
+    // Copy PWA build output (includes Service Worker, manifest.json, and all assets)
     copy {
-        from "${project(':web-vue').projectDir}/dist"
+        from "${project(':web-vue3').projectDir}/dist/pwa" // Changed from spa to pwa
         into "${project(':server-core').buildDir}/resources/main/public"
     }
-    copy {
-        from "${project(':web-vue3').projectDir}/dist/spa"
-        into "${project(':server-core').buildDir}/resources/main/public/nx"
-    }
+    logger.quiet "✅ Copied PWA client resources from dist/pwa to server public directory"
 }
-
 
 task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
     description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
@@ -147,7 +231,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'openjdk:14'
+    from 'eclipse-temurin:17-jre'
 
     label(['project': 'myHAB'])
     label(['version': "${projectVersion}"])
@@ -198,4 +282,49 @@ task removeImage(type: DockerRemoveImage) {
     group = dockerBuildGroup
     targetImageId { dockerTag }
 }
+
+/**
+ * BUILD WORKFLOW SUMMARY
+ * ======================
+ * 
+ * Development:
+ * ------------
+ * gradle serve          - Run SPA dev server (standard mode)
+ * gradle servePWA       - Run PWA dev server (with Service Worker)
+ * gradle bootRun        - Run Grails backend server
+ * 
+ * Production Build:
+ * -----------------
+ * 1. gradle assembleServerAndClient
+ *    ├── syncVersions (sync version across all files)
+ *    ├── :web-vue3:pwaBuild (build PWA with Service Worker)
+ *    ├── copyClientResources (copy dist/pwa to server public/)
+ *    └── :server-core:assemble (build JAR with embedded PWA)
+ * 
+ * 2. gradle buildImage
+ *    ├── prepareDocker (prepare Docker context)
+ *    ├── createDockerfile (generate Dockerfile)
+ *    └── buildImage (build Docker image)
+ * 
+ * 3. gradle pushImage (push to Docker registry)
+ * 
+ * PWA Features in Production:
+ * ---------------------------
+ * ✓ Installable app (Chrome/Edge/Safari)
+ * ✓ Offline support via Service Worker
+ * ✓ Auto-updates with user notification
+ * ✓ App manifest for metadata
+ * ✓ Optimized caching strategies
+ * ✓ Push notification ready
+ * 
+ * Docker Image Contents:
+ * ----------------------
+ * - Java 17 JRE
+ * - Grails backend application
+ * - Vue 3 PWA frontend (in /public)
+ * - Service Worker (sw.js)
+ * - PWA Manifest (manifest.json)
+ * - App icons and assets
+ */
+
 //apply from: "${commonBuild}/common-publishing.gradle"

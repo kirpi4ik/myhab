@@ -7,7 +7,6 @@ import org.myhab.domain.common.BaseEntity
  *
  */
 class DeviceAccount extends BaseEntity {
-  String uid = DomainUtil.NULL_UID
   String username
   String password
   boolean isDefault

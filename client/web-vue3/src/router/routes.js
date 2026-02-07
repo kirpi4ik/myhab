@@ -33,7 +33,8 @@ const routes = [
         component: () => import('layouts/CenterLayout'),
         meta: {
           reload: true,
-          name: "Users"
+          name: "Users",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -69,7 +70,8 @@ const routes = [
         path: adminPrefix + '/cables',
         component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "cables"
+          name: "cables",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -103,7 +105,8 @@ const routes = [
         path: adminPrefix + '/devices',
         component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "devices"
+          name: "devices",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -137,7 +140,8 @@ const routes = [
         path: adminPrefix + '/dcategories',
         component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "dcategories"
+          name: "dcategories",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -171,7 +175,8 @@ const routes = [
         path: adminPrefix + '/peripherals',
         component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "peripherals"
+          name: "peripherals",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -205,7 +210,8 @@ const routes = [
         path: adminPrefix + '/pcategories',
         component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "peripherals"
+          name: "pcategories",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -228,7 +234,7 @@ const routes = [
           },
           {
             path: adminPrefix + '/pcategories/:idPrimary/edit',
-            component: () => import('pages/infra/peripheral/PeripheralEdit'),
+            component: () => import('pages/infra/peripheral/categories/CategoryEdit'),
             meta: {
               name: "edit"
             }
@@ -240,7 +246,8 @@ const routes = [
         path: adminPrefix + '/configurations/:idPrimary',
         component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "configurations"
+          name: "configurations",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -253,7 +260,8 @@ const routes = [
         path: adminPrefix + '/zones',
         component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "zones"
+          name: "zones",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -287,7 +295,8 @@ const routes = [
         path: adminPrefix + '/ports',
         component: () => import('layouts/CenterLayout'),
         meta: {
-          name: "ports"
+          name: "ports",
+          authorize: [Role.Admin]
         },
         children: [
           {
@@ -316,6 +325,97 @@ const routes = [
             }
           },
         ],
+      },
+      {
+        path: adminPrefix + '/scenarios',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "scenarios",
+          authorize: [Role.Admin]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/scenario/ScenarioList'),
+          },
+          {
+            path: adminPrefix + '/scenarios/new',
+            component: () => import('pages/infra/scenario/ScenarioNew'),
+            meta: {
+              name: "new"
+            }
+          },
+          {
+            path: adminPrefix + '/scenarios/:idPrimary/view',
+            component: () => import('pages/infra/scenario/ScenarioView'),
+            meta: {
+              name: "details"
+            }
+          },
+          {
+            path: adminPrefix + '/scenarios/:idPrimary/edit',
+            component: () => import('pages/infra/scenario/ScenarioEdit'),
+            meta: {
+              name: "edit"
+            }
+          },
+        ],
+      },
+      {
+        path: adminPrefix + '/jobs',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "jobs",
+          authorize: [Role.Admin]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/job/JobList'),
+          },
+          {
+            path: adminPrefix + '/jobs/new',
+            component: () => import('pages/infra/job/JobNew'),
+            meta: {
+              name: "new"
+            }
+          },
+          {
+            path: adminPrefix + '/jobs/:idPrimary/view',
+            component: () => import('pages/infra/job/JobView'),
+            meta: {
+              name: "details"
+            }
+          },
+          {
+            path: adminPrefix + '/jobs/:idPrimary/edit',
+            component: () => import('pages/infra/job/JobEdit'),
+            meta: {
+              name: "edit"
+            }
+          },
+        ],
+      },
+      {
+        path: adminPrefix + '/appconfig',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "appconfig",
+          authorize: [Role.Admin]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/appconfig/AppConfigView'),
+          }
+        ],
+      },
+      {
+        path: '/solar-reports',
+        component: () => import('pages/SolarReports'),
+        meta: {
+          name: "Solar Reports"
+        }
       },
     ],
     meta: {authorize: [Role.Admin, Role.User]},

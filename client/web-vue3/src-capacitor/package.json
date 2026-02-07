@@ -1,0 +1,9 @@
+{
+  "name": "myhab-capacitor",
+  "version": "1.0.0",
+  "description": "Capacitor integration for myHAB",
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {}
+}
+

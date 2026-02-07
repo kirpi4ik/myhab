@@ -19,7 +19,6 @@ abstract class BaseEntity implements Serializable {
 //    @GenericGenerator(name = "uuid2", strategy = "uuid2")
 //    private UUID id;
 
-    String uid = DomainUtil.NULL_UID
     Date tsCreated = DomainUtil.NULL_DATE
     Date tsUpdated = DomainUtil.NULL_DATE
     EntityType entityType = EntityType.get(this)
@@ -29,20 +28,23 @@ abstract class BaseEntity implements Serializable {
     }
 
     void beforeInsert() {
-        if (this.uid == DomainUtil.NULL_UID) {
-            this.uid = UUID.randomUUID().toString()
-        }
         if (this.tsCreated == DomainUtil.NULL_DATE) {
-            def now = DateTime.now().toDate()
+            // Store timestamps in UTC
+            def now = DateTime.now(org.joda.time.DateTimeZone.UTC).toDate()
             this.tsCreated = now
         }
-        log.trace 'Before inserting [' + this.entityType + ']... ' + this.uid
+        // Also set ts_updated on insert for tables that never get updated
+        if (this.tsUpdated == DomainUtil.NULL_DATE) {
+            this.tsUpdated = this.tsCreated
+        }
+        log.trace 'Before inserting [' + this.entityType + ']... ' + (id ?: 'new')
     }
 
     void beforeUpdate() {
-        def now = DateTime.now().toDate()
+        // Store timestamps in UTC
+        def now = DateTime.now(org.joda.time.DateTimeZone.UTC).toDate()
         this.tsUpdated = now
-        log.trace 'Before updating [' + this.entityType + ']... ' + this.uid
+        log.trace 'Before updating [' + this.entityType + ']... ' + (id ?: 'new')
     }
 //  static mapping = {
 //    table '`device_event_logs`'
@@ -50,7 +52,6 @@ abstract class BaseEntity implements Serializable {
 //  }
 
     static constraints = {
-        uid column: "uid", nullable: true
         tsCreated column: "ts_created", nullable: true
         tsUpdated column: "ts_updated", nullable: true
         entityType column: "en_type", nullable: true

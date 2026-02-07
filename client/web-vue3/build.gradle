@@ -1,10 +1,10 @@
 plugins {
     //https://github.com/node-gradle/gradle-node-plugin/releases
-    id "com.github.node-gradle.node" version "7.0.1"
+    id "com.github.node-gradle.node" version "7.1.0"
 }
 node {
-    version = '18.18.2' // https://nodejs.org/en/
-    yarnVersion = '1.22.19' // https://yarnpkg.com/en/
+    version = '22.13.0' // https://nodejs.org/en/
+    yarnVersion = '1.22.22' // https://yarnpkg.com/en/
     download = true
 }
 
@@ -13,10 +13,29 @@ task bootRun(dependsOn: 'serve') {
     description = 'Run the client app (for use with gradle bootRun -parallel'
 }
 
-task serve(type: YarnTask, dependsOn: 'yarn') {
+task cleanNodeModules(type: Delete) {
+    group = 'application'
+    description = 'Clean node_modules and reinstall dependencies'
+    delete "${projectDir}/node_modules"
+    delete "${projectDir}/package-lock.json"
+}
+
+task yarnInstall(type: YarnTask) {
+    group = 'application'
+    description = 'Install yarn dependencies with force and check files'
+    args = ['install', '--force', '--check-files']
+}
+
+task serve(type: YarnTask, dependsOn: ['yarnInstall']) {
     group = 'application'
     description = 'Run the client app'
     args = ['serve']
+}
+
+task pwaDev(type: YarnTask, dependsOn: ['yarnInstall']) {
+    group = 'application'
+    description = 'Run the client app in PWA development mode'
+    args = ['run', 'pwa:dev']
 }
 
 task build(type: YarnTask, dependsOn: 'yarn') {
@@ -24,6 +43,13 @@ task build(type: YarnTask, dependsOn: 'yarn') {
     description = 'Build the client bundle'
     args = ['run', 'build']
 }
+
+task pwaBuild(type: YarnTask, dependsOn: 'yarn') {
+    group = 'build'
+    description = 'Build the client PWA bundle for production'
+    args = ['run', 'pwa:build']
+}
+
 task lint(type: YarnTask, dependsOn: 'yarn') {
     group = 'build'
     description = 'Run eslint'

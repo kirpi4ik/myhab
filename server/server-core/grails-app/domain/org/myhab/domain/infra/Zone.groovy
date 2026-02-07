@@ -13,7 +13,9 @@ import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.EntityDataFetcher
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DevicePeripheral
+import groovy.util.logging.Slf4j
 
+@Slf4j
 @Resource(readOnly = true, formats = ['json', 'xml'])
 class Zone extends BaseEntity implements Configurable<Zone> {
     String name
@@ -21,29 +23,23 @@ class Zone extends BaseEntity implements Configurable<Zone> {
     Set<String> categories
     Zone parent
     Set<Zone> zones
-    Set<DevicePeripheral> devices
+    Set<Device> devices
     Set<DevicePeripheral> peripherals
     Set<Cable> cables
 
     static belongsTo = [parent: Zone]
-    static hasOne = [parent: Zone]
     static hasMany = [cables: Cable, peripherals: DevicePeripheral, devices: Device, zones: Zone]
 
 
     static mapping = {
         table '`zones`'
         sort name: "asc"
-        zones sort: "name"
-        devices joinTable: [name: "zones_devices_join", key: 'zone_id']
-        peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id']
-        cables joinTable: [name: "zones_cables_join", key: 'zone_id']
-
+        zones sort: "name", cascade: "save-update"
+        devices joinTable: [name: "zones_devices_join", key: 'zone_id'], cascade: "save-update"
+        peripherals joinTable: [name: "zones_peripherals_join", key: 'zone_id'], cascade: "save-update"
+        cables joinTable: [name: "zones_cables_join", key: 'zone_id'], cascade: "save-update"
     }
     static constraints = {
-        devices cascade: 'save-update'
-        peripherals cascade: 'save-update'
-        cables cascade: 'save-update'
-        zones cascade: 'save-update'
     }
 
     static graphql = GraphQLMapping.lazy {
@@ -56,12 +52,90 @@ class Zone extends BaseEntity implements Configurable<Zone> {
             input true
         }
 
+        // Custom update mutation to properly handle sub-zones removal
+        mutation('zoneUpdateCustom', Zone) {
+            argument('id', Long)
+            argument('zone', Zone.class)
+            returns Zone
+            dataFetcher { DataFetchingEnvironment env ->
+                Long id = env.getArgument('id') as Long
+                Zone zoneData = env.getArgument('zone') as Zone
+                
+                Zone existingZone = Zone.get(id)
+                if (!existingZone) {
+                    throw new RuntimeException("Zone not found with id: ${id}")
+                }
+                
+                Zone.withTransaction {
+                    // Update basic fields
+                    if (zoneData.name != null) existingZone.name = zoneData.name
+                    if (zoneData.description != null) existingZone.description = zoneData.description
+                    if (zoneData.categories != null) existingZone.categories = zoneData.categories
+                    
+                    // Update parent - get managed entity or clear
+                    def newParentId = zoneData.parent?.id as Long
+                    if (newParentId != existingZone.parent?.id) {
+                        existingZone.parent = newParentId ? Zone.load(newParentId) : null
+                    }
+                    
+                    // Update sub-zones - rebuild the collection
+                    def oldZoneIds = existingZone.zones?.collect { it.id } ?: []
+                    def newZoneIds = zoneData.zones?.collect { it.id } ?: []
+                    
+                    // Find zones that need to be removed (in old but not in new)
+                    def zonesToRemove = oldZoneIds - newZoneIds
+                    
+                    // Clear parent on removed zones BEFORE modifying the collection
+                    zonesToRemove.each { zoneId ->
+                        Zone.executeUpdate("UPDATE Zone z SET z.parent = NULL WHERE z.id = :zoneId", [zoneId: zoneId])
+                    }
+                    
+                    // Now rebuild the zones collection
+                    existingZone.zones?.clear()
+                    
+                    // Add all zones from the new list
+                    newZoneIds.each { zoneId ->
+                        Zone zone = Zone.load(zoneId as Long)
+                        if (zone) {
+                            existingZone.addToZones(zone)
+                        }
+                    }
+                    
+                    existingZone.save(flush: true, failOnError: true)
+                }
+                
+                // Refresh to get latest state
+                existingZone.refresh()
+                
+                return existingZone
+            }
+        }
+
         query('zoneById', Zone) {
             argument('id', String)
+            argument('category', String) {
+                nullable true
+            }
             dataFetcher(new DataFetcher() {
                 @Override
                 Object get(DataFetchingEnvironment environment) {
-                    Zone.findById(environment.getArgument('id') as Long, [sort: "name", order: "asc"])
+                    def zoneId = environment.getArgument('id') as Long
+                    def category = environment.getArgument('category') as String
+                    
+                    def zone = Zone.findById(zoneId, [sort: "name", order: "asc"])
+                    
+                    // If category is provided, eagerly filter peripherals
+                    if (zone && category) {
+                        // Eagerly initialize and filter peripherals collection
+                        def filteredPeripherals = zone.peripherals?.findAll { peripheral ->
+                            peripheral.category?.name?.trim()?.equalsIgnoreCase(category?.trim())
+                        } ?: []
+                        
+                        // Replace the peripherals collection with filtered one
+                        zone.@peripherals = filteredPeripherals as Set
+                    }
+                    
+                    return zone
                 }
             })
         }
@@ -84,14 +158,6 @@ class Zone extends BaseEntity implements Configurable<Zone> {
                 @Override
                 protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
                     Zone.where { parent == null }.order("name", "asc")
-                }
-            })
-        }
-        query('zonesRoot', [Zone]) {
-            dataFetcher(new EntityDataFetcher<Zone>(Zone.gormPersistentEntity) {
-                @Override
-                protected DetachedCriteria buildCriteria(DataFetchingEnvironment environment) {
-                    Zone.where { parent == null }.order("name", "desc")
                 }
             })
         }

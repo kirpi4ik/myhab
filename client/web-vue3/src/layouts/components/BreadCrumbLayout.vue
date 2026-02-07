@@ -36,10 +36,15 @@
 </template>
 <script>
 import {defineComponent, ref} from 'vue';
+
 import {useApolloClient} from '@vue/apollo-composable';
-import {NAV_BREADCRUMB} from '@/graphql/queries';
 import {useRoute} from 'vue-router';
+
+import {NAV_BREADCRUMB} from '@/graphql/queries';
+
 import _ from "lodash";
+
+
 
 export default defineComponent({
   name: 'BreadCrumbLayout',
@@ -84,4 +89,5 @@ export default defineComponent({
     },
   },
 });
+
 </script>

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.FilterType
 
 @ComponentScan(basePackages = [
         "org.myhab.init.cache",
+        "org.myhab.config", // Keep scanning for CustomPostgreSQLDelegate
         "org.myhab.async.socket",
         "org.myhab.async.mqtt",
         "org.myhab.async.mqtt.handlers",
@@ -18,6 +19,10 @@ import org.springframework.context.annotation.FilterType
 @CompileStatic
 class Application extends GrailsAutoConfiguration {
     static void main(String[] args) {
+        // Set default timezone to UTC for the entire application
+        // This ensures all Date operations use UTC unless explicitly specified
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        
         GrailsApp.run(Application, args)
     }
 }

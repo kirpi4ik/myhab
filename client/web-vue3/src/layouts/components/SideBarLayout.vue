@@ -1,5 +1,5 @@
 <template>
-  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || miniState" @click.capture="drawerClick" bordered persistent
+  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || isSidebarMini" @click.capture="drawerClick" bordered persistent
             class="bg-grey-9 text-white">
     <template v-slot:mini>
       <q-scroll-area class="fit mini-slot cursor-pointer">
@@ -24,6 +24,7 @@
           </q-item-section>
         </q-item>
         <q-expansion-item
+          v-if="isAdmin"
           v-model="expanded"
           icon="mdi-clipboard-edit-outline"
           :label="$t('navigation.infrastructure')"
@@ -113,6 +114,26 @@
                 <q-item-label>{{ $t('navigation.zones') }}</q-item-label>
               </q-item-section>
             </q-item>
+            
+          
+            <q-item to="/admin/jobs" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-briefcase-clock"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.jobs') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item to="/admin/scenarios" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-script-text"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.scenarios') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            
             <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="mdi-graphql"/>
@@ -122,6 +143,14 @@
               </q-item-section>
             </q-item>
             <q-item-label header class="text-weight-bolder text-white">{{ $t('navigation.settings') }}</q-item-label>
+            <q-item to="/admin/appconfig" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-cog-sync"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>App Configuration</q-item-label>
+              </q-item-section>
+            </q-item>
             <q-item to="/maintenance" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
                 <q-icon name="settings"/>
@@ -152,37 +181,50 @@
   </q-drawer>
 </template>
 <script>
-import {defineComponent, ref} from 'vue';
+import {defineComponent, ref, computed} from 'vue';
 import {useUiState} from '@/composables';
-import {Platform} from "quasar";
+import {authzService} from '@/_services';
+import {Role} from '@/_helpers/role';
 
 export default defineComponent({
   name: 'SideBarLayout',
   setup() {
-    const miniState = ref(Platform.is.mobile)
-    const {isSidebarOpen} = useUiState();
+    const {isSidebarOpen, isSidebarMini} = useUiState();
     const prjVersion = process.env.PRJ_VERSION;
-    const graphiqlUrl = process.env.BCK_SERVER_URL + '/graphql/browser';
+    const graphiqlUrl = (process.env.BCK_SERVER_URL || '') + '/graphql/browser';
 
-    const expanded = ref(true)
+    const expanded = ref(true);
+    
+    /**
+     * Check if current user has admin role
+     */
+    const isAdmin = computed(() => {
+      const currentUser = authzService.currentUserValue;
+      if (!currentUser?.permissions) {
+        return false;
+      }
+      return currentUser.permissions.includes(Role.Admin);
+    });
+    
     return {
       expanded,
-      miniState,
       isSidebarOpen,
+      isSidebarMini,
       prjVersion,
       graphiqlUrl,
+      isAdmin,
       drawerClick(e) {
-        if (miniState.value) {
-          miniState.value = false
+        if (isSidebarMini.value) {
+          isSidebarMini.value = false
           e.stopPropagation()
         }
       },
       drawerClick2(e) {
-        if (miniState.value) {
-          miniState.value = false
+        if (isSidebarMini.value) {
+          isSidebarMini.value = false
           e.stopPropagation()
         } else {
-          miniState.value = true
+          isSidebarMini.value = true
         }
       }
     };
@@ -197,6 +239,7 @@ export default defineComponent({
     },
   },
 });
+
 </script>
 <style lang="sass" scoped>
 .mini-slot
