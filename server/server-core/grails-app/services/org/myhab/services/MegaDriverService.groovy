@@ -63,12 +63,14 @@ class MegaDriverService implements EventPublisher {
         return response
     }
 
-    def readPortValue(deviceUid, portNr) {
+    def readPortValue(deviceId, portNr) {
         try {
-            Device deviceController = Device.findByUid(deviceUid)
-            return new DeviceHttpService(device: deviceController, uri: "?pt=${portNr}&cmd=get").readState()
+            Device deviceController = Device.findById(deviceId)
+            if (deviceController) {
+                return new DeviceHttpService(device: deviceController, uri: "?pt=${portNr}&cmd=get").readState()
+            }
         } catch (Exception ex) {
-            log.error("Read port value failed deviceUid=[$deviceUid], portNr=[$portNr]", ex.message)
+            log.error("Read port value failed deviceId=[$deviceId], portNr=[$portNr]", ex.message)
         }
     }
 
@@ -105,8 +107,13 @@ class MegaDriverService implements EventPublisher {
     @Subscriber('2561.run.action')
     def runAction(event) {
         log.debug("call action")
-        new DeviceHttpService(device: Device.findById(event?.data?.deviceUid), uri: '?cmd=' + event?.data?.actionBody).readState()
-
+        Long deviceId = event?.data?.deviceId
+        if (deviceId) {
+            Device device = Device.findById(deviceId)
+            if (device) {
+                new DeviceHttpService(device: device, uri: '?cmd=' + event?.data?.actionBody).readState()
+            }
+        }
     }
 
     @Subscriber('2561.run.scenario')

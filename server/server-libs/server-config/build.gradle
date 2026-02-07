@@ -11,6 +11,12 @@ plugins {
     id 'idea'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 repositories {
     mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }
@@ -19,7 +25,7 @@ repositories {
 dependencies {
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
     implementation 'org.springframework:spring-beans:5.1.18.RELEASE'
-    runtimeOnly 'org.yaml:snakeyaml:1.30'
+    implementation 'org.yaml:snakeyaml:1.30'
     runtimeOnly 'commons-beanutils:commons-beanutils:1.9.4'
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.kohsuke:github-api:1.301'

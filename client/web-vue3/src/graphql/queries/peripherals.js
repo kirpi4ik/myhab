@@ -22,33 +22,36 @@ export const PERIPHERAL_CATEGORY_CREATE = gql`
     }
   }
 `;
-export const PERIPHERAL_VALUE_UPDATE = gql`
-  mutation ($id: Long!, $devicePeripheralUpdate: DevicePeripheralUpdate!) {
-    updatePeripheral(id: $id, peripheral: $devicePeripheralUpdate) {
-      success
-    }
-  }
-`;
 export const PERIPHERAL_DELETE = gql`
   mutation ($id: Long!) {
-    devicePeripheralDelete(id: $id) {
+    deleteDevicePeripheral(id: $id) {
       success
+      error
     }
   }
 `;
 export const PERIPHERAL_LIST_ALL = gql`
-  {
+  query {
     devicePeripheralList {
       id
-      uid
       name
       model
       description
+      category {
+        id
+        name
+      }
+      connectedTo {
+        id
+      }
+      tsCreated
+      tsUpdated
     }
   }
 `;
+
 export const PERIPHERAL_CATEGORIES = gql`
-  {
+  query {
     peripheralCategoryList {
       id
       name
@@ -64,26 +67,40 @@ export const PERIPHERAL_CATEGORY_BY_ID = gql`
     }
   }
 `;
-export const PERIPHERAL_META_GET = gql`
-  {
-    peripheralCategoryList {
+
+export const PERIPHERAL_CATEGORY_GET_DETAILS = gql`
+  query peripheralCategory($id: Long!) {
+    peripheralCategory(id: $id) {
       id
-      uid
+      name
       title
-      name
+      entityType
+      peripherals {
+        id
+        name
+      }
+      cables {
+        id
+        code
+      }
     }
-    zoneList {
+  }
+`;
+export const PERIPHERAL_CATEGORY_UPDATE = gql`
+  mutation ($id: Long!, $peripheralCategory: PeripheralCategoryUpdate!) {
+    peripheralCategoryUpdate(id: $id, peripheralCategory: $peripheralCategory) {
       id
-      uid
       name
-      description
+      title
     }
-    devicePortList {
-      id
-      uid
-      internalRef
-      name
-      description
+  }
+`;
+
+export const PERIPHERAL_CATEGORY_DELETE = gql`
+  mutation ($id: Long!) {
+    peripheralCategoryDelete(id: $id) {
+      success
+      error
     }
   }
 `;
@@ -92,9 +109,11 @@ export const PERIPHERAL_GET_BY_ID = gql`
     devicePeripheral(id: $id) {
       id
       name
+      description
       model
       maxAmp
-      description
+      tsCreated
+      tsUpdated
       category {
         id
         name
@@ -109,7 +128,6 @@ export const PERIPHERAL_GET_BY_ID = gql`
           status
         }
       }
-
       configurations {
         id
         key
@@ -120,84 +138,44 @@ export const PERIPHERAL_GET_BY_ID = gql`
         name
         description
       }
-    }
-  }
-`;
-export const PERIPHERAL_GET_BY_ID_CHILDS = gql`
-  query devicePeripheralById($id: Long!) {
-    devicePeripheral(id: $id) {
-      id
-      uid
-      name
-      description
-      model
-      maxAmp
-      category {
+      cables {
         id
-        uid
-        title
-        name
-      }
-      connectedTo {
-        id
-        uid
-        internalRef
-        name
-        description
-        device {
-          id
-        }
-        __typename
-      }
-      zones {
-        id
-        uid
-        name
-        description
-        __typename
-      }
-    }
-    peripheralCategoryList {
-      id
-      uid
-      title
-      name
-    }
-    zoneList {
-      id
-      uid
-      name
-      description
-    }
-    devicePortList {
-      id
-      uid
-      internalRef
-      name
-      description
-      device {
-        name
         code
+        codeNew
+        codeOld
+        description
+        category {
+          id
+          name
+        }
+      }
+    }
+    deviceList {
+      id
+      code
+      name
+      ports {
+        id
+        name
+        internalRef
       }
     }
   }
 `;
+
 export const PERIPHERAL_LIST_WUI = gql`
   query devicePeripheralList {
     devicePeripheralList {
       id
-      uid
       name
       description
       category {
         id
-        uid
-        title
         name
+        title
       }
       connectedTo {
         id
-        uid
         internalRef
         name
         description
@@ -213,7 +191,22 @@ export const PERIPHERAl_EVENT_LOGS = gql`
   query eventsByP2($p2: String!, $count: Int!, $offset: Int!) {
     eventsByP2(p2: $p2, count: $count, offset: $offset) {
       id
-      uid
+      tsCreated
+      entityType
+      p4
+      p6
+      p2
+      p3
+      p1
+      p0
+    }
+  }
+`;
+
+export const PERIPHERAL_EVENT_LOGS_MULTIPLE = gql`
+  query eventsByP2List($p2List: [String!]!, $count: Int!, $offset: Int!) {
+    eventsByP2List(p2List: $p2List, count: $count, offset: $offset) {
+      id
       tsCreated
       entityType
       p4

@@ -5,6 +5,9 @@ import grails.util.Environment
 class UrlMappings {
     static excludes = ["/images/**", "/css/**", "/js/**", "/img/**", "/font/**", "/fonts/**", "/*.html"]
     static mappings = {
+        // Permanent redirect from /nx* to /*
+        "/nx/$path**"(redirect: [uri: "/$path", permanent: true])
+        
         get "/api/public/event"(controller: "event", action: "pubGetEvent")
         get "/pub-event"(controller: "event", action: "pubGetEvent")
         get "/e"(controller: "event", action: "shortUrlEvent")
@@ -13,16 +16,15 @@ class UrlMappings {
         if (Environment.current == Environment.PRODUCTION) {
             "/"(uri: "/index.html")
             "/error"(uri: "/index.html")
-            "/nx"(uri: "/nx/index.html")
-            "/nx/wui"(uri: "/nx/index.html")
-            "/nx/ports/**"(uri: "/nx/index.html")
-            "/nx/login"(uri: "/nx/index.html")
-            "/nx/admin/**"(uri: "/nx/index.html")
-            "/nx/zones/**"(uri: "/nx/index.html")
-            "/nx/users/**"(uri: "/nx/index.html")
-            "/nx/cables/**"(uri: "/nx/index.html")
-            "/nx/devices/**"(uri: "/nx/index.html")
-            "/nx/peripherals/**"(uri: "/nx/index.html")
+            "/wui"(uri: "/index.html")
+            "/ports/**"(uri: "/index.html")
+            "/login"(uri: "/index.html")
+            "/admin/**"(uri: "/index.html")
+            "/zones/**"(uri: "/index.html")
+            "/users/**"(uri: "/index.html")
+            "/cables/**"(uri: "/index.html")
+            "/devices/**"(uri: "/index.html")
+            "/peripherals/**"(uri: "/index.html")
         } else {
             "/"(controller: "application", action: "index")
             "/error"(controller: "application", action: "index")

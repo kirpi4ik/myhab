@@ -20,6 +20,11 @@ grails.plugin.springsecurity.userLookup.passwordExpiredPropertyName = 'passwordE
 grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'org.myhab.domain.UserRole'
 grails.plugin.springsecurity.authority.className = 'org.myhab.domain.Role'
 
+// Password encoding configuration for Spring Security 5.3.0
+grails.plugin.springsecurity.password.algorithm = 'bcrypt'
+grails.plugin.springsecurity.password.bcrypt.logrounds = 10
+
+
 grails.plugin.springsecurity.rest.login.active = true
 grails.plugin.springsecurity.rest.login.endpointUrl = "/api/login"
 grails.plugin.springsecurity.rest.login.failureStatusCode = 401
@@ -74,6 +79,7 @@ grails.plugin.springsecurity.filterChain.chainMap = [
         [pattern: '/**', filters: 'JOINED_FILTERS,-statelessSecurityContextPersistenceFilter,-oauth2ProviderFilter,-clientCredentialsTokenEndpointFilter,-oauth2BasicAuthenticationFilter,-oauth2ExceptionTranslationFilter']
 ]
 
+// Common DataSource configuration
 dataSource {
     driverClassName = "org.postgresql.Driver"
     dialect = "org.hibernate.dialect.PostgreSQL95Dialect"
@@ -84,7 +90,7 @@ dataSource {
         minIdle = 5
         maxIdle = 25
         maxWait = 10000
-        maxAge = 60000
+        maxAge = 10 * 60 * 1000 // 10 minutes
         timeBetweenEvictionRunsMillis = 5000
         minEvictableIdleTimeMillis = 60000
         validationQuery = "SELECT 1"
@@ -94,27 +100,34 @@ dataSource {
         testWhileIdle = true
         testOnReturn = false
         jdbcInterceptors = "ConnectionState"
-        defaultTransactionIsolation = 2 //# TRANSACTION_READ_COMMITTED
+        defaultTransactionIsolation = 2 // TRANSACTION_READ_COMMITTED
         removeAbandoned = true
         removeAbandonedTimeout = 120
         logAbandoned = false
     }
 }
+
+// Quartz Scheduler Configuration
+// Using native Quartz library (not the Grails plugin)
+// Configuration is done in org.myhab.config.QuartzConfiguration
+
 environments {
     development {
         dataSource {
             dbCreate = "update"
-            url = "jdbc:postgresql://localhost:5432/madhouse"
+            url = "jdbc:postgresql://localhost:5432/madhouse?TimeZone=UTC"
             username = "myhab"
             password = "myhab"
             logSql = false
             formatSql = false
         }
+        
     }
     production {
         dataSource {
             dbCreate = "update"
-            url = System.getenv("DB_URL")
+            // Append TimeZone=UTC to the connection URL if not already present
+            url = System.getenv("DB_URL")?.contains("TimeZone=") ? System.getenv("DB_URL") : "${System.getenv('DB_URL')}?TimeZone=UTC"
             username = System.getenv("DB_USERNAME")
             password = System.getenv("DB_PASSWORD")
             logSql = false

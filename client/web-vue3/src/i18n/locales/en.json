@@ -2,115 +2,149 @@
 	"project": {
 		"name": "myHAB"
 	},
+	"electric_meter": {
+		"title": "Electric Meter",
+		"sub_title": "Real-time consumption data"
+	},
+	"heat_pump": {
+		"title": "Heat Pump",
+		"sub_title": "Central heating, pump data",
+		"heating": "Heating",
+		"standby": "Standby",
+		"outdoor_temp": "Outdoor",
+		"room_temp": "Room",
+		"hot_water": "Hot Water",
+		"supply_line": "Supply",
+		"return_line": "Return",
+		"heating_circuit": "Heating Circuit",
+		"supply": "Supply",
+		"return": "Return",
+		"delta_t": "ΔT",
+		"compressor": "Compressor",
+		"compressor_status": "Status",
+		"compressor_starts": "Starts",
+		"total_operating_time": "Total Operating Time",
+		"running": "Running",
+		"stopped": "Stopped",
+		"brine_circuit": "Brine Circuit (Ground Loop)",
+		"brine_in": "Brine In",
+		"brine_out": "Brine Out",
+		"energy_efficiency": "Energy & Efficiency",
+		"current_power": "Flow Rate",
+		"cop": "COP",
+		"total_heating": "Total Heating Energy",
+		"total_hot_water": "Total Hot Water Energy",
+		"last_update": "Last updated"
+	},
 	"actions": {
 		"view": "View",
-		"save": "Salvare",
-		"edit": "Editare",
-		"delete": "Stergere",
-		"create": "Creare",
-		"add": "Adaugare",
-		"cancel": "Renuntare",
-		"config": "Configurare",
-		"add_new": "Adauga",
-		"remove_from": "Starge din lista",
+		"save": "Save",
+		"edit": "Edit",
+		"delete": "Delete",
+		"create": "Create",
+		"add": "Add",
+		"cancel": "Cancel",
+		"config": "Configure",
+		"add_new": "Add New",
+		"remove_from": "Remove from list",
 		"nav": {
-			"back": "Inapoi",
-			"next": "Pasul urmator"
+			"back": "Back",
+			"next": "Next Step"
 		}
 	},
 	"modal": {
 		"delete": {
-			"title": "Stergere",
-			"confirmation_msg": "Sunteti sigur ca doriti sa stergeti :"
+			"title": "Delete",
+			"confirmation_msg": "Are you sure you want to delete:"
 		}
 	},
 	"table": {
 		"header": {
-			"actions": "Actiune"
+			"actions": "Actions"
 		}
 	},
 	"breadcrumb": {
-		"home": "Acasa",
+		"home": "Home",
 		"dashboard": "Dashboard",
-		"peripherals": "Periferice",
+		"peripherals": "Peripherals",
 		"peripheral": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Periferic nou"
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Peripheral"
 		},
 		"ports": {
-			"list": "Porturi",
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Port nou"
+			"list": "Ports",
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Port"
 		},
-		"zones": "Locatii",
+		"zones": "Locations",
 		"zone": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Locatie noua"
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Location"
 		},
-		"users": "Utilizatori",
+		"users": "Users",
 		"user": {
-			"details": "Detalii utilizator",
-			"edit": "Editeaza utilizator",
-			"create": "Utilizator nou"
+			"details": "User Details",
+			"edit": "Edit User",
+			"create": "New User"
 		},
-		"devices": "Dispozitive",
+		"devices": "Devices",
 		"device": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Dispozitiv nou"
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Device"
 		},
-		"cables": "Cablaj",
+		"cables": "Cables",
 		"cable": {
-			"details": "Detalii",
-			"edit": "Editeaza",
-			"create": "Cablaj nou"
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Cable"
 		},
-		"configurations": "Configurare"
+		"configurations": "Configuration"
 	},
 	"peripheral": {
 		"fields": {
-			"category": "Categorie",
-			"categories": "Categorii",
-			"zone": "Localizare",
-			"zones": "Localizari",
-			"connectedTo": "Conectat la "
+			"category": "Category",
+			"categories": "Categories",
+			"zone": "Location",
+			"zones": "Locations",
+			"connectedTo": "Connected to "
 		},
 		"list": {
-			"nav_title": "Lista periferice"
+			"nav_title": "Peripherals List"
 		},
 		"view": {
-			"nav_title": "Detalii Periferic :"
+			"nav_title": "Peripheral Details:"
 		},
 		"create": {
-			"nav_title": "Periferice"
+			"nav_title": "Peripherals"
 		},
 		"edit": {
-			"nav_title": "Editare periferic :"
+			"nav_title": "Edit Peripheral:"
 		}
 	},
 	"device": {
 		"edit": {
-			"nav_title": "Editare dispozitiv :"
+			"nav_title": "Edit Device:"
 		},
 		"details": {
-			"title": "Detalii dispozitiv :"
+			"title": "Device Details:"
 		},
 		"fields": {
 			"type": {
-				"label": "Tip"
+				"label": "Type"
 			},
 			"rack": {
 				"label": "Rack",
 				"fields": {
-					"name": "Denumire",
-					"description": "Descriere"
+					"name": "Name",
+					"description": "Description"
 				}
 			},
 			"networkAddress": {
-				"label": "Adresa retea",
+				"label": "Network Address",
 				"fields": {
 					"ip": "IP",
 					"port": "Port",
@@ -118,29 +152,136 @@
 				}
 			},
 			"authAccounts": {
-				"label": "Conturi access",
+				"label": "Access Accounts",
 				"fields": {
-					"username": "IP",
-					"password": "Port",
-					"isDefault": "Implicit"
+					"username": "Username",
+					"password": "Password",
+					"isDefault": "Default"
 				}
 			}
 		}
 	},
 	"cables": {
 		"list": {
-			"nav_title": "Cabluri"
+			"nav_title": "Cables"
 		}
 	},
 	"port": {
 		"fields": {
-			"type": "Tip",
-			"state": "Stare"
+			"type": "Type",
+			"state": "State"
 		}
 	},
 	"configurations": {
 		"list": {
-			"title": "Configurarile"
+			"title": "Configurations"
 		}
+	},
+	"mobile": {
+		"unlock": {
+			"title": "Alert",
+			"message": "Attention! Do you want to open?",
+			"button": "Open"
+		}
+	},
+	"common": {
+		"close": "Close",
+		"alert": "Alert",
+		"cancel": "Cancel"
+	},
+	"door": {
+		"small_gate": "Small Gate",
+		"open": "Open",
+		"confirm_open": "Attention! Do you want to open the door?"
+	},
+	"meteo": {
+		"title": "Weather Station",
+		"forecast_3_days": "3-Day Forecast",
+		"sunrise": "Sunrise",
+		"sunset": "Sunset",
+		"sunshine": "Sunshine",
+		"daylight": "Daylight",
+		"last_update": "Last updated",
+		"today": "Today",
+		"tomorrow": "Tomorrow",
+		"wind": "Wind",
+		"rain": "Rain",
+		"visibility": "Visibility",
+		"temperature": "Temperature",
+		"precipitation": "Precipitation",
+		"weather_station": "Weather Station"
+	},
+	"solar": {
+		"title": "Solar Power Plant",
+		"subtitle": "Solar energy production & consumption",
+		"realtime": "Real-Time Data",
+		"today": "Today",
+		"totals": "Totals",
+		"status_ok": "OK",
+		"status_warning": "Warning",
+		"status_error": "Error",
+		"solar_production": "Solar Production",
+		"house_from_plant": "House from Solar",
+		"grid_import": "Grid Import",
+		"grid_export": "Grid Export",
+		"phase_consumption": "Phase Consumption",
+		"phase_a": "Phase A",
+		"phase_b": "Phase B",
+		"phase_c": "Phase C",
+		"daily_yield": "Today's Yield",
+		"daily_total_consumption": "Total Consumption Today",
+		"daily_solar_usage": "Solar Usage Today",
+		"daily_grid_export": "Grid Export Today",
+		"daily_grid_import": "Grid Import Today",
+		"monthly_yield": "Monthly Yield",
+		"yearly_yield": "Yearly Yield",
+		"total_yield": "Total Yield",
+		"total_grid_export": "Total Grid Export",
+		"total_grid_import": "Total Grid Import",
+		"not_available": "N/A"
+	},
+	"timeout_selector": {
+		"title": "Auto-Off Timer",
+		"description": "Select duration before automatic shutdown",
+		"current": "Current",
+		"quick_options": "Quick Options",
+		"extended_durations": "Extended Durations",
+		"remove_timeout": "Remove Timeout",
+		"keep_running": "Keep running indefinitely",
+		"durations": {
+			"quick": "Quick timeout",
+			"short": "Short duration",
+			"medium": "Medium duration",
+			"long": "Long duration"
+		}
+	},
+	"zone_card": {
+		"location": "Location",
+		"item": "item",
+		"items": "items"
+	},
+	"light_card": {
+		"on": "ON",
+		"off": "OFF",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
+	},
+	"heat_card": {
+		"on": "WARM",
+		"off": "COLD",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
+	},
+	"switch_card": {
+		"on": "POWER ON",
+		"off": "POWER OFF",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
+	},
+	"sprinkler_card": {
+		"on": "ON",
+		"off": "OFF",
+		"details": "Details",
+		"device_offline": "Device is offline - controls disabled"
 	}
 }

@@ -1,230 +1,420 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="!loading && cable">
       <q-card flat bordered>
-        <q-card-section class="full-width" v-if="cable">
-          <div class="text-h5">Edit cable {{ cable.code }}</div>
-          <q-input v-model="cable.code" label="Code" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="cable.description" label="Description" clearable clear-icon="close" color="orange"
-                   :rules="[val => !!val || 'Field is required']"/>
-          <q-input v-model="cable.nrWires" label="Nr wires" clearable clear-icon="close" color="green"/>
-          <q-input v-model="cable.maxAmp" label="Max amp" clearable clear-icon="close" color="green"/>
-          <q-select v-model="cable.category"
-                    :options="cableCategoryList"
-                    option-label="name"
-                    label="Category" map-options filled dense color="green">
-            <q-icon name="cancel" @click.stop.prevent="cable.category = null" class="cursor-pointer text-blue"/>
-          </q-select>
-          <q-select v-model="cable.rack"
-                    :options="rackList"
-                    option-label="name"
-                    label="Located" map-options filled dense color="green">
-            <q-icon name="cancel" @click.stop.prevent="cable.rack = null" class="cursor-pointer text-blue"/>
-          </q-select>
-          <q-card-section>
-            <q-select v-model="cable.patchPanel"
-                      :options="patchPanelList"
-                      option-label="name"
-                      label="Patch panel" map-options filled dense color="green">
-              <q-icon name="cancel" @click.stop.prevent="cable.patchPanel = null ; cable.patchPanelPort = null"
-                      class="cursor-pointer text-blue"/>
-            </q-select>
-            <q-select v-model="cable.patchPanelPort" clearable
-                      :options="cable.patchPanel!=null?Array.from({length: cable.patchPanel.size}, (_, i) => i + 1):[]"
-                      label="Patch panel port"/>
-          </q-card-section>
-          <q-input v-model="cable.codeOld" label="Code old" clearable clear-icon="close" color="green"/>
-          <q-input v-model="cable.codeNew" label="Code new" clearable clear-icon="close" color="green"/>
-          <div class="row q-col-gutter-xs">
-            <q-input v-model="cable.rackRowNr" label="Row Nr" clearable clear-icon="close" color="green"/>
-            <q-input v-model="cable.orderInRow" label="Cable order" clearable clear-icon="close" color="green"/>
-          </div>
-        </q-card-section>
         <q-card-section>
-          <q-item-label>Port connect</q-item-label>
-          <div class="row q-col-gutter-xs">
-            <q-select v-model="newPortDevice"
-                      :options="options"
-                      option-label="name"
-                      label="Device" map-options filled dense use-input @filter="filterFn" color="green"
-                      class="col-lg-2 col-md-2"
-                      @update:model-value="selectDevice">
-              <q-icon name="cancel" @click.stop.prevent="newPortDevice = null" class="cursor-pointer text-blue"/>
-            </q-select>
-            <q-select v-if="newPortDevice != null"
-                      v-model="newPort"
-                      :options="portList"
-                      option-label="name"
-                      label="Port" map-options filled dense use-input @filter="portFilterFn" color="green"
-                      class="col-lg-2 col-md-2">
-              <q-icon name="cancel" @click.stop.prevent="newPort = null" class="cursor-pointer text-blue"/>
-            </q-select>
-            <q-btn icon="mdi-link-variant-plus" @click="connectPort()" color="green" label="Connect"
-                   :disable="newPort == null"/>
-            <q-btn icon="mdi-plus" @click="$router.push('/admin/ports/new?deviceId='+newPortDevice.id)" color="orange"
-                   label="New" :disable="newPort != null || newPortDevice == null"/>
+          <div class="text-h5 q-mb-md">
+            <q-icon name="mdi-pencil" color="primary" size="sm" class="q-mr-sm"/>
+            Edit Cable
           </div>
-          <div class="row">
-            <q-table
-              class="col"
-              title="Connected to ports"
-              :rows="cable.connectedTo"
-              :columns="portColumns"
-              @row-click="viewPort"
-              row-key="id"
-            >
-              <template v-slot:body-cell-actions="props">
-                <q-td :props="props">
-                  <q-btn icon="delete" @click="removePortFromConnected(props.row)"></q-btn>
-                </q-td>
-              </template>
-            </q-table>
+          <div class="text-subtitle2 text-weight-medium">
+            {{ cable.code }}
           </div>
         </q-card-section>
+
         <q-separator/>
-        <q-card-actions>
-          <q-btn color="accent" type="submit">
-            Save
-          </q-btn>
-          <q-btn color="info" @click="$router.go(-1)">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+
+        <!-- Basic Information -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">Basic Information</div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <q-input 
+            v-model="cable.code" 
+            label="Code" 
+            hint="Unique cable identifier"
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            filled
+            dense
+            :rules="[val => !!val || 'Code is required']"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-barcode"/>
+            </template>
+          </q-input>
+
+          <q-input 
+            v-model="cable.description" 
+            label="Description" 
+            hint="Cable description or purpose"
+            clearable 
+            clear-icon="close" 
+            color="orange"
+            filled
+            dense
+            type="textarea"
+            rows="3"
+            :rules="[val => !!val || 'Description is required']"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-text"/>
+            </template>
+          </q-input>
+
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model.number="cable.nrWires" 
+                label="Number of Wires" 
+                hint="Total wire count"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                type="number"
+                min="1"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-cable-data"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model.number="cable.maxAmp" 
+                label="Max Amperage" 
+                hint="Maximum current capacity"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                type="number"
+                min="0"
+                step="0.1"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-lightning-bolt"/>
+                </template>
+              </q-input>
+            </div>
+          </div>
+
+          <q-select 
+            v-model="cable.category"
+            :options="cableCategoryList"
+            option-label="name"
+            label="Category" 
+            hint="Cable category type"
+            map-options 
+            filled 
+            dense
+            clearable
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-shape"/>
+            </template>
+          </q-select>
+
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model="cable.codeOld" 
+                label="Code Old" 
+                hint="Previous cable code"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-barcode-scan"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model="cable.codeNew" 
+                label="Code New" 
+                hint="New cable code"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-barcode-scan"/>
+                </template>
+              </q-input>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Location Information -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">
+            <q-icon name="mdi-map-marker" class="q-mr-xs"/>
+            Location Information
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <q-select 
+            v-model="cable.rack"
+            :options="rackList"
+            option-label="name"
+            label="Rack Location" 
+            hint="Select the rack where cable is located"
+            map-options 
+            filled 
+            dense
+            clearable
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-server"/>
+            </template>
+          </q-select>
+
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model.number="cable.rackRowNr" 
+                label="Row Number" 
+                hint="Row position in rack"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                type="number"
+                min="1"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-grid"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input 
+                v-model.number="cable.orderInRow" 
+                label="Order in Row" 
+                hint="Cable order within row"
+                clearable 
+                clear-icon="close" 
+                color="orange"
+                type="number"
+                min="1"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-sort-numeric-ascending"/>
+                </template>
+              </q-input>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Patch Panel Information -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">
+            <q-icon name="mdi-lan" class="q-mr-xs"/>
+            Patch Panel Information
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <q-select 
+            v-model="cable.patchPanel"
+            :options="patchPanelList"
+            option-label="name"
+            label="Patch Panel" 
+            hint="Select patch panel"
+            map-options 
+            filled 
+            dense
+            clearable
+            @update:model-value="cable.patchPanelPort = null"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-lan"/>
+            </template>
+          </q-select>
+
+          <q-select 
+            v-model="cable.patchPanelPort" 
+            :options="cable.patchPanel ? Array.from({length: cable.patchPanel.size}, (_, i) => i + 1) : []"
+            label="Patch Panel Port"
+            hint="Select port number on patch panel"
+            :disable="!cable.patchPanel"
+            filled
+            dense
+            clearable
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-ethernet"/>
+            </template>
+          </q-select>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Port Connections -->
+        <PortConnectCard
+          v-if="cable.connectedTo"
+          v-model="cable.connectedTo"
+          :device-list="deviceList"
+          title="Port Connections"
+          table-title="Connected to ports"
+        />
+
+        <q-separator/>
+
+        <!-- Information Panel -->
+        <EntityInfoPanel
+          :entity="cable"
+          icon="mdi-cable-data"
+          :extra-info="[
+            { icon: 'mdi-ethernet', label: 'Ports', value: cable.connectedTo?.length || 0 }
+          ]"
+        />
+
+        <q-separator/>
+
+        <!-- Actions -->
+        <EntityFormActions
+          :saving="saving"
+          :show-view="true"
+          :view-route="`/admin/cables/${$route.params.idPrimary}/view`"
+          save-label="Save Cable"
+        />
       </q-card>
     </form>
+
+    <!-- Loading State -->
+    <q-inner-loading :showing="loading">
+      <q-spinner-gears size="50px" color="primary"/>
+    </q-inner-loading>
   </q-page>
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
-import {defineComponent, onMounted, ref} from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useEntityCRUD } from '@/composables';
+import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
+import EntityFormActions from '@/components/EntityFormActions.vue';
+import PortConnectCard from '@/components/cards/PortConnectCard.vue';
+
 import {
-  CABLE_BY_ID,
-  CABLE_CREATE,
   CABLE_EDIT_GET_DETAILS,
-  CABLE_GET_BY_ID_CHILDS,
-  CABLE_VALUE_UPDATE,
-  RACK_LIST_ALL
+  CABLE_VALUE_UPDATE
 } from '@/graphql/queries';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
 export default defineComponent({
   name: 'CableEdit',
+  components: {
+    EntityInfoPanel,
+    EntityFormActions,
+    PortConnectCard
+  },
   setup() {
-    const $q = useQuasar()
-    const {client} = useApolloClient();
-    const cable = ref({})
-    const rackList = ref([])
-    const patchPanelList = ref([])
-    const cableCategoryList = ref([])
-    const deviceList = ref([])
-    const router = useRouter();
     const route = useRoute();
-    const newPortDevice = ref(null)
-    const newPort = ref()
-    const portList = ref()
-    const options = ref()
+    const rackList = ref([]);
+    const patchPanelList = ref([]);
+    const cableCategoryList = ref([]);
+    const deviceList = ref([]);
 
-    options.value = deviceList.value
-    const portColumns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'internalRef', label: 'Int Ref', field: 'internalRef', align: 'left', sortable: true},
-      {name: 'actions', label: 'Actions', field: 'actions'}
-    ]
-
-    const fetchData = () => {
-      client.query({
-        query: CABLE_EDIT_GET_DETAILS,
-        variables: {id: route.params.idPrimary},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        cable.value = _.cloneDeep(response.data.cable)
-        patchPanelList.value = response.data.patchPanelList
-        rackList.value = response.data.rackList
-        cableCategoryList.value = response.data.cableCategoryList
-        deviceList.value = response.data.deviceList
-      })
-    }
-    const onSave = () => {
-      if (cable.value.hasError) {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed submission'
-        })
-      } else {
-        delete cable.value.id
-        cable.value.connectedTo.forEach(function (port) {
-          delete port.device
-        })
-
-        client.mutate({
-          mutation: CABLE_VALUE_UPDATE,
-          variables: {id: route.params.idPrimary, cable: cable.value},
-        }).then(response => {
-          router.push({path: `/admin/cables/${response.data.updateCable.id}/view`})
-        });
+    const {
+      entity: cable,
+      loading,
+      saving,
+      fetchEntity,
+      updateEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'Cable',
+      entityPath: '/admin/cables',
+      getQuery: CABLE_EDIT_GET_DETAILS,
+      getQueryKey: 'cable',
+      updateMutation: CABLE_VALUE_UPDATE,
+      updateMutationKey: 'updateCable',
+      excludeFields: ['__typename', 'device', 'tsCreated', 'tsUpdated'],
+      transformBeforeSave: (data) => {
+        const transformed = {...data};
+        
+        // Clean connectedTo array - keep only id
+        if (transformed.connectedTo && Array.isArray(transformed.connectedTo)) {
+          transformed.connectedTo = transformed.connectedTo.map(port => ({ id: port.id }));
+        }
+        
+        // Clean zones array - keep only id
+        if (transformed.zones && Array.isArray(transformed.zones)) {
+          transformed.zones = transformed.zones.map(zone => ({ id: zone.id }));
+        }
+        
+        // Clean rack - keep only id
+        if (transformed.rack) {
+          transformed.rack = { id: transformed.rack.id };
+        }
+        
+        // Clean category - keep only id
+        if (transformed.category) {
+          transformed.category = { id: transformed.category.id };
+        }
+        
+        // Clean patchPanel - keep only id
+        if (transformed.patchPanel) {
+          transformed.patchPanel = { id: transformed.patchPanel.id };
+        }
+        
+        return transformed;
       }
-    }
+    });
+
+    /**
+     * Custom fetch to load additional data (racks, categories, devices, etc.)
+     */
+    const fetchData = async () => {
+      const response = await fetchEntity();
+      if (response) {
+        patchPanelList.value = response.patchPanelList || [];
+        rackList.value = response.rackList || [];
+        cableCategoryList.value = response.cableCategoryList || [];
+        deviceList.value = response.deviceList || [];
+      }
+    };
+
+    /**
+     * Save cable
+     */
+    const onSave = async () => {
+      // Prevent duplicate submissions
+      if (saving.value) {
+        return;
+      }
+
+      if (!validateRequired(cable.value, ['code', 'description'])) {
+        return;
+      }
+
+      await updateEntity();
+    };
+
     onMounted(() => {
-      fetchData()
-    })
+      fetchData();
+    });
+
     return {
       cable,
       onSave,
       rackList,
       cableCategoryList,
       patchPanelList,
-      portColumns,
       deviceList,
-      options,
-      newPort,
-      newPortDevice,
-      portList,
-      viewPort: (evt, row) => {
-        if (evt.target.nodeName === 'TD' || evt.target.nodeName === 'DIV') {
-          router.push({path: `/admin/ports/${row.id}/view`})
-        }
-      },
-      selectDevice: (evt) => {
-        newPort.value = null
-        portList.value = deviceList.value.ports
-      },
-      connectPort: (evt) => {
-        cable.value.connectedTo.push(newPort.value)
-      },
-      removePortFromConnected: (row) => {
-        _.remove(cable.value.connectedTo, function (currentObject) {
-          return currentObject.id === row.id;
-        });
-      },
-      filterFn: (val, update) => {
-        if (val === '') {
-          update(() => {
-            options.value = deviceList.value
-          })
-          return
-        }
-        update(() => {
-          const needle = val.toLowerCase()
-          options.value = deviceList.value.filter(v => v.name.toLowerCase().indexOf(needle) > -1)
-        })
-      },
-      portFilterFn: (val, update) => {
-        if (val === '') {
-          update(() => {
-            portList.value = newPortDevice.value.ports
-          })
-          return
-        }
-        update(() => {
-          const needle = val.toLowerCase()
-          portList.value = newPortDevice.value.ports.filter(v => v.name.toLowerCase().indexOf(needle) > -1)
-        })
-      }
-    }
+      loading,
+      saving
+    };
   }
 });
 </script>

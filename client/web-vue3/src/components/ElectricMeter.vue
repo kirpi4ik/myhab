@@ -139,16 +139,21 @@
   </q-card>
 </template>
 <script>
+import {computed, defineComponent, onMounted, ref, toRefs} from 'vue';
 
-import {computed, defineComponent, onMounted, ref, toRefs, watch} from 'vue';
+import {useApolloClient} from "@vue/apollo-composable";
+import {useWebSocketListener} from "@/composables";
+
 import {
   CONFIG_GLOBAL_GET_STRING_VAL,
   DEVICE_GET_BY_ID_WITH_PORT_VALUES,
   TIMESERIES_GET_LATEST_BY_KEYS
 } from '@/graphql/queries';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useStore} from "vuex";
+
 import _ from "lodash";
+
+
+
 
 export default defineComponent({
   name: 'ElectricMeter',
@@ -158,7 +163,6 @@ export default defineComponent({
   components: {},
   setup(props, {emit}) {
     const {client} = useApolloClient();
-    const store = useStore();
     let {deviceId: deviceId} = toRefs(props);
     let device = ref({})
     let deviceDetails = ref({})
@@ -226,20 +230,25 @@ export default defineComponent({
     onMounted(() => {
       loadDetails()
     })
-    const wsMessage = computed(() => store.getters.ws.message);
-    watch(
-      () => store.getters.ws.message,
-      function () {
-        if (wsMessage.value.eventName == 'evt_port_value_persisted') {
-          let payload = JSON.parse(wsMessage.value.jsonPayload);
-          if (portIds.value.includes(Number(payload.p2))) {
-            deviceDetails.value[payload.p3].value = payload.p4
-          }
-        } else if (wsMessage.value.eventName == 'evt_stat_value_changed') {
-
-          loadStatistics();
+    
+    // Listen for WebSocket events
+    useWebSocketListener('evt_port_value_persisted', (payload) => {
+      if (portIds.value.includes(Number(payload.p2))) {
+        const portRef = deviceDetails.value[payload.p3];
+        if (portRef) {
+          // Update the port object inside the ref, not the ref itself
+          portRef.value = {
+            ...portRef.value,
+            value: payload.p4
+          };
         }
-      });
+      }
+    });
+    
+    useWebSocketListener('evt_stat_value_changed', () => {
+      loadStatistics();
+    });
+    
     return {
       device,
       deviceDetails,
@@ -248,6 +257,7 @@ export default defineComponent({
 
   }
 });
+
 </script>
 <style>
 

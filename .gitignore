@@ -8,3 +8,14 @@
 .gradle
 **/.graphqlconfig
 
+# Documentation folder (local development notes)
+/doc/
+
+# Generated files (auto-generated during build from gradle.properties)
+**/version.txt
+src/main/docker/
+VERSIONING.md
+
+# Quasar temporary compiled config files
+**/quasar.config.js.temporary.compiled.*.mjs
+/*.code-workspace

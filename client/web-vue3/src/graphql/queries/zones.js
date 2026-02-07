@@ -4,48 +4,53 @@ export const ZONES_GET_ALL = gql`
   query {
     zoneList {
       id
-      uid
       name
       description
+      parent {
+        id
+        name
+      }
+      zones {
+        id
+        name
+      }
       peripherals {
         id
-        uid
         name
         description
         category {
-          uid
+          id
+          name
         }
         connectedTo {
-          uid
+          id
           value
         }
       }
     }
   }
 `;
+
 export const ZONE_GET_BY_ID = gql`
   query zoneById($id: String!) {
     zoneById(id: $id) {
       id
-      uid
       name
       description
       zones {
         id
-        uid
         name
         description
         peripherals {
           id
-          uid
           name
           description
           category {
+            id
             name
           }
           connectedTo {
             id
-            uid
             value
             device {
               status
@@ -65,18 +70,22 @@ export const ZONE_GET_BY_ID = gql`
       }
       peripherals {
         id
-        uid
         name
         description
         category {
+          id
           name
         }
         connectedTo {
           id
-          uid
           value
           device {
             status
+          }
+          configurations {
+            id
+            key
+            value
           }
         }
         configurations {
@@ -95,6 +104,11 @@ export const ZONE_GET_BY_ID_MINIMAL = gql`
       name
       description
       categories
+      parent {
+        id
+        name
+        description
+      }
       zones {
         id
         name
@@ -113,40 +127,74 @@ export const ZONE_GET_BY_ID_MINIMAL = gql`
     }
   }
 `;
-export const ZONES_GET_ROOT = gql`
-  {
-    zonesRoot {
-      uid
+
+export const ZONE_GET_BY_ID_WITH_CATEGORY = gql`
+  query zoneById($id: String!, $category: String) {
+    zoneById(id: $id, category: $category) {
+      id
       name
       description
       zones {
-        uid
+        id
         name
         description
       }
       peripherals {
         id
-        uid
         name
         description
         category {
           name
         }
         connectedTo {
-          uid
+          id
+          name
+          internalRef
           value
-          configurations {
-            id
-            key
-            value
-          }
         }
         configurations {
-          id
           key
           value
         }
+        tsUpdated
       }
+    }
+  }
+`;
+
+export const ZONE_VALUE_UPDATE = gql`
+  mutation ($id: Long!, $zone: ZoneUpdate!) {
+    zoneUpdateCustom(id: $id, zone: $zone) {
+      id
+      name
+      description
+      parent {
+        id
+        name
+      }
+      zones {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const ZONE_CREATE = gql`
+  mutation ($zone: ZoneCreate!) {
+    zoneCreate(zone: $zone) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const ZONE_DELETE = gql`
+  mutation ($id: Long!) {
+    zoneDelete(id: $id) {
+      success
+      error
     }
   }
 `;

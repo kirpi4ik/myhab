@@ -4,15 +4,13 @@ export const DEVICE_CREATE = gql`
   mutation ($device: DeviceCreate) {
     deviceCreate(device: $device) {
       id
-      uid
     }
   }
 `;
-export const DEVICE_UPDATE = gql`
-  mutation ($id: Long!, $device: DeviceUpdate) {
-    deviceUpdate(id: $id, device: $device) {
+export const DEVICE_UPDATE_CUSTOM = gql`
+  mutation ($id: Long!, $device: DeviceUpdate!) {
+    deviceUpdateCustom(id: $id, device: $device) {
       id
-      uid
       code
       name
     }
@@ -32,81 +30,62 @@ export const DEVICE_CATEGORY_CREATE = gql`
     }
   }
 `;
+export const DEVICE_CATEGORY_UPDATE = gql`
+  mutation ($id: Long!, $deviceCategory: DeviceCategoryUpdate) {
+    deviceCategoryUpdate(id: $id, deviceCategory: $deviceCategory) {
+      id
+      name
+    }
+  }
+`;
+export const DEVICE_CATEGORY_DELETE = gql`
+  mutation ($id: Long!) {
+    deviceCategoryDelete(id: $id) {
+      success
+      error
+    }
+  }
+`;
 export const DEVICE_LIST_ALL = gql`
-  {
+  query {
     deviceList {
-      id
-      uid
-      code
-      name
-      description
-    }
-  }
-`;
-export const DEVICE_LIST_ALL_WITH_PORTS = gql`
-  {
-    deviceList {
-      id
-      uid
-      code
-      name
-      description
-      ports {
-        id
-        name
-      }
-    }
-  }
-`;
-export const DEVICE_GET_DETAILS_FOR_EDIT = gql`
-  query device($id: Long!) {
-    deviceCategoryList {
-      id
-      name
-    }
-    rackList {
-      id
-      name
-      description
-    }
-    device(id: $id) {
       id
       code
       model
-      uid
       name
       description
       type {
         name
-      }
-      networkAddress {
-        ip
-        port
-        gateway
       }
       rack {
         id
         name
         description
       }
-      authAccounts {
+      ports {
         id
-        username
-        password
-        isDefault
+        name
+        internalRef
       }
+      tsCreated
+      tsUpdated
     }
   }
 `;
-export const DEVICE_GET_BY_ID_MINIMAL = gql`
-  query device($id: Long!) {
-    device(id: $id) {
+
+export const DEVICE_LIST_ALL_WITH_PORTS = gql`
+  query {
+    deviceList {
       id
       code
       model
-      uid
       name
       description
+      ports {
+        id
+        name
+        internalRef
+      }
     }
   }
 `;
@@ -120,6 +99,8 @@ export const DEVICE_CATEGORIES_LIST = gql`
     deviceCategoryList{
       id
       name
+      tsCreated
+      tsUpdated
     }
   }
 `;
@@ -128,6 +109,8 @@ export const DEVICE_CATEGORY_BY_ID = gql`
     deviceCategory(id: $id){
       id
       name
+      tsCreated
+      tsUpdated
     }
   }
 `;
@@ -137,13 +120,13 @@ export const DEVICE_GET_BY_ID_WITH_PORT_VALUES = gql`
       id
       code
       model
-      uid
       name
       description
+      status
       ports {
         id
-        internalRef
         name
+        internalRef
         description
         type
         state
@@ -152,6 +135,7 @@ export const DEVICE_GET_BY_ID_WITH_PORT_VALUES = gql`
     }
   }
 `;
+
 export const DEVICE_GET_BY_ID_CHILDS = gql`
   query device($id: Long!) {
     deviceCategoryList {
@@ -167,9 +151,11 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
       id
       code
       model
-      uid
       name
       description
+      status
+      tsCreated
+      tsUpdated
       type {
         name
       }
@@ -182,13 +168,19 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
         name
         description
       }
+      zones {
+        id
+        name
+        description
+      }
       ports {
         id
-        internalRef
         name
+        internalRef
         description
         type
         state
+        value
       }
       authAccounts {
         id
@@ -196,44 +188,6 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
         password
         isDefault
       }
-    }
-  }
-`;
-export const DEVICE_META_GET = gql`
-  {
-    deviceCategoryList {
-      id
-      name
-    }
-    rackList {
-      id
-      name
-      description
-    }
-  }
-`;
-export const DEVICE_ACCOUNT_CREATE = gql`
-  mutation ($deviceAccount: DeviceAccountCreate) {
-    deviceAccountCreate(deviceAccount: $deviceAccount) {
-      id
-      uid
-      username
-    }
-  }
-`;
-export const DEVICE_ACCOUNT_UPDATE = gql`
-  mutation ($id: Long!, $deviceAccount: DeviceAccountUpdate) {
-    deviceAccountUpdate(id: $id, deviceAccount: $deviceAccount) {
-      id
-      uid
-    }
-  }
-`;
-export const DEVICE_ACCOUNT_DELETE = gql`
-  mutation ($id: Long!) {
-    deviceAccountDelete(id: $id) {
-      success
-      error
     }
   }
 `;

@@ -62,10 +62,17 @@ class User extends BaseEntity {
                 @Override
                 Object get(DataFetchingEnvironment environment) throws Exception {
                     withTransaction(false) {
-                        def currentUser = User.findById(environment.getArgument("id"))
+                        Long userId = environment.getArgument("id") as Long
+                        def currentUser = User.findById(userId)
+                        
+                        // Remove user roles
                         UserRole.where {
                             user == currentUser
                         }.deleteAll()
+                        
+                        // Remove user's favorite jobs
+                        UserFavJobJoin.removeAllForUser(userId)
+                        
                         currentUser.delete()
                     }
                     return [success: true, error: null]

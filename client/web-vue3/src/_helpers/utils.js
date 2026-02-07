@@ -1,9 +1,8 @@
 export const Utils = {
 	host: function () {
-		if (process.env.ENV_NAME == 'Development') {
+		if (process.env.ENV_NAME === 'Production') {
 			return process.env.BCK_SERVER_URL;
-		} else {
-			return '';
 		}
+		return process.env.BCK_SERVER_URL || 'http://localhost:8181';
 	},
 };

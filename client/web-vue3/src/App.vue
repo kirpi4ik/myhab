@@ -7,18 +7,25 @@
   </router-view>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {mapActions} from 'vuex';
+import {defineComponent, onMounted} from 'vue';
+
+import {useWebSocketStore} from '@/store/websocket.store';
+
+
 
 export default defineComponent({
     name: 'App',
-    methods: {
-      ...mapActions(['connect']),
-    },
-    mounted() {
-      this.connect();
+    setup() {
+      const wsStore = useWebSocketStore();
+      
+      onMounted(() => {
+        wsStore.connect();
+      });
+      
+      return {};
     },
   });
+
 </script>
 <style>
   .route-enter-from {

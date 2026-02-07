@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <form @submit.prevent.stop="onSave" class="q-gutter-md">
+    <form @submit.prevent.stop="onSave" class="q-gutter-md" v-if="user">
       <q-card flat bordered>
         <q-card-section class="full-width">
           <div class="text-overline">Register new user</div>
@@ -35,70 +35,89 @@
                    :rules="[val => !!val || 'Field is required']"/>
           <q-input v-model="user.phoneNr" label="Telephone number" clearable clear-icon="close" type="tel"
                    color="orange"/>
+          <q-input v-model="user.telegramUsername" label="Telegram Username" clearable clear-icon="close"
+                   color="orange" hint="Telegram username for bot access (without @)"/>
         </q-card-section>
 
         <q-separator/>
 
-        <q-card-actions>
-          <q-btn color="accent" type="submit">
-            Save
-          </q-btn>
-          <q-btn color="info" @click="$router.go(-1)">
-            Cancel
-          </q-btn>
-        </q-card-actions>
+        <EntityFormActions
+          :saving="saving"
+          :show-view="false"
+          save-label="Create User"
+        />
       </q-card>
     </form>
   </q-page>
 </template>
 
 <script>
-import {useQuasar} from 'quasar'
 import {defineComponent, ref} from 'vue';
+import {useEntityCRUD} from '@/composables';
+import EntityFormActions from '@/components/EntityFormActions.vue';
 import {USER_CREATE} from '@/graphql/queries';
-import {useApolloClient} from "@vue/apollo-composable";
 
 export default defineComponent({
   name: 'UserNew',
+  components: {
+    EntityFormActions
+  },
   setup() {
-    const $q = useQuasar()
-    const {client} = useApolloClient();
-    const user = ref({
-      passwordExpired: false,
-      accountExpired: false,
-      accountLocked: false,
-      enabled: false
-    })
-    const isPwd = ref(true)
-    const confirmPwd = ref(null)
-    const confirmPwdRef = ref(null)
-    const onSave = () => {
-      confirmPwdRef.value.validate()
-      if (confirmPwdRef.value.hasError) {
-        $q.notify({
-          color: 'negative',
-          message: 'Failed submission'
-        })
-      } else {
-        client.mutate({
-          mutation: USER_CREATE,
-          variables: {user: user.value},
-        }).then(response => {
-        });
+    const isPwd = ref(true);
+    const confirmPwd = ref(null);
+    const confirmPwdRef = ref(null);
+
+    const {
+      entity: user,
+      saving,
+      createEntity,
+      validateRequired
+    } = useEntityCRUD({
+      entityName: 'User',
+      entityPath: '/admin/users',
+      createMutation: USER_CREATE,
+      createMutationKey: 'userCreate',
+      createVariableName: 'user',
+      excludeFields: ['__typename'],
+      initialData: {
+        username: '',
+        password: '',
+        email: '',
+        phoneNr: '',
+        telegramUsername: '',
+        passwordExpired: false,
+        accountExpired: false,
+        accountLocked: false,
+        enabled: true
       }
-    }
+    });
+
+    const onSave = async () => {
+      if (saving.value) return;
+      
+      // Validate password confirmation
+      confirmPwdRef.value.validate();
+      if (confirmPwdRef.value.hasError) {
+        return;
+      }
+
+      if (!validateRequired(user.value, ['username', 'password', 'email'])) return;
+      await createEntity();
+    };
+
     return {
       user,
       isPwd,
       confirmPwd,
       confirmPwdRef,
+      saving,
       onSave,
       pwdRules: [
         val => (val !== null && val !== '') || 'Field is required',
         val => (val === user.value.password) || 'Wrong confirmation password'
-      ],
-
-    }
+      ]
+    };
   }
 });
+
 </script>

@@ -1,0 +1,107 @@
+{
+  "_comment": "Groovy autocompletion hints for CodeEditor component",
+  "_structure": {
+    "keywords": "Groovy language keywords",
+    "functions": "Built-in Groovy functions and collection methods",
+    "dsl": "MyHAB DSL-specific variables and objects",
+    "scenarioMethods": "ScenarioService methods available in DSL context"
+  },
+  "keywords": [
+    { "label": "def", "type": "keyword", "info": "Define a variable" },
+    { "label": "class", "type": "keyword", "info": "Define a class" },
+    { "label": "interface", "type": "keyword", "info": "Define an interface" },
+    { "label": "trait", "type": "keyword", "info": "Define a trait" },
+    { "label": "enum", "type": "keyword", "info": "Define an enum" },
+    { "label": "package", "type": "keyword", "info": "Package declaration" },
+    { "label": "import", "type": "keyword", "info": "Import statement" },
+    { "label": "extends", "type": "keyword", "info": "Class inheritance" },
+    { "label": "implements", "type": "keyword", "info": "Interface implementation" },
+    { "label": "return", "type": "keyword", "info": "Return statement" },
+    { "label": "if", "type": "keyword", "info": "Conditional statement" },
+    { "label": "else", "type": "keyword", "info": "Else clause" },
+    { "label": "for", "type": "keyword", "info": "For loop" },
+    { "label": "while", "type": "keyword", "info": "While loop" },
+    { "label": "switch", "type": "keyword", "info": "Switch statement" },
+    { "label": "case", "type": "keyword", "info": "Case clause" },
+    { "label": "break", "type": "keyword", "info": "Break statement" },
+    { "label": "continue", "type": "keyword", "info": "Continue statement" },
+    { "label": "try", "type": "keyword", "info": "Try block" },
+    { "label": "catch", "type": "keyword", "info": "Catch block" },
+    { "label": "finally", "type": "keyword", "info": "Finally block" },
+    { "label": "throw", "type": "keyword", "info": "Throw exception" },
+    { "label": "new", "type": "keyword", "info": "Create new instance" },
+    { "label": "this", "type": "keyword", "info": "Reference to current object" },
+    { "label": "super", "type": "keyword", "info": "Reference to parent class" },
+    { "label": "static", "type": "keyword", "info": "Static member" },
+    { "label": "final", "type": "keyword", "info": "Final/immutable" },
+    { "label": "abstract", "type": "keyword", "info": "Abstract class/method" },
+    { "label": "public", "type": "keyword", "info": "Public access modifier" },
+    { "label": "private", "type": "keyword", "info": "Private access modifier" },
+    { "label": "protected", "type": "keyword", "info": "Protected access modifier" },
+    { "label": "null", "type": "keyword", "info": "Null value" },
+    { "label": "true", "type": "keyword", "info": "Boolean true" },
+    { "label": "false", "type": "keyword", "info": "Boolean false" },
+    { "label": "in", "type": "keyword", "info": "Membership test operator" },
+    { "label": "as", "type": "keyword", "info": "Type coercion operator" }
+  ],
+  "functions": [
+    { "label": "println", "type": "function", "info": "Print line to console" },
+    { "label": "print", "type": "function", "info": "Print to console" },
+    { "label": "sleep", "type": "function", "info": "Sleep for specified milliseconds" },
+    { "label": "each", "type": "method", "info": "Iterate over collection: list.each { item -> ... }" },
+    { "label": "eachWithIndex", "type": "method", "info": "Iterate with index: list.eachWithIndex { item, idx -> ... }" },
+    { "label": "collect", "type": "method", "info": "Transform collection elements: list.collect { it * 2 }" },
+    { "label": "find", "type": "method", "info": "Find first matching element: list.find { it > 5 }" },
+    { "label": "findAll", "type": "method", "info": "Find all matching elements: list.findAll { it > 5 }" },
+    { "label": "any", "type": "method", "info": "Check if any element matches: list.any { it > 5 }" },
+    { "label": "every", "type": "method", "info": "Check if all elements match: list.every { it > 0 }" },
+    { "label": "size", "type": "method", "info": "Get collection size" },
+    { "label": "isEmpty", "type": "method", "info": "Check if collection is empty" },
+    { "label": "contains", "type": "method", "info": "Check if collection contains element" },
+    { "label": "sort", "type": "method", "info": "Sort collection" },
+    { "label": "reverse", "type": "method", "info": "Reverse collection order" },
+    { "label": "join", "type": "method", "info": "Join collection elements: list.join(', ')" },
+    { "label": "split", "type": "method", "info": "Split string: str.split(',')" },
+    { "label": "trim", "type": "method", "info": "Remove leading/trailing whitespace" },
+    { "label": "toLowerCase", "type": "method", "info": "Convert to lowercase" },
+    { "label": "toUpperCase", "type": "method", "info": "Convert to uppercase" },
+    { "label": "toInteger", "type": "method", "info": "Convert string to integer" },
+    { "label": "toFloat", "type": "method", "info": "Convert string to float" },
+    { "label": "toDouble", "type": "method", "info": "Convert string to double" },
+    { "label": "toBoolean", "type": "method", "info": "Convert to boolean" }
+  ],
+  "dsl": [
+    { "label": "scenario", "type": "variable", "info": "Current scenario context" },
+    { "label": "log", "type": "variable", "info": "Logger instance for logging messages" },
+    { "label": "context", "type": "variable", "info": "Execution context with job and scenario data" },
+    { "label": "it", "type": "variable", "info": "Implicit closure parameter" }
+  ],
+  "scenarioMethods": [
+    { 
+      "label": "isEvening", 
+      "type": "method", 
+      "info": "Check if current time is evening (after 18:00 in UTC+2): isEvening()" 
+    },
+    { 
+      "label": "switchOn", 
+      "type": "method", 
+      "info": "Switch device/port ON: switchOn([portIds: [123, 456]]) or switchOn([peripheralIds: [10, 11]])" 
+    },
+    { 
+      "label": "switchOff", 
+      "type": "method", 
+      "info": "Switch device/port OFF: switchOff([portIds: [123, 456]]) or switchOff([peripheralIds: [10, 11]])" 
+    },
+    { 
+      "label": "switchToggle", 
+      "type": "method", 
+      "info": "Toggle device/port state: switchToggle([portIds: [123, 456]]) or switchToggle([peripheralIds: [10, 11]])" 
+    },
+    { 
+      "label": "pause", 
+      "type": "method", 
+      "info": "Pause execution for specified milliseconds: pause(1000)" 
+    }
+  ]
+}
+

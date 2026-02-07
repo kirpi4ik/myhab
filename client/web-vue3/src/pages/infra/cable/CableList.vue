@@ -1,173 +1,239 @@
 <template>
   <q-page padding>
-    <q-btn icon="add" color="positive" :disable="loading" label="Add cable" @click="addRow"/>
-    <q-grid :data="rows" :columns="columns" :columns_filter="true" :pagination="{rowsPerPage:10}"
-            class="myhab-list-qgrid">
-      <template v-slot:header="props">
-        <q-tr :props="props">
-          <q-th
-            :key="col.name"
-            v-for="col in props.cols">
-            {{ col.label }}
-          </q-th>
-        </q-tr>
-      </template>
-      <template v-slot:body="props">
-        <q-tr :props="props" @click="onRowClick(props.row)">
-          <q-td key="name" style="max-width: 50px">
-            {{ props.row.id }}
+    <q-card flat bordered>
+      <!-- Header Section -->
+      <q-card-section>
+        <div class="row items-center">
+          <div class="text-h5 text-primary">
+            <q-icon name="mdi-ethernet-cable" class="q-mr-sm"/>
+            Cable List
+          </div>
+          <q-space/>
+          <q-input 
+            v-model="filter" 
+            dense 
+            outlined
+            debounce="300" 
+            placeholder="Search cables..."
+            clearable
+            class="q-mr-sm"
+            style="min-width: 250px"
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-magnify"/>
+            </template>
+          </q-input>
+          <q-btn
+            color="primary"
+            icon="mdi-plus-circle"
+            label="Add Cable"
+            @click="createItem"
+            :disable="loading"
+          />
+        </div>
+      </q-card-section>
+
+      <!-- Table Section -->
+      <q-table 
+        :rows="filteredItems" 
+        :columns="columns" 
+        :loading="loading"
+        row-key="id"
+        flat
+        virtual-scroll
+        :rows-per-page-options="[0]"
+        hide-pagination
+        style="max-height: calc(100vh - 250px)"
+        class="sticky-header-table"
+        @row-click="(evt, row) => viewItem(row)"
+      >
+        <template v-slot:body-cell-code="props">
+          <q-td :props="props">
+            <q-badge color="primary" :label="props.row.code || 'No Code'"/>
           </q-td>
-          <q-td key="name">
-            {{ props.row.location }}
+        </template>
+
+        <template v-slot:body-cell-location="props">
+          <q-td :props="props">
+            <q-badge color="secondary" :label="props.row.location || '-'"/>
           </q-td>
-          <q-td key="name">
-            {{ props.row.category }}
+        </template>
+
+        <template v-slot:body-cell-category="props">
+          <q-td :props="props">
+            <q-badge 
+              v-if="props.row.category" 
+              :color="getCategoryColor(props.row.category)" 
+              :label="props.row.category"
+            />
+            <span v-else class="text-grey-6">-</span>
           </q-td>
-          <q-td key="name">
-            {{ props.row.code }}
+        </template>
+
+        <template v-slot:body-cell-description="props">
+          <q-td :props="props">
+            {{ props.row.description ? (props.row.description.length > 50 ? props.row.description.substring(0, 50) + '...' : props.row.description) : '-' }}
           </q-td>
-          <q-td key="name">
-            {{ props.row.description }}
+        </template>
+
+        <template v-slot:body-cell-patchPanel="props">
+          <q-td :props="props">
+            {{ props.row.patchPanel || '-' }}
           </q-td>
-          <q-td key="name">
-            {{ props.row.patchPanel }}
+        </template>
+
+        <template v-slot:body-cell-tsCreated="props">
+          <q-td :props="props">
+            {{ formatDate(props.row.tsCreated) }}
           </q-td>
-          <q-td key="name">
+        </template>
+
+        <template v-slot:body-cell-actions="props">
+          <q-td :props="props">
             <q-btn-group>
-              <q-btn icon="mdi-open-in-new" @click.stop="" :href="'/nx'+uri+'/'+props.row.id+'/view'" target="_blank"
-                     color="blue-6"/>
-              <q-btn icon="mdi-note-edit-outline" color="amber-7" @click.stop="onEdit(props.row)"/>
-              <q-btn icon="delete" color="red-7" @click.stop="removeItem(props.row)"/>
+              <q-btn 
+                icon="mdi-eye" 
+                @click.stop="viewItem(props.row)" 
+                color="blue-6" 
+                flat
+                size="sm"
+              >
+                <q-tooltip>View</q-tooltip>
+              </q-btn>
+              <q-btn 
+                icon="mdi-pencil" 
+                color="amber-7" 
+                @click.stop="editItem(props.row)" 
+                flat
+                size="sm"
+              >
+                <q-tooltip>Edit</q-tooltip>
+              </q-btn>
+              <q-btn 
+                icon="mdi-delete" 
+                color="red-7" 
+                @click.stop="deleteItem(props.row)" 
+                flat
+                size="sm"
+              >
+                <q-tooltip>Delete</q-tooltip>
+              </q-btn>
             </q-btn-group>
           </q-td>
-        </q-tr>
-      </template>
-    </q-grid>
+        </template>
+      </q-table>
+    </q-card>
   </q-page>
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from "vue";
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRouter} from "vue-router/dist/vue-router";
+import {defineComponent, onMounted} from "vue";
+import {useEntityList} from '@/composables';
 import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
-import _ from "lodash";
-import {useQuasar} from "quasar";
-import {right} from "core-js/internals/array-reduce";
+import {format} from 'date-fns';
 
 export default defineComponent({
   name: 'CableList',
   setup() {
-    const $q = useQuasar()
-    const uri = '/admin/cables'
-    const {client} = useApolloClient();
-    const loading = ref(false)
-    const router = useRouter();
-    const rows = ref([]);
-    const selectedRow = ref(null);
-    const categoryList = ref([]);
+    // Define columns for the table
     const columns = [
+      {name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left', style: 'max-width: 60px'},
+      {name: 'code', label: 'Code', field: 'code', sortable: true, align: 'left'},
+      {name: 'location', label: 'Rack', field: 'location', sortable: true, align: 'left'},
+      {name: 'category', label: 'Category', field: 'category', sortable: true, align: 'left'},
+      {name: 'description', label: 'Description', field: 'description', sortable: true, align: 'left'},
+      {name: 'patchPanel', label: 'Panel Port', field: 'patchPanel', sortable: true, align: 'left'},
+      {name: 'tsCreated', label: 'Created', field: 'tsCreated', sortable: true, align: 'left'},
       {
-        name: 'id',
-        label: 'ID',
-        field: 'id',
-        sortable: true,
-        align: 'left'
-      },
-      {name: 'location', label: 'Rack', field: 'location', sortable: true, filter_type: 'select'},
-      {name: 'category', label: 'Category', field: 'category', sortable: true, filter_type: 'select'},
-      {name: 'code', label: 'Code', field: 'code', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', sortable: true},
-      {name: 'patchPanel', label: 'Panel port', field: 'patchPanel', sortable: true},
-      {name: 'actions', label: 'Actions', field: 'actions', sortable: false, filter_type: '', align: 'right'}
+        name: 'actions', 
+        label: 'Actions', 
+        field: '', 
+        sortable: false, 
+        align: 'right',
+        headerClasses: 'bg-grey-2',
+        classes: 'bg-grey-1',
+        headerStyle: 'position: sticky; right: 0; z-index: 1',
+        style: 'position: sticky; right: 0'
+      }
     ];
-    const fetchData = () => {
-      loading.value = true;
-      client.query({
-        query: CABLE_LIST_ALL,
-        variables: {},
-        fetchPolicy: 'network-only',
-      }).then(response => {
-        categoryList.value = _.transform(response.data.cableCategoryList,
-          function (result, value, key) {
-            result.push(value.name)
-          })
-        rows.value = [];
-        rows.value = _.transform(response.data.cableList,
-          function (result, value, key) {
-            let device = {
-              id: value.id,
-              location: value.rack.name,
-              category: value.category != null ? value.category.name : "",
-              code: value.code,
-              description: value.description,
-              patchPanel: value.patchPanel != null ? (value.patchPanel.name + '(' + value.patchPanelPort + '/' + value.patchPanel.size + ')') : ''
-            }
-            result.push(device)
-          }
-        );
-        loading.value = false;
-      });
-    }
-    const removeItem = (toDelete) => {
-      $q.dialog({
-        title: 'Remove',
-        message: `Doriti sa stergeti port : ${toDelete.code} ?`,
-        ok: {
-          push: true,
-          color: 'negative',
-          label: "Remove"
-        },
-        cancel: {
-          push: true,
-          color: 'green'
-        }
-      }).onOk(() => {
-        client.mutate({
-          mutation: CABLE_DELETE,
-          variables: {id: selectedRow.value.id},
-        }).then(response => {
-          fetchData()
-          if (response.data.cableDelete.success) {
-            $q.notify({
-              color: 'positive',
-              message: 'Port removed'
-            })
-          } else {
-            $q.notify({
-              color: 'negative',
-              message: 'Failed to remove'
-            })
-          }
-        });
-      })
-    }
-    onMounted(() => {
-      fetchData()
-    })
-    return {
-      rows,
+
+    // Use the entity list composable
+    const {
+      filteredItems,
       loading,
-      fetchData,
-      removeItem,
-      categoryList,
+      filter,
+      fetchList,
+      viewItem,
+      editItem,
+      createItem,
+      deleteItem
+    } = useEntityList({
+      entityName: 'Cable',
+      entityPath: '/admin/cables',
+      listQuery: CABLE_LIST_ALL,
+      deleteMutation: CABLE_DELETE,
       columns,
-      uri,
-      onRowClick: (row) => {
-        router.push({path: `${uri}/${row.id}/view`})
-      },
-      onEdit: (row) => {
-        router.push({path: `${uri}/${row.id}/edit`})
-      },
-      addRow: () => {
-        router.push({path: `${uri}/new`})
-      },
-    }
+      transformAfterLoad: (cable) => ({
+        id: cable.id,
+        code: cable.code,
+        location: cable.rack?.name || '-',
+        category: cable.category?.name || null,
+        description: cable.description,
+        patchPanel: cable.patchPanel 
+          ? `${cable.patchPanel.name} (${cable.patchPanelPort}/${cable.patchPanel.size})` 
+          : null,
+        tsCreated: cable.tsCreated,
+        tsUpdated: cable.tsUpdated
+      })
+    });
+
+    /**
+     * Format date for display
+     */
+    const formatDate = (dateString) => {
+      if (!dateString) return '-';
+      try {
+        return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
+      } catch (error) {
+        return '-';
+      }
+    };
+
+    /**
+     * Get color for category badge
+     */
+    const getCategoryColor = (category) => {
+      const colors = {
+        'CAT5': 'blue-6',
+        'CAT5E': 'blue-7',
+        'CAT6': 'green-7',
+        'CAT6A': 'green-8',
+        'CAT7': 'purple-7',
+        'FIBER': 'orange-7',
+        'COAX': 'brown-7',
+        'POWER': 'red-7'
+      };
+      return colors[category] || 'grey-7';
+    };
+
+    // Fetch data on mount
+    onMounted(() => {
+      fetchList();
+    });
+
+    return {
+      filteredItems,
+      loading,
+      filter,
+      columns,
+      viewItem,
+      editItem,
+      createItem,
+      deleteItem,
+      formatDate,
+      getCategoryColor
+    };
   }
 });
+
 </script>
-<style>
-.myhab-list-qgrid input:first-child {
-  max-width: 40px;
-}
-</style>

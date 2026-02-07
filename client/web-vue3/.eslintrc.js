@@ -58,7 +58,8 @@ module.exports = {
 	rules: {
 		// allow debugger during development only
 		'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-		'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+		// Disable console warnings - we use console.error for legitimate error logging
+		'no-console': 'off',
 		'no-unused-vars': 'off',
 		'prefer-promise-reject-errors': 'off',
 	},

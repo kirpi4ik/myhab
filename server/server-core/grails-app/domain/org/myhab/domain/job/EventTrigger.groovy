@@ -8,6 +8,7 @@ class EventTrigger extends BaseEntity {
 
   static belongsTo = [Job]
   static hasOne = [job: Job]
+  static hasMany = [events: EventDefinition]
 
   static constraints = {
   }
@@ -16,4 +17,6 @@ class EventTrigger extends BaseEntity {
     events joinTable: [name: "job_triggers_event_definitions_join", key: 'trigger_id']
     version false
   }
+
+  static graphql = true
 }

@@ -31,14 +31,14 @@ class EventController implements EventPublisher {
         def devicePort = DevicePort.withCriteria {
             eq('internalRef', input[1])
             device {
-                eq('uid', mega.uid)
+                eq('id', mega.id)
             }
             maxResults(1)
         }
         EventData eObj = new EventData().with {
             p0 = TopicName.byOrder(input[2] as Integer).id()
             p1 = EntityType.PORT.name()
-            p2 = "${devicePort.uid}"
+            p2 = "${devicePort.id}"
             p3 = "sensor-${input[0]}-${input[1]}"
             p4 = "ON"
             it
