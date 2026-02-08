@@ -7,6 +7,25 @@ type Query{
     appConfigList: [AppConfigEntry]
     deviceModelList:[String!]!
     jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
+    """Active jobs linked to a sprinkler peripheral, for the sprinkler scheduler UI. Ordered by peripheral name."""
+    sprinklerScheduleJobs: [SprinklerScheduleEntry!]!
+}
+
+"""One row in the sprinkler scheduler: an ACTIVE job linked to a sprinkler peripheral."""
+type SprinklerScheduleEntry {
+    jobId: ID!
+    jobName: String!
+    peripheralId: ID!
+    peripheralName: String!
+    peripheralDescription: String
+    """Running time in minutes (from key.on.timeout in seconds, default 60)."""
+    timeoutMinutes: Int!
+    cronTriggers: [SprinklerCronTrigger!]!
+}
+
+type SprinklerCronTrigger {
+    id: ID!
+    expression: String!
 }
 
 type AppConfigEntry {
