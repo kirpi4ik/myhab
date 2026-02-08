@@ -11,6 +11,11 @@ class UrlMappings {
         get "/api/public/event"(controller: "event", action: "pubGetEvent")
         get "/pub-event"(controller: "event", action: "pubGetEvent")
         get "/e"(controller: "event", action: "shortUrlEvent")
+        
+        // Label generation API
+        get "/api/labels/cable/$id"(controller: "label", action: "generateCableLabel")
+        get "/api/labels/templates"(controller: "label", action: "templates")
+        get "/api/labels/fields"(controller: "label", action: "fields")
         "/login/auth"(controller: "login", action: "auth")
 
         if (Environment.current == Environment.PRODUCTION) {

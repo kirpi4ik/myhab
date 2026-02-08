@@ -17,6 +17,12 @@
         <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           <q-tooltip>Edit Cable</q-tooltip>
         </q-btn>
+        <q-btn outline round color="teal-7" icon="mdi-label-outline" 
+               @click="downloadLabel" 
+               :loading="labelLoading"
+               class="q-ml-sm">
+          <q-tooltip>Download Label</q-tooltip>
+        </q-btn>
         <q-btn outline round color="amber-8" icon="mdi-view-list" 
                :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=CABLE'" class="q-ml-sm">
           <q-tooltip>View Configurations</q-tooltip>
@@ -303,6 +309,7 @@ import {useRoute, useRouter} from "vue-router";
 import {useQuasar} from "quasar";
 
 import {CABLE_BY_ID} from "@/graphql/queries";
+import {labelService} from '@/_services';
 
 import {format} from 'date-fns';
 
@@ -313,6 +320,7 @@ export default defineComponent({
     const $q = useQuasar();
     const viewItem = ref();
     const loading = ref(false);
+    const labelLoading = ref(false);
     const {client} = useApolloClient();
     const router = useRouter();
     const route = useRoute();
@@ -405,6 +413,34 @@ export default defineComponent({
       router.push({path: `/admin/peripherals/${row.id}/view`});
     };
 
+    /**
+     * Download label for the current cable
+     */
+    const downloadLabel = async () => {
+      labelLoading.value = true;
+      try {
+        await labelService.downloadCableLabel(route.params.idPrimary, {
+          template: 'brother_18mm'
+        });
+        $q.notify({
+          color: 'positive',
+          message: 'Label downloaded successfully',
+          icon: 'mdi-check-circle',
+          position: 'top',
+          timeout: 2000
+        });
+      } catch (error) {
+        $q.notify({
+          color: 'negative',
+          message: 'Failed to download label: ' + error.message,
+          icon: 'mdi-alert-circle',
+          position: 'top'
+        });
+      } finally {
+        labelLoading.value = false;
+      }
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -414,13 +450,15 @@ export default defineComponent({
       fetchData,
       viewItem,
       loading,
+      labelLoading,
       pagination,
       portColumns,
       peripheralColumns,
       viewPort,
       viewPeripheral,
       formatDate,
-      getCategoryColor
+      getCategoryColor,
+      downloadLabel
     };
   }
 });
