@@ -22,6 +22,15 @@ export const JOB_LIST_ALL = gql`
       id
       name
     }
+    devicePeripheralList {
+      id
+      name
+      description
+      category {
+        id
+        name
+      }
+    }
   }
 `;
 
@@ -86,6 +95,11 @@ export const JOB_EDIT_GET_BY_ID = gql`
         id
         name
       }
+      peripheral {
+        id
+        name
+        description
+      }
     }
     scenarioList {
       id
@@ -98,6 +112,15 @@ export const JOB_EDIT_GET_BY_ID = gql`
     eventDefinitionList {
       id
       name
+    }
+    devicePeripheralList {
+      id
+      name
+      description
+      category {
+        id
+        name
+      }
     }
   }
 `;
@@ -150,6 +173,37 @@ export const JOB_TRIGGER = gql`
     jobTrigger(jobId: $jobId) {
       success
       error
+    }
+  }
+`;
+
+/** List jobs with peripheral id (for showing linked job on PeripheralView). */
+export const JOB_LIST_WITH_PERIPHERAL = gql`
+  query jobListWithPeripheral {
+    jobList {
+      id
+      name
+      peripheral {
+        id
+      }
+    }
+  }
+`;
+
+/** Sprinkler scheduler: ACTIVE jobs linked to a sprinkler peripheral. */
+export const SPRINKLER_SCHEDULE_JOBS = gql`
+  query sprinklerScheduleJobs {
+    sprinklerScheduleJobs {
+      jobId
+      jobName
+      peripheralId
+      peripheralName
+      peripheralDescription
+      timeoutMinutes
+      cronTriggers {
+        id
+        expression
+      }
     }
   }
 `;

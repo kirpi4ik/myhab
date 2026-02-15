@@ -124,6 +124,14 @@
                 <q-item-label>{{ $t('navigation.jobs') }}</q-item-label>
               </q-item-section>
             </q-item>
+            <q-item to="/admin/jobs/sprinkler-schedule" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-sprinkler-variant"/>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Sprinkler Scheduler</q-item-label>
+              </q-item-section>
+            </q-item>
 
             <q-item to="/admin/scenarios" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>

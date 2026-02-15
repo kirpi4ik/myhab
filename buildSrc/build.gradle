@@ -1,0 +1,8 @@
+repositories {
+    mavenCentral()
+    maven { url "https://repo.grails.org/grails/core" }
+}
+
+dependencies {
+    implementation "org.grails.plugins:views-gradle:3.0.0"
+}

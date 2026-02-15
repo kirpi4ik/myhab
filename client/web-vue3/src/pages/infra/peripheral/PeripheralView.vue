@@ -95,6 +95,31 @@
           </q-item-section>
         </q-item>
 
+        <q-item v-if="linkedJobs.length > 0">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-briefcase-clock" class="q-mr-sm"/>
+              Linked job(s)
+            </q-item-label>
+            <q-item-label caption class="text-body2">
+              <q-btn
+                v-for="job in linkedJobs"
+                :key="job.id"
+                icon="mdi-eye"
+                :to="'/admin/jobs/' + job.id + '/view'"
+                size="sm"
+                flat
+                dense
+                color="primary"
+                class="q-mr-sm"
+              >
+                {{ job.name }}
+                <q-tooltip>View Job</q-tooltip>
+              </q-btn>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+
         <q-separator class="q-my-md"/>
 
         <!-- Connected Ports Section -->
@@ -276,14 +301,14 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from "vue";
+import {defineComponent, onMounted, ref, computed} from "vue";
 
-import {useApolloClient} from "@vue/apollo-composable";
+import {useApolloClient, useQuery} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router";
 
 import {useQuasar} from "quasar";
 
-import {PERIPHERAL_GET_BY_ID} from "@/graphql/queries";
+import {PERIPHERAL_GET_BY_ID, JOB_LIST_WITH_PERIPHERAL} from "@/graphql/queries";
 
 import {format} from 'date-fns';
 
@@ -297,6 +322,14 @@ export default defineComponent({
     const {client} = useApolloClient();
     const router = useRouter();
     const route = useRoute();
+    const { result: jobsResult } = useQuery(JOB_LIST_WITH_PERIPHERAL);
+
+    const linkedJobs = computed(() => {
+      const jobs = jobsResult.value?.jobList || [];
+      const pid = viewItem.value?.id;
+      if (pid == null) return [];
+      return jobs.filter((job) => job.peripheral && Number(job.peripheral.id) === Number(pid));
+    });
 
     const pagination = ref({
       sortBy: 'id',
@@ -430,6 +463,7 @@ export default defineComponent({
       fetchData,
       viewItem,
       loading,
+      linkedJobs,
       pagination,
       zoneColumns,
       portColumns,

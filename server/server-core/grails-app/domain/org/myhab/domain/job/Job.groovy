@@ -3,6 +3,7 @@ package org.myhab.domain.job
 import grails.util.Holders
 import groovy.util.logging.Slf4j
 import org.myhab.domain.common.BaseEntity
+import org.myhab.domain.device.DevicePeripheral
 import org.myhab.domain.device.Scenario
 import org.myhab.domain.UserFavJobJoin
 import graphql.schema.DataFetchingEnvironment
@@ -18,19 +19,14 @@ class Job extends BaseEntity {
     Scenario scenario
     JobState state
     Set<JobTag> tags
+    /** Optional link to a peripheral (e.g. sprinkler) for schedule UI. Used only for "sprinkler schedule" jobs. */
+    DevicePeripheral peripheral
 
     // Store previous state to detect changes
     transient JobState previousState
 
     static fetchMode = [tags: "eager"]
     static hasMany = [cronTriggers: CronTrigger, eventTriggers: EventTrigger, tags: JobTag]
-
-    static mapping = {
-        table '`jobs`'
-        tags joinTable: [name: "jobs_tags_join", key: 'job_id']
-        cronTriggers cascade: "all-delete-orphan"
-        eventTriggers cascade: "all-delete-orphan"
-    }
 
     static constraints = {
         tags nullable: true
@@ -39,6 +35,15 @@ class Job extends BaseEntity {
         state nullable: true
         cronTriggers nullable: true
         eventTriggers nullable: true
+        peripheral nullable: true
+    }
+
+    static mapping = {
+        table '`jobs`'
+        tags joinTable: [name: "jobs_tags_join", key: 'job_id']
+        cronTriggers cascade: "all-delete-orphan"
+        eventTriggers cascade: "all-delete-orphan"
+        peripheral column: 'peripheral_id'
     }
 
     static graphql = GraphQLMapping.lazy {

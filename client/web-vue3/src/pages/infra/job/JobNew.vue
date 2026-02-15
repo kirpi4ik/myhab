@@ -69,6 +69,36 @@
             </template>
           </q-select>
 
+          <q-select v-model="selectedPeripheral"
+                    :options="peripheralListFiltered"
+                    option-label="name"
+                    label="Peripheral (optional)"
+                    hint="Link to a peripheral e.g. for Sprinkler Scheduler"
+                    clearable
+                    use-input
+                    input-debounce="200"
+                    @filter="filterPeripheralFn"
+                    filled
+                    dense>
+            <template v-slot:prepend>
+              <q-icon name="mdi-power-socket-au"/>
+            </template>
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section>
+                  <q-item-label>{{ scope.opt.name }}</q-item-label>
+                  <q-item-label caption v-if="scope.opt.description">{{ scope.opt.description }}</q-item-label>
+                  <q-item-label caption v-if="scope.opt.category">{{ scope.opt.category.name }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey">No peripherals found</q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+
           <div class="text-subtitle2 text-weight-medium q-mt-md q-mb-sm">Cron Triggers</div>
           <q-list bordered separator>
             <q-item v-for="(trigger, index) in cronTriggers" :key="index">
@@ -177,6 +207,9 @@ export default defineComponent({
     const {client} = useApolloClient();
     const scenarioList = ref([]);
     const selectedScenario = ref(null);
+    const peripheralList = ref([]);
+    const peripheralListFiltered = ref([]);
+    const selectedPeripheral = ref(null);
     const tagList = ref([]);
     const tagListFiltered = ref([]);
     const selectedTags = ref([]);
@@ -206,6 +239,12 @@ export default defineComponent({
         // Add scenario
         if (selectedScenario.value && selectedScenario.value.id) {
           transformed.scenario = { id: selectedScenario.value.id };
+        }
+        // Add optional peripheral (e.g. for Sprinkler Scheduler)
+        if (selectedPeripheral.value && selectedPeripheral.value.id) {
+          transformed.peripheral = { id: selectedPeripheral.value.id };
+        } else {
+          transformed.peripheral = null;
         }
         // Add cron triggers
         transformed.cronTriggers = cronTriggers.value.map(t => ({ 
@@ -240,6 +279,21 @@ export default defineComponent({
           const needle = val.toLowerCase();
           tagListFiltered.value = tagList.value.filter(
             tag => tag.name.toLowerCase().includes(needle)
+          );
+        }
+      });
+    };
+
+    const filterPeripheralFn = (val, update) => {
+      update(() => {
+        if (val === '') {
+          peripheralListFiltered.value = peripheralList.value;
+        } else {
+          const needle = val.toLowerCase();
+          peripheralListFiltered.value = peripheralList.value.filter(
+            p => (p.name && p.name.toLowerCase().includes(needle)) ||
+                 (p.description && p.description.toLowerCase().includes(needle)) ||
+                 (p.category?.name && p.category.name.toLowerCase().includes(needle))
           );
         }
       });
@@ -281,6 +335,8 @@ export default defineComponent({
         fetchPolicy: 'network-only',
       }).then(response => {
         scenarioList.value = response.data.scenarioList || [];
+        peripheralList.value = [...(response.data.devicePeripheralList || [])];
+        peripheralListFiltered.value = [...peripheralList.value];
         tagList.value = [...(response.data.jobTagList || [])];
         tagListFiltered.value = [...(response.data.jobTagList || [])];
       }).catch(error => {
@@ -362,6 +418,10 @@ export default defineComponent({
       job,
       scenarioList,
       selectedScenario,
+      peripheralList,
+      peripheralListFiltered,
+      selectedPeripheral,
+      filterPeripheralFn,
       tagList,
       tagListFiltered,
       selectedTags,
