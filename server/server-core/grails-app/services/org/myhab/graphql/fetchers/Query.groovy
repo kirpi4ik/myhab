@@ -1,9 +1,14 @@
 package org.myhab.graphql.fetchers
 
 import com.hazelcast.core.HazelcastInstance
+import org.myhab.ConfigKey
 import org.myhab.config.ConfigProvider
+import org.myhab.domain.Configuration
+import org.myhab.domain.EntityType
 import org.myhab.domain.User
+import org.myhab.domain.job.Job
 import org.myhab.domain.job.JobExecutionHistory
+import org.myhab.domain.job.JobState
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
@@ -167,6 +172,40 @@ class Query {
                         actualFireTime: history.actualFireTime ? ISO_DATE_FORMAT.format(history.actualFireTime) : null,
                         tsCreated: history.tsCreated ? ISO_DATE_FORMAT.format(history.tsCreated) : null,
                         tsUpdated: history.tsUpdated ? ISO_DATE_FORMAT.format(history.tsUpdated) : null
+                    ]
+                }
+            }
+        }
+    }
+
+    /**
+     * Active jobs that have a linked sprinkler peripheral (for scheduler UI).
+     * Ordered by peripheral name. Timeout from key.on.timeout in seconds, default 60 minutes.
+     */
+    def sprinklerScheduleJobs() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def jobs = Job.where {
+                    state == JobState.ACTIVE && peripheral != null
+                }.list(sort: 'peripheral.name', order: 'asc')
+                return jobs.collect { job ->
+                    def peripheral = job.peripheral
+                    def timeoutConfig = Configuration.findByEntityIdAndEntityTypeAndKey(
+                        peripheral.id, EntityType.PERIPHERAL, ConfigKey.STATE_ON_TIMEOUT
+                    )
+                    int timeoutSeconds = timeoutConfig?.value ? Integer.parseInt(timeoutConfig.value.trim()) : 3600
+                    int timeoutMinutes = Math.max(1, (int) (timeoutSeconds / 60))
+                    [
+                        jobId: job.id,
+                        jobName: job.name,
+                        peripheralId: peripheral.id,
+                        peripheralName: peripheral.name ?: '',
+                        peripheralDescription: peripheral.description,
+                        timeoutMinutes: timeoutMinutes,
+                        cronTriggers: (job.cronTriggers ?: []).collect { t ->
+                            [id: t.id, expression: t.expression]
+                        }
                     ]
                 }
             }

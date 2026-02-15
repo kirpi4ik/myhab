@@ -69,6 +69,36 @@
             </template>
           </q-select>
 
+          <q-select v-model="selectedPeripheral"
+                    :options="peripheralListFiltered"
+                    option-label="name"
+                    label="Peripheral (optional)"
+                    hint="Link to a peripheral e.g. for Sprinkler Scheduler"
+                    clearable
+                    use-input
+                    input-debounce="200"
+                    @filter="filterPeripheralFn"
+                    filled
+                    dense>
+            <template v-slot:prepend>
+              <q-icon name="mdi-power-socket-au"/>
+            </template>
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section>
+                  <q-item-label>{{ scope.opt.name }}</q-item-label>
+                  <q-item-label caption v-if="scope.opt.description">{{ scope.opt.description }}</q-item-label>
+                  <q-item-label caption v-if="scope.opt.category">{{ scope.opt.category.name }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey">No peripherals found</q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+
           <div class="text-subtitle2 text-weight-medium q-mt-md q-mb-sm">Cron Triggers</div>
           <q-list bordered separator>
             <q-item v-for="(trigger, index) in cronTriggers" :key="index">
@@ -201,6 +231,9 @@ export default defineComponent({
     
     const scenarioList = ref([]);
     const selectedScenario = ref(null);
+    const peripheralList = ref([]);
+    const peripheralListFiltered = ref([]);
+    const selectedPeripheral = ref(null);
     const tagList = ref([]);
     const tagListFiltered = ref([]);
     const selectedTags = ref([]);
@@ -224,12 +257,19 @@ export default defineComponent({
       updateMutation: JOB_UPDATE,
       updateMutationKey: 'jobUpdate',
       updateVariableName: 'job',
-      excludeFields: ['__typename', 'id', 'tsCreated', 'tsUpdated', 'entityType', 'cronTriggers', 'eventTriggers', 'tags', 'scenario'],
+      excludeFields: ['__typename', 'id', 'tsCreated', 'tsUpdated', 'entityType', 'cronTriggers', 'eventTriggers', 'tags', 'scenario', 'peripheral'],
       transformBeforeSave: (data) => {
         const transformed = {...data};
         
         // Set scenario
         transformed.scenario = { id: selectedScenario.value.id };
+        
+        // Set optional peripheral (e.g. for Sprinkler Scheduler)
+        if (selectedPeripheral.value && selectedPeripheral.value.id) {
+          transformed.peripheral = { id: selectedPeripheral.value.id };
+        } else {
+          transformed.peripheral = null;
+        }
         
         // Set cron triggers
         transformed.cronTriggers = cronTriggers.value.map(t => ({
@@ -271,6 +311,24 @@ export default defineComponent({
         }
       });
       cronErrors.value = newErrors;
+    };
+
+    /**
+     * Filter peripherals for searchable select
+     */
+    const filterPeripheralFn = (val, update) => {
+      update(() => {
+        if (val === '') {
+          peripheralListFiltered.value = peripheralList.value;
+        } else {
+          const needle = val.toLowerCase();
+          peripheralListFiltered.value = peripheralList.value.filter(
+            p => (p.name && p.name.toLowerCase().includes(needle)) ||
+                 (p.description && p.description.toLowerCase().includes(needle)) ||
+                 (p.category?.name && p.category.name.toLowerCase().includes(needle))
+          );
+        }
+      });
     };
 
     /**
@@ -335,6 +393,8 @@ export default defineComponent({
       
       if (response) {
         scenarioList.value = response.scenarioList || [];
+        peripheralList.value = [...(response.devicePeripheralList || [])];
+        peripheralListFiltered.value = [...peripheralList.value];
         // Create mutable copies of tag lists to allow adding new tags
         tagList.value = [...(response.jobTagList || [])];
         tagListFiltered.value = [...(response.jobTagList || [])];
@@ -342,6 +402,13 @@ export default defineComponent({
         // Pre-select scenario
         if (job.value.scenario) {
           selectedScenario.value = scenarioList.value.find(s => s.id === job.value.scenario.id);
+        }
+        
+        // Pre-select peripheral
+        if (job.value.peripheral) {
+          selectedPeripheral.value = peripheralList.value.find(p => p.id === job.value.peripheral.id) || job.value.peripheral;
+        } else {
+          selectedPeripheral.value = null;
         }
         
         // Pre-select tags
@@ -446,6 +513,10 @@ export default defineComponent({
       saving,
       scenarioList,
       selectedScenario,
+      peripheralList,
+      peripheralListFiltered,
+      selectedPeripheral,
+      filterPeripheralFn,
       tagList,
       tagListFiltered,
       selectedTags,

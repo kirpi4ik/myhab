@@ -110,6 +110,16 @@
                 <q-tooltip>Edit</q-tooltip>
               </q-btn>
               <q-btn 
+                icon="mdi-label-outline" 
+                color="teal-7" 
+                @click.stop="downloadLabel(props.row)" 
+                flat
+                size="sm"
+                :loading="labelLoading === props.row.id"
+              >
+                <q-tooltip>Download Label</q-tooltip>
+              </q-btn>
+              <q-btn 
                 icon="mdi-delete" 
                 color="red-7" 
                 @click.stop="deleteItem(props.row)" 
@@ -127,14 +137,19 @@
 </template>
 
 <script>
-import {defineComponent, onMounted} from "vue";
+import {defineComponent, onMounted, ref} from "vue";
 import {useEntityList} from '@/composables';
 import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
 import {format} from 'date-fns';
+import {labelService} from '@/_services';
+import {useQuasar} from 'quasar';
 
 export default defineComponent({
   name: 'CableList',
   setup() {
+    const $q = useQuasar();
+    const labelLoading = ref(null);
+
     // Define columns for the table
     const columns = [
       {name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left', style: 'max-width: 60px'},
@@ -216,6 +231,34 @@ export default defineComponent({
       return colors[category] || 'grey-7';
     };
 
+    /**
+     * Download label for a cable
+     */
+    const downloadLabel = async (row) => {
+      labelLoading.value = row.id;
+      try {
+        await labelService.downloadCableLabel(row.id, {
+          template: 'brother_18mm'
+        });
+        $q.notify({
+          color: 'positive',
+          message: 'Label downloaded successfully',
+          icon: 'mdi-check-circle',
+          position: 'top',
+          timeout: 2000
+        });
+      } catch (error) {
+        $q.notify({
+          color: 'negative',
+          message: 'Failed to download label: ' + error.message,
+          icon: 'mdi-alert-circle',
+          position: 'top'
+        });
+      } finally {
+        labelLoading.value = null;
+      }
+    };
+
     // Fetch data on mount
     onMounted(() => {
       fetchList();
@@ -231,7 +274,9 @@ export default defineComponent({
       createItem,
       deleteItem,
       formatDate,
-      getCategoryColor
+      getCategoryColor,
+      downloadLabel,
+      labelLoading
     };
   }
 });

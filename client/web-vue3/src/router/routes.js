@@ -374,6 +374,13 @@ const routes = [
             component: () => import('pages/infra/job/JobList'),
           },
           {
+            path: adminPrefix + '/jobs/sprinkler-schedule',
+            component: () => import('pages/infra/job/SprinklerScheduler'),
+            meta: {
+              name: "Sprinkler Scheduler"
+            }
+          },
+          {
             path: adminPrefix + '/jobs/new',
             component: () => import('pages/infra/job/JobNew'),
             meta: {
