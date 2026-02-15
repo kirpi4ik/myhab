@@ -1,3 +1,14 @@
+pluginManagement {
+    repositories {
+        maven { url "https://repo.grails.org/grails/core" }
+        maven { url "https://plugins.gradle.org/m2/" }
+        gradlePluginPortal()
+    }
+    plugins {
+        id 'org.grails.grails-web' version '6.1.0'
+    }
+}
+
 include ":web-vue3"
 include ":server-core"
 include ":server-config"
