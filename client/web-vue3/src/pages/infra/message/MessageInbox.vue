@@ -186,7 +186,8 @@
 </template>
 
 <script>
-import { computed, defineComponent, onMounted, ref } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useApolloClient } from '@vue/apollo-composable';
 import { useQuasar } from 'quasar';
 import { formatDistanceToNow, format, parseISO } from 'date-fns';
@@ -199,6 +200,7 @@ export default defineComponent({
   name: 'MessageInbox',
   setup() {
     const $q = useQuasar();
+    const route = useRoute();
     const { client } = useApolloClient();
 
     const messages = ref([]);
@@ -356,8 +358,24 @@ export default defineComponent({
       return true;
     });
 
-    onMounted(() => {
-      fetchMessages();
+    const applyQuerySelection = async () => {
+      const idFromQuery = route.query.id;
+      if (!idFromQuery) {
+        selectedMessage.value = null;
+        return;
+      }
+      if (messages.value.length === 0) return;
+      const msg = messages.value.find(m => String(m.id) === String(idFromQuery));
+      if (msg) {
+        await selectMessage(msg);
+      }
+    };
+
+    watch(() => route.query.id, () => applyQuerySelection());
+
+    onMounted(async () => {
+      await fetchMessages();
+      await applyQuerySelection();
     });
 
     return {
