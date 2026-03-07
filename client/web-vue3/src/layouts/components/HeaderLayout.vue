@@ -33,12 +33,12 @@
         >
         </q-btn>
         <q-btn round dense flat color="secondary" icon="notifications">
-          <q-badge color="negative" text-color="white" floating> 5</q-badge>
+          <q-badge v-if="unreadCount > 0" color="negative" text-color="white" floating>{{ unreadCount }}</q-badge>
           <q-menu>
             <q-list style="min-width: 100px">
               <user-messages></user-messages>
               <q-card class="text-center no-shadow no-border">
-                <q-btn label="View All" style="max-width: 120px !important" flat dense class="text-indigo-8"></q-btn>
+                <q-btn label="View All" style="max-width: 120px !important" flat dense class="text-indigo-8" @click="$router.push('/messages')"/>
               </q-card>
             </q-list>
           </q-menu>
@@ -71,11 +71,11 @@
 <script>
 import { computed, defineComponent, ref, onMounted, onUnmounted } from 'vue';
 
-import { useQuery } from '@vue/apollo-composable';
+import { useQuery, useApolloClient } from '@vue/apollo-composable';
 import { useWebSocketStore } from '@/store/websocket.store';
 
 import { authzService, fetchAvatarBlobUrl } from '@/_services';
-import { CONFIG_GLOBAL_GET_STRING_VAL } from '@/graphql/queries';
+import { CONFIG_GLOBAL_GET_STRING_VAL, MY_UNREAD_COUNT } from '@/graphql/queries';
 import { useUiState } from '@/composables';
 import UserMessages from './UserMessages';
 
@@ -93,12 +93,26 @@ export default defineComponent({
     const wsStore = useWebSocketStore();
     const { toggleSideBar } = useUiState();
     const { result } = useQuery(CONFIG_GLOBAL_GET_STRING_VAL, { key: 'surveillance.url' });
+    const { client } = useApolloClient();
 
     const avatarBlobUrl = ref(null);
+    const unreadCount = ref(0);
 
     const wsConnection = computed(() => {
       return wsStore.ws.connection || 'OFFLINE';
     });
+
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await client.query({
+          query: MY_UNREAD_COUNT,
+          fetchPolicy: 'network-only'
+        });
+        unreadCount.value = response.data.myUnreadCount || 0;
+      } catch {
+        unreadCount.value = 0;
+      }
+    };
 
     onMounted(async () => {
       const userId = authzService.currentUserValue?.id;
@@ -106,6 +120,7 @@ export default defineComponent({
         const url = await fetchAvatarBlobUrl(userId);
         avatarBlobUrl.value = url;
       }
+      fetchUnreadCount();
     });
 
     onUnmounted(() => {
@@ -121,6 +136,7 @@ export default defineComponent({
       authzService,
       wsConnection,
       avatarBlobUrl,
+      unreadCount,
     };
   },
   mounted() {

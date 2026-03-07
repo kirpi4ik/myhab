@@ -23,6 +23,14 @@
             <q-item-label>{{ $t('navigation.dashboard') }}</q-item-label>
           </q-item-section>
         </q-item>
+        <q-item to="/messages" active-class="q-item-no-link-highlighting">
+          <q-item-section avatar>
+            <q-icon name="mdi-email" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Messages</q-item-label>
+          </q-item-section>
+        </q-item>
         <q-expansion-item v-if="isAdmin" v-model="expanded" icon="mdi-clipboard-edit-outline"
           :label="$t('navigation.infrastructure')" class="text-weight-bolder text-white">
           <q-list class="q-pl-lg text-weight-light">

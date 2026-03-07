@@ -418,6 +418,14 @@ const routes = [
         ],
       },
       {
+        path: '/messages',
+        component: () => import('pages/infra/message/MessageInbox'),
+        meta: {
+          name: "Messages",
+          authorize: [Role.Admin, Role.User]
+        }
+      },
+      {
         path: '/solar-reports',
         component: () => import('pages/SolarReports'),
         meta: {
