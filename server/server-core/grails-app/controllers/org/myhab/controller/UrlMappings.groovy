@@ -16,6 +16,9 @@ class UrlMappings {
         get "/api/labels/cable/$id"(controller: "label", action: "generateCableLabel")
         get "/api/labels/templates"(controller: "label", action: "templates")
         get "/api/labels/fields"(controller: "label", action: "fields")
+        get "/api/me"(controller: "me", action: "index")
+        get "/api/users/$id/avatar"(controller: "userAvatar", action: "show")
+        put "/api/users/$id/avatar"(controller: "userAvatar", action: "update")
         "/login/auth"(controller: "login", action: "auth")
 
         if (Environment.current == Environment.PRODUCTION) {

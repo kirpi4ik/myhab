@@ -9,6 +9,7 @@ import groovy.transform.ToString
 import org.grails.gorm.graphql.entity.dsl.GraphQLMapping
 import org.grails.gorm.graphql.fetcher.impl.DeleteEntityDataFetcher
 import org.myhab.domain.job.Job
+import org.myhab.services.UserService
 
 @Resource(uri = '/user')
 @EqualsAndHashCode(includes = 'username')
@@ -16,6 +17,7 @@ import org.myhab.domain.job.Job
 class User extends BaseEntity {
     private static final long serialVersionUID = 1
     transient springSecurityService
+    transient UserService userService
 
     String username
     String password
@@ -31,6 +33,8 @@ class User extends BaseEntity {
     String name
     String telegramUsername
     Set<PeripheralAccessToken> peripheralAccessTokens
+    /** User avatar image (PNG/JPEG, max 3KB). Not exposed via GraphQL; use REST GET /api/users/:id/avatar */
+    byte[] avatar
 
     User(String username, String password) {
         this()
@@ -42,7 +46,45 @@ class User extends BaseEntity {
         (UserRole.findAllByUser(this) as List<UserRole>)*.role as Set<Role>
     }
 
+    /**
+     * Before update event - automatically invalidate tokens if account is locked, expired, or password expired
+     */
+    @Override
+    void beforeUpdate() {
+        super.beforeUpdate()
+        // Get the persisted (old) state of the user
+        def oldUser = User.get(this.id)
+        
+        // Check if any security flags changed to true
+        boolean shouldInvalidateTokens = false
+        
+        if (this.accountLocked && (!oldUser?.accountLocked)) {
+            shouldInvalidateTokens = true
+            log.info("User ${this.username} account locked - will invalidate tokens")
+        }
+        
+        if (this.accountExpired && (!oldUser?.accountExpired)) {
+            shouldInvalidateTokens = true
+            log.info("User ${this.username} account expired - will invalidate tokens")
+        }
+        
+        if (this.passwordExpired && (!oldUser?.passwordExpired)) {
+            shouldInvalidateTokens = true
+            log.info("User ${this.username} password expired - will invalidate tokens")
+        }
+        
+        // Invalidate tokens if needed
+        if (shouldInvalidateTokens && userService) {
+            try {
+                userService.invalidateUserTokens(this.username)
+            } catch (Exception ex) {
+                log.error("Failed to invalidate tokens for user ${this.username} in beforeUpdate", ex)
+            }
+        }
+    }
+
     static graphql = GraphQLMapping.lazy {
+        exclude('avatar')  // Served via REST GET /api/users/:id/avatar only
         query('userById', User) {
             argument('id', String)
             dataFetcher(new DataFetcher() {
@@ -89,6 +131,7 @@ class User extends BaseEntity {
         email nullable: true
         phoneNr nullable: true
         telegramUsername nullable: true
+        avatar nullable: true, maxSize: 3 * 1024
     }
 
     static hasMany = [favJobs: Job, peripheralAccessTokens: PeripheralAccessToken]
@@ -100,6 +143,7 @@ class User extends BaseEntity {
         version false
         autowire true
         favJobs joinTable: [name: "users_fav_jobs", key: 'user_id']
+        avatar type: 'binary'
     }
 
 

@@ -1,14 +1,14 @@
 <template>
-  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || isSidebarMini" @click.capture="drawerClick" bordered persistent
-            class="bg-grey-9 text-white">
+  <q-drawer v-model="isSidebarOpen" :mini="!isSidebarOpen || isSidebarMini" @click.capture="drawerClick" bordered
+    persistent class="bg-grey-9 text-white">
     <template v-slot:mini>
       <q-scroll-area class="fit mini-slot cursor-pointer">
         <div class="q-py-lg">
           <div class="column items-center">
-            <q-icon name="inbox" color="blue" class="mini-icon"/>
-            <q-icon name="star" color="orange" class="mini-icon"/>
-            <q-icon name="send" color="purple" class="mini-icon"/>
-            <q-icon name="drafts" color="teal" class="mini-icon"/>
+            <q-icon name="inbox" color="blue" class="mini-icon" />
+            <q-icon name="star" color="orange" class="mini-icon" />
+            <q-icon name="send" color="purple" class="mini-icon" />
+            <q-icon name="drafts" color="teal" class="mini-icon" />
           </div>
         </div>
       </q-scroll-area>
@@ -17,38 +17,30 @@
       <q-list>
         <q-item to="/" active-class="q-item-no-link-highlighting">
           <q-item-section avatar>
-            <q-icon name="dashboard"/>
+            <q-icon name="dashboard" />
           </q-item-section>
           <q-item-section>
             <q-item-label>{{ $t('navigation.dashboard') }}</q-item-label>
           </q-item-section>
         </q-item>
-        <q-expansion-item
-          v-if="isAdmin"
-          v-model="expanded"
-          icon="mdi-clipboard-edit-outline"
-          :label="$t('navigation.infrastructure')"
-          class="text-weight-bolder text-white"
-        >
+        <q-expansion-item v-if="isAdmin" v-model="expanded" icon="mdi-clipboard-edit-outline"
+          :label="$t('navigation.infrastructure')" class="text-weight-bolder text-white">
           <q-list class="q-pl-lg text-weight-light">
             <q-item to="/admin/users" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-account-details"/>
+                <q-icon name="mdi-account-details" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.users') }}</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-expansion-item
-              icon="mdi-devices"
-              :label="$t('navigation.devices')"
-              class="text-weight-bolder text-white"
-            >
+            <q-expansion-item icon="mdi-devices" :label="$t('navigation.devices')"
+              class="text-weight-bolder text-white">
               <q-list class="q-pl-lg text-weight-light">
                 <q-item to="/admin/devices" active-class="q-item-no-link-highlighting">
                   <q-item-section avatar>
-                    <q-icon name="mdi-view-list"/>
+                    <q-icon name="mdi-view-list" />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>{{ $t('navigation.devices') }}</q-item-label>
@@ -56,7 +48,7 @@
                 </q-item>
                 <q-item to="/admin/dcategories" active-class="q-item-no-link-highlighting">
                   <q-item-section avatar>
-                    <q-icon name="mdi-shape"/>
+                    <q-icon name="mdi-shape" />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>{{ $t('navigation.peripheral.categories') }}</q-item-label>
@@ -67,21 +59,18 @@
 
             <q-item to="/admin/ports" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-connection"/>
+                <q-icon name="mdi-connection" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.ports.list') }}</q-item-label>
               </q-item-section>
             </q-item>
-            <q-expansion-item
-              icon="mdi-power-socket-au"
-              :label="$t('navigation.peripherals')"
-              class="text-weight-bolder text-white"
-            >
+            <q-expansion-item icon="mdi-power-socket-au" :label="$t('navigation.peripherals')"
+              class="text-weight-bolder text-white">
               <q-list class="q-pl-lg text-weight-light">
                 <q-item to="/admin/peripherals" active-class="q-item-no-link-highlighting">
                   <q-item-section avatar>
-                    <q-icon name="mdi-view-list"/>
+                    <q-icon name="mdi-view-list" />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>{{ $t('navigation.peripheral.list') }}</q-item-label>
@@ -89,7 +78,7 @@
                 </q-item>
                 <q-item to="/admin/pcategories" active-class="q-item-no-link-highlighting">
                   <q-item-section avatar>
-                    <q-icon name="mdi-shape"/>
+                    <q-icon name="mdi-shape" />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>{{ $t('navigation.peripheral.categories') }}</q-item-label>
@@ -100,7 +89,7 @@
 
             <q-item to="/admin/cables" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-cable-data"/>
+                <q-icon name="mdi-cable-data" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.cables') }}</q-item-label>
@@ -108,17 +97,23 @@
             </q-item>
             <q-item to="/admin/zones" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-map-marker-multiple"/>
+                <q-icon name="mdi-map-marker-multiple" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.zones') }}</q-item-label>
               </q-item-section>
             </q-item>
-            
-          
+            <q-item to="/admin/scenarios" active-class="q-item-no-link-highlighting">
+              <q-item-section avatar>
+                <q-icon name="mdi-script-text" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('navigation.scenarios') }}</q-item-label>
+              </q-item-section>
+            </q-item>
             <q-item to="/admin/jobs" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-briefcase-clock"/>
+                <q-icon name="mdi-briefcase-clock" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.jobs') }}</q-item-label>
@@ -126,25 +121,16 @@
             </q-item>
             <q-item to="/admin/jobs/sprinkler-schedule" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-sprinkler-variant"/>
+                <q-icon name="mdi-sprinkler-variant" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>Sprinkler Scheduler</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-item to="/admin/scenarios" active-class="q-item-no-link-highlighting">
-              <q-item-section avatar>
-                <q-icon name="mdi-script-text"/>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ $t('navigation.scenarios') }}</q-item-label>
-              </q-item-section>
-            </q-item>
-            
             <q-item :href="graphiqlUrl" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-graphql"/>
+                <q-icon name="mdi-graphql" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.graphiql') }}</q-item-label>
@@ -153,7 +139,7 @@
             <q-item-label header class="text-weight-bolder text-white">{{ $t('navigation.settings') }}</q-item-label>
             <q-item to="/admin/appconfig" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="mdi-cog-sync"/>
+                <q-icon name="mdi-cog-sync" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>App Configuration</q-item-label>
@@ -161,7 +147,7 @@
             </q-item>
             <q-item to="/maintenance" active-class="q-item-no-link-highlighting">
               <q-item-section avatar>
-                <q-icon name="settings"/>
+                <q-icon name="settings" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ $t('navigation.maintenance') }}</q-item-label>
@@ -177,32 +163,25 @@
       </div>
     </q-img>
     <div class="q-mini-drawer-hide absolute" style="top: 150px; right: -17px">
-      <q-btn
-        dense
-        round
-        unelevated
-        color="grey-8"
-        icon="chevron_left"
-        @click="drawerClick2"
-      />
+      <q-btn dense round unelevated color="grey-8" icon="chevron_left" @click="drawerClick2" />
     </div>
   </q-drawer>
 </template>
 <script>
-import {defineComponent, ref, computed} from 'vue';
-import {useUiState} from '@/composables';
-import {authzService} from '@/_services';
-import {Role} from '@/_helpers/role';
+import { defineComponent, ref, computed } from 'vue';
+import { useUiState } from '@/composables';
+import { authzService } from '@/_services';
+import { Role } from '@/_helpers/role';
 
 export default defineComponent({
   name: 'SideBarLayout',
   setup() {
-    const {isSidebarOpen, isSidebarMini} = useUiState();
+    const { isSidebarOpen, isSidebarMini } = useUiState();
     const prjVersion = process.env.PRJ_VERSION;
     const graphiqlUrl = (process.env.BCK_SERVER_URL || '') + '/graphql/browser';
 
     const expanded = ref(true);
-    
+
     /**
      * Check if current user has admin role
      */
@@ -213,7 +192,7 @@ export default defineComponent({
       }
       return currentUser.permissions.includes(Role.Admin);
     });
-    
+
     return {
       expanded,
       isSidebarOpen,
