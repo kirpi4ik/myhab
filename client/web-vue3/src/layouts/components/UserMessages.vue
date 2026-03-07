@@ -10,7 +10,7 @@
         :key="msg.id"
         clickable
         v-ripple
-        @click="$router.push('/messages')"
+        @click="goToMessage(msg)"
       >
         <q-item-section avatar>
           <q-icon
@@ -38,6 +38,7 @@
 
 <script>
 import { defineComponent, ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useApolloClient } from '@vue/apollo-composable';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { MY_MESSAGES } from '@/graphql/queries';
@@ -45,9 +46,14 @@ import { MY_MESSAGES } from '@/graphql/queries';
 export default defineComponent({
   name: 'UserMessages',
   setup() {
+    const router = useRouter();
     const { client } = useApolloClient();
     const messages = ref([]);
     const loading = ref(false);
+
+    const goToMessage = (msg) => {
+      router.push({ path: '/messages', query: { id: msg.id } });
+    };
 
     const fetchMessages = async () => {
       loading.value = true;
@@ -98,6 +104,7 @@ export default defineComponent({
     return {
       messages,
       loading,
+      goToMessage,
       levelIcon,
       levelColor,
       formatRelativeDate
