@@ -45,7 +45,8 @@
         </q-btn>
         <q-btn round flat>
           <q-avatar size="42px">
-            <img src="~assets/avatar.png"/>
+            <img v-if="avatarBlobUrl" :src="avatarBlobUrl" alt="Avatar"/>
+            <img v-else src="~assets/avatar.png" alt="Avatar"/>
           </q-avatar>
           <q-menu>
             <q-list style="min-width: 100px">
@@ -68,20 +69,18 @@
   </q-header>
 </template>
 <script>
-import {computed, defineComponent} from 'vue';
+import { computed, defineComponent, ref, onMounted, onUnmounted } from 'vue';
 
-import {useQuery} from '@vue/apollo-composable';
-import {useWebSocketStore} from '@/store/websocket.store';
+import { useQuery } from '@vue/apollo-composable';
+import { useWebSocketStore } from '@/store/websocket.store';
 
-import {authzService} from '@/_services';
-import {CONFIG_GLOBAL_GET_STRING_VAL} from '@/graphql/queries';
-import {useUiState} from '@/composables';
+import { authzService, fetchAvatarBlobUrl } from '@/_services';
+import { CONFIG_GLOBAL_GET_STRING_VAL } from '@/graphql/queries';
+import { useUiState } from '@/composables';
 import UserMessages from './UserMessages';
 
 import BreadCrumbLayout from 'layouts/components/BreadCrumbLayout.vue';
 import ClockComponent from 'components/ClockComponent';
-
-
 
 export default defineComponent({
   name: 'HeaderLayout',
@@ -92,17 +91,36 @@ export default defineComponent({
   },
   setup() {
     const wsStore = useWebSocketStore();
-    const {toggleSideBar} = useUiState();
-    const {result} = useQuery(CONFIG_GLOBAL_GET_STRING_VAL, {key: 'surveillance.url'});
-    
+    const { toggleSideBar } = useUiState();
+    const { result } = useQuery(CONFIG_GLOBAL_GET_STRING_VAL, { key: 'surveillance.url' });
+
+    const avatarBlobUrl = ref(null);
+
     const wsConnection = computed(() => {
       return wsStore.ws.connection || 'OFFLINE';
     });
+
+    onMounted(async () => {
+      const userId = authzService.currentUserValue?.id;
+      if (userId) {
+        const url = await fetchAvatarBlobUrl(userId);
+        avatarBlobUrl.value = url;
+      }
+    });
+
+    onUnmounted(() => {
+      if (avatarBlobUrl.value) {
+        URL.revokeObjectURL(avatarBlobUrl.value);
+        avatarBlobUrl.value = null;
+      }
+    });
+
     return {
       toggleSideBar,
       result,
       authzService,
       wsConnection,
+      avatarBlobUrl,
     };
   },
   mounted() {
