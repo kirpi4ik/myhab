@@ -6,6 +6,8 @@ import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import groovy.util.logging.Slf4j
 import org.myhab.init.cache.CacheMap
+import org.myhab.domain.MessageState
+import org.myhab.domain.UserMessage
 import org.myhab.services.UserService
 import org.myhab.services.SchedulerService
 import org.myhab.config.ConfigProvider
@@ -229,6 +231,60 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("Failed to refresh app config", e)
                     return [success: false, error: e.message ?: "Failed to refresh configuration"]
+                }
+            }
+        }
+    }
+
+    DataFetcher messageUpdateState() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    Long msgId = environment.getArgument("id") as Long
+                    String stateStr = environment.getArgument("state")
+                    MessageState newState = MessageState.valueOf(stateStr)
+
+                    UserMessage.withTransaction {
+                        def msg = UserMessage.get(msgId)
+                        if (!msg) {
+                            return [success: false, error: "Message not found"]
+                        }
+                        msg.state = newState
+                        msg.save(flush: true, failOnError: true)
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to update message state", e)
+                    return [success: false, error: e.message ?: "Failed to update message state"]
+                }
+            }
+        }
+    }
+
+    DataFetcher messageBatchUpdateState() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    List<String> ids = environment.getArgument("ids")
+                    String stateStr = environment.getArgument("state")
+                    MessageState newState = MessageState.valueOf(stateStr)
+
+                    UserMessage.withTransaction {
+                        ids.each { idStr ->
+                            Long msgId = idStr as Long
+                            def msg = UserMessage.get(msgId)
+                            if (msg) {
+                                msg.state = newState
+                                msg.save(flush: true, failOnError: true)
+                            }
+                        }
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to batch update message states", e)
+                    return [success: false, error: e.message ?: "Failed to batch update message states"]
                 }
             }
         }

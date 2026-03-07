@@ -9,6 +9,10 @@ type Query{
     jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
     """Active jobs linked to a sprinkler peripheral, for the sprinkler scheduler UI. Ordered by peripheral name."""
     sprinklerScheduleJobs: [SprinklerScheduleEntry!]!
+    """Messages for the current authenticated user, optionally filtered by level and/or state."""
+    myMessages(level: String, state: String): [UserMessageResult!]!
+    """Count of NEW (unread) messages for the current authenticated user."""
+    myUnreadCount: Int!
 }
 
 """One row in the sprinkler scheduler: an ACTIVE job linked to a sprinkler peripheral."""
@@ -26,6 +30,17 @@ type SprinklerScheduleEntry {
 type SprinklerCronTrigger {
     id: ID!
     expression: String!
+}
+
+type UserMessageResult {
+    id: ID!
+    subject: String!
+    fromSender: String!
+    message: String!
+    level: String!
+    state: String!
+    tsCreated: String
+    tsUpdated: String
 }
 
 type AppConfigEntry {
@@ -91,6 +106,10 @@ type Mutation {
     scenarioDelete(id: ID!): MutationResponse
     appConfigUpdate(key: String!, value: String!, commitMessage: String): MutationResponse
     appConfigRefresh: MutationResponse
+    """Update the state of a single message (NEW, READ, ARCHIVE)."""
+    messageUpdateState(id: ID!, state: String!): MutationResponse
+    """Update the state of multiple messages at once."""
+    messageBatchUpdateState(ids: [ID!]!, state: String!): MutationResponse
 }
 
 type EventDataResponse {
