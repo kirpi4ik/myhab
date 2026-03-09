@@ -11,6 +11,9 @@ class UrlMappings {
         get "/api/public/event"(controller: "event", action: "pubGetEvent")
         get "/pub-event"(controller: "event", action: "pubGetEvent")
         get "/e"(controller: "event", action: "shortUrlEvent")
+
+        get "/api/public/share/$token"(controller: "sharedWidget", action: "show")
+        post "/api/public/share/$token/action"(controller: "sharedWidget", action: "executeAction")
         
         // Label generation API
         get "/api/labels/cable/$id"(controller: "label", action: "generateCableLabel")
@@ -33,6 +36,8 @@ class UrlMappings {
             "/cables/**"(uri: "/index.html")
             "/devices/**"(uri: "/index.html")
             "/peripherals/**"(uri: "/index.html")
+            "/shared/**"(uri: "/index.html")
+            "/messages"(uri: "/index.html")
         } else {
             "/"(controller: "application", action: "index")
             "/error"(controller: "application", action: "index")

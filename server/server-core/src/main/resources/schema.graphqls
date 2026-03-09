@@ -13,6 +13,8 @@ type Query{
     myMessages(level: String, state: String): [UserMessageResult!]!
     """Count of NEW (unread) messages for the current authenticated user."""
     myUnreadCount: Int!
+    """List all shared widgets, optionally filtered by state."""
+    sharedWidgets(state: String): [SharedWidgetResult!]!
 }
 
 """One row in the sprinkler scheduler: an ACTIVE job linked to a sprinkler peripheral."""
@@ -110,6 +112,10 @@ type Mutation {
     messageUpdateState(id: ID!, state: String!): MutationResponse
     """Update the state of multiple messages at once."""
     messageBatchUpdateState(ids: [ID!]!, state: String!): MutationResponse
+    """Create a new shared widget link."""
+    sharedWidgetCreate(input: SharedWidgetInput!): SharedWidgetCreateResult
+    """Update the state of a shared widget (VALID, DISABLED, EXPIRED, ARCHIVED)."""
+    sharedWidgetUpdateState(id: ID!, state: String!, stateDescription: String): MutationResponse
 }
 
 type EventDataResponse {
@@ -131,6 +137,40 @@ input EventDatInput {
     p4: String
     p5: String
     p6: String
+}
+
+type SharedWidgetResult {
+    id: ID!
+    token: String!
+    widgetType: String!
+    peripheralId: String!
+    peripheralName: String
+    shareStartDate: String!
+    shareExpireDate: String!
+    actionsAllowed: Int!
+    actionsUsed: Int!
+    state: String!
+    stateDescription: String
+    createdByUsername: String!
+    hasPin: Boolean!
+    tsCreated: String
+    tsUpdated: String
+}
+
+type SharedWidgetCreateResult {
+    success: Boolean!
+    error: String
+    token: String
+    shareUrl: String
+}
+
+input SharedWidgetInput {
+    widgetType: String!
+    peripheralId: String!
+    pin: String
+    shareStartDate: String!
+    shareExpireDate: String!
+    actionsAllowed: Int!
 }
 
 input SaveUserRoles {
