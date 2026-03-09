@@ -426,6 +426,14 @@ const routes = [
         }
       },
       {
+        path: adminPrefix + '/shared-widgets',
+        component: () => import('pages/infra/share/SharedWidgetList'),
+        meta: {
+          name: "Shared Links",
+          authorize: [Role.Admin]
+        }
+      },
+      {
         path: '/solar-reports',
         component: () => import('pages/SolarReports'),
         meta: {
@@ -439,6 +447,11 @@ const routes = [
     path: '/wui',
     component: () => import('pages/MobileWebLayout'),
     meta: {authorize: [Role.Admin, Role.User]},
+  },
+  {
+    path: '/shared/:token',
+    component: () => import('pages/public/GateAccessWidget'),
+    meta: { public: true }
   },
   // Always leave this as last one,
   // but you can also remove it

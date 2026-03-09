@@ -16,6 +16,9 @@ import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.MessageLevel
 import org.myhab.domain.MessageState
 import org.myhab.domain.UserMessage
+import org.myhab.domain.SharedWidget
+import org.myhab.domain.SharedWidgetState
+import org.myhab.domain.device.DevicePeripheral
 import org.myhab.init.cache.CacheMap
 import grails.plugin.springsecurity.SpringSecurityService
 import org.springframework.beans.factory.annotation.Autowired
@@ -270,6 +273,49 @@ class Query {
                 def currentUser = resolveCurrentUser()
                 if (!currentUser) return 0
                 return UserMessage.countByUserAndState(currentUser, MessageState.NEW)
+            }
+        }
+    }
+
+    def sharedWidgets() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String stateArg = environment.getArgument("state")
+
+                def criteria = SharedWidget.createCriteria()
+                def results = criteria.list {
+                    if (stateArg) {
+                        eq('state', SharedWidgetState.valueOf(stateArg))
+                    }
+                    order('tsCreated', 'desc')
+                }
+
+                return results.collect { sw ->
+                    String peripheralName = ''
+                    try {
+                        def peripheral = DevicePeripheral.get(sw.peripheralId)
+                        peripheralName = peripheral?.name ?: ''
+                    } catch (ignored) {}
+
+                    [
+                        id               : sw.id,
+                        token            : sw.token,
+                        widgetType       : sw.widgetType?.name(),
+                        peripheralId     : sw.peripheralId,
+                        peripheralName   : peripheralName,
+                        shareStartDate   : sw.shareStartDate ? ISO_DATE_FORMAT.format(sw.shareStartDate) : null,
+                        shareExpireDate  : sw.shareExpireDate ? ISO_DATE_FORMAT.format(sw.shareExpireDate) : null,
+                        actionsAllowed   : sw.actionsAllowed,
+                        actionsUsed      : sw.actionsUsed,
+                        state            : sw.state?.name(),
+                        stateDescription : sw.stateDescription,
+                        createdByUsername: sw.createdByUsername,
+                        hasPin           : sw.pin != null && !sw.pin.isEmpty(),
+                        tsCreated        : sw.tsCreated ? ISO_DATE_FORMAT.format(sw.tsCreated) : null,
+                        tsUpdated        : sw.tsUpdated ? ISO_DATE_FORMAT.format(sw.tsUpdated) : null
+                    ]
+                }
             }
         }
     }
