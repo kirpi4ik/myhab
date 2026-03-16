@@ -47,6 +47,7 @@
 					<q-input
 						v-model="form.pin"
 						label="PIN (optional)"
+						type="number"
 						outlined
 						dense
 						class="q-mb-md"
