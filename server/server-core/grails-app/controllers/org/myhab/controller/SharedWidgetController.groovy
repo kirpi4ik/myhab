@@ -13,7 +13,7 @@ import org.myhab.domain.device.DevicePeripheral
 class SharedWidgetController implements EventPublisher {
 
     static responseFormats = ['json']
-    static allowedMethods = [show: 'GET', executeAction: 'POST']
+    static allowedMethods = [show: 'GET', executeAction: 'POST', verifyPin: 'POST']
 
     /**
      * GET /api/public/share/:token
@@ -50,6 +50,49 @@ class SharedWidgetController implements EventPublisher {
             actionsAllowed: widget.actionsAllowed,
             actionsUsed   : widget.actionsUsed,
         ] as JSON)
+    }
+
+    /**
+     * POST /api/public/share/:token/verify-pin
+     * Verifies the PIN for a shared widget without executing any action.
+     */
+    def verifyPin() {
+        String token = params.token
+        if (!token) {
+            response.status = 400
+            render([success: false, error: 'Token is required'] as JSON)
+            return
+        }
+
+        SharedWidget widget = SharedWidget.findByToken(token)
+        if (!widget) {
+            response.status = 404
+            render([success: false, error: 'Share link not found'] as JSON)
+            return
+        }
+
+        String effectiveState = resolveEffectiveState(widget)
+        if (effectiveState != SharedWidgetState.VALID.name() && effectiveState != 'NOT_YET_ACTIVE') {
+            response.status = 403
+            render([success: false, error: "Share link is ${effectiveState.toLowerCase()}"] as JSON)
+            return
+        }
+
+        def body = request.JSON
+        String providedPin = body?.pin ?: ''
+        
+        if (widget.pin == null || widget.pin.isEmpty()) {
+            render([success: true] as JSON)
+            return
+        }
+
+        if (providedPin != widget.pin) {
+            response.status = 403
+            render([success: false, error: 'Invalid PIN'] as JSON)
+            return
+        }
+
+        render([success: true] as JSON)
     }
 
     /**

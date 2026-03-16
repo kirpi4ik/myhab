@@ -13,6 +13,7 @@ class UrlMappings {
         get "/e"(controller: "event", action: "shortUrlEvent")
 
         get "/api/public/share/$token"(controller: "sharedWidget", action: "show")
+        post "/api/public/share/$token/verify-pin"(controller: "sharedWidget", action: "verifyPin")
         post "/api/public/share/$token/action"(controller: "sharedWidget", action: "executeAction")
         
         // Label generation API

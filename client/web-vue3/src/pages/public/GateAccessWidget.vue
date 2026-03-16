@@ -20,7 +20,7 @@
 			<div class="state-text q-mb-lg">A PIN is required to access this gate control</div>
 			<q-input
 				v-model="pinInput"
-				type="password"
+				type="number"
 				outlined
 				dark
 				dense
@@ -41,7 +41,7 @@
 				label="Continue"
 				icon="mdi-arrow-right"
 				class="pin-submit-btn"
-				:loading="verifying"
+				:loading="verifyingPin"
 				@click="verifyPin"
 			/>
 		</div>
@@ -187,14 +187,41 @@ export default defineComponent({
 			}
 		};
 
-		const verifyPin = () => {
+		const verifyingPin = ref(false);
+
+		const verifyPin = async () => {
 			if (!pinInput.value || pinInput.value.trim() === '') {
 				pinError.value = true;
 				pinErrorMessage.value = 'Please enter the PIN';
 				return;
 			}
+
+			verifyingPin.value = true;
 			pinError.value = false;
-			showPinEntry.value = false;
+
+			try {
+				const res = await fetch(`${apiBase()}/verify-pin`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ pin: pinInput.value })
+				});
+
+				const data = await res.json();
+
+				if (!res.ok || !data.success) {
+					pinError.value = true;
+					pinErrorMessage.value = data.error || 'Invalid PIN';
+					return;
+				}
+
+				pinError.value = false;
+				showPinEntry.value = false;
+			} catch {
+				pinError.value = true;
+				pinErrorMessage.value = 'Failed to verify PIN. Please try again.';
+			} finally {
+				verifyingPin.value = false;
+			}
 		};
 
 		const showConfirm = () => {
@@ -267,6 +294,7 @@ export default defineComponent({
 			pinError,
 			pinErrorMessage,
 			verifying,
+			verifyingPin,
 			peripheralName,
 			actionsRemaining,
 			unlocking,
