@@ -309,6 +309,7 @@ class Query {
                         actionsAllowed   : sw.actionsAllowed,
                         actionsUsed      : sw.actionsUsed,
                         state            : sw.state?.name(),
+                        description      : sw.description,
                         stateDescription : sw.stateDescription,
                         createdByUsername: sw.createdByUsername,
                         hasPin           : sw.pin != null && !sw.pin.isEmpty(),

@@ -277,6 +277,7 @@ class Mutation implements EventPublisher {
                     String widgetTypeStr = input.widgetType
                     String peripheralId = input.peripheralId
                     String pin = input.pin
+                    String description = input.description
                     String startDateStr = input.shareStartDate
                     String expireDateStr = input.shareExpireDate
                     int actionsAllowed = input.actionsAllowed as int
@@ -304,6 +305,7 @@ class Mutation implements EventPublisher {
                             widgetType: SharedWidgetType.valueOf(widgetTypeStr),
                             peripheralId: peripheralId,
                             pin: (pin && !pin.trim().isEmpty()) ? pin.trim() : null,
+                            description: (description && !description.trim().isEmpty()) ? description.trim() : null,
                             shareStartDate: startDate,
                             shareExpireDate: expireDate,
                             actionsAllowed: actionsAllowed,

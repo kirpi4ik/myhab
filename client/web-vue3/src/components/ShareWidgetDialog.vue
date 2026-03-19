@@ -58,7 +58,23 @@
 						</template>
 					</q-input>
 
-					<!-- Start Date -->
+					<!-- Description -->
+					<q-input
+						v-model="form.description"
+						label="Description (optional)"
+						outlined
+						dense
+						type="textarea"
+						autogrow
+						class="q-mb-md"
+						hint="Why and for whom this link is shared"
+					>
+						<template v-slot:prepend>
+							<q-icon name="mdi-text"/>
+						</template>
+					</q-input>
+
+					<!-- Start Date & Time -->
 					<q-input
 						v-model="form.shareStartDate"
 						label="Starts on"
@@ -71,9 +87,18 @@
 							<q-icon name="mdi-calendar-start"/>
 						</template>
 						<template v-slot:append>
+							<q-icon name="mdi-clock-outline" class="cursor-pointer q-mr-xs">
+								<q-popup-proxy cover transition-show="scale" transition-hide="scale">
+									<q-time v-model="form.shareStartDate" mask="YYYY-MM-DD HH:mm" format24h>
+										<div class="row items-center justify-end">
+											<q-btn v-close-popup label="OK" flat color="primary"/>
+										</div>
+									</q-time>
+								</q-popup-proxy>
+							</q-icon>
 							<q-icon name="mdi-calendar" class="cursor-pointer">
 								<q-popup-proxy cover transition-show="scale" transition-hide="scale">
-									<q-date v-model="form.shareStartDate" mask="YYYY-MM-DD" :options="startDateOptions">
+									<q-date v-model="form.shareStartDate" mask="YYYY-MM-DD HH:mm" :options="startDateOptions">
 										<div class="row items-center justify-end">
 											<q-btn v-close-popup label="OK" flat color="primary"/>
 										</div>
@@ -83,7 +108,7 @@
 						</template>
 					</q-input>
 
-					<!-- Expiry Date -->
+					<!-- Expiry Date & Time -->
 					<q-input
 						v-model="form.shareExpireDate"
 						label="Expires on"
@@ -98,9 +123,18 @@
 							<q-icon name="mdi-calendar-clock"/>
 						</template>
 						<template v-slot:append>
+							<q-icon name="mdi-clock-outline" class="cursor-pointer q-mr-xs">
+								<q-popup-proxy cover transition-show="scale" transition-hide="scale">
+									<q-time v-model="form.shareExpireDate" mask="YYYY-MM-DD HH:mm" format24h>
+										<div class="row items-center justify-end">
+											<q-btn v-close-popup label="OK" flat color="primary"/>
+										</div>
+									</q-time>
+								</q-popup-proxy>
+							</q-icon>
 							<q-icon name="mdi-calendar" class="cursor-pointer">
 								<q-popup-proxy cover transition-show="scale" transition-hide="scale">
-									<q-date v-model="form.shareExpireDate" mask="YYYY-MM-DD" :options="expireDateOptions">
+									<q-date v-model="form.shareExpireDate" mask="YYYY-MM-DD HH:mm" :options="expireDateOptions">
 										<div class="row items-center justify-end">
 											<q-btn v-close-popup label="OK" flat color="primary"/>
 										</div>
@@ -173,10 +207,15 @@ export default defineComponent({
 		const today = new Date();
 		const defaultExpiry = new Date(today);
 		defaultExpiry.setDate(defaultExpiry.getDate() + 7);
-		const formatDate = (d) => d.toISOString().split('T')[0];
+		const formatDateTime = (d) => {
+			const pad = (n) => String(n).padStart(2, '0');
+			return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		};
+		const formatDate = (d) => formatDateTime(d);
 
 		const form = reactive({
 			pin: '',
+			description: '',
 			shareStartDate: formatDate(today),
 			shareExpireDate: formatDate(defaultExpiry),
 			actionsAllowed: 5,
@@ -201,12 +240,13 @@ export default defineComponent({
 			return '';
 		});
 
+		const todayDateStr = today.toISOString().split('T')[0].replaceAll('-', '/');
 		const startDateOptions = (date) => {
-			return date >= formatDate(today);
+			return date >= todayDateStr;
 		};
 
 		const expireDateOptions = (date) => {
-			return date > form.shareStartDate;
+			return date >= form.shareStartDate.split(' ')[0].replaceAll('-', '/');
 		};
 
 		const createShare = async () => {
@@ -238,8 +278,9 @@ export default defineComponent({
 							widgetType: props.widgetType,
 							peripheralId: props.peripheralId,
 							pin: form.pin || null,
-							shareStartDate: new Date(form.shareStartDate + 'T00:00:00').toISOString(),
-							shareExpireDate: new Date(form.shareExpireDate + 'T23:59:59').toISOString(),
+							description: form.description || null,
+							shareStartDate: new Date(form.shareStartDate.replace(' ', 'T')).toISOString(),
+							shareExpireDate: new Date(form.shareExpireDate.replace(' ', 'T')).toISOString(),
 							actionsAllowed: form.actionsAllowed,
 						}
 					},
@@ -277,6 +318,7 @@ export default defineComponent({
 				createError.value = '';
 				copied.value = false;
 				form.pin = '';
+				form.description = '';
 				form.shareStartDate = formatDate(today);
 				form.shareExpireDate = formatDate(defaultExpiry);
 				form.actionsAllowed = 5;

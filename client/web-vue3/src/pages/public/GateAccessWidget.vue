@@ -81,6 +81,12 @@
 				<q-icon name="mdi-key-variant" size="16px" class="q-mr-xs"/>
 				{{ actionsRemaining }} use{{ actionsRemaining !== 1 ? 's' : '' }} remaining
 			</div>
+
+			<!-- Expiration Date -->
+			<div class="actions-info" v-if="expiresAt">
+				<q-icon name="mdi-clock-outline" size="16px" class="q-mr-xs"/>
+				Expires {{ expiresAt }}
+			</div>
 		</div>
 
 		<!-- Confirm Dialog -->
@@ -133,6 +139,7 @@ export default defineComponent({
 
 		const peripheralName = ref('');
 		const actionsRemaining = ref(null);
+		const expiresAt = ref(null);
 		const unlocking = ref(false);
 		const unlockSuccess = ref(false);
 		const confirmDialog = ref(false);
@@ -175,6 +182,11 @@ export default defineComponent({
 
 				peripheralName.value = data.peripheralName || 'Gate Access';
 				actionsRemaining.value = Math.max(0, data.actionsAllowed - data.actionsUsed);
+				if (data.shareExpireDate) {
+					expiresAt.value = new Date(data.shareExpireDate).toLocaleDateString(undefined, {
+						year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+					});
+				}
 
 				if (data.requiresPin) {
 					showPinEntry.value = true;
@@ -297,6 +309,7 @@ export default defineComponent({
 			verifyingPin,
 			peripheralName,
 			actionsRemaining,
+			expiresAt,
 			unlocking,
 			unlockSuccess,
 			confirmDialog,

@@ -13,6 +13,7 @@ export const SHARED_WIDGETS = gql`
 			actionsAllowed
 			actionsUsed
 			state
+			description
 			stateDescription
 			createdByUsername
 			hasPin
