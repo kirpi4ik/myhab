@@ -122,6 +122,42 @@
 
         <q-separator/>
 
+        <!-- Avatar -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">
+            <q-icon name="mdi-account-circle" class="q-mr-xs"/>
+            Avatar
+          </div>
+          <div class="text-caption text-grey-7 q-mb-md">
+            PNG or JPEG, max 3KB. Shown in header and profile.
+          </div>
+          <div class="row items-center q-gutter-md">
+            <q-avatar size="64px">
+              <img v-if="avatarPreviewUrl" :src="avatarPreviewUrl" alt="Preview"/>
+              <img v-else-if="avatarBlobUrl" :src="avatarBlobUrl" alt="Avatar"/>
+              <q-icon v-else name="mdi-account-circle" size="xl"/>
+            </q-avatar>
+            <div>
+              <q-file
+                v-model="avatarFile"
+                label="Choose image"
+                accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+                max-file-size="3072"
+                @update:model-value="onAvatarFileSelected"
+                dense
+                outlined
+                clearable
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-image"/>
+                </template>
+              </q-file>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
         <!-- Password Section -->
         <q-card-section>
           <div class="text-subtitle2 text-weight-medium q-mb-sm">
@@ -281,15 +317,18 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from 'vue';
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute} from "vue-router";
-import {useQuasar} from 'quasar';
-import {useEntityCRUD} from '@/composables';
+import { defineComponent, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useApolloClient } from "@vue/apollo-composable";
+import { useRoute } from "vue-router";
+import { useQuasar } from 'quasar';
+import { useEntityCRUD } from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
-import {USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE, ROLES_SAVE} from '@/graphql/queries';
+import { USER_GET_BY_ID_WITH_ROLES, USER_VALUE_UPDATE, ROLES_SAVE } from '@/graphql/queries';
+import { authzService, getAvatarApiUrl, fetchAvatarBlobUrl } from '@/_services';
 import _ from "lodash";
+
+const MAX_AVATAR_SIZE = 3 * 1024;
 
 export default defineComponent({
   name: 'UserEdit',
@@ -299,14 +338,57 @@ export default defineComponent({
   },
   setup() {
     const $q = useQuasar();
-    const {client} = useApolloClient();
+    const { client } = useApolloClient();
     const route = useRoute();
-    
+
     const confirmPwd = ref(null);
     const confirmPwdRef = ref(null);
     const pwdRef = ref(null);
     const roles = ref([]);
     const selectedRoles = ref([]);
+    const avatarBlobUrl = ref(null);
+    const avatarFile = ref(null);
+    const avatarPreviewUrl = ref(null);
+
+    watch(() => route.params.idPrimary, async (id) => {
+      if (avatarBlobUrl.value) {
+        URL.revokeObjectURL(avatarBlobUrl.value);
+        avatarBlobUrl.value = null;
+      }
+      if (id) {
+        const url = await fetchAvatarBlobUrl(id);
+        avatarBlobUrl.value = url;
+      }
+    }, { immediate: true });
+
+    const onAvatarFileSelected = (file) => {
+      if (avatarPreviewUrl.value) {
+        URL.revokeObjectURL(avatarPreviewUrl.value);
+        avatarPreviewUrl.value = null;
+      }
+      if (file && file.size <= MAX_AVATAR_SIZE) {
+        avatarPreviewUrl.value = URL.createObjectURL(file);
+      } else if (file && file.size > MAX_AVATAR_SIZE) {
+        $q.notify({
+          color: 'warning',
+          message: 'Avatar must be 3KB or smaller',
+          icon: 'mdi-alert',
+          position: 'top'
+        });
+        avatarFile.value = null;
+      }
+    };
+
+    onUnmounted(() => {
+      if (avatarBlobUrl.value) {
+        URL.revokeObjectURL(avatarBlobUrl.value);
+        avatarBlobUrl.value = null;
+      }
+      if (avatarPreviewUrl.value) {
+        URL.revokeObjectURL(avatarPreviewUrl.value);
+        avatarPreviewUrl.value = null;
+      }
+    });
 
     // Use CRUD composable
     const {
@@ -474,17 +556,50 @@ export default defineComponent({
             }
           });
           
+          // Upload avatar if a new file was selected
+          if (avatarFile.value) {
+            try {
+              const formData = new FormData();
+              formData.append('avatar', avatarFile.value);
+              const accessToken = authzService.currentUserValue?.access_token || authzService.currentUserValue?.token;
+              const res = await fetch(getAvatarApiUrl(route.params.idPrimary), {
+                method: 'PUT',
+                headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+                body: formData
+              });
+              if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Avatar upload failed');
+              }
+              if (avatarPreviewUrl.value) {
+                URL.revokeObjectURL(avatarPreviewUrl.value);
+                avatarPreviewUrl.value = null;
+              }
+              avatarFile.value = null;
+              const url = await fetchAvatarBlobUrl(route.params.idPrimary);
+              if (avatarBlobUrl.value) URL.revokeObjectURL(avatarBlobUrl.value);
+              avatarBlobUrl.value = url;
+            } catch (avatarErr) {
+              $q.notify({
+                color: 'negative',
+                message: avatarErr.message || 'Failed to upload avatar',
+                icon: 'mdi-alert-circle',
+                position: 'top'
+              });
+            }
+          }
+
           $q.notify({
             color: 'positive',
             message: 'User and roles updated successfully',
             icon: 'mdi-check-circle',
             position: 'top'
           });
-          
+
           // Clear password fields
           user.value.password = null;
           confirmPwd.value = null;
-          
+
           // Refresh the data
           fetchData();
         } catch (error) {
@@ -517,7 +632,11 @@ export default defineComponent({
       isValidEmail,
       getRoleDescription,
       isRoleSelected,
-      toggleRole
+      toggleRole,
+      avatarBlobUrl,
+      avatarFile,
+      avatarPreviewUrl,
+      onAvatarFileSelected
     };
   }
 });

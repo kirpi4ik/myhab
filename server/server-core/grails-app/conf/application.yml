@@ -143,6 +143,13 @@ grails:
     allowedMethods:
       - GET
       - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowedHeaders:
+      - Authorization
+      - Content-Type
+      - Accept
     allowedOrigins:
       - http://localhost:10000
       - http://localhost:10001

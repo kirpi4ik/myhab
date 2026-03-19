@@ -33,19 +33,20 @@
         >
         </q-btn>
         <q-btn round dense flat color="secondary" icon="notifications">
-          <q-badge color="negative" text-color="white" floating> 5</q-badge>
+          <q-badge v-if="unreadCount > 0" color="negative" text-color="white" floating>{{ unreadCount }}</q-badge>
           <q-menu>
             <q-list style="min-width: 100px">
               <user-messages></user-messages>
               <q-card class="text-center no-shadow no-border">
-                <q-btn label="View All" style="max-width: 120px !important" flat dense class="text-indigo-8"></q-btn>
+                <q-btn label="View All" style="max-width: 120px !important" flat dense class="text-indigo-8" @click="$router.push('/messages')"/>
               </q-card>
             </q-list>
           </q-menu>
         </q-btn>
         <q-btn round flat>
           <q-avatar size="42px">
-            <img src="~assets/avatar.png"/>
+            <img v-if="avatarBlobUrl" :src="avatarBlobUrl" alt="Avatar"/>
+            <img v-else src="~assets/avatar.png" alt="Avatar"/>
           </q-avatar>
           <q-menu>
             <q-list style="min-width: 100px">
@@ -68,20 +69,18 @@
   </q-header>
 </template>
 <script>
-import {computed, defineComponent} from 'vue';
+import { computed, defineComponent, ref, onMounted, onUnmounted } from 'vue';
 
-import {useQuery} from '@vue/apollo-composable';
-import {useWebSocketStore} from '@/store/websocket.store';
+import { useQuery, useApolloClient } from '@vue/apollo-composable';
+import { useWebSocketStore } from '@/store/websocket.store';
 
-import {authzService} from '@/_services';
-import {CONFIG_GLOBAL_GET_STRING_VAL} from '@/graphql/queries';
-import {useUiState} from '@/composables';
+import { authzService, fetchAvatarBlobUrl } from '@/_services';
+import { CONFIG_GLOBAL_GET_STRING_VAL, MY_UNREAD_COUNT } from '@/graphql/queries';
+import { useUiState } from '@/composables';
 import UserMessages from './UserMessages';
 
 import BreadCrumbLayout from 'layouts/components/BreadCrumbLayout.vue';
 import ClockComponent from 'components/ClockComponent';
-
-
 
 export default defineComponent({
   name: 'HeaderLayout',
@@ -92,17 +91,52 @@ export default defineComponent({
   },
   setup() {
     const wsStore = useWebSocketStore();
-    const {toggleSideBar} = useUiState();
-    const {result} = useQuery(CONFIG_GLOBAL_GET_STRING_VAL, {key: 'surveillance.url'});
-    
+    const { toggleSideBar } = useUiState();
+    const { result } = useQuery(CONFIG_GLOBAL_GET_STRING_VAL, { key: 'surveillance.url' });
+    const { client } = useApolloClient();
+
+    const avatarBlobUrl = ref(null);
+    const unreadCount = ref(0);
+
     const wsConnection = computed(() => {
       return wsStore.ws.connection || 'OFFLINE';
     });
+
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await client.query({
+          query: MY_UNREAD_COUNT,
+          fetchPolicy: 'network-only'
+        });
+        unreadCount.value = response.data.myUnreadCount || 0;
+      } catch {
+        unreadCount.value = 0;
+      }
+    };
+
+    onMounted(async () => {
+      const userId = authzService.currentUserValue?.id;
+      if (userId) {
+        const url = await fetchAvatarBlobUrl(userId);
+        avatarBlobUrl.value = url;
+      }
+      fetchUnreadCount();
+    });
+
+    onUnmounted(() => {
+      if (avatarBlobUrl.value) {
+        URL.revokeObjectURL(avatarBlobUrl.value);
+        avatarBlobUrl.value = null;
+      }
+    });
+
     return {
       toggleSideBar,
       result,
       authzService,
       wsConnection,
+      avatarBlobUrl,
+      unreadCount,
     };
   },
   mounted() {

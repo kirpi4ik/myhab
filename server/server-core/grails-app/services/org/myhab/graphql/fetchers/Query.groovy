@@ -13,7 +13,14 @@ import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.myhab.domain.device.DeviceModel
+import org.myhab.domain.MessageLevel
+import org.myhab.domain.MessageState
+import org.myhab.domain.UserMessage
+import org.myhab.domain.SharedWidget
+import org.myhab.domain.SharedWidgetState
+import org.myhab.domain.device.DevicePeripheral
 import org.myhab.init.cache.CacheMap
+import grails.plugin.springsecurity.SpringSecurityService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -26,9 +33,11 @@ import java.text.SimpleDateFormat
 @Transactional
 class Query {
     @Autowired
-    HazelcastInstance hazelcastInstance;
+    HazelcastInstance hazelcastInstance
     @Autowired
     ConfigProvider configProvider
+    @Autowired
+    SpringSecurityService springSecurityService
     
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
@@ -206,6 +215,106 @@ class Query {
                         cronTriggers: (job.cronTriggers ?: []).collect { t ->
                             [id: t.id, expression: t.expression]
                         }
+                    ]
+                }
+            }
+        }
+    }
+
+    private User resolveCurrentUser() {
+        def principal = springSecurityService?.principal
+        if (!principal) return null
+        String username = principal instanceof String ? principal : (principal?.username ?: principal?.toString())
+        return User.findByUsername(username)
+    }
+
+    def myMessages() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def currentUser = resolveCurrentUser()
+                if (!currentUser) return []
+
+                String levelArg = environment.getArgument("level")
+                String stateArg = environment.getArgument("state")
+
+                def criteria = UserMessage.createCriteria()
+                def results = criteria.list {
+                    eq('user', currentUser)
+                    if (levelArg) {
+                        eq('level', MessageLevel.valueOf(levelArg))
+                    }
+                    if (stateArg) {
+                        eq('state', MessageState.valueOf(stateArg))
+                    }
+                    order('tsCreated', 'desc')
+                }
+
+                return results.collect { msg ->
+                    [
+                        id        : msg.id,
+                        subject   : msg.subject,
+                        fromSender: msg.fromSender,
+                        message   : msg.message,
+                        level     : msg.level?.name(),
+                        state     : msg.state?.name(),
+                        tsCreated : msg.tsCreated ? ISO_DATE_FORMAT.format(msg.tsCreated) : null,
+                        tsUpdated : msg.tsUpdated ? ISO_DATE_FORMAT.format(msg.tsUpdated) : null
+                    ]
+                }
+            }
+        }
+    }
+
+    def myUnreadCount() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def currentUser = resolveCurrentUser()
+                if (!currentUser) return 0
+                return UserMessage.countByUserAndState(currentUser, MessageState.NEW)
+            }
+        }
+    }
+
+    def sharedWidgets() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String stateArg = environment.getArgument("state")
+
+                def criteria = SharedWidget.createCriteria()
+                def results = criteria.list {
+                    if (stateArg) {
+                        eq('state', SharedWidgetState.valueOf(stateArg))
+                    }
+                    order('tsCreated', 'desc')
+                }
+
+                return results.collect { sw ->
+                    String peripheralName = ''
+                    try {
+                        def peripheral = DevicePeripheral.get(sw.peripheralId)
+                        peripheralName = peripheral?.name ?: ''
+                    } catch (ignored) {}
+
+                    [
+                        id               : sw.id,
+                        token            : sw.token,
+                        widgetType       : sw.widgetType?.name(),
+                        peripheralId     : sw.peripheralId,
+                        peripheralName   : peripheralName,
+                        shareStartDate   : sw.shareStartDate ? ISO_DATE_FORMAT.format(sw.shareStartDate) : null,
+                        shareExpireDate  : sw.shareExpireDate ? ISO_DATE_FORMAT.format(sw.shareExpireDate) : null,
+                        actionsAllowed   : sw.actionsAllowed,
+                        actionsUsed      : sw.actionsUsed,
+                        state            : sw.state?.name(),
+                        description      : sw.description,
+                        stateDescription : sw.stateDescription,
+                        createdByUsername: sw.createdByUsername,
+                        hasPin           : sw.pin != null && !sw.pin.isEmpty(),
+                        tsCreated        : sw.tsCreated ? ISO_DATE_FORMAT.format(sw.tsCreated) : null,
+                        tsUpdated        : sw.tsUpdated ? ISO_DATE_FORMAT.format(sw.tsUpdated) : null
                     ]
                 }
             }
