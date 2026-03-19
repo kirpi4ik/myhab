@@ -43,12 +43,13 @@ class SharedWidgetController implements EventPublisher {
         } catch (ignored) {}
 
         render([
-            widgetType    : widget.widgetType.name(),
-            requiresPin   : widget.pin != null && !widget.pin.isEmpty(),
-            state         : effectiveState,
-            peripheralName: peripheralName,
-            actionsAllowed: widget.actionsAllowed,
-            actionsUsed   : widget.actionsUsed,
+            widgetType     : widget.widgetType.name(),
+            requiresPin    : widget.pin != null && !widget.pin.isEmpty(),
+            state          : effectiveState,
+            peripheralName : peripheralName,
+            actionsAllowed : widget.actionsAllowed,
+            actionsUsed    : widget.actionsUsed,
+            shareExpireDate: widget.shareExpireDate?.time,
         ] as JSON)
     }
 

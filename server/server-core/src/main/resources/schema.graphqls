@@ -150,6 +150,7 @@ type SharedWidgetResult {
     actionsAllowed: Int!
     actionsUsed: Int!
     state: String!
+    description: String
     stateDescription: String
     createdByUsername: String!
     hasPin: Boolean!
@@ -168,6 +169,7 @@ input SharedWidgetInput {
     widgetType: String!
     peripheralId: String!
     pin: String
+    description: String
     shareStartDate: String!
     shareExpireDate: String!
     actionsAllowed: Int!

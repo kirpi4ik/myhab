@@ -14,6 +14,7 @@ class SharedWidget extends BaseEntity {
     int actionsAllowed = 5
     int actionsUsed = 0
     SharedWidgetState state = SharedWidgetState.VALID
+    String description
     String stateDescription
     String createdByUsername
 
@@ -31,6 +32,7 @@ class SharedWidget extends BaseEntity {
         actionsAllowed nullable: false, min: 1
         actionsUsed nullable: false, min: 0
         state nullable: false
+        description nullable: true, maxSize: 500
         stateDescription nullable: true, maxSize: 500
         createdByUsername nullable: false, blank: false, maxSize: 255
     }
@@ -46,6 +48,7 @@ class SharedWidget extends BaseEntity {
         actionsAllowed column: 'actions_allowed'
         actionsUsed column: 'actions_used'
         state column: 'state'
+        description column: 'description', type: 'text'
         stateDescription column: 'state_description', type: 'text'
         createdByUsername column: 'created_by_username'
         sort tsCreated: 'desc'

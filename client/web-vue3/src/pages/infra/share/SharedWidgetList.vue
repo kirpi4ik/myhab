@@ -35,6 +35,20 @@
 					</q-td>
 				</template>
 
+				<template v-slot:body-cell-description="props">
+					<q-td :props="props">
+						<div
+							v-if="props.row.description"
+							class="ellipsis cursor-pointer"
+							style="max-width: 200px;"
+							@click="showDetail(props.row)"
+						>
+							{{ props.row.description }}
+							<q-tooltip>Click to see full details</q-tooltip>
+						</div>
+					</q-td>
+				</template>
+
 				<template v-slot:body-cell-state="props">
 					<q-td :props="props">
 						<q-badge
@@ -111,6 +125,49 @@
 				</template>
 			</q-table>
 		</q-card>
+
+		<!-- Detail Dialog -->
+		<q-dialog v-model="detailDialog">
+			<q-card style="min-width: 400px; max-width: 560px;">
+				<q-bar class="bg-primary text-white">
+					<q-icon name="mdi-information-outline" size="20px"/>
+					<div class="q-ml-sm text-weight-bold">Share Link Details</div>
+					<q-space/>
+					<q-btn dense flat icon="close" v-close-popup/>
+				</q-bar>
+				<q-card-section v-if="detailRow">
+					<div class="text-subtitle2 text-grey-7 q-mb-xs">Description</div>
+					<div class="text-body1 q-mb-md" style="white-space: pre-wrap;">{{ detailRow.description || 'No description' }}</div>
+					<q-separator class="q-mb-md"/>
+					<div class="row q-col-gutter-sm">
+						<div class="col-6">
+							<div class="text-caption text-grey-7">Peripheral</div>
+							<div>{{ detailRow.peripheralName }}</div>
+						</div>
+						<div class="col-6">
+							<div class="text-caption text-grey-7">State</div>
+							<q-badge :color="stateColor(detailRow.state)" :label="detailRow.state"/>
+						</div>
+						<div class="col-6">
+							<div class="text-caption text-grey-7">Usage</div>
+							<div>{{ detailRow.actionsUsed }} / {{ detailRow.actionsAllowed }}</div>
+						</div>
+						<div class="col-6">
+							<div class="text-caption text-grey-7">Expires</div>
+							<div>{{ formatDate(detailRow.shareExpireDate) }}</div>
+						</div>
+						<div class="col-6">
+							<div class="text-caption text-grey-7">Created by</div>
+							<div>{{ detailRow.createdByUsername }}</div>
+						</div>
+						<div class="col-6">
+							<div class="text-caption text-grey-7">Created</div>
+							<div>{{ formatDate(detailRow.tsCreated) }}</div>
+						</div>
+					</div>
+				</q-card-section>
+			</q-card>
+		</q-dialog>
 	</q-page>
 </template>
 
@@ -129,6 +186,8 @@ export default defineComponent({
 		const rows = ref([]);
 		const loading = ref(false);
 		const stateFilter = ref(null);
+		const detailDialog = ref(false);
+		const detailRow = ref(null);
 
 		const stateOptions = [
 			{ label: 'All', value: null },
@@ -142,6 +201,7 @@ export default defineComponent({
 			{ name: 'token', label: 'Token', field: 'token', align: 'left', sortable: false },
 			{ name: 'widgetType', label: 'Type', field: 'widgetType', align: 'left', sortable: true },
 			{ name: 'peripheralName', label: 'Peripheral', field: 'peripheralName', align: 'left', sortable: true },
+			{ name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
 			{ name: 'state', label: 'State', field: 'state', align: 'center', sortable: true },
 			{ name: 'hasPin', label: 'PIN', field: 'hasPin', align: 'center', sortable: true },
 			{ name: 'usage', label: 'Usage', field: 'actionsUsed', align: 'center', sortable: true },
@@ -221,6 +281,11 @@ export default defineComponent({
 			}
 		};
 
+		const showDetail = (row) => {
+			detailRow.value = row;
+			detailDialog.value = true;
+		};
+
 		onMounted(() => fetchData());
 
 		return {
@@ -230,10 +295,13 @@ export default defineComponent({
 			stateOptions,
 			columns,
 			filteredRows,
+			detailDialog,
+			detailRow,
 			updateState,
 			stateColor,
 			formatDate,
 			copyLink,
+			showDetail,
 			fetchData,
 		};
 	}
