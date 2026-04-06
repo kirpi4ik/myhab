@@ -196,7 +196,7 @@ class Query {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def jobs = Job.where {
-                    state == JobState.ACTIVE && peripheral != null
+                    peripheral != null
                 }.list(sort: 'peripheral.name', order: 'asc')
                 return jobs.collect { job ->
                     def peripheral = job.peripheral
@@ -208,6 +208,7 @@ class Query {
                     [
                         jobId: job.id,
                         jobName: job.name,
+                        jobState: job.state?.name(),
                         peripheralId: peripheral.id,
                         peripheralName: peripheral.name ?: '',
                         peripheralDescription: peripheral.description,

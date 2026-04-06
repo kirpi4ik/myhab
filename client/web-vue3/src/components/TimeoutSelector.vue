@@ -241,7 +241,7 @@ export default defineComponent({
 <style scoped lang="scss">
 .timeout-selector {
   min-width: 320px;
-  max-width: 400px;
+  width: 100%;
 
   .timeout-header {
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);

@@ -7,7 +7,7 @@ type Query{
     appConfigList: [AppConfigEntry]
     deviceModelList:[String!]!
     jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
-    """Active jobs linked to a sprinkler peripheral, for the sprinkler scheduler UI. Ordered by peripheral name."""
+    """Jobs linked to a sprinkler peripheral, for the sprinkler scheduler UI. Ordered by peripheral name."""
     sprinklerScheduleJobs: [SprinklerScheduleEntry!]!
     """Messages for the current authenticated user, optionally filtered by level and/or state."""
     myMessages(level: String, state: String): [UserMessageResult!]!
@@ -17,10 +17,11 @@ type Query{
     sharedWidgets(state: String): [SharedWidgetResult!]!
 }
 
-"""One row in the sprinkler scheduler: an ACTIVE job linked to a sprinkler peripheral."""
+"""One row in the sprinkler scheduler: a job linked to a sprinkler peripheral."""
 type SprinklerScheduleEntry {
     jobId: ID!
     jobName: String!
+    jobState: String
     peripheralId: ID!
     peripheralName: String!
     peripheralDescription: String

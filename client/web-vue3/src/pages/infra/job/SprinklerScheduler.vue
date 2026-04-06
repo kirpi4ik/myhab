@@ -51,19 +51,20 @@
         <q-spinner-dots color="primary" size="40px"/>
       </q-card-section>
       <q-card-section v-else-if="!rows.length" class="text-center text-grey-6 q-pa-xl">
-        No active sprinkler jobs. Create a job linked to a sprinkler peripheral and set it to ACTIVE to see it here.
+        No sprinkler jobs found. Create a job linked to a sprinkler peripheral to see it here.
       </q-card-section>
       <template v-else>
         <q-card-section
           v-for="row in rows"
           :key="row.jobId"
-          class="scheduler-row row items-center no-wrap"
+          :class="['scheduler-row row items-center no-wrap', { 'scheduler-row--disabled': !row.isActive }]"
         >
           <div class="scheduler-label-col">
             <div class="text-weight-medium">
-              <router-link :to="'/admin/peripherals/' + row.peripheralId + '/view'" class="text-primary text-weight-medium" style="text-decoration: none;">
+              <router-link :to="'/admin/peripherals/' + row.peripheralId + '/view'" :class="row.isActive ? 'text-primary' : 'text-grey-6'" class="text-weight-medium" style="text-decoration: none;">
                 {{ row.peripheralName }}
               </router-link>
+              <q-badge v-if="!row.isActive" color="grey-4" text-color="grey-7" class="q-ml-sm" label="disabled"/>
             </div>
             <div class="text-caption text-grey-7">
               <router-link :to="'/admin/peripherals/' + row.peripheralId + '/view'" class="text-grey-7">#{{ row.peripheralId }}</router-link>
@@ -78,7 +79,7 @@
           >
             <div
               v-if="row.startMinutesLocal != null"
-              class="scheduler-bar"
+              :class="['scheduler-bar', { 'scheduler-bar--disabled': !row.isActive }]"
               :style="barStyle(row)"
               @mousedown.stop="onBarMouseDown(row, $event)"
             >
@@ -250,6 +251,7 @@ export default defineComponent({
           : (fromCron === null || fromCron === undefined ? 0 : fromCron);
         return {
           ...entry,
+          isActive: entry.jobState === 'ACTIVE',
           triggerId: trigger?.id,
           triggerExpression: trigger?.expression,
           cronParsed,
@@ -403,6 +405,9 @@ export default defineComponent({
 .scheduler-row:hover .scheduler-strip {
   background-color: rgba(0, 0, 0, 0.02);
 }
+.scheduler-row--disabled {
+  opacity: 0.55;
+}
 .scheduler-bar {
   position: absolute;
   top: 4px;
@@ -414,6 +419,9 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.scheduler-bar--disabled {
+  background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
 }
 .scheduler-bar:hover {
   filter: brightness(1.05);
