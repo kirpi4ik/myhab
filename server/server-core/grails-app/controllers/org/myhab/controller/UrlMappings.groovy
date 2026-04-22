@@ -20,6 +20,15 @@ class UrlMappings {
         get "/api/labels/cable/$id"(controller: "label", action: "generateCableLabel")
         get "/api/labels/templates"(controller: "label", action: "templates")
         get "/api/labels/fields"(controller: "label", action: "fields")
+        // Device management API
+        get "/api/devices/discover"(controller: "device", action: "discover")
+        post "/api/devices/init-from-device"(controller: "device", action: "initFromDevice")
+        get "/api/devices/$id/backups"(controller: "device", action: "listBackups")
+        get "/api/devices/$id/config"(controller: "device", action: "readFullConfig")
+        post "/api/devices/$id/backup"(controller: "device", action: "backupConfig")
+        post "/api/devices/$id/push-to-controller/$backupId"(controller: "device", action: "restoreToController")
+        post "/api/devices/$id/sync-from-backup/$backupId"(controller: "device", action: "syncFromBackup")
+
         get "/api/me"(controller: "me", action: "index")
         get "/api/users/$id/avatar"(controller: "userAvatar", action: "show")
         put "/api/users/$id/avatar"(controller: "userAvatar", action: "update")

@@ -14,9 +14,7 @@ class DeviceBackup extends BaseEntity {
         configuration nullable: true
     }
     static mapping = {
-        columns {
-            firmware type: 'blob'
-            configuration type: 'text'
-        }
+        firmware type: 'blob'
+        configuration type: 'text', sqlType: 'text'
     }
 }
