@@ -3,7 +3,8 @@
     <q-card class="my-card" v-if="viewItem">
       <q-card-section>
         <q-avatar size="103px" class="absolute-center shadow-10">
-          <q-icon name="mdi-account-circle" size="xl"/>
+          <img v-if="avatarBlobUrl" :src="avatarBlobUrl" alt="Avatar"/>
+          <q-icon v-else name="mdi-account-circle" size="xl"/>
         </q-avatar>
         <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
       </q-card-section>
@@ -289,14 +290,15 @@
 </template>
 
 <script>
-import {computed, defineComponent, onMounted, ref} from "vue";
+import { computed, defineComponent, onMounted, onUnmounted, ref, watch } from "vue";
 
-import {useApolloClient} from "@vue/apollo-composable";
-import {useRoute} from "vue-router/dist/vue-router";
+import { useApolloClient } from "@vue/apollo-composable";
+import { useRoute } from "vue-router/dist/vue-router";
 
-import {useQuasar} from "quasar";
+import { useQuasar } from "quasar";
 
-import {USER_GET_BY_ID_WITH_ROLES} from "@/graphql/queries";
+import { USER_GET_BY_ID_WITH_ROLES } from "@/graphql/queries";
+import { fetchAvatarBlobUrl } from "@/_services";
 
 import _ from 'lodash';
 
@@ -307,10 +309,29 @@ export default defineComponent({
     const $q = useQuasar();
     const viewItem = ref();
     const loading = ref(false);
-    const {client} = useApolloClient();
+    const avatarBlobUrl = ref(null);
+    const { client } = useApolloClient();
     const route = useRoute();
     const allRoles = ref([]);
     const assignedRoleIds = ref([]);
+
+    watch(viewItem, async (val) => {
+      if (avatarBlobUrl.value) {
+        URL.revokeObjectURL(avatarBlobUrl.value);
+        avatarBlobUrl.value = null;
+      }
+      if (val?.id) {
+        const url = await fetchAvatarBlobUrl(val.id);
+        avatarBlobUrl.value = url;
+      }
+    }, { immediate: true });
+
+    onUnmounted(() => {
+      if (avatarBlobUrl.value) {
+        URL.revokeObjectURL(avatarBlobUrl.value);
+        avatarBlobUrl.value = null;
+      }
+    });
 
     /**
      * Compute full name from first and last name
@@ -364,7 +385,7 @@ export default defineComponent({
           color: 'warning',
           icon: 'mdi-key-remove'
         };
-      } else if (!viewItem.value.enabled) {
+      } else if (viewItem.value.enabled === false) {
         return {
           label: 'DISABLED',
           color: 'grey',
@@ -449,6 +470,7 @@ export default defineComponent({
       fetchData,
       viewItem,
       loading,
+      avatarBlobUrl,
       fullName,
       userStatus,
       formatDate,

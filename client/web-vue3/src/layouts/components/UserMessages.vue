@@ -1,74 +1,115 @@
 <template>
-	<div>
-		<q-item style="max-width: 420px" v-for="msg in messages" :key="msg.id" clickable v-ripple>
-			<q-item-section avatar>
-				<q-avatar>
-					<img :src="msg.avatar" />
-				</q-avatar>
-			</q-item-section>
-
-			<q-item-section>
-				<q-item-label>{{ msg.name }}</q-item-label>
-				<q-item-label caption lines="1">{{ msg.msg }}</q-item-label>
-			</q-item-section>
-
-			<q-item-section side>
-				{{ msg.time }}
-			</q-item-section>
-		</q-item>
-	</div>
+  <div>
+    <q-item v-if="loading" class="justify-center q-pa-md">
+      <q-spinner-dots size="24px" color="primary"/>
+    </q-item>
+    <template v-else-if="messages.length > 0">
+      <q-item
+        style="max-width: 420px"
+        v-for="msg in messages"
+        :key="msg.id"
+        clickable
+        v-ripple
+        @click="goToMessage(msg)"
+      >
+        <q-item-section avatar>
+          <q-icon
+            :name="levelIcon(msg.level)"
+            :color="levelColor(msg.level)"
+            size="sm"
+          />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label :lines="1" class="text-weight-medium">{{ msg.subject }}</q-item-label>
+          <q-item-label caption :lines="1">{{ msg.fromSender }}</q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-item-label caption>{{ formatRelativeDate(msg.tsCreated) }}</q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+    <q-item v-else>
+      <q-item-section class="text-center text-grey-6 q-pa-sm">
+        No new messages
+      </q-item-section>
+    </q-item>
+  </div>
 </template>
 
 <script>
-import {defineComponent} from 'vue';
-
-
+import { defineComponent, ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useApolloClient } from '@vue/apollo-composable';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { MY_MESSAGES } from '@/graphql/queries';
 
 export default defineComponent({
-	name: 'UserMessages',
-	setup() {
-		return {
-			messages: [
-				{
-					id: 5,
-					name: 'Pratik Patel',
-					msg: " -- I'll be in your neighborhood doing errands this\n" + '            weekend. Do you want to grab brunch?',
-					avatar: 'https://avatars2.githubusercontent.com/u/34883558?s=400&v=4',
-					time: '10:42 PM',
-				},
-				{
-					id: 6,
-					name: 'Winfield Stapforth',
-					msg: " -- I'll be in your neighborhood doing errands this\n" + '            weekend. Do you want to grab brunch?',
-					avatar: 'https://cdn.quasar.dev/img/avatar6.jpg',
-					time: '11:17 AM',
-				},
-				{
-					id: 1,
-					name: 'Boy',
-					msg: " -- I'll be in your neighborhood doing errands this\n" + '            weekend. Do you want to grab brunch?',
-					avatar: 'https://cdn.quasar.dev/img/boy-avatar.png',
-					time: '5:17 AM',
-				},
-				{
-					id: 2,
-					name: 'Jeff Galbraith',
-					msg: " -- I'll be in your neighborhood doing errands this\n" + '            weekend. Do you want to grab brunch?',
-					avatar: 'https://cdn.quasar.dev/team/jeff_galbraith.jpg',
-					time: '5:17 AM',
-				},
-				{
-					id: 3,
-					name: 'Razvan Stoenescu',
-					msg: " -- I'll be in your neighborhood doing errands this\n" + '            weekend. Do you want to grab brunch?',
-					avatar: 'https://cdn.quasar.dev/team/razvan_stoenescu.jpeg',
-					time: '5:17 AM',
-				},
-			],
-		};
-	},
-});
+  name: 'UserMessages',
+  setup() {
+    const router = useRouter();
+    const { client } = useApolloClient();
+    const messages = ref([]);
+    const loading = ref(false);
 
+    const goToMessage = (msg) => {
+      router.push({ path: '/messages', query: { id: msg.id } });
+    };
+
+    const fetchMessages = async () => {
+      loading.value = true;
+      try {
+        const response = await client.query({
+          query: MY_MESSAGES,
+          variables: { state: 'NEW' },
+          fetchPolicy: 'network-only'
+        });
+        const all = response.data.myMessages || [];
+        messages.value = all.slice(0, 5);
+      } catch {
+        messages.value = [];
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const levelIcon = (level) => {
+      switch (level) {
+        case 'ERROR': return 'mdi-alert-circle';
+        case 'WARN': return 'mdi-alert';
+        default: return 'mdi-information';
+      }
+    };
+
+    const levelColor = (level) => {
+      switch (level) {
+        case 'ERROR': return 'negative';
+        case 'WARN': return 'warning';
+        default: return 'info';
+      }
+    };
+
+    const formatRelativeDate = (dateStr) => {
+      if (!dateStr) return '';
+      try {
+        return formatDistanceToNow(parseISO(dateStr), { addSuffix: true });
+      } catch {
+        return '';
+      }
+    };
+
+    onMounted(() => {
+      fetchMessages();
+    });
+
+    return {
+      messages,
+      loading,
+      goToMessage,
+      levelIcon,
+      levelColor,
+      formatRelativeDate
+    };
+  }
+});
 </script>
 
-<style scoped></style>

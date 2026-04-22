@@ -6,7 +6,13 @@ import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import groovy.util.logging.Slf4j
 import org.myhab.init.cache.CacheMap
+import org.myhab.domain.MessageState
+import org.myhab.domain.UserMessage
+import org.myhab.domain.SharedWidget
+import org.myhab.domain.SharedWidgetState
+import org.myhab.domain.SharedWidgetType
 import org.myhab.services.UserService
+import grails.plugin.springsecurity.SpringSecurityService
 import org.myhab.services.SchedulerService
 import org.myhab.config.ConfigProvider
 import org.myhab.domain.device.Scenario
@@ -32,6 +38,8 @@ class Mutation implements EventPublisher {
     SchedulerService schedulerService
     @Autowired
     ConfigProvider configProvider
+    @Autowired
+    SpringSecurityService springSecurityService
 
 
     DataFetcher pushEvent() {
@@ -229,6 +237,152 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("Failed to refresh app config", e)
                     return [success: false, error: e.message ?: "Failed to refresh configuration"]
+                }
+            }
+        }
+    }
+
+    DataFetcher messageUpdateState() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    Long msgId = environment.getArgument("id") as Long
+                    String stateStr = environment.getArgument("state")
+                    MessageState newState = MessageState.valueOf(stateStr)
+
+                    UserMessage.withTransaction {
+                        def msg = UserMessage.get(msgId)
+                        if (!msg) {
+                            return [success: false, error: "Message not found"]
+                        }
+                        msg.state = newState
+                        msg.save(flush: true, failOnError: true)
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to update message state", e)
+                    return [success: false, error: e.message ?: "Failed to update message state"]
+                }
+            }
+        }
+    }
+
+    DataFetcher sharedWidgetCreate() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    def input = environment.getArgument("input")
+                    String widgetTypeStr = input.widgetType
+                    String peripheralId = input.peripheralId
+                    String pin = input.pin
+                    String description = input.description
+                    String startDateStr = input.shareStartDate
+                    String expireDateStr = input.shareExpireDate
+                    int actionsAllowed = input.actionsAllowed as int
+
+                    def principal = springSecurityService?.principal
+                    String username = principal instanceof String ? principal : (principal?.username ?: 'unknown')
+
+                    def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+                    Date startDate
+                    Date expireDate
+                    try {
+                        startDate = sdf.parse(startDateStr)
+                    } catch (Exception ignored) {
+                        startDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(startDateStr)
+                    }
+                    try {
+                        expireDate = sdf.parse(expireDateStr)
+                    } catch (Exception ignored) {
+                        expireDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(expireDateStr)
+                    }
+
+                    def result = SharedWidget.withTransaction {
+                        SharedWidget widget = new SharedWidget(
+                            token: UUID.randomUUID().toString().replace('-', ''),
+                            widgetType: SharedWidgetType.valueOf(widgetTypeStr),
+                            peripheralId: peripheralId,
+                            pin: (pin && !pin.trim().isEmpty()) ? pin.trim() : null,
+                            description: (description && !description.trim().isEmpty()) ? description.trim() : null,
+                            shareStartDate: startDate,
+                            shareExpireDate: expireDate,
+                            actionsAllowed: actionsAllowed,
+                            actionsUsed: 0,
+                            state: SharedWidgetState.VALID,
+                            createdByUsername: username
+                        )
+                        widget.save(flush: true, failOnError: true)
+                        return [token: widget.token]
+                    }
+                    return [
+                        success : true,
+                        error   : null,
+                        token   : result.token,
+                        shareUrl: "/shared/${result.token}"
+                    ]
+                } catch (Exception e) {
+                    log.error("Failed to create shared widget", e)
+                    return [success: false, error: e.message ?: "Failed to create shared widget", token: null, shareUrl: null]
+                }
+            }
+        }
+    }
+
+    DataFetcher sharedWidgetUpdateState() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    Long widgetId = environment.getArgument("id") as Long
+                    String stateStr = environment.getArgument("state")
+                    String stateDescription = environment.getArgument("stateDescription")
+                    SharedWidgetState newState = SharedWidgetState.valueOf(stateStr)
+
+                    SharedWidget.withTransaction {
+                        def widget = SharedWidget.get(widgetId)
+                        if (!widget) {
+                            return [success: false, error: "Shared widget not found"]
+                        }
+                        widget.state = newState
+                        if (stateDescription != null) {
+                            widget.stateDescription = stateDescription
+                        }
+                        widget.save(flush: true, failOnError: true)
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to update shared widget state", e)
+                    return [success: false, error: e.message ?: "Failed to update shared widget state"]
+                }
+            }
+        }
+    }
+
+    DataFetcher messageBatchUpdateState() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    List<String> ids = environment.getArgument("ids")
+                    String stateStr = environment.getArgument("state")
+                    MessageState newState = MessageState.valueOf(stateStr)
+
+                    UserMessage.withTransaction {
+                        ids.each { idStr ->
+                            Long msgId = idStr as Long
+                            def msg = UserMessage.get(msgId)
+                            if (msg) {
+                                msg.state = newState
+                                msg.save(flush: true, failOnError: true)
+                            }
+                        }
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to batch update message states", e)
+                    return [success: false, error: e.message ?: "Failed to batch update message states"]
                 }
             }
         }

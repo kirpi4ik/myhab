@@ -7,14 +7,21 @@ type Query{
     appConfigList: [AppConfigEntry]
     deviceModelList:[String!]!
     jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
-    """Active jobs linked to a sprinkler peripheral, for the sprinkler scheduler UI. Ordered by peripheral name."""
+    """Jobs linked to a sprinkler peripheral, for the sprinkler scheduler UI. Ordered by peripheral name."""
     sprinklerScheduleJobs: [SprinklerScheduleEntry!]!
+    """Messages for the current authenticated user, optionally filtered by level and/or state."""
+    myMessages(level: String, state: String): [UserMessageResult!]!
+    """Count of NEW (unread) messages for the current authenticated user."""
+    myUnreadCount: Int!
+    """List all shared widgets, optionally filtered by state."""
+    sharedWidgets(state: String): [SharedWidgetResult!]!
 }
 
-"""One row in the sprinkler scheduler: an ACTIVE job linked to a sprinkler peripheral."""
+"""One row in the sprinkler scheduler: a job linked to a sprinkler peripheral."""
 type SprinklerScheduleEntry {
     jobId: ID!
     jobName: String!
+    jobState: String
     peripheralId: ID!
     peripheralName: String!
     peripheralDescription: String
@@ -26,6 +33,17 @@ type SprinklerScheduleEntry {
 type SprinklerCronTrigger {
     id: ID!
     expression: String!
+}
+
+type UserMessageResult {
+    id: ID!
+    subject: String!
+    fromSender: String!
+    message: String!
+    level: String!
+    state: String!
+    tsCreated: String
+    tsUpdated: String
 }
 
 type AppConfigEntry {
@@ -91,6 +109,14 @@ type Mutation {
     scenarioDelete(id: ID!): MutationResponse
     appConfigUpdate(key: String!, value: String!, commitMessage: String): MutationResponse
     appConfigRefresh: MutationResponse
+    """Update the state of a single message (NEW, READ, ARCHIVE)."""
+    messageUpdateState(id: ID!, state: String!): MutationResponse
+    """Update the state of multiple messages at once."""
+    messageBatchUpdateState(ids: [ID!]!, state: String!): MutationResponse
+    """Create a new shared widget link."""
+    sharedWidgetCreate(input: SharedWidgetInput!): SharedWidgetCreateResult
+    """Update the state of a shared widget (VALID, DISABLED, EXPIRED, ARCHIVED)."""
+    sharedWidgetUpdateState(id: ID!, state: String!, stateDescription: String): MutationResponse
 }
 
 type EventDataResponse {
@@ -112,6 +138,42 @@ input EventDatInput {
     p4: String
     p5: String
     p6: String
+}
+
+type SharedWidgetResult {
+    id: ID!
+    token: String!
+    widgetType: String!
+    peripheralId: String!
+    peripheralName: String
+    shareStartDate: String!
+    shareExpireDate: String!
+    actionsAllowed: Int!
+    actionsUsed: Int!
+    state: String!
+    description: String
+    stateDescription: String
+    createdByUsername: String!
+    hasPin: Boolean!
+    tsCreated: String
+    tsUpdated: String
+}
+
+type SharedWidgetCreateResult {
+    success: Boolean!
+    error: String
+    token: String
+    shareUrl: String
+}
+
+input SharedWidgetInput {
+    widgetType: String!
+    peripheralId: String!
+    pin: String
+    description: String
+    shareStartDate: String!
+    shareExpireDate: String!
+    actionsAllowed: Int!
 }
 
 input SaveUserRoles {

@@ -38,7 +38,9 @@ enum EntityType {
     JOB(Job.class),
     JOB_TAG(JobTag.class),
     LAYER(Layer.class),
-    USER(User.class);
+    USER(User.class),
+    USER_MESSAGE(UserMessage.class),
+    SHARED_WIDGET(SharedWidget.class);
 
     static <T extends BaseEntity> EntityType get(T type) {
         return values().find {

@@ -1,6 +1,6 @@
 import {BehaviorSubject} from 'rxjs';
 
-import {handleResponse, requestOptions, Utils} from '@/_helpers';
+import { handleResponse, requestOptions, Utils } from '@/_helpers';
 
 /**
  * Safe JSON parse with fallback
@@ -18,6 +18,33 @@ const safeJsonParse = (value) => {
 
 const currentUserSubject = new BehaviorSubject(safeJsonParse(localStorage.getItem('currentUser')));
 
+/**
+ * Fetch current user id/username from GET /api/me and merge into currentUser.
+ * Call after login or on app load so HeaderLayout (and avatar) can use currentUser.id.
+ */
+function ensureCurrentUserIds() {
+	const current = currentUserSubject.value;
+	const token = current?.access_token || current?.token;
+	if (!token || (current?.id != null && current?.username != null)) {
+		return Promise.resolve(current);
+	}
+	return fetch(`${Utils.host()}/api/me`, {
+		method: 'GET',
+		headers: { Authorization: `Bearer ${token}` }
+	})
+		.then((res) => (res.ok ? res.json() : null))
+		.then((data) => {
+			if (data?.id != null || data?.username != null) {
+				const updated = { ...current, ...data };
+				localStorage.setItem('currentUser', JSON.stringify(updated));
+				currentUserSubject.next(updated);
+				return updated;
+			}
+			return current;
+		})
+		.catch(() => current);
+}
+
 export const authzService = {
 	login,
 	logout,
@@ -26,6 +53,7 @@ export const authzService = {
 		return currentUserSubject.value;
 	},
 	hasAnyRole,
+	ensureCurrentUserIds,
 };
 
 /**
@@ -45,7 +73,8 @@ function login(username, password) {
 			// Store user details and jwt token in local storage to keep user logged in between page refreshes
 			localStorage.setItem('currentUser', JSON.stringify(user));
 			currentUserSubject.next(user);
-			return user;
+			// Ensure id/username are set for avatar and profile (from /api/me)
+			return ensureCurrentUserIds().then(() => currentUserSubject.value || user);
 		})
 		.catch(error => {
 			console.error('Login failed:', error);

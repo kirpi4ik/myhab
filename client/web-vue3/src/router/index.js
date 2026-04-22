@@ -25,24 +25,28 @@ export default route(function ({ store, ssrContext }) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  router.beforeEach((to, from, next) => {
+  router.beforeEach(async (to, from, next) => {
     // redirect to login page if not logged in and trying to access a restricted page
-    const {authorize} = to.meta;
+    const { authorize } = to.meta;
     const currentUser = authzService.currentUserValue;
 
     if (authorize) {
       if (!currentUser) {
         // not logged in so redirect to login page with the return url
-        return next({path: '/login', query: {returnUrl: to.path}});
+        return next({ path: '/login', query: { returnUrl: to.path } });
       }
 
+      // ensure currentUser has id/username (for avatar, etc.) from /api/me
+      await authzService.ensureCurrentUserIds();
+
       // check if route is restricted by role
-      const hasRole = currentUser.permissions.filter(function (userRole) {
+      const permissions = authzService.currentUserValue?.permissions || currentUser.permissions || [];
+      const hasRole = permissions.filter(function (userRole) {
         return authorize.includes(userRole);
       }).length > 0;
       if (authorize.length && !hasRole) {
         // role not authorised so redirect to home page
-        return next({path: '/pages/403'});
+        return next({ path: '/pages/403' });
       }
     }
 

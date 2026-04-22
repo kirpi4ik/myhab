@@ -190,12 +190,13 @@ export const JOB_LIST_WITH_PERIPHERAL = gql`
   }
 `;
 
-/** Sprinkler scheduler: ACTIVE jobs linked to a sprinkler peripheral. */
+/** Sprinkler scheduler: jobs linked to a sprinkler peripheral. */
 export const SPRINKLER_SCHEDULE_JOBS = gql`
   query sprinklerScheduleJobs {
     sprinklerScheduleJobs {
       jobId
       jobName
+      jobState
       peripheralId
       peripheralName
       peripheralDescription

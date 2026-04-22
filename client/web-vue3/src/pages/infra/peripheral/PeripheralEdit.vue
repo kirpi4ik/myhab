@@ -131,6 +131,44 @@
 
         <q-separator/>
 
+        <!-- Timeout Configuration -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">Timeout Configuration</div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <q-field
+            :model-value="timeoutDisplay"
+            label="Auto-off Timeout"
+            filled
+            dense
+            stack-label
+            readonly
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-timer-outline"/>
+            </template>
+            <template v-slot:control>
+              <div class="self-center full-width no-outline" tabindex="0">
+                {{ timeoutDisplay }}
+              </div>
+            </template>
+            <template v-slot:append>
+              <q-icon name="mdi-menu-down" class="cursor-pointer"/>
+            </template>
+
+            <q-popup-proxy fit cover transition-show="scale" transition-hide="scale">
+              <TimeoutSelector
+                :current-timeout="timeoutConfig ? Number(timeoutConfig.value) : null"
+                @set-timeout="handleSetTimeout"
+                @delete-timeout="handleDeleteTimeout"
+              />
+            </q-popup-proxy>
+          </q-field>
+        </q-card-section>
+
+        <q-separator/>
+
         <!-- Port Connections -->
         <PortConnectCard
           v-model="peripheral.connectedTo"
@@ -172,7 +210,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, ref } from 'vue';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useEntityCRUD } from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
@@ -180,14 +218,18 @@ import EntityFormActions from '@/components/EntityFormActions.vue';
 import PortConnectCard from '@/components/cards/PortConnectCard.vue';
 import LocationSelector from '@/components/selectors/LocationSelector.vue';
 import CableSelector from '@/components/selectors/CableSelector.vue';
+import TimeoutSelector from '@/components/TimeoutSelector.vue';
+import humanizeDuration from 'humanize-duration';
 
 import {
   PERIPHERAL_CATEGORIES,
   PERIPHERAL_GET_BY_ID,
-  PERIPHERAL_UPDATE
+  PERIPHERAL_UPDATE,
+  CONFIGURATION_SET_VALUE,
+  CONFIGURATION_REMOVE_CONFIG_BY_KEY
 } from '@/graphql/queries';
 
-import { useApolloClient } from '@vue/apollo-composable';
+import { useApolloClient, useMutation } from '@vue/apollo-composable';
 
 export default defineComponent({
   name: 'PeripheralEdit',
@@ -196,7 +238,8 @@ export default defineComponent({
     EntityFormActions,
     PortConnectCard,
     LocationSelector,
-    CableSelector
+    CableSelector,
+    TimeoutSelector
   },
   setup() {
     const route = useRoute();
@@ -246,6 +289,47 @@ export default defineComponent({
         return transformed;
       }
     });
+
+    const timeoutConfig = computed(() => {
+      return peripheral.value?.configurations?.find(cfg => cfg.key === 'key.on.timeout');
+    });
+
+    const timeoutDisplay = computed(() => {
+      if (!timeoutConfig.value) return 'No timeout set';
+      const seconds = Number(timeoutConfig.value.value);
+      return humanizeDuration(seconds * 1000, {
+        largest: 2,
+        language: 'en',
+        round: true,
+        conjunction: ' ',
+        serialComma: false
+      });
+    });
+
+    const { mutate: setConfigValue } = useMutation(CONFIGURATION_SET_VALUE, {
+      update: () => { fetchData(); },
+    });
+
+    const { mutate: deleteConfigValue } = useMutation(CONFIGURATION_REMOVE_CONFIG_BY_KEY, {
+      update: () => { fetchData(); },
+    });
+
+    const handleSetTimeout = (timeoutValue) => {
+      setConfigValue({
+        key: 'key.on.timeout',
+        value: String(timeoutValue),
+        entityId: peripheral.value.id,
+        entityType: 'PERIPHERAL',
+      });
+    };
+
+    const handleDeleteTimeout = () => {
+      deleteConfigValue({
+        entityId: peripheral.value.id,
+        entityType: 'PERIPHERAL',
+        key: 'key.on.timeout',
+      });
+    };
 
     /**
      * Custom fetch to load additional data
@@ -303,7 +387,11 @@ export default defineComponent({
       deviceList,
       loading,
       saving,
-      onSave
+      onSave,
+      timeoutConfig,
+      timeoutDisplay,
+      handleSetTimeout,
+      handleDeleteTimeout
     };
   }
 });

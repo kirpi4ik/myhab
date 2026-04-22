@@ -19,3 +19,7 @@ VERSIONING.md
 # Quasar temporary compiled config files
 **/quasar.config.js.temporary.compiled.*.mjs
 /*.code-workspace
+
+# IDE and editor configuration
+.vscode/
+.claude/

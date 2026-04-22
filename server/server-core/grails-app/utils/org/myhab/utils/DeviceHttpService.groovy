@@ -70,6 +70,20 @@ public class DeviceHttpService {
         }
     }
 
+    def sendRawQuery(String queryString) throws UnavailableDeviceException {
+        if (device?.model == DeviceModel.MEGAD_2561_RTC) {
+            def url = "$PROTOCOL://${device.networkAddress.ip}:${device.networkAddress.port}/${device.authAccounts.first().password}/?${queryString}"
+            log.trace("SEND RAW QUERY [${DeviceModel.MEGAD_2561_RTC}]: ${url}")
+            try {
+                return connect(url).timeout(DEVICE_URL_TIMEOUT).get()
+            } catch (Exception ce) {
+                throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
+            }
+        } else {
+            log.error("sendRawQuery not supported for device model ${device?.model}")
+        }
+    }
+
     def writeState() {
         def act = []
 

@@ -34,15 +34,53 @@
 					</q-item-label>
 				</q-item-section>
 
-				<!-- Event Logger -->
-				<q-item-section side>
-					<q-item-label>
-						<event-logger :peripheral="peripheral" />
-					</q-item-label>
-				</q-item-section>
-			</q-item>
+			<!-- Actions Menu -->
+			<q-item-section side>
+				<q-btn-dropdown
+					size="sm"
+					flat
+					round
+					icon="mdi-tune-variant"
+					class="text-white"
+				>
+					<q-list>
+						<q-item clickable v-close-popup @click="shareDialogVisible = true">
+							<q-item-section avatar>
+								<q-icon name="mdi-share-variant" color="primary"/>
+							</q-item-section>
+							<q-item-section>
+								<q-item-label>Share Access</q-item-label>
+							</q-item-section>
+						</q-item>
 
-			<q-separator class="separator-line" />
+						<q-separator/>
+
+						<q-item>
+							<q-item-section>
+								<event-logger :peripheral="peripheral"/>
+							</q-item-section>
+						</q-item>
+
+						<q-separator/>
+
+						<q-item
+							clickable
+							v-close-popup
+							@click="$router.push({ path: '/admin/peripherals/' + peripheral.id + '/view' })"
+						>
+							<q-item-section avatar>
+								<q-icon name="mdi-information" color="info"/>
+							</q-item-section>
+							<q-item-section>
+								<q-item-label>Details</q-item-label>
+							</q-item-section>
+						</q-item>
+					</q-list>
+				</q-btn-dropdown>
+			</q-item-section>
+		</q-item>
+
+		<q-separator class="separator-line" />
 
 			<!-- Unlock Button Section -->
 			<q-card-section class="action-section">
@@ -116,6 +154,13 @@
 				</q-card-actions>
 			</q-card>
 		</q-dialog>
+
+	<!-- Share Widget Dialog -->
+	<share-widget-dialog
+		v-model="shareDialogVisible"
+		:peripheral-id="String(peripheral.id || '')"
+		widget-type="GATE_ACCESS"
+	/>
 	</div>
 </template>
 
@@ -126,6 +171,7 @@ import { useQuasar } from 'quasar';
 import { authzService } from '@/_services';
 import { PERIPHERAL_GET_BY_ID, PUSH_EVENT } from '@/graphql/queries';
 import EventLogger from 'components/EventLogger.vue';
+import ShareWidgetDialog from 'components/ShareWidgetDialog.vue';
 
 // Composables
 const { client } = useApolloClient();
@@ -135,6 +181,7 @@ const $q = useQuasar();
 const loading = ref(false);
 const unlocking = ref(false);
 const confirmDialog = ref(false);
+const shareDialogVisible = ref(false);
 const peripheral = ref({ 
 	id: process.env.DOOR_LOCK_ID 
 });
