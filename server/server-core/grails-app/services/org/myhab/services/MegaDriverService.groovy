@@ -252,8 +252,8 @@ class MegaDriverService implements EventPublisher {
     Map<String, String> readPortValues(Device deviceController) throws UnavailableDeviceException {
         Map<String, String> response = [:]
         def allStringStatus = httpClient(deviceController, "?cmd=all").readState()
-        allStringStatus.text().split(";").eachWithIndex { status, index ->
-            response["${index}"] = "${status}"
+        allStringStatus.text().split(";").eachWithIndex { String status, int index ->
+            response[index.toString()] = status
         }
         return response
     }

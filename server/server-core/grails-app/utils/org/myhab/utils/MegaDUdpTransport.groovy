@@ -263,19 +263,16 @@ class MegaDUdpTransport {
                     && (pkt[4] & 0xFF) == 0xFF
                     && (pkt[5] & 0xFF) == 0xFF
                     && (pkt[6] & 0xFF) == 0xFF) {
-                Map<String, Object> result = [ip: DEFAULT_BOOTLOADER_IP, bootloaderMode: true]
-                return result
+                return [ip: DEFAULT_BOOTLOADER_IP, bootloaderMode: true] as Map<String, Object>
             }
             if (pkt.length < 7) {
                 return null
             }
             String ip = "${pkt[3] & 0xFF}.${pkt[4] & 0xFF}.${pkt[5] & 0xFF}.${pkt[6] & 0xFF}"
-            Map<String, Object> result = [ip: ip, bootloaderMode: true]
-            return result
+            return [ip: ip, bootloaderMode: true] as Map<String, Object>
         }
         String ip = "${pkt[1] & 0xFF}.${pkt[2] & 0xFF}.${pkt[3] & 0xFF}.${pkt[4] & 0xFF}"
-        Map<String, Object> result = [ip: ip, bootloaderMode: false]
-        return result
+        return [ip: ip, bootloaderMode: false] as Map<String, Object>
     }
 
     // ==================== Network helpers ====================
