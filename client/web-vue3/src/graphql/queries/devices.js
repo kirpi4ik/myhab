@@ -136,6 +136,73 @@ export const DEVICE_GET_BY_ID_WITH_PORT_VALUES = gql`
   }
 `;
 
+// ==================== MegaD discovery + backup/restore ====================
+
+export const DEVICES_DISCOVER = gql`
+  query {
+    discoveredDevices {
+      ip
+      bootloaderMode
+      mqttId
+    }
+  }
+`;
+
+export const DEVICE_BACKUP_LIST = gql`
+  query deviceBackupList($deviceId: ID!) {
+    deviceBackupList(deviceId: $deviceId) {
+      id
+      frmVersion
+      configLines
+      tsCreated
+    }
+  }
+`;
+
+export const DEVICE_INIT_FROM_CONTROLLER = gql`
+  mutation deviceInitFromController($ip: String!, $password: String!) {
+    deviceInitFromController(ip: $ip, password: $password) {
+      success
+      error
+      deviceId
+      deviceCode
+      portCount
+      existingDeviceId
+      existingDeviceCode
+    }
+  }
+`;
+
+export const DEVICE_BACKUP_CONFIG = gql`
+  mutation deviceBackupConfig($deviceId: ID!) {
+    deviceBackupConfig(deviceId: $deviceId) {
+      success
+      error
+      id
+      frmVersion
+      configLines
+    }
+  }
+`;
+
+export const DEVICE_RESTORE_TO_CONTROLLER = gql`
+  mutation deviceRestoreToController($deviceId: ID!, $backupId: ID!) {
+    deviceRestoreToController(deviceId: $deviceId, backupId: $backupId) {
+      success
+      error
+    }
+  }
+`;
+
+export const DEVICE_SYNC_FROM_BACKUP = gql`
+  mutation deviceSyncFromBackup($deviceId: ID!, $backupId: ID!) {
+    deviceSyncFromBackup(deviceId: $deviceId, backupId: $backupId) {
+      success
+      error
+    }
+  }
+`;
+
 export const DEVICE_GET_BY_ID_CHILDS = gql`
   query device($id: Long!) {
     deviceCategoryList {

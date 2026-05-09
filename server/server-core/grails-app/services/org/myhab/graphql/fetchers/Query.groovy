@@ -12,6 +12,8 @@ import org.myhab.domain.job.JobState
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import org.myhab.domain.device.Device
+import org.myhab.domain.device.DeviceBackup
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.MessageLevel
 import org.myhab.domain.MessageState
@@ -20,6 +22,7 @@ import org.myhab.domain.SharedWidget
 import org.myhab.domain.SharedWidgetState
 import org.myhab.domain.device.DevicePeripheral
 import org.myhab.init.cache.CacheMap
+import org.myhab.services.MegaDriverService
 import grails.plugin.springsecurity.SpringSecurityService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -38,6 +41,8 @@ class Query {
     ConfigProvider configProvider
     @Autowired
     SpringSecurityService springSecurityService
+    @Autowired
+    MegaDriverService megaDriverService
     
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
@@ -318,6 +323,46 @@ class Query {
                         tsUpdated        : sw.tsUpdated ? ISO_DATE_FORMAT.format(sw.tsUpdated) : null
                     ]
                 }
+            }
+        }
+    }
+
+    // ==================== Device (MegaD) operations ====================
+
+    /**
+     * UDP-broadcast scan for MegaD controllers on the local network.
+     */
+    DataFetcher discoveredDevices() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                return megaDriverService.discoverDevices(true)
+            }
+        }
+    }
+
+    /**
+     * Backups stored in the DB for a given device, newest first.
+     */
+    DataFetcher deviceBackupList() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                Long deviceId = environment.getArgument("deviceId") as Long
+                Device device = Device.get(deviceId)
+                if (!device) {
+                    return []
+                }
+                return (device.backups ?: [])
+                        .sort { a, b -> (b?.tsCreated ?: 0) <=> (a?.tsCreated ?: 0) }
+                        .collect { DeviceBackup b ->
+                            [
+                                    id         : b.id,
+                                    frmVersion : b.frmVersion,
+                                    configLines: b.configuration ? b.configuration.split('\n').length : 0,
+                                    tsCreated  : b.tsCreated ? ISO_DATE_FORMAT.format(b.tsCreated) : null
+                            ]
+                        }
             }
         }
     }
