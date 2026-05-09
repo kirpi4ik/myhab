@@ -27,34 +27,31 @@ export const labelService = {
 
         const url = `${Utils.host()}/api/labels/cable/${cableId}?${params.toString()}`;
 
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authzService.currentUserValue?.access_token || ''}`
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to generate label');
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authzService.currentUserValue?.access_token || ''}`
             }
+        });
 
-            // Get the blob and trigger download
-            const blob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = `cable-${cableId}-label.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(downloadUrl);
-
-            return true;
-        } catch (error) {
-            console.error('Error downloading label:', error);
-            throw error;
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const err = new Error(errorData.error || 'Failed to generate label');
+            console.error('Error downloading label:', err);
+            throw err;
         }
+
+        // Get the blob and trigger download
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `cable-${cableId}-label.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+
+        return true;
     }
 };

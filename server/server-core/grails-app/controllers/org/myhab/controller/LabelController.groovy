@@ -43,7 +43,8 @@ class LabelController {
         }
 
         String templateName = params.template ?: 'brother_18mm'
-        List<String> fields = params.fields ? params.fields.split(',').collect { it.trim() } : null
+        String fieldsParam = params.fields as String
+        List<String> fields = fieldsParam ? fieldsParam.split(',').collect { it.trim() } : null
         Integer customWidth = params.width ? params.width as Integer : null
         Integer customHeight = params.height ? params.height as Integer : null
         boolean download = params.download == 'true'

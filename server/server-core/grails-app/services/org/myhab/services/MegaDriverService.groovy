@@ -15,6 +15,7 @@ import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.NetworkAddress
 import org.myhab.domain.device.port.DevicePort
+import org.myhab.domain.device.port.PortAction
 import org.myhab.domain.device.port.PortType
 import org.myhab.domain.events.TopicName
 import org.myhab.domain.job.EventData
@@ -37,8 +38,7 @@ class MegaDriverService implements EventPublisher {
      * Optionally enriches with MQTT device ID by reading cf=2 page via HTTP.
      */
     List<Map<String, Object>> discoverDevices(boolean enrichWithHttp = false) {
-        def transport = new MegaDUdpTransport()
-        def devices = transport.discoverDevices()
+        def devices = MegaDUdpTransport.discoverDevices()
 
         if (enrichWithHttp) {
             devices.each { device ->
@@ -69,7 +69,7 @@ class MegaDriverService implements EventPublisher {
      * Ping a specific device via UDP to check reachability.
      */
     boolean pingDevice(String ip) {
-        return new MegaDUdpTransport().pingDevice(ip)
+        return MegaDUdpTransport.pingDevice(ip)
     }
 
     // ==================== Device Initialization ====================
@@ -84,12 +84,12 @@ class MegaDriverService implements EventPublisher {
     Device initializeFromConfig(String configContent, String deviceCode = null) {
         def lines = configContent.split('\n').collect { it.trim() }.findAll { it }
 
-        def generalConfig = [:]
-        def mqttConfig = [:]
-        def portConfigs = []
+        Map<String, String> generalConfig = [:]
+        Map<String, String> mqttConfig = [:]
+        List<Map<String, String>> portConfigs = []
 
         lines.each { line ->
-            def fields = parseConfigLine(line)
+            Map<String, String> fields = parseConfigLine(line)
             if (fields.cf == '1') {
                 generalConfig = fields
             } else if (fields.cf == '2') {
@@ -124,7 +124,7 @@ class MegaDriverService implements EventPublisher {
         )
         device.authAccounts = [account] as Set
 
-        portConfigs.each { Map fields ->
+        portConfigs.each { Map<String, String> fields ->
             String portNr = fields.pn
             String ptyValue = fields.pty
             PortType portType = PortType.fromValue(ptyValue) ?: PortType.NOT_CONFIGURED
@@ -166,7 +166,7 @@ class MegaDriverService implements EventPublisher {
      * Returns a structured map with all config sections.
      */
     Map<String, Object> readFullConfig(Device device) {
-        def config = [:]
+        Map<String, Object> config = [:]
 
         // Required pages — failures here mean the device is unreachable.
         config.general = readConfigPage(device, "?cf=1")
@@ -211,7 +211,7 @@ class MegaDriverService implements EventPublisher {
      * Returns map keyed by internalRef.
      */
     Map<String, Map<String, String>> readPortConfigs(Device device, List<String> internalRefs) {
-        def result = [:]
+        Map<String, Map<String, String>> result = [:]
         internalRefs.each { ref ->
             try {
                 result[ref] = readPortConfig(device, ref)
@@ -250,7 +250,7 @@ class MegaDriverService implements EventPublisher {
      * Returns map of portNr -> value string.
      */
     Map<String, String> readPortValues(Device deviceController) throws UnavailableDeviceException {
-        def response = [:]
+        Map<String, String> response = [:]
         def allStringStatus = httpClient(deviceController, "?cmd=all").readState()
         allStringStatus.text().split(";").eachWithIndex { status, index ->
             response["${index}"] = "${status}"
@@ -479,12 +479,12 @@ class MegaDriverService implements EventPublisher {
             return
         }
 
-        def generalConfig = [:]
-        def mqttConfig = [:]
-        def portConfigs = []
+        Map<String, String> generalConfig = [:]
+        Map<String, String> mqttConfig = [:]
+        List<Map<String, String>> portConfigs = []
 
         lines.each { line ->
-            def fields = parseConfigLine(line)
+            Map<String, String> fields = parseConfigLine(line)
             if (fields.cf == '1') {
                 generalConfig = fields
             } else if (fields.cf == '2') {
@@ -515,14 +515,14 @@ class MegaDriverService implements EventPublisher {
         }
 
         // Build a map of existing ports by internalRef for efficient lookup
-        def existingPorts = [:]
-        device.ports?.each { port ->
+        Map<String, DevicePort> existingPorts = [:]
+        device.ports?.each { DevicePort port ->
             existingPorts[port.internalRef] = port
         }
 
-        def seenRefs = [] as Set
+        Set<String> seenRefs = [] as Set
 
-        portConfigs.each { Map fields ->
+        portConfigs.each { Map<String, String> fields ->
             String portNr = fields.pn
             String ptyValue = fields.pty
             PortType portType = PortType.fromValue(ptyValue) ?: PortType.NOT_CONFIGURED
@@ -533,7 +533,7 @@ class MegaDriverService implements EventPublisher {
 
             seenRefs << portNr
 
-            def existingPort = existingPorts[portNr]
+            DevicePort existingPort = existingPorts[portNr]
             if (existingPort) {
                 // Update existing port
                 existingPort.type = portType
@@ -616,8 +616,7 @@ class MegaDriverService implements EventPublisher {
         String password = device.authAccounts?.first()?.password ?: 'sec'
         String oldIp = device.networkAddress?.ip
 
-        def transport = new MegaDUdpTransport()
-        boolean success = transport.changeIp(oldIp, newIp, password)
+        boolean success = MegaDUdpTransport.changeIp(oldIp, newIp, password)
         if (success) {
             device.networkAddress.ip = newIp
             device.save(flush: true)
@@ -678,7 +677,7 @@ class MegaDriverService implements EventPublisher {
      * Kept for backward compatibility with DeviceService.importPort().
      */
     def readPortConfigFromController(code, internalRef, portName) {
-        DevicePort port
+        DevicePort port = null
         try {
             Device deviceController = Device.findByCode(code)
             def fields = readPortConfig(deviceController, "${internalRef}")
@@ -877,7 +876,7 @@ class MegaDriverService implements EventPublisher {
      * Resolve action to its numeric value for command strings.
      */
     private String resolveActionValue(def action) {
-        if (action instanceof org.myhab.domain.device.port.PortAction) {
+        if (action instanceof PortAction) {
             return "${action.value}"
         }
         return "${action}"

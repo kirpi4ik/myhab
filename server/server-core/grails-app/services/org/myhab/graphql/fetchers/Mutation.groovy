@@ -5,6 +5,8 @@ import grails.events.EventPublisher
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import groovy.util.logging.Slf4j
+
+import java.text.SimpleDateFormat
 import org.myhab.init.cache.CacheMap
 import org.myhab.domain.MessageState
 import org.myhab.domain.UserMessage
@@ -31,11 +33,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Slf4j
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
-@org.springframework.transaction.annotation.Transactional
+@Transactional
 class Mutation implements EventPublisher {
 
     @Autowired
@@ -228,7 +231,7 @@ class Mutation implements EventPublisher {
                 def cacheKeyStr = String.valueOf(cacheKey)
                 
                     // IMPORTANT: Use the cacheName argument, not hardcoded CacheMap.EXPIRE.name
-                    def cacheMap = hazelcastInstance.getMap(cacheName)
+                    def cacheMap = hazelcastInstance.getMap(cacheName as String)
                     
                     // Delete the entry
                     cacheMap.delete(cacheKeyStr)
@@ -292,7 +295,7 @@ class Mutation implements EventPublisher {
         }
     }
 
-    public DataFetcher userRolesSave() {
+    DataFetcher userRolesSave() {
         return userService
     }
 
@@ -397,7 +400,7 @@ class Mutation implements EventPublisher {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
                 try {
-                    boolean success = configProvider.refresh()
+                    configProvider.refresh()
                     log.info("App config refreshed from GIT")
                     return [success: true, error: null]
                 } catch (Exception e) {
@@ -451,18 +454,18 @@ class Mutation implements EventPublisher {
                     def principal = springSecurityService?.principal
                     String username = principal instanceof String ? principal : (principal?.username ?: 'unknown')
 
-                    def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+                    def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
                     Date startDate
                     Date expireDate
                     try {
                         startDate = sdf.parse(startDateStr)
                     } catch (Exception ignored) {
-                        startDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(startDateStr)
+                        startDate = new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr)
                     }
                     try {
                         expireDate = sdf.parse(expireDateStr)
                     } catch (Exception ignored) {
-                        expireDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(expireDateStr)
+                        expireDate = new SimpleDateFormat("yyyy-MM-dd").parse(expireDateStr)
                     }
 
                     def result = SharedWidget.withTransaction {

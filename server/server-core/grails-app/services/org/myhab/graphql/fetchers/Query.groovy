@@ -52,7 +52,6 @@ class Query {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def userId = environment.getArgument("userId")
                 def user = User.findById(userId)
-                def userRoles = user.authorities
                 def response = []
                 user.authorities.each {
                     response << [userId: user.id, roleId: it.id]
@@ -68,7 +67,7 @@ class Query {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
-                def cacheName = environment.getArgument("cacheName")
+                def cacheName = environment.getArgument("cacheName") as String
                 def cacheKey = environment.getArgument("cacheKey")
                 // Convert cacheKey to String to match mutation's String.valueOf()
                 def cachedValue = hazelcastInstance.getMap(cacheName).get(String.valueOf(cacheKey))
@@ -113,7 +112,7 @@ class Query {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
-                def key = environment.getArgument("key")
+                String key = environment.getArgument("key") as String
                 def config = configProvider.get(String, key)
                 return config
             }
@@ -377,8 +376,9 @@ class Query {
                 if (!device) {
                     return []
                 }
+                Date epoch = new Date(0)
                 return (device.backups ?: [])
-                        .sort { a, b -> (b?.tsCreated ?: 0) <=> (a?.tsCreated ?: 0) }
+                        .sort { a, b -> (b?.tsCreated ?: epoch) <=> (a?.tsCreated ?: epoch) }
                         .collect { DeviceBackup b ->
                             [
                                     id         : b.id,

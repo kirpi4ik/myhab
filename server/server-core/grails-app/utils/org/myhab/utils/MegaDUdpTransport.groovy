@@ -52,7 +52,7 @@ class MegaDUdpTransport {
      *
      * @return list of [ip: String, bootloaderMode: boolean, mqttId: null]
      */
-    List<Map<String, Object>> discoverDevices() {
+    static List<Map<String, Object>> discoverDevices() {
         List<Map<String, Object>> result = []
         String localIp = detectLocalIp()
         if (!localIp) {
@@ -106,7 +106,7 @@ class MegaDUdpTransport {
     /**
      * Send a unicast ping (CMD_PING) and report whether the device replies.
      */
-    boolean pingDevice(String ip) {
+    static boolean pingDevice(String ip) {
         String localIp = detectLocalIp()
         if (!localIp) {
             log.warn("Could not auto-detect local IP for UDP ping")
@@ -148,7 +148,7 @@ class MegaDUdpTransport {
      *
      * @return true if the device replied with success (response[1] == 0x01)
      */
-    boolean changeIp(String oldIp, String newIp, String password) {
+    static boolean changeIp(String oldIp, String newIp, String password) {
         if (!isValidIp(oldIp) || !isValidIp(newIp)) {
             log.warn("changeIp called with invalid addresses old={} new={}", oldIp, newIp)
             return false
@@ -263,16 +263,19 @@ class MegaDUdpTransport {
                     && (pkt[4] & 0xFF) == 0xFF
                     && (pkt[5] & 0xFF) == 0xFF
                     && (pkt[6] & 0xFF) == 0xFF) {
-                return [ip: DEFAULT_BOOTLOADER_IP, bootloaderMode: true]
+                Map<String, Object> result = [ip: DEFAULT_BOOTLOADER_IP, bootloaderMode: true]
+                return result
             }
             if (pkt.length < 7) {
                 return null
             }
             String ip = "${pkt[3] & 0xFF}.${pkt[4] & 0xFF}.${pkt[5] & 0xFF}.${pkt[6] & 0xFF}"
-            return [ip: ip, bootloaderMode: true]
+            Map<String, Object> result = [ip: ip, bootloaderMode: true]
+            return result
         }
         String ip = "${pkt[1] & 0xFF}.${pkt[2] & 0xFF}.${pkt[3] & 0xFF}.${pkt[4] & 0xFF}"
-        return [ip: ip, bootloaderMode: false]
+        Map<String, Object> result = [ip: ip, bootloaderMode: false]
+        return result
     }
 
     // ==================== Network helpers ====================
@@ -314,7 +317,7 @@ class MegaDUdpTransport {
             try {
                 int v = Integer.parseInt(part)
                 if (v < 0 || v > 255) return false
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ignored) {
                 return false
             }
         }

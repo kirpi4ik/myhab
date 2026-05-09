@@ -124,7 +124,10 @@ class UserAvatarController {
         if (!currentUser) return false
 
         if (currentUser.id == targetUserId) return true
-        return springSecurityService.isLoggedIn() && springSecurityService.getAuthorities()?.any { it?.authority == 'ROLE_ADMIN' }
+        // Spring Security Core 6.x removed springSecurityService.getAuthorities().
+        // Read authorities off the loaded User instead — works regardless of whether
+        // the JWT principal is a UserDetails or a bare username String.
+        return currentUser.authorities?.any { it?.authority == 'ROLE_ADMIN' }
     }
 
     private static String contentTypeFromBytes(byte[] bytes) {

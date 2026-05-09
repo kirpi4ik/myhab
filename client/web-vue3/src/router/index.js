@@ -1,5 +1,5 @@
 import {route} from 'quasar/wrappers';
-import {createMemoryHistory, createRouter, createWebHashHistory, createWebHistory} from 'vue-router';
+import {createRouter, createWebHistory} from 'vue-router';
 import routes from './routes';
 import {authzService} from '@/_services';
 
@@ -12,7 +12,7 @@ import {authzService} from '@/_services';
  * with the Router instance.
  */
 
-export default route(function ({ store, ssrContext }) {
+export default route(function () {
   const createHistory = createWebHistory;
 
   const router = createRouter({

@@ -14,7 +14,7 @@ import static org.jsoup.Jsoup.connect
  *
  */
 @Slf4j
-public class DeviceHttpService {
+class DeviceHttpService {
     public static final String PROTOCOL = "http"
     def DEVICE_URL_TIMEOUT = 4000
     def DEVICE_URL_TIMEOUT_ESP = 5000
@@ -109,7 +109,7 @@ public class DeviceHttpService {
                     }
 
                 }
-                def url
+                def url = "[node defined]"
                 try {
                     url = "$PROTOCOL://${port.device.networkAddress.ip}:${port.device.networkAddress.port}/${port.device.authAccounts.first().password}/?cmd=${act.join(";")}"
 
@@ -120,7 +120,7 @@ public class DeviceHttpService {
             }
         } else if (device?.model == DeviceModel.ESP32 || port?.device?.model == DeviceModel.ESP32) {
             if (port != null && action != null && value != null) {
-                def url
+                def url = "[node defined]"
                 try {
                     url = "$PROTOCOL://${port.device.networkAddress.ip}:${port.device.networkAddress.port}/cmd?action=${action}&port=${port.internalRef}&value=${value}"
                     return connect(url)
@@ -135,7 +135,7 @@ public class DeviceHttpService {
                 }
             }
         } else if (device?.model == DeviceModel.TMEZON_INTERCOM) {
-            def url
+            def url = "[node defined]"
             try {
                 url = "$PROTOCOL://${device.networkAddress.ip}:${device.networkAddress.port}/${uri}"
                 return connect(url)
