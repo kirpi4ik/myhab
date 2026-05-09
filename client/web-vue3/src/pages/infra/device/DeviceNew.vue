@@ -299,6 +299,31 @@
           </template>
         </template>
 
+        <!-- Available actions / help -->
+        <q-card-section v-if="!discovering" class="q-pa-md q-pt-none">
+          <q-banner dense rounded class="bg-blue-1 text-blue-10">
+            <template v-slot:avatar>
+              <q-icon name="mdi-information-outline" color="blue-10"/>
+            </template>
+            <div class="text-body2 text-weight-medium q-mb-xs">Available actions</div>
+            <ul class="q-my-none q-pl-md text-caption">
+              <li>
+                <strong>Initialize</strong> &mdash; click next to a discovered controller to read
+                its full configuration over HTTP and create a Device record in the database.
+                Enter the device password (default <code>sec</code>) when prompted.
+              </li>
+              <li>
+                <strong>Bootloader mode</strong> &mdash; the controller is waiting for a firmware
+                upload and cannot be initialized until it boots into normal mode.
+              </li>
+              <li>
+                <strong>Scan Again</strong> &mdash; re-broadcast the UDP discovery packet
+                (port&nbsp;52000) to refresh the list.
+              </li>
+            </ul>
+          </q-banner>
+        </q-card-section>
+
         <q-card-actions v-if="!discovering" align="right" class="q-pa-md">
           <q-btn
             flat
@@ -472,11 +497,34 @@ export default defineComponent({
         });
         router.push(`/admin/devices/${result.deviceId}/edit`);
       } catch (error) {
-        $q.notify({
-          type: 'negative',
-          message: `Initialization failed: ${error.message}`,
-          icon: 'mdi-alert-circle'
-        });
+        // 409 → a Device with this code already exists; offer to open it.
+        if (error.status === 409 && error.payload?.existingDeviceId) {
+          const existingId = error.payload.existingDeviceId;
+          const existingCode = error.payload.existingDeviceCode;
+          $q.notify({
+            type: 'warning',
+            message: `Device "${existingCode}" is already registered. Open it to backup or update its config.`,
+            icon: 'mdi-database-alert',
+            timeout: 8000,
+            actions: [
+              {
+                label: 'Open',
+                color: 'white',
+                handler: () => {
+                  discoverDialogVisible.value = false;
+                  router.push(`/admin/devices/${existingId}/edit`);
+                }
+              },
+              { label: 'Dismiss', color: 'white' }
+            ]
+          });
+        } else {
+          $q.notify({
+            type: 'negative',
+            message: `Initialization failed: ${error.message}`,
+            icon: 'mdi-alert-circle'
+          });
+        }
       } finally {
         initializing.value = false;
       }

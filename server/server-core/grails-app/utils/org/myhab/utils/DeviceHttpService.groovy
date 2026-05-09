@@ -24,6 +24,8 @@ public class DeviceHttpService {
     def device
     def uri
     def value
+    /** Optional per-call timeout override (ms). Falls back to DEVICE_URL_TIMEOUT when null. */
+    Integer timeoutMs
 
     def readState() throws UnavailableDeviceException {
         def url = "[node defined]"
@@ -34,7 +36,7 @@ public class DeviceHttpService {
             url = "$PROTOCOL://${device?.networkAddress?.ip}:${device.networkAddress.port}/${device?.authAccounts?.first()?.password}/${uri != null ? uri : ''}"
             log.trace("READ STAT for [${DeviceModel.MEGAD_2561_RTC}] from : ${url}")
             try {
-                return connect(url).timeout(DEVICE_URL_TIMEOUT).get()
+                return connect(url).timeout(timeoutMs ?: DEVICE_URL_TIMEOUT).get()
             } catch (Exception ce) {
                 throw new UnavailableDeviceException("Http failed for ${url}: ${ce.message}")
             }

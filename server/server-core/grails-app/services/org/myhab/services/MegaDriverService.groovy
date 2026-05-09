@@ -168,14 +168,23 @@ class MegaDriverService implements EventPublisher {
     Map<String, Object> readFullConfig(Device device) {
         def config = [:]
 
+        // Required pages — failures here mean the device is unreachable.
         config.general = readConfigPage(device, "?cf=1")
         config.mqtt = readConfigPage(device, "?cf=2")
-        config.cron = readConfigPage(device, "?cf=7")
-        config.keys = readConfigPage(device, "?cf=8")
 
-        // Read program slots (0-9)
-        config.programs = (0..9).collect { n ->
-            readConfigPage(device, "?cf=10&prn=${n}")
+        // Optional pages — older / minimal firmwares simply hang the request.
+        // Use a short timeout and quiet logging so init doesn't drag for 40+ seconds.
+        config.cron = readConfigPage(device, "?cf=7", true)
+        config.keys = readConfigPage(device, "?cf=8", true)
+
+        // Probe program slot 0 first; if it isn't supported, skip 1..9
+        // (otherwise we'd burn 9 × OPTIONAL_TIMEOUT_MS waiting for nothing).
+        def slot0 = readConfigPage(device, "?cf=10&prn=0", true)
+        config.programs = [slot0]
+        if (slot0) {
+            config.programs.addAll((1..9).collect { n -> readConfigPage(device, "?cf=10&prn=${n}", true) })
+        } else {
+            log.debug("Device {} does not respond on cf=10 (programs); skipping slots 1..9", device.code)
         }
 
         // Detect port count from main page and read each port
@@ -325,12 +334,11 @@ class MegaDriverService implements EventPublisher {
     // ==================== Backup / Restore ====================
 
     /**
-     * Backup the full device configuration into a DeviceBackup record.
-     * Config is stored in temp.cf format (one URL query string per line).
+     * Serialize a full-config map (as returned by readFullConfig) into the
+     * temp.cf line-per-section format consumed by initializeFromConfig and
+     * stored in DeviceBackup.configuration.
      */
-    @Transactional
-    DeviceBackup backupConfiguration(Device device) {
-        def fullConfig = readFullConfig(device)
+    String serializeFullConfig(Map<String, Object> fullConfig) {
         def lines = []
 
         // cf=1 — general config (no &nr=1)
@@ -390,7 +398,18 @@ class MegaDriverService implements EventPublisher {
             lines << buildConfigLine(fields)
         }
 
-        def configContent = lines.join('\n')
+        return lines.join('\n')
+    }
+
+    /**
+     * Backup the full device configuration into a DeviceBackup record.
+     * Config is stored in temp.cf format (one URL query string per line).
+     */
+    @Transactional
+    DeviceBackup backupConfiguration(Device device) {
+        def fullConfig = readFullConfig(device)
+        def configContent = serializeFullConfig(fullConfig)
+        int lineCount = configContent ? configContent.split('\n').length : 0
         def frmVersion = readFirmwareVersion(device)
 
         def backup = new DeviceBackup(
@@ -401,7 +420,7 @@ class MegaDriverService implements EventPublisher {
         device.addToBackups(backup)
         device.save(flush: true, failOnError: true)
 
-        log.info("Configuration backed up for device {}: {} lines, firmware={}", device.code, lines.size(), frmVersion)
+        log.info("Configuration backed up for device {}: {} lines, firmware={}", device.code, lineCount, frmVersion)
         return backup
     }
 
@@ -771,22 +790,33 @@ class MegaDriverService implements EventPublisher {
         return fields.collect { k, v -> "${k}=${v ?: ''}" }.join("&")
     }
 
+    /** Short timeout for optional firmware features (cron / keys / programs). */
+    private static final int OPTIONAL_PAGE_TIMEOUT_MS = 1500
+
     /**
      * Shorthand factory for DeviceHttpService.
      */
-    private DeviceHttpService httpClient(Device device, String uri = null) {
-        return new DeviceHttpService(device: device, uri: uri)
+    private DeviceHttpService httpClient(Device device, String uri = null, Integer timeoutMs = null) {
+        return new DeviceHttpService(device: device, uri: uri, timeoutMs: timeoutMs)
     }
 
     /**
      * Read a config page and extract form fields.
+     *
+     * @param optional when true, use a short timeout and demote failures to debug
+     *                 — pages cf=7/cf=8/cf=10 aren't compiled into every firmware
+     *                 and the device just hangs the request when they're absent.
      */
-    private Map<String, String> readConfigPage(Device device, String uri) {
+    private Map<String, String> readConfigPage(Device device, String uri, boolean optional = false) {
         try {
-            def page = httpClient(device, uri).readState()
+            def page = httpClient(device, uri, optional ? OPTIONAL_PAGE_TIMEOUT_MS : null).readState()
             return extractFormFields(page)
         } catch (Exception e) {
-            log.error("Failed to read config page {}: {}", uri, e.message)
+            if (optional) {
+                log.debug("Optional config page {} not available on device {}: {}", uri, device.code, e.message)
+            } else {
+                log.error("Failed to read config page {}: {}", uri, e.message)
+            }
             return [:]
         }
     }
