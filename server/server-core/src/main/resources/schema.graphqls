@@ -15,6 +15,12 @@ type Query{
     myUnreadCount: Int!
     """List all shared widgets, optionally filtered by state."""
     sharedWidgets(state: String): [SharedWidgetResult!]!
+    """UDP-broadcast scan for MegaD controllers on the local network."""
+    discoveredDevices: [DiscoveredDevice!]!
+    """Backups stored in the DB for a given device, newest first."""
+    deviceBackupList(deviceId: ID!): [DeviceBackupSummary!]!
+    """Current authenticated user (id + username). Used by the SPA on app load to populate currentUser."""
+    me: MeResult
 }
 
 """One row in the sprinkler scheduler: a job linked to a sprinkler peripheral."""
@@ -117,6 +123,14 @@ type Mutation {
     sharedWidgetCreate(input: SharedWidgetInput!): SharedWidgetCreateResult
     """Update the state of a shared widget (VALID, DISABLED, EXPIRED, ARCHIVED)."""
     sharedWidgetUpdateState(id: ID!, state: String!, stateDescription: String): MutationResponse
+    """Read full config from a live MegaD controller and create a Device row."""
+    deviceInitFromController(ip: String!, password: String!): DeviceInitResult
+    """Persist a temp.cf-format backup of the controller's current configuration."""
+    deviceBackupConfig(deviceId: ID!): DeviceBackupResult
+    """Push a stored backup down to the physical controller (with restart)."""
+    deviceRestoreToController(deviceId: ID!, backupId: ID!): MutationResponse
+    """Sync the database Device + DevicePort model from a stored backup."""
+    deviceSyncFromBackup(deviceId: ID!, backupId: ID!): MutationResponse
 }
 
 type EventDataResponse {
@@ -183,4 +197,45 @@ input SaveUserRoles {
 input UserRoleRef {
     userId : ID!
     roleId: ID!
+}
+
+type DiscoveredDevice {
+    ip: String!
+    bootloaderMode: Boolean!
+    mqttId: String
+}
+
+type DeviceBackupSummary {
+    id: ID!
+    frmVersion: String
+    configLines: Int!
+    tsCreated: String
+}
+
+"""
+Result of init-from-controller. On success: success=true + deviceId/deviceCode/portCount.
+On code-already-exists: success=false + existingDeviceId/existingDeviceCode (so the UI
+can offer to open the existing device instead of duplicating it).
+"""
+type DeviceInitResult {
+    success: Boolean!
+    error: String
+    deviceId: ID
+    deviceCode: String
+    portCount: Int
+    existingDeviceId: ID
+    existingDeviceCode: String
+}
+
+type DeviceBackupResult {
+    success: Boolean!
+    error: String
+    id: ID
+    frmVersion: String
+    configLines: Int
+}
+
+type MeResult {
+    id: ID
+    username: String
 }

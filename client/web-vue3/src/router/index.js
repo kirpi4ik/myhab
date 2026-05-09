@@ -1,5 +1,5 @@
 import {route} from 'quasar/wrappers';
-import {createMemoryHistory, createRouter, createWebHashHistory, createWebHistory} from 'vue-router';
+import {createRouter, createWebHistory} from 'vue-router';
 import routes from './routes';
 import {authzService} from '@/_services';
 
@@ -12,7 +12,7 @@ import {authzService} from '@/_services';
  * with the Router instance.
  */
 
-export default route(function ({ store, ssrContext }) {
+export default route(function () {
   const createHistory = createWebHistory;
 
   const router = createRouter({
@@ -36,7 +36,7 @@ export default route(function ({ store, ssrContext }) {
         return next({ path: '/login', query: { returnUrl: to.path } });
       }
 
-      // ensure currentUser has id/username (for avatar, etc.) from /api/me
+      // ensure currentUser has id/username (for avatar, etc.) via the `me` GraphQL query
       await authzService.ensureCurrentUserIds();
 
       // check if route is restricted by role

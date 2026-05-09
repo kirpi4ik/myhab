@@ -1,6 +1,11 @@
 import {BehaviorSubject} from 'rxjs';
 
 import { handleResponse, requestOptions, Utils } from '@/_helpers';
+import { ME } from '@/graphql/queries';
+
+// `apolloClient` is loaded lazily (dynamic import inside ensureCurrentUserIds) to avoid
+// a module-evaluation cycle: boot/graphql.js → @/_services → authentication.service.js → boot/graphql.js.
+// At call time (post-login / on route change) all modules have fully evaluated.
 
 /**
  * Safe JSON parse with fallback
@@ -19,7 +24,7 @@ const safeJsonParse = (value) => {
 const currentUserSubject = new BehaviorSubject(safeJsonParse(localStorage.getItem('currentUser')));
 
 /**
- * Fetch current user id/username from GET /api/me and merge into currentUser.
+ * Fetch current user id/username via the `me` GraphQL query and merge into currentUser.
  * Call after login or on app load so HeaderLayout (and avatar) can use currentUser.id.
  */
 function ensureCurrentUserIds() {
@@ -28,11 +33,9 @@ function ensureCurrentUserIds() {
 	if (!token || (current?.id != null && current?.username != null)) {
 		return Promise.resolve(current);
 	}
-	return fetch(`${Utils.host()}/api/me`, {
-		method: 'GET',
-		headers: { Authorization: `Bearer ${token}` }
-	})
-		.then((res) => (res.ok ? res.json() : null))
+	return import('@/boot/graphql')
+		.then(({ apolloClient }) => apolloClient.query({ query: ME, fetchPolicy: 'no-cache' }))
+		.then((response) => response?.data?.me || null)
 		.then((data) => {
 			if (data?.id != null || data?.username != null) {
 				const updated = { ...current, ...data };
@@ -73,7 +76,7 @@ function login(username, password) {
 			// Store user details and jwt token in local storage to keep user logged in between page refreshes
 			localStorage.setItem('currentUser', JSON.stringify(user));
 			currentUserSubject.next(user);
-			// Ensure id/username are set for avatar and profile (from /api/me)
+			// Ensure id/username are set for avatar and profile (via `me` GraphQL query)
 			return ensureCurrentUserIds().then(() => currentUserSubject.value || user);
 		})
 		.catch(error => {

@@ -5,6 +5,8 @@ import grails.events.EventPublisher
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import groovy.util.logging.Slf4j
+
+import java.text.SimpleDateFormat
 import org.myhab.init.cache.CacheMap
 import org.myhab.domain.MessageState
 import org.myhab.domain.UserMessage
@@ -14,20 +16,29 @@ import org.myhab.domain.SharedWidgetType
 import org.myhab.services.UserService
 import grails.plugin.springsecurity.SpringSecurityService
 import org.myhab.services.SchedulerService
+import org.myhab.services.MegaDriverService
 import org.myhab.config.ConfigProvider
+import org.myhab.domain.device.Device
+import org.myhab.domain.device.DeviceAccount
+import org.myhab.domain.device.DeviceBackup
+import org.myhab.domain.device.DeviceModel
+import org.myhab.domain.device.DeviceStatus
+import org.myhab.domain.device.NetworkAddress
 import org.myhab.domain.device.Scenario
 import org.myhab.domain.job.Job
 import org.myhab.domain.job.EventSubscription
 import org.myhab.domain.device.port.PortScenarioJoin
+import org.myhab.exceptions.UnavailableDeviceException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Slf4j
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
-@org.springframework.transaction.annotation.Transactional
+@Transactional
 class Mutation implements EventPublisher {
 
     @Autowired
@@ -40,6 +51,8 @@ class Mutation implements EventPublisher {
     ConfigProvider configProvider
     @Autowired
     SpringSecurityService springSecurityService
+    @Autowired
+    MegaDriverService megaDriverService
 
 
     DataFetcher pushEvent() {
@@ -53,6 +66,162 @@ class Mutation implements EventPublisher {
         }
     }
 
+    // ==================== Device (MegaD) operations ====================
+
+    /**
+     * Read full configuration from a live MegaD controller and create a Device row.
+     * On code-already-exists, surfaces existingDeviceId so the UI can offer to open
+     * the existing record instead of duplicating it.
+     */
+    DataFetcher deviceInitFromController() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String ip = environment.getArgument("ip")
+                String password = environment.getArgument("password") ?: 'sec'
+                if (!ip) {
+                    return [success: false, error: 'ip is required']
+                }
+                try {
+                    Device temp = new Device(
+                            code: "tmp-${ip}",
+                            name: "tmp-${ip}",
+                            model: DeviceModel.MEGAD_2561_RTC,
+                            status: DeviceStatus.OFFLINE,
+                            networkAddress: new NetworkAddress(ip: ip, port: '80')
+                    )
+                    temp.authAccounts = [new DeviceAccount(password: password, isDefault: true, device: temp)] as Set
+
+                    def fullConfig = megaDriverService.readFullConfig(temp)
+                    String configContent = megaDriverService.serializeFullConfig(fullConfig)
+                    if (!configContent) {
+                        return [success: false, error: "Could not read configuration from device at ${ip}"]
+                    }
+
+                    Device device = megaDriverService.initializeFromConfig(configContent)
+
+                    // Code derives from controller's mdid (cf=2). Refuse on collision.
+                    Device existing = Device.findByCode(device.code)
+                    if (existing) {
+                        return [
+                                success           : false,
+                                error             : "A device with code '${device.code}' already exists",
+                                existingDeviceId  : existing.id,
+                                existingDeviceCode: existing.code
+                        ]
+                    }
+
+                    if (device.authAccounts) {
+                        device.authAccounts.first().password = password
+                    }
+                    device.save(flush: true, failOnError: true)
+
+                    return [
+                            success   : true,
+                            deviceId  : device.id,
+                            deviceCode: device.code,
+                            portCount : device.ports?.size() ?: 0
+                    ]
+                } catch (UnavailableDeviceException e) {
+                    log.warn("deviceInitFromController unreachable: ip={} error={}", ip, e.message)
+                    return [success: false, error: "Device at ${ip} is unreachable: ${e.message}"]
+                } catch (Exception e) {
+                    log.error("deviceInitFromController failed for ip={}", ip, e)
+                    return [success: false, error: "Init failed: ${e.message}"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Persist a temp.cf-format backup of the controller's current configuration.
+     */
+    DataFetcher deviceBackupConfig() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                Long deviceId = environment.getArgument("deviceId") as Long
+                Device device = Device.get(deviceId)
+                if (!device) {
+                    return [success: false, error: "Device not found: ${deviceId}"]
+                }
+                try {
+                    DeviceBackup backup = megaDriverService.backupConfiguration(device)
+                    int lines = backup.configuration ? backup.configuration.split('\n').length : 0
+                    return [
+                            success    : true,
+                            id         : backup.id,
+                            frmVersion : backup.frmVersion,
+                            configLines: lines
+                    ]
+                } catch (UnavailableDeviceException e) {
+                    return [success: false, error: "Device unreachable: ${e.message}"]
+                } catch (Exception e) {
+                    log.error("deviceBackupConfig failed for device id={}", deviceId, e)
+                    return [success: false, error: "Backup failed: ${e.message}"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Push a stored backup down to the physical controller (with restart).
+     */
+    DataFetcher deviceRestoreToController() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                Long deviceId = environment.getArgument("deviceId") as Long
+                Long backupId = environment.getArgument("backupId") as Long
+                Device device = Device.get(deviceId)
+                DeviceBackup backup = backupId ? DeviceBackup.get(backupId) : null
+
+                if (!device) {
+                    return [success: false, error: "Device not found: ${deviceId}"]
+                }
+                if (!backup || backup.device?.id != device.id) {
+                    return [success: false, error: "Backup not found for device ${deviceId}: ${backupId}"]
+                }
+                try {
+                    megaDriverService.restoreToController(device, backup, true)
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("deviceRestoreToController failed device={} backup={}", deviceId, backupId, e)
+                    return [success: false, error: "Push to controller failed: ${e.message}"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Sync the database Device + DevicePort model from a stored backup.
+     */
+    DataFetcher deviceSyncFromBackup() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                Long deviceId = environment.getArgument("deviceId") as Long
+                Long backupId = environment.getArgument("backupId") as Long
+                Device device = Device.get(deviceId)
+                DeviceBackup backup = backupId ? DeviceBackup.get(backupId) : null
+
+                if (!device) {
+                    return [success: false, error: "Device not found: ${deviceId}"]
+                }
+                if (!backup || backup.device?.id != device.id) {
+                    return [success: false, error: "Backup not found for device ${deviceId}: ${backupId}"]
+                }
+                try {
+                    megaDriverService.syncFromBackup(device, backup)
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("deviceSyncFromBackup failed device={} backup={}", deviceId, backupId, e)
+                    return [success: false, error: "Sync from backup failed: ${e.message}"]
+                }
+            }
+        }
+    }
+
     DataFetcher cacheDelete() {
         return new DataFetcher() {
             @Override
@@ -62,7 +231,7 @@ class Mutation implements EventPublisher {
                 def cacheKeyStr = String.valueOf(cacheKey)
                 
                     // IMPORTANT: Use the cacheName argument, not hardcoded CacheMap.EXPIRE.name
-                    def cacheMap = hazelcastInstance.getMap(cacheName)
+                    def cacheMap = hazelcastInstance.getMap(cacheName as String)
                     
                     // Delete the entry
                     cacheMap.delete(cacheKeyStr)
@@ -126,7 +295,7 @@ class Mutation implements EventPublisher {
         }
     }
 
-    public DataFetcher userRolesSave() {
+    DataFetcher userRolesSave() {
         return userService
     }
 
@@ -231,7 +400,7 @@ class Mutation implements EventPublisher {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
                 try {
-                    boolean success = configProvider.refresh()
+                    configProvider.refresh()
                     log.info("App config refreshed from GIT")
                     return [success: true, error: null]
                 } catch (Exception e) {
@@ -285,18 +454,18 @@ class Mutation implements EventPublisher {
                     def principal = springSecurityService?.principal
                     String username = principal instanceof String ? principal : (principal?.username ?: 'unknown')
 
-                    def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+                    def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
                     Date startDate
                     Date expireDate
                     try {
                         startDate = sdf.parse(startDateStr)
                     } catch (Exception ignored) {
-                        startDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(startDateStr)
+                        startDate = new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr)
                     }
                     try {
                         expireDate = sdf.parse(expireDateStr)
                     } catch (Exception ignored) {
-                        expireDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(expireDateStr)
+                        expireDate = new SimpleDateFormat("yyyy-MM-dd").parse(expireDateStr)
                     }
 
                     def result = SharedWidget.withTransaction {

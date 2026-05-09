@@ -299,6 +299,31 @@
           </template>
         </template>
 
+        <!-- Available actions / help -->
+        <q-card-section v-if="!discovering" class="q-pa-md q-pt-none">
+          <q-banner dense rounded class="bg-blue-1 text-blue-10">
+            <template v-slot:avatar>
+              <q-icon name="mdi-information-outline" color="blue-10"/>
+            </template>
+            <div class="text-body2 text-weight-medium q-mb-xs">Available actions</div>
+            <ul class="q-my-none q-pl-md text-caption">
+              <li>
+                <strong>Initialize</strong> &mdash; click next to a discovered controller to read
+                its full configuration over HTTP and create a Device record in the database.
+                Enter the device password (default <code>sec</code>) when prompted.
+              </li>
+              <li>
+                <strong>Bootloader mode</strong> &mdash; the controller is waiting for a firmware
+                upload and cannot be initialized until it boots into normal mode.
+              </li>
+              <li>
+                <strong>Scan Again</strong> &mdash; re-broadcast the UDP discovery packet
+                (port&nbsp;52000) to refresh the list.
+              </li>
+            </ul>
+          </q-banner>
+        </q-card-section>
+
         <q-card-actions v-if="!discovering" align="right" class="q-pa-md">
           <q-btn
             flat
@@ -323,8 +348,14 @@ import {useApolloClient} from "@vue/apollo-composable";
 import {useQuasar} from 'quasar';
 import {useEntityCRUD} from '@/composables';
 import EntityFormActions from '@/components/EntityFormActions.vue';
-import {deviceService} from '@/_services';
-import {DEVICE_CATEGORIES_LIST, DEVICE_CREATE, DEVICE_MODEL_LIST, RACK_LIST_ALL} from '@/graphql/queries';
+import {
+  DEVICE_CATEGORIES_LIST,
+  DEVICE_CREATE,
+  DEVICE_INIT_FROM_CONTROLLER,
+  DEVICE_MODEL_LIST,
+  DEVICES_DISCOVER,
+  RACK_LIST_ALL
+} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'DeviceNew',
@@ -445,8 +476,11 @@ export default defineComponent({
       discoveredDevices.value = [];
       initFormVisible.value = false;
       try {
-        const result = await deviceService.discoverDevices();
-        discoveredDevices.value = result.devices || [];
+        const { data } = await client.query({
+          query: DEVICES_DISCOVER,
+          fetchPolicy: 'no-cache'
+        });
+        discoveredDevices.value = data?.discoveredDevices || [];
       } catch (error) {
         discoverError.value = error.message;
       } finally {
@@ -463,7 +497,45 @@ export default defineComponent({
     const doInitFromDevice = async () => {
       initializing.value = true;
       try {
-        const result = await deviceService.initFromDevice(initializingIp.value, initPassword.value);
+        const { data } = await client.mutate({
+          mutation: DEVICE_INIT_FROM_CONTROLLER,
+          variables: { ip: initializingIp.value, password: initPassword.value },
+          fetchPolicy: 'no-cache'
+        });
+        const result = data?.deviceInitFromController;
+
+        if (!result?.success) {
+          // Code-already-exists → offer to open the existing device.
+          if (result?.existingDeviceId) {
+            const existingId = result.existingDeviceId;
+            const existingCode = result.existingDeviceCode;
+            $q.notify({
+              type: 'warning',
+              message: `Device "${existingCode}" is already registered. Open it to backup or update its config.`,
+              icon: 'mdi-database-alert',
+              timeout: 8000,
+              actions: [
+                {
+                  label: 'Open',
+                  color: 'white',
+                  handler: () => {
+                    discoverDialogVisible.value = false;
+                    router.push(`/admin/devices/${existingId}/edit`);
+                  }
+                },
+                { label: 'Dismiss', color: 'white' }
+              ]
+            });
+          } else {
+            $q.notify({
+              type: 'negative',
+              message: `Initialization failed: ${result?.error || 'unknown error'}`,
+              icon: 'mdi-alert-circle'
+            });
+          }
+          return;
+        }
+
         discoverDialogVisible.value = false;
         $q.notify({
           type: 'positive',

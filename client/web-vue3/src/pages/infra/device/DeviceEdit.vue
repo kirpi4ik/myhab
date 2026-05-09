@@ -340,12 +340,14 @@ import {useEntityCRUD} from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
 import LocationSelector from '@/components/selectors/LocationSelector.vue';
-import {deviceService} from '@/_services';
-
 import {
+  DEVICE_BACKUP_CONFIG,
+  DEVICE_BACKUP_LIST,
   DEVICE_CATEGORIES_LIST,
   DEVICE_GET_BY_ID_CHILDS,
   DEVICE_MODEL_LIST,
+  DEVICE_RESTORE_TO_CONTROLLER,
+  DEVICE_SYNC_FROM_BACKUP,
   DEVICE_UPDATE_CUSTOM,
   RACK_LIST_ALL
 } from '@/graphql/queries';
@@ -435,7 +437,20 @@ export default defineComponent({
     const onBackupConfig = async () => {
       backingUp.value = true;
       try {
-        const result = await deviceService.backupConfig(route.params.idPrimary);
+        const { data } = await client.mutate({
+          mutation: DEVICE_BACKUP_CONFIG,
+          variables: { deviceId: route.params.idPrimary },
+          fetchPolicy: 'no-cache'
+        });
+        const result = data?.deviceBackupConfig;
+        if (!result?.success) {
+          $q.notify({
+            type: 'negative',
+            message: `Backup failed: ${result?.error || 'unknown error'}`,
+            icon: 'mdi-alert-circle'
+          });
+          return;
+        }
         $q.notify({
           type: 'positive',
           message: `Configuration backed up successfully (${result.configLines} lines, firmware: ${result.frmVersion})`,
@@ -457,8 +472,12 @@ export default defineComponent({
       loadingBackups.value = true;
       selectedBackupId.value = null;
       try {
-        const result = await deviceService.listBackups(route.params.idPrimary);
-        backupsList.value = result.backups || [];
+        const { data } = await client.query({
+          query: DEVICE_BACKUP_LIST,
+          variables: { deviceId: route.params.idPrimary },
+          fetchPolicy: 'no-cache'
+        });
+        backupsList.value = data?.deviceBackupList || [];
       } catch (error) {
         $q.notify({
           type: 'negative',
@@ -475,7 +494,23 @@ export default defineComponent({
       restoring.value = true;
       restoreTarget.value = 'controller';
       try {
-        await deviceService.pushToController(route.params.idPrimary, selectedBackupId.value);
+        const { data } = await client.mutate({
+          mutation: DEVICE_RESTORE_TO_CONTROLLER,
+          variables: {
+            deviceId: route.params.idPrimary,
+            backupId: selectedBackupId.value
+          },
+          fetchPolicy: 'no-cache'
+        });
+        const result = data?.deviceRestoreToController;
+        if (!result?.success) {
+          $q.notify({
+            type: 'negative',
+            message: `Push to controller failed: ${result?.error || 'unknown error'}`,
+            icon: 'mdi-alert-circle'
+          });
+          return;
+        }
         restoreDialogVisible.value = false;
         $q.notify({
           type: 'positive',
@@ -498,7 +533,23 @@ export default defineComponent({
       restoring.value = true;
       restoreTarget.value = 'database';
       try {
-        await deviceService.syncFromBackup(route.params.idPrimary, selectedBackupId.value);
+        const { data } = await client.mutate({
+          mutation: DEVICE_SYNC_FROM_BACKUP,
+          variables: {
+            deviceId: route.params.idPrimary,
+            backupId: selectedBackupId.value
+          },
+          fetchPolicy: 'no-cache'
+        });
+        const result = data?.deviceSyncFromBackup;
+        if (!result?.success) {
+          $q.notify({
+            type: 'negative',
+            message: `Sync from backup failed: ${result?.error || 'unknown error'}`,
+            icon: 'mdi-alert-circle'
+          });
+          return;
+        }
         restoreDialogVisible.value = false;
         $q.notify({
           type: 'positive',

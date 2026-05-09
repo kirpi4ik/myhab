@@ -15,6 +15,7 @@ import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
 import org.myhab.domain.device.NetworkAddress
 import org.myhab.domain.device.port.DevicePort
+import org.myhab.domain.device.port.PortAction
 import org.myhab.domain.device.port.PortType
 import org.myhab.domain.events.TopicName
 import org.myhab.domain.job.EventData
@@ -37,8 +38,7 @@ class MegaDriverService implements EventPublisher {
      * Optionally enriches with MQTT device ID by reading cf=2 page via HTTP.
      */
     List<Map<String, Object>> discoverDevices(boolean enrichWithHttp = false) {
-        def transport = new MegaDUdpTransport()
-        def devices = transport.discoverDevices()
+        def devices = MegaDUdpTransport.discoverDevices()
 
         if (enrichWithHttp) {
             devices.each { device ->
@@ -69,7 +69,7 @@ class MegaDriverService implements EventPublisher {
      * Ping a specific device via UDP to check reachability.
      */
     boolean pingDevice(String ip) {
-        return new MegaDUdpTransport().pingDevice(ip)
+        return MegaDUdpTransport.pingDevice(ip)
     }
 
     // ==================== Device Initialization ====================
@@ -84,12 +84,12 @@ class MegaDriverService implements EventPublisher {
     Device initializeFromConfig(String configContent, String deviceCode = null) {
         def lines = configContent.split('\n').collect { it.trim() }.findAll { it }
 
-        def generalConfig = [:]
-        def mqttConfig = [:]
-        def portConfigs = []
+        Map<String, String> generalConfig = [:]
+        Map<String, String> mqttConfig = [:]
+        List<Map<String, String>> portConfigs = []
 
         lines.each { line ->
-            def fields = parseConfigLine(line)
+            Map<String, String> fields = parseConfigLine(line)
             if (fields.cf == '1') {
                 generalConfig = fields
             } else if (fields.cf == '2') {
@@ -124,7 +124,7 @@ class MegaDriverService implements EventPublisher {
         )
         device.authAccounts = [account] as Set
 
-        portConfigs.each { Map fields ->
+        portConfigs.each { Map<String, String> fields ->
             String portNr = fields.pn
             String ptyValue = fields.pty
             PortType portType = PortType.fromValue(ptyValue) ?: PortType.NOT_CONFIGURED
@@ -166,16 +166,25 @@ class MegaDriverService implements EventPublisher {
      * Returns a structured map with all config sections.
      */
     Map<String, Object> readFullConfig(Device device) {
-        def config = [:]
+        Map<String, Object> config = [:]
 
+        // Required pages — failures here mean the device is unreachable.
         config.general = readConfigPage(device, "?cf=1")
         config.mqtt = readConfigPage(device, "?cf=2")
-        config.cron = readConfigPage(device, "?cf=7")
-        config.keys = readConfigPage(device, "?cf=8")
 
-        // Read program slots (0-9)
-        config.programs = (0..9).collect { n ->
-            readConfigPage(device, "?cf=10&prn=${n}")
+        // Optional pages — older / minimal firmwares simply hang the request.
+        // Use a short timeout and quiet logging so init doesn't drag for 40+ seconds.
+        config.cron = readConfigPage(device, "?cf=7", true)
+        config.keys = readConfigPage(device, "?cf=8", true)
+
+        // Probe program slot 0 first; if it isn't supported, skip 1..9
+        // (otherwise we'd burn 9 × OPTIONAL_TIMEOUT_MS waiting for nothing).
+        def slot0 = readConfigPage(device, "?cf=10&prn=0", true)
+        config.programs = [slot0]
+        if (slot0) {
+            config.programs.addAll((1..9).collect { n -> readConfigPage(device, "?cf=10&prn=${n}", true) })
+        } else {
+            log.debug("Device {} does not respond on cf=10 (programs); skipping slots 1..9", device.code)
         }
 
         // Detect port count from main page and read each port
@@ -202,7 +211,7 @@ class MegaDriverService implements EventPublisher {
      * Returns map keyed by internalRef.
      */
     Map<String, Map<String, String>> readPortConfigs(Device device, List<String> internalRefs) {
-        def result = [:]
+        Map<String, Map<String, String>> result = [:]
         internalRefs.each { ref ->
             try {
                 result[ref] = readPortConfig(device, ref)
@@ -241,10 +250,10 @@ class MegaDriverService implements EventPublisher {
      * Returns map of portNr -> value string.
      */
     Map<String, String> readPortValues(Device deviceController) throws UnavailableDeviceException {
-        def response = [:]
+        Map<String, String> response = [:]
         def allStringStatus = httpClient(deviceController, "?cmd=all").readState()
-        allStringStatus.text().split(";").eachWithIndex { status, index ->
-            response["${index}"] = "${status}"
+        allStringStatus.text().split(";").eachWithIndex { String status, int index ->
+            response[index.toString()] = status
         }
         return response
     }
@@ -325,12 +334,11 @@ class MegaDriverService implements EventPublisher {
     // ==================== Backup / Restore ====================
 
     /**
-     * Backup the full device configuration into a DeviceBackup record.
-     * Config is stored in temp.cf format (one URL query string per line).
+     * Serialize a full-config map (as returned by readFullConfig) into the
+     * temp.cf line-per-section format consumed by initializeFromConfig and
+     * stored in DeviceBackup.configuration.
      */
-    @Transactional
-    DeviceBackup backupConfiguration(Device device) {
-        def fullConfig = readFullConfig(device)
+    String serializeFullConfig(Map<String, Object> fullConfig) {
         def lines = []
 
         // cf=1 — general config (no &nr=1)
@@ -390,7 +398,18 @@ class MegaDriverService implements EventPublisher {
             lines << buildConfigLine(fields)
         }
 
-        def configContent = lines.join('\n')
+        return lines.join('\n')
+    }
+
+    /**
+     * Backup the full device configuration into a DeviceBackup record.
+     * Config is stored in temp.cf format (one URL query string per line).
+     */
+    @Transactional
+    DeviceBackup backupConfiguration(Device device) {
+        def fullConfig = readFullConfig(device)
+        def configContent = serializeFullConfig(fullConfig)
+        int lineCount = configContent ? configContent.split('\n').length : 0
         def frmVersion = readFirmwareVersion(device)
 
         def backup = new DeviceBackup(
@@ -401,7 +420,7 @@ class MegaDriverService implements EventPublisher {
         device.addToBackups(backup)
         device.save(flush: true, failOnError: true)
 
-        log.info("Configuration backed up for device {}: {} lines, firmware={}", device.code, lines.size(), frmVersion)
+        log.info("Configuration backed up for device {}: {} lines, firmware={}", device.code, lineCount, frmVersion)
         return backup
     }
 
@@ -460,12 +479,12 @@ class MegaDriverService implements EventPublisher {
             return
         }
 
-        def generalConfig = [:]
-        def mqttConfig = [:]
-        def portConfigs = []
+        Map<String, String> generalConfig = [:]
+        Map<String, String> mqttConfig = [:]
+        List<Map<String, String>> portConfigs = []
 
         lines.each { line ->
-            def fields = parseConfigLine(line)
+            Map<String, String> fields = parseConfigLine(line)
             if (fields.cf == '1') {
                 generalConfig = fields
             } else if (fields.cf == '2') {
@@ -496,14 +515,14 @@ class MegaDriverService implements EventPublisher {
         }
 
         // Build a map of existing ports by internalRef for efficient lookup
-        def existingPorts = [:]
-        device.ports?.each { port ->
+        Map<String, DevicePort> existingPorts = [:]
+        device.ports?.each { DevicePort port ->
             existingPorts[port.internalRef] = port
         }
 
-        def seenRefs = [] as Set
+        Set<String> seenRefs = [] as Set
 
-        portConfigs.each { Map fields ->
+        portConfigs.each { Map<String, String> fields ->
             String portNr = fields.pn
             String ptyValue = fields.pty
             PortType portType = PortType.fromValue(ptyValue) ?: PortType.NOT_CONFIGURED
@@ -514,7 +533,7 @@ class MegaDriverService implements EventPublisher {
 
             seenRefs << portNr
 
-            def existingPort = existingPorts[portNr]
+            DevicePort existingPort = existingPorts[portNr]
             if (existingPort) {
                 // Update existing port
                 existingPort.type = portType
@@ -597,8 +616,7 @@ class MegaDriverService implements EventPublisher {
         String password = device.authAccounts?.first()?.password ?: 'sec'
         String oldIp = device.networkAddress?.ip
 
-        def transport = new MegaDUdpTransport()
-        boolean success = transport.changeIp(oldIp, newIp, password)
+        boolean success = MegaDUdpTransport.changeIp(oldIp, newIp, password)
         if (success) {
             device.networkAddress.ip = newIp
             device.save(flush: true)
@@ -659,7 +677,7 @@ class MegaDriverService implements EventPublisher {
      * Kept for backward compatibility with DeviceService.importPort().
      */
     def readPortConfigFromController(code, internalRef, portName) {
-        DevicePort port
+        DevicePort port = null
         try {
             Device deviceController = Device.findByCode(code)
             def fields = readPortConfig(deviceController, "${internalRef}")
@@ -771,22 +789,33 @@ class MegaDriverService implements EventPublisher {
         return fields.collect { k, v -> "${k}=${v ?: ''}" }.join("&")
     }
 
+    /** Short timeout for optional firmware features (cron / keys / programs). */
+    private static final int OPTIONAL_PAGE_TIMEOUT_MS = 1500
+
     /**
      * Shorthand factory for DeviceHttpService.
      */
-    private DeviceHttpService httpClient(Device device, String uri = null) {
-        return new DeviceHttpService(device: device, uri: uri)
+    private DeviceHttpService httpClient(Device device, String uri = null, Integer timeoutMs = null) {
+        return new DeviceHttpService(device: device, uri: uri, timeoutMs: timeoutMs)
     }
 
     /**
      * Read a config page and extract form fields.
+     *
+     * @param optional when true, use a short timeout and demote failures to debug
+     *                 — pages cf=7/cf=8/cf=10 aren't compiled into every firmware
+     *                 and the device just hangs the request when they're absent.
      */
-    private Map<String, String> readConfigPage(Device device, String uri) {
+    private Map<String, String> readConfigPage(Device device, String uri, boolean optional = false) {
         try {
-            def page = httpClient(device, uri).readState()
+            def page = httpClient(device, uri, optional ? OPTIONAL_PAGE_TIMEOUT_MS : null).readState()
             return extractFormFields(page)
         } catch (Exception e) {
-            log.error("Failed to read config page {}: {}", uri, e.message)
+            if (optional) {
+                log.debug("Optional config page {} not available on device {}: {}", uri, device.code, e.message)
+            } else {
+                log.error("Failed to read config page {}: {}", uri, e.message)
+            }
             return [:]
         }
     }
@@ -847,7 +876,7 @@ class MegaDriverService implements EventPublisher {
      * Resolve action to its numeric value for command strings.
      */
     private String resolveActionValue(def action) {
-        if (action instanceof org.myhab.domain.device.port.PortAction) {
+        if (action instanceof PortAction) {
             return "${action.value}"
         }
         return "${action}"

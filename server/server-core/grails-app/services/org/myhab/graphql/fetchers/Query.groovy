@@ -12,6 +12,8 @@ import org.myhab.domain.job.JobState
 import grails.gorm.transactions.Transactional
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import org.myhab.domain.device.Device
+import org.myhab.domain.device.DeviceBackup
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.MessageLevel
 import org.myhab.domain.MessageState
@@ -20,6 +22,7 @@ import org.myhab.domain.SharedWidget
 import org.myhab.domain.SharedWidgetState
 import org.myhab.domain.device.DevicePeripheral
 import org.myhab.init.cache.CacheMap
+import org.myhab.services.MegaDriverService
 import grails.plugin.springsecurity.SpringSecurityService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -38,6 +41,8 @@ class Query {
     ConfigProvider configProvider
     @Autowired
     SpringSecurityService springSecurityService
+    @Autowired
+    MegaDriverService megaDriverService
     
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
@@ -47,7 +52,6 @@ class Query {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def userId = environment.getArgument("userId")
                 def user = User.findById(userId)
-                def userRoles = user.authorities
                 def response = []
                 user.authorities.each {
                     response << [userId: user.id, roleId: it.id]
@@ -63,7 +67,7 @@ class Query {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
-                def cacheName = environment.getArgument("cacheName")
+                def cacheName = environment.getArgument("cacheName") as String
                 def cacheKey = environment.getArgument("cacheKey")
                 // Convert cacheKey to String to match mutation's String.valueOf()
                 def cachedValue = hazelcastInstance.getMap(cacheName).get(String.valueOf(cacheKey))
@@ -108,7 +112,7 @@ class Query {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
-                def key = environment.getArgument("key")
+                String key = environment.getArgument("key") as String
                 def config = configProvider.get(String, key)
                 return config
             }
@@ -318,6 +322,71 @@ class Query {
                         tsUpdated        : sw.tsUpdated ? ISO_DATE_FORMAT.format(sw.tsUpdated) : null
                     ]
                 }
+            }
+        }
+    }
+
+    // ==================== Current user ====================
+
+    /**
+     * Returns id + username of the authenticated user (via Spring Security principal).
+     * Used by the SPA on app load to populate `currentUser` for avatar / profile rendering.
+     */
+    DataFetcher me() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def principal = springSecurityService?.principal
+                if (!principal) {
+                    return null
+                }
+                String username = principal instanceof String ? principal : (principal?.username ?: principal?.toString())
+                User user = User.findByUsername(username)
+                if (!user) {
+                    return null
+                }
+                return [id: user.id, username: user.username]
+            }
+        }
+    }
+
+    // ==================== Device (MegaD) operations ====================
+
+    /**
+     * UDP-broadcast scan for MegaD controllers on the local network.
+     */
+    DataFetcher discoveredDevices() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                return megaDriverService.discoverDevices(true)
+            }
+        }
+    }
+
+    /**
+     * Backups stored in the DB for a given device, newest first.
+     */
+    DataFetcher deviceBackupList() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                Long deviceId = environment.getArgument("deviceId") as Long
+                Device device = Device.get(deviceId)
+                if (!device) {
+                    return []
+                }
+                Date epoch = new Date(0)
+                return (device.backups ?: [])
+                        .sort { a, b -> (b?.tsCreated ?: epoch) <=> (a?.tsCreated ?: epoch) }
+                        .collect { DeviceBackup b ->
+                            [
+                                    id         : b.id,
+                                    frmVersion : b.frmVersion,
+                                    configLines: b.configuration ? b.configuration.split('\n').length : 0,
+                                    tsCreated  : b.tsCreated ? ISO_DATE_FORMAT.format(b.tsCreated) : null
+                            ]
+                        }
             }
         }
     }

@@ -124,15 +124,20 @@ class UserAvatarController {
         if (!currentUser) return false
 
         if (currentUser.id == targetUserId) return true
-        return springSecurityService.isLoggedIn() && springSecurityService.getAuthorities()?.any { it?.authority == 'ROLE_ADMIN' }
+        // Spring Security Core 6.x removed springSecurityService.getAuthorities().
+        // Read authorities off the loaded User instead — works regardless of whether
+        // the JWT principal is a UserDetails or a bare username String.
+        return currentUser.authorities?.any { it?.authority == 'ROLE_ADMIN' }
     }
 
     private static String contentTypeFromBytes(byte[] bytes) {
         if (bytes == null || bytes.length < 4) return 'image/png'
-        // PNG signature
-        if (bytes[0] == (byte) 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) return 'image/png'
-        // JPEG
-        if (bytes[0] == (byte) 0xFF && bytes[1] == (byte) 0xD8) return 'image/jpeg'
+        // Compare via int (& 0xFF) to avoid signed-byte vs Integer-literal mismatches.
+        // PNG signature: 89 50 4E 47
+        if ((bytes[0] & 0xFF) == 0x89 && (bytes[1] & 0xFF) == 0x50
+                && (bytes[2] & 0xFF) == 0x4E && (bytes[3] & 0xFF) == 0x47) return 'image/png'
+        // JPEG: FF D8
+        if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8) return 'image/jpeg'
         return 'image/png'
     }
 }
