@@ -74,3 +74,11 @@ export const ROLES_SAVE = gql`
 		}
 	}
 `;
+export const ME = gql`
+	query me {
+		me {
+			id
+			username
+		}
+	}
+`;

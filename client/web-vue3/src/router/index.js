@@ -36,7 +36,7 @@ export default route(function ({ store, ssrContext }) {
         return next({ path: '/login', query: { returnUrl: to.path } });
       }
 
-      // ensure currentUser has id/username (for avatar, etc.) from /api/me
+      // ensure currentUser has id/username (for avatar, etc.) via the `me` GraphQL query
       await authzService.ensureCurrentUserIds();
 
       // check if route is restricted by role

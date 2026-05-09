@@ -327,6 +327,30 @@ class Query {
         }
     }
 
+    // ==================== Current user ====================
+
+    /**
+     * Returns id + username of the authenticated user (via Spring Security principal).
+     * Used by the SPA on app load to populate `currentUser` for avatar / profile rendering.
+     */
+    DataFetcher me() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def principal = springSecurityService?.principal
+                if (!principal) {
+                    return null
+                }
+                String username = principal instanceof String ? principal : (principal?.username ?: principal?.toString())
+                User user = User.findByUsername(username)
+                if (!user) {
+                    return null
+                }
+                return [id: user.id, username: user.username]
+            }
+        }
+    }
+
     // ==================== Device (MegaD) operations ====================
 
     /**

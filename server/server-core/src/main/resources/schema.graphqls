@@ -19,6 +19,8 @@ type Query{
     discoveredDevices: [DiscoveredDevice!]!
     """Backups stored in the DB for a given device, newest first."""
     deviceBackupList(deviceId: ID!): [DeviceBackupSummary!]!
+    """Current authenticated user (id + username). Used by the SPA on app load to populate currentUser."""
+    me: MeResult
 }
 
 """One row in the sprinkler scheduler: a job linked to a sprinkler peripheral."""
@@ -231,4 +233,9 @@ type DeviceBackupResult {
     id: ID
     frmVersion: String
     configLines: Int
+}
+
+type MeResult {
+    id: ID
+    username: String
 }
