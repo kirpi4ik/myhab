@@ -1,6 +1,9 @@
 package org.myhab.services.dsl.action
 
 
+import org.myhab.ConfigKey
+import org.myhab.domain.Configuration
+import org.myhab.domain.EntityType
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortAction
 import org.myhab.domain.device.DevicePeripheral
@@ -155,7 +158,45 @@ class PowerService implements EventPublisher {
             
             // Execute action on all collected ports
             log.info("Executing ${params.action} on ${ports.size()} unique port(s): ${ports*.id}")
-            
+
+            // One-shot timeout override for switchOn([..., timeout: <sec>]). Stored as a
+            // Configuration row (key=key.on.timeout.override) on each port's first peripheral
+            // — visible in the UI alongside the regular key.on.timeout, traceable, and
+            // consumed (then deleted) by PortValueService.updateExpirationTime when the
+            // device confirms ON. Wins over the persisted key.on.timeout for that one cycle.
+            Integer customTimeoutSec = (params.timeout instanceof Number) ? (params.timeout as Integer) : null
+            if (params.action == PortAction.ON && customTimeoutSec != null && customTimeoutSec > 0) {
+                ports.each { port ->
+                    def peripheral = port.peripherals?.find()
+                    if (peripheral == null) {
+                        log.debug("Skipping timeout override for port ${port.id}: no peripheral attached")
+                        return
+                    }
+                    try {
+                        upsertTimeoutOverride(peripheral, customTimeoutSec)
+                        log.debug("Registered timeout override for peripheral ${peripheral.id} (port ${port.id}): ${customTimeoutSec}s")
+                    } catch (Exception e) {
+                        log.error("Failed to register timeout override for peripheral ${peripheral.id}: ${e.message}", e)
+                    }
+                }
+            }
+
+            // Synchronous override cleanup on caller-initiated OFF — covers the case where
+            // the device was already OFF and won't echo the change via MQTT, so the
+            // updateExpirationTime OFF cleanup never fires. Idempotent: deleting a
+            // non-existent row is a no-op.
+            if (params.action == PortAction.OFF) {
+                ports.each { port ->
+                    def peripheral = port.peripherals?.find()
+                    if (peripheral == null) return
+                    try {
+                        clearTimeoutOverride(peripheral)
+                    } catch (Exception e) {
+                        log.error("Failed to clear pending timeout override for peripheral ${peripheral.id}: ${e.message}", e)
+                    }
+                }
+            }
+
             ports.each { port ->
                 try {
                     log.debug("Power switch: ${port.name} (id: ${port.id}, device: ${port.device?.code}) - action: ${params.action}")
@@ -171,6 +212,50 @@ class PowerService implements EventPublisher {
             log.error("Invalid ID format in params: ${params} - ${e.message}", e)
         } catch (Exception e) {
             log.error("Unexpected error in PowerService.execute: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Upsert the one-shot timeout override Configuration row for a peripheral.
+     * Wraps in a writable transaction since the surrounding service is readOnly.
+     *
+     * @param peripheral target peripheral
+     * @param timeoutSec override value, in seconds (must be &gt; 0)
+     */
+    private void upsertTimeoutOverride(DevicePeripheral peripheral, Integer timeoutSec) {
+        Configuration.withNewTransaction {
+            Configuration existing = Configuration.where {
+                entityId == peripheral.id &&
+                        entityType == EntityType.PERIPHERAL &&
+                        key == ConfigKey.STATE_ON_TIMEOUT_OVERRIDE
+            }.find()
+            if (existing == null) {
+                existing = new Configuration(
+                        entityId: peripheral.id,
+                        entityType: EntityType.PERIPHERAL,
+                        key: ConfigKey.STATE_ON_TIMEOUT_OVERRIDE
+                )
+            }
+            existing.value = String.valueOf(timeoutSec)
+            existing.save(flush: true, failOnError: true)
+        }
+    }
+
+    /**
+     * Remove any pending one-shot timeout override Configuration row for a peripheral.
+     * Idempotent — silently does nothing when no row exists. Wraps in a writable
+     * transaction since the surrounding service is readOnly.
+     */
+    private void clearTimeoutOverride(DevicePeripheral peripheral) {
+        Configuration.withNewTransaction {
+            int deleted = Configuration.where {
+                entityId == peripheral.id &&
+                        entityType == EntityType.PERIPHERAL &&
+                        key == ConfigKey.STATE_ON_TIMEOUT_OVERRIDE
+            }.deleteAll()
+            if (deleted > 0) {
+                log.debug("Cleared pending timeout override for peripheral ${peripheral.id} on OFF")
+            }
         }
     }
 }

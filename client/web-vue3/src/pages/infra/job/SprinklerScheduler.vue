@@ -309,18 +309,32 @@ export default defineComponent({
     async function saveSchedule() {
       saving.value = true;
       const dow = getDayOfWeekCronValue();
+      const overrides = startMinutesOverrides.value;
       try {
         for (const row of rows.value) {
           const { hourUtc, minuteUtc } = localMinutesToUtc(row.startMinutesLocal);
           const newExpression = buildCron(minuteUtc, hourUtc, dow);
-          if (!row.triggerId) continue;
-          if (row.triggerExpression === newExpression) continue;
+          const hasTrigger = !!row.triggerId;
+          const userTouched = overrides[row.jobId] !== undefined;
+
+          // Skip jobs that have no trigger AND the user didn't move the bar —
+          // we'd otherwise create an unintended 00:00 trigger every time the
+          // schedule is saved for unrelated rows.
+          if (!hasTrigger && !userTouched) continue;
+
+          // Skip if nothing actually changed (only meaningful when a trigger exists).
+          if (hasTrigger && row.triggerExpression === newExpression) continue;
+
+          // For new triggers, omit `id` so GORM (cascade: all-delete-orphan)
+          // creates a fresh CronTrigger for the job.
+          const cronTriggerInput = hasTrigger
+            ? [{ id: row.triggerId, expression: newExpression }]
+            : [{ expression: newExpression }];
+
           const { mutate } = jobUpdateMutation;
           await mutate({
             id: row.jobId,
-            job: {
-              cronTriggers: [{ id: row.triggerId, expression: newExpression }],
-            },
+            job: { cronTriggers: cronTriggerInput },
           });
         }
         await refetch();

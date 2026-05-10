@@ -1,6 +1,7 @@
 package org.myhab.services
 
 import org.myhab.ConfigKey
+import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DevicePeripheral
@@ -84,30 +85,83 @@ class PortValueService implements EventPublisher {
     @Subscriber("evt_mqtt_port_value_changed")
     def updateExpirationTime(event) {
         log.debug("evt_mqtt_port_value_changed received: device=${event.data.p2}, ref=${event.data.p4}, value=${event.data.p5}")
-        
+
         def port = Device.findByCode(event.data.p2, [lock: true])?.ports?.find {
             port -> port.internalRef == event.data.p4
         }
-        
-        if (port != null) {
-            def newVal = ValueParser.parser(port).apply(event.data.p5)
+        if (port == null) return
 
+        def newVal = ValueParser.parser(port).apply(event.data.p5)
+
+        if (newVal == PortAction.OFF.name()) {
+            hazelcastInstance.getMap(CacheMap.EXPIRE.name).remove(String.valueOf(port.id))
+            log.debug("Cache removed for port ${port.id}")
+            // Clear any pending one-shot override on this port's peripheral. Stale
+            // overrides (set by switchOn but never consumed because the device went
+            // OFF before confirming ON) would otherwise be mistakenly applied to the
+            // next unrelated ON event.
             if (!port.peripherals.empty) {
-                def peripheral = port.peripherals?.first()
-                if (peripheral != null) {
-                    def config = peripheral.configurations.find { it.key == ConfigKey.STATE_ON_TIMEOUT }
-                    
-                if (config != null && newVal == PortAction.ON.name()) {
-                    def expireInMs = DateTime.now().plusSeconds(Integer.valueOf(config.value)).toDate().time
-                    hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
-                    log.debug("Cache created for port ${port.id}, expires at ${new Date(expireInMs)}, peripheral ${peripheral.id}")
-                } else if (newVal == PortAction.OFF.name()) {
-                    hazelcastInstance.getMap(CacheMap.EXPIRE.name).remove(String.valueOf(port.id))
-                    log.debug("Cache removed for port ${port.id}")
+                def offPeripheral = port.peripherals.first()
+                if (offPeripheral != null) {
+                    try {
+                        int deleted = Configuration.where {
+                            entityId == offPeripheral.id &&
+                                    entityType == EntityType.PERIPHERAL &&
+                                    key == ConfigKey.STATE_ON_TIMEOUT_OVERRIDE
+                        }.deleteAll()
+                        if (deleted > 0) {
+                            log.debug("Cleared ${deleted} stale timeout override(s) for peripheral ${offPeripheral.id} on observed OFF")
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to clear stale override for peripheral ${offPeripheral.id}: ${e.message}", e)
+                    }
                 }
+            }
+            return
+        }
+
+        if (newVal != PortAction.ON.name()) return
+        if (port.peripherals.empty) return
+        def peripheral = port.peripherals.first()
+        if (peripheral == null) return
+
+        // 1. One-shot override Configuration row (key.on.timeout.override) wins over
+        //    the persisted key.on.timeout for this cycle. Consumed and deleted.
+        def overrideConfig = peripheral.configurations.find { it.key == ConfigKey.STATE_ON_TIMEOUT_OVERRIDE }
+        Integer overrideSec = null
+        if (overrideConfig != null) {
+            try {
+                overrideSec = Integer.valueOf(overrideConfig.value)
+            } catch (NumberFormatException ignored) {
+                log.warn("Invalid ${ConfigKey.STATE_ON_TIMEOUT_OVERRIDE} value '${overrideConfig.value}' on peripheral ${peripheral.id}")
+            }
+            // Always delete the override row once observed, even if the value is
+            // unparseable — keeps the row from sticking around forever.
+            try {
+                Configuration.where { id == overrideConfig.id }.deleteAll()
+            } catch (Exception e) {
+                log.error("Failed to remove consumed override row ${overrideConfig.id}: ${e.message}", e)
+            }
+        }
+
+        Integer timeoutSec = overrideSec
+        if (timeoutSec == null) {
+            // 2. Fall back to the peripheral's persisted Configuration row.
+            def config = peripheral.configurations.find { it.key == ConfigKey.STATE_ON_TIMEOUT }
+            if (config != null) {
+                try {
+                    timeoutSec = Integer.valueOf(config.value)
+                } catch (NumberFormatException ignored) {
+                    log.warn("Invalid ${ConfigKey.STATE_ON_TIMEOUT} value '${config.value}' on peripheral ${peripheral.id}")
                 }
             }
         }
+        if (timeoutSec == null || timeoutSec <= 0) return
+
+        def expireInMs = DateTime.now().plusSeconds(timeoutSec).toDate().time
+        hazelcastInstance.getMap(CacheMap.EXPIRE.name)
+                .put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
+        log.debug("Cache created for port ${port.id}, expires at ${new Date(expireInMs)}, peripheral ${peripheral.id} (override=${overrideSec != null})")
     }
 
     @Subscriber("evt_cfg_value_changed")
