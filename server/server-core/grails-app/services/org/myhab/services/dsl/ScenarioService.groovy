@@ -101,18 +101,34 @@ class ScenarioService implements EventPublisher{
      * <pre>
      * // Turn on specific ports by ID
      * switchOn([portIds: [123, 456]])
-     * 
+     *
      * // Turn on ports via peripheral IDs
      * switchOn([peripheralIds: [10, 11, 12]])
-     * 
+     *
      * // Combine both approaches
      * switchOn([portIds: [123], peripheralIds: [10, 11]])
+     *
+     * // One-shot custom auto-off timeout (5 minutes) — overrides any persisted
+     * // key.on.timeout configuration for this single switch-on cycle. Not saved.
+     * switchOn([peripheralIds: [42], timeout: 300])
      * </pre>
-     * 
+     *
      * @param args Map containing port selection criteria. Supported keys:
      *             <ul>
      *               <li><b>portIds</b> - Optional list of device port IDs to turn on</li>
      *               <li><b>peripheralIds</b> - Optional list of peripheral IDs (uses their connected ports)</li>
+     *               <li><b>timeout</b> - Optional one-shot auto-off timeout in seconds.
+     *                   When provided and &gt; 0, overrides the peripheral's persisted
+     *                   {@code key.on.timeout} for this single switch-on cycle. The
+     *                   override is stored as a Configuration row with key
+     *                   {@code key.on.timeout.override} on each affected peripheral —
+     *                   visible in the UI alongside the regular timeout, traceable.
+     *                   Cleared automatically by any of the following:
+     *                   <ul>
+     *                     <li>Device confirms ON via MQTT — override is consumed and the row deleted.</li>
+     *                     <li>Caller invokes {@code switchOff} on the same peripheral — synchronous cleanup.</li>
+     *                     <li>Device reports OFF via MQTT (manual switch, scheduled job, etc.) — row deleted.</li>
+     *                   </ul></li>
      *             </ul>
      *             At least one of portIds or peripheralIds must be provided.
      * @see org.myhab.services.dsl.action.PowerService#execute(java.util.Map)
