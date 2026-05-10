@@ -132,15 +132,34 @@ function positionToMinutes(clientX, stripEl) {
   return snapToStep(pct * MINUTES_PER_DAY);
 }
 
-/** Parse Quartz cron (sec min hour dayOfMonth month dayOfWeek) to { hourUtc, minuteUtc, dayOfWeek } */
+/**
+ * Parse a stored cron expression. Accepts both:
+ *   - 5-field standard cron: `min hour dom month dow`         (dow = Unix 0..6, 0=Sun)
+ *   - 6-field Quartz cron:   `sec min hour dom month dow`     (dow = Quartz 1..7, 1=Sun) — legacy data only
+ *
+ * Returns { hourUtc, minuteUtc, dayOfWeek } where `dayOfWeek` is normalized to the
+ * **Quartz** form (1..7) so the existing UI `selectedDays` model (which uses QUARTZ_DOW)
+ * and `parseDayOfWeekToArray` keep working without changes.
+ */
 function parseCron(cron) {
   if (!cron || !cron.trim()) return null;
   const parts = cron.trim().split(/\s+/);
-  if (parts.length < 6) return null;
-  const minute = Number.parseInt(parts[1], 10);
-  const hour = Number.parseInt(parts[2], 10);
-  const dayOfWeek = parts[5];
+  let minute, hour, dayOfWeek, isStandard;
+  if (parts.length === 5) {
+    minute = Number.parseInt(parts[0], 10);
+    hour = Number.parseInt(parts[1], 10);
+    dayOfWeek = parts[4];
+    isStandard = true;
+  } else if (parts.length >= 6) {
+    minute = Number.parseInt(parts[1], 10);
+    hour = Number.parseInt(parts[2], 10);
+    dayOfWeek = parts[5];
+    isStandard = false;
+  } else {
+    return null;
+  }
   if (Number.isNaN(minute) || Number.isNaN(hour)) return null;
+  if (isStandard) dayOfWeek = unixDayOfWeekToQuartz(dayOfWeek);
   return { hourUtc: hour, minuteUtc: minute, dayOfWeek };
 }
 
@@ -159,14 +178,40 @@ function localMinutesToUtc(localMinutes) {
   return { hourUtc: d.getUTCHours(), minuteUtc: d.getUTCMinutes() };
 }
 
-/** Build Quartz cron: 0 sec min hour ? * dayOfWeek */
+/**
+ * Build a 5-field standard cron expression: `min hour * * dow` with Unix DOW (0..6, 0=Sun).
+ * The server's normalizeCronExpression converts this to the 6-field Quartz form Quartz needs.
+ *
+ * 5-field is also what `<cron-light>` (used in JobEdit) understands natively, so the same
+ * trigger renders correctly in the generic job editor after being saved here.
+ *
+ * @param dayOfWeekStr DOW field already in Unix form (e.g., "0,1,2" = Sun,Mon,Tue), or "*"
+ */
 function buildCron(minuteUtc, hourUtc, dayOfWeekStr) {
-  return `0 ${minuteUtc} ${hourUtc} ? * ${dayOfWeekStr}`;
+  return `${minuteUtc} ${hourUtc} * * ${dayOfWeekStr}`;
 }
 
 /**
- * Parse Quartz day-of-week field (1-7, Sun-Sat) to array of numbers.
- * Supports "2,4,6", "1-5", "*", "?".
+ * Convert a Unix-cron DOW field (0..6, 0=Sun) to Quartz (1..7, 1=Sun).
+ * Supports comma lists and ranges. "*" / "?" / "" pass through untouched.
+ */
+function unixDayOfWeekToQuartz(dowStr) {
+  if (!dowStr || dowStr === '*' || dowStr === '?') return dowStr;
+  return dowStr.split(',').map(seg => {
+    const s = seg.trim();
+    if (s.includes('-')) {
+      const [a, b] = s.split('-').map(p => Number.parseInt(p.trim(), 10));
+      if (Number.isNaN(a) || Number.isNaN(b)) return s;
+      return `${a + 1}-${b + 1}`;
+    }
+    const n = Number.parseInt(s, 10);
+    return Number.isNaN(n) ? s : String(n + 1);
+  }).join(',');
+}
+
+/**
+ * Parse a Quartz-style day-of-week field (1..7, 1=Sun, the form `parseCron` always returns)
+ * into an array of numbers. Supports "2,4,6", "1-5", "*", "?".
  */
 function parseDayOfWeekToArray(dowStr) {
   if (!dowStr || !dowStr.trim()) return [QUARTZ_DOW.MON, QUARTZ_DOW.TUE, QUARTZ_DOW.WED, QUARTZ_DOW.THU, QUARTZ_DOW.FRI];
@@ -301,9 +346,18 @@ export default defineComponent({
       dragStripEl.value = null;
     }
 
+    /**
+     * Build the DOW field for a 5-field standard cron: Unix numbers (0..6, 0=Sun).
+     * `selectedDays.value` holds Quartz numbers (1..7) so subtract 1 per entry.
+     * The server's normalizeCronExpression then converts back to Quartz when scheduling.
+     */
     function getDayOfWeekCronValue() {
       if (!selectedDays.value || selectedDays.value.length === 0) return '*';
-      return selectedDays.value.sort((a, b) => a - b).join(',');
+      return selectedDays.value
+        .slice()
+        .sort((a, b) => a - b)
+        .map(d => d - 1)
+        .join(',');
     }
 
     async function saveSchedule() {
