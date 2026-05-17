@@ -43,7 +43,9 @@ class Query {
     SpringSecurityService springSecurityService
     @Autowired
     MegaDriverService megaDriverService
-    
+    @Autowired
+    org.myhab.async.mqtt.MqttRetainedFetchService mqttRetainedFetchService
+
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
     def userRolesForUser() {
@@ -388,6 +390,83 @@ class Query {
                             ]
                         }
             }
+        }
+    }
+
+    /**
+     * On-demand fetch of a device's current IP from the MQTT broker, without
+     * requiring the corresponding DevicePort to exist in the DB yet. Maps the
+     * device's model to the appropriate IP-broadcast topic and subscribes
+     * briefly via {@link org.myhab.async.mqtt.MqttRetainedFetchService}.
+     *
+     * <p>Returns a {@code DeviceIpFromMqttResult} with:</p>
+     * <ul>
+     *   <li>{@code topic} — the topic that was subscribed to (always populated for traceability)</li>
+     *   <li>{@code ip} — the trimmed payload value, or {@code null} on timeout / device not found</li>
+     *   <li>{@code error} — non-null message when the device or model is unsupported, or broker access fails</li>
+     * </ul>
+     */
+    DataFetcher deviceFetchIpFromMqtt() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String deviceCode = environment.getArgument("deviceCode") as String
+                if (!deviceCode?.trim()) {
+                    return [topic: '', ip: null, error: 'deviceCode is required']
+                }
+                Device device = Device.findByCode(deviceCode.trim())
+                if (!device) {
+                    return [topic: '', ip: null, error: "Device '${deviceCode}' not found"]
+                }
+                String portCode = portCodeForIpBroadcast(device.model)
+                String topic = topicForIpBroadcast(device.model, device.code)
+                if (!topic || !portCode) {
+                    return [topic: '', ip: null,
+                            error: "Model ${device.model} has no MQTT IP-broadcast topic configured on the server"]
+                }
+
+                // 1. In-memory cache populated by the existing inbound MQTT channel —
+                //    works for non-retained messages too, as long as the backend has
+                //    observed at least one publish since startup.
+                String cached = mqttRetainedFetchService.getCachedValue(device.code, portCode)
+                if (cached?.trim()) {
+                    return [topic: topic, ip: cached.trim(), error: null]
+                }
+
+                // 2. Cache miss → transient broker subscription. Picks up retained
+                //    messages immediately; non-retained ones if the device republishes
+                //    within the window.
+                String raw = mqttRetainedFetchService.fetchLatestValue(topic, 5000L)
+                return [topic: topic, ip: raw?.trim() ?: null,
+                        error: raw == null ? "No MQTT payload received on ${topic} within timeout (broker has no retained value and the device didn't publish in the last 5s)" : null]
+            }
+        }
+    }
+
+    /**
+     * Map a device model to the topic the device publishes its current IP on.
+     * Returns {@code null} for models with no known IP-broadcast convention.
+     */
+    private String topicForIpBroadcast(DeviceModel model, String deviceCode) {
+        if (!model || !deviceCode) return null
+        String portCode = portCodeForIpBroadcast(model)
+        if (!portCode) return null
+        switch (model) {
+            case DeviceModel.ESP32:
+                return "myhab/${deviceCode}/sensor/${portCode}/state".toString()
+            default:
+                return null
+        }
+    }
+
+    /** The {@code portCode} that the IP-broadcast topic exposes for a given model. */
+    private String portCodeForIpBroadcast(DeviceModel model) {
+        if (!model) return null
+        switch (model) {
+            case DeviceModel.ESP32:
+                return 'esp_ip_address'
+            default:
+                return null
         }
     }
 

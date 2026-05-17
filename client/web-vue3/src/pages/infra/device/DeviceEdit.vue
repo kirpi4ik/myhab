@@ -150,6 +150,166 @@
 
         <q-separator/>
 
+        <!-- Network Address -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">
+            <q-icon name="mdi-ip-network" class="q-mr-xs"/>
+            Network Address
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <div class="row q-col-gutter-md items-center">
+            <div class="col-12 col-md-5">
+              <q-input
+                v-model="ipModel"
+                label="IP"
+                hint="IPv4 address used to reach the controller"
+                clearable
+                clear-icon="close"
+                color="orange"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-ip"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-3">
+              <q-input
+                v-model="portModel"
+                label="Port"
+                hint="HTTP port (default 80)"
+                clearable
+                clear-icon="close"
+                color="orange"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-numeric"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input
+                v-model="gatewayModel"
+                label="Gateway"
+                hint="Optional default gateway"
+                clearable
+                clear-icon="close"
+                color="orange"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-router-network"/>
+                </template>
+              </q-input>
+            </div>
+          </div>
+          <div>
+            <DeviceIpUpdater
+              :device="device"
+              button-raised
+              :dense="false"
+              label="Update IP from device"
+              @updated="onIpUpdated"
+            />
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
+        <!-- Authentication Accounts -->
+        <q-card-section>
+          <div class="row items-center q-mb-sm">
+            <div class="text-subtitle2 text-weight-medium">
+              <q-icon name="mdi-key" class="q-mr-xs"/>
+              Authentication Accounts
+            </div>
+            <q-space/>
+            <q-btn
+              flat
+              dense
+              no-caps
+              color="primary"
+              icon="mdi-plus"
+              label="Add account"
+              @click="addAuthAccount"
+            />
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-sm">
+          <div v-if="!device.authAccounts || device.authAccounts.length === 0" class="text-grey-6 text-caption">
+            No accounts configured. Add one if the controller requires HTTP authentication.
+          </div>
+          <q-card
+            v-for="(acc, idx) in device.authAccounts"
+            :key="acc.id ?? `new-${idx}`"
+            flat
+            bordered
+            class="q-pa-sm"
+          >
+            <div class="row q-col-gutter-sm items-center">
+              <div class="col-12 col-md-4">
+                <q-input
+                  v-model="acc.username"
+                  label="Username"
+                  filled
+                  dense
+                  clearable
+                  clear-icon="close"
+                />
+              </div>
+              <div class="col-12 col-md-4">
+                <q-input
+                  v-model="acc.password"
+                  :type="acc._show ? 'text' : 'password'"
+                  label="Password"
+                  filled
+                  dense
+                  clearable
+                  clear-icon="close"
+                >
+                  <template v-slot:append>
+                    <q-icon
+                      :name="acc._show ? 'mdi-eye-off' : 'mdi-eye'"
+                      class="cursor-pointer"
+                      @click="acc._show = !acc._show"
+                    />
+                  </template>
+                </q-input>
+              </div>
+              <div class="col-6 col-md-2">
+                <q-toggle
+                  :model-value="!!acc.isDefault"
+                  @update:model-value="onSetDefaultAccount(idx, $event)"
+                  label="Default"
+                  color="positive"
+                  dense
+                />
+              </div>
+              <div class="col-6 col-md-2 text-right">
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="mdi-delete"
+                  color="negative"
+                  @click="removeAuthAccount(idx)"
+                >
+                  <q-tooltip>Remove account</q-tooltip>
+                </q-btn>
+              </div>
+            </div>
+          </q-card>
+        </q-card-section>
+
+        <q-separator/>
+
         <!-- Configuration Management -->
         <q-card-section>
           <div class="text-subtitle2 text-weight-medium q-mb-sm">
@@ -332,7 +492,7 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from 'vue';
+import {defineComponent, onMounted, ref, computed} from 'vue';
 import {useRoute} from "vue-router";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useQuasar} from 'quasar';
@@ -340,6 +500,7 @@ import {useEntityCRUD} from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
 import LocationSelector from '@/components/selectors/LocationSelector.vue';
+import DeviceIpUpdater from '@/components/DeviceIpUpdater.vue';
 import {
   DEVICE_BACKUP_CONFIG,
   DEVICE_BACKUP_LIST,
@@ -357,7 +518,8 @@ export default defineComponent({
   components: {
     EntityInfoPanel,
     EntityFormActions,
-    LocationSelector
+    LocationSelector,
+    DeviceIpUpdater
   },
   setup() {
     const route = useRoute();
@@ -394,7 +556,7 @@ export default defineComponent({
       updateMutation: DEVICE_UPDATE_CUSTOM,
       updateMutationKey: 'deviceUpdateCustom',
       updateVariableName: 'device',
-      excludeFields: ['__typename', 'ports', 'authAccounts', 'tsCreated', 'tsUpdated'],
+      excludeFields: ['__typename', 'ports', 'tsCreated', 'tsUpdated'],
       transformBeforeSave: (data) => {
         const transformed = {...data};
         if (transformed.rack) {
@@ -408,9 +570,99 @@ export default defineComponent({
             .filter(zone => zone && zone.id)
             .map(zone => ({ id: zone.id }));
         }
+        // Normalize networkAddress: drop the wrapper if all fields are blank,
+        // strip __typename. The embedded NetworkAddress sub-record on the backend
+        // accepts ip / gateway / port; we mirror that shape.
+        if (transformed.networkAddress) {
+          const na = transformed.networkAddress;
+          const ip = (na.ip || '').trim();
+          const gateway = (na.gateway || '').trim();
+          const port = (na.port || '').toString().trim();
+          if (!ip && !gateway && !port) {
+            transformed.networkAddress = null;
+          } else {
+            transformed.networkAddress = {
+              ip: ip || null,
+              gateway: gateway || null,
+              port: port || null,
+            };
+          }
+        }
+        // Normalize authAccounts: keep id when present (server uses it to update),
+        // strip transient UI flags (_show, __typename). Empty list is allowed and
+        // means "delete all accounts".
+        if (transformed.authAccounts !== undefined) {
+          if (!Array.isArray(transformed.authAccounts)) {
+            transformed.authAccounts = [];
+          }
+          transformed.authAccounts = transformed.authAccounts.map(acc => {
+            const out = {
+              username: acc.username || null,
+              password: acc.password || null,
+              isDefault: !!acc.isDefault,
+            };
+            if (acc.id) out.id = acc.id;
+            return out;
+          });
+        }
         return transformed;
       }
     });
+
+    // Proxies so the IP/port/gateway inputs always have a backing object to bind to,
+    // even when the device row arrived from the server with networkAddress == null.
+    const ensureNetworkAddress = () => {
+      if (!device.value.networkAddress) {
+        device.value.networkAddress = { ip: '', gateway: '', port: '' };
+      }
+      return device.value.networkAddress;
+    };
+    const ipModel = computed({
+      get: () => device.value?.networkAddress?.ip || '',
+      set: (v) => { ensureNetworkAddress().ip = v; },
+    });
+    const portModel = computed({
+      get: () => device.value?.networkAddress?.port || '',
+      set: (v) => { ensureNetworkAddress().port = v; },
+    });
+    const gatewayModel = computed({
+      get: () => device.value?.networkAddress?.gateway || '',
+      set: (v) => { ensureNetworkAddress().gateway = v; },
+    });
+
+    /** Add a blank auth account row. */
+    const addAuthAccount = () => {
+      if (!Array.isArray(device.value.authAccounts)) {
+        device.value.authAccounts = [];
+      }
+      device.value.authAccounts.push({
+        username: '',
+        password: '',
+        isDefault: device.value.authAccounts.length === 0,
+        _show: false,
+      });
+    };
+
+    /** Remove an auth account row by index. */
+    const removeAuthAccount = (idx) => {
+      device.value.authAccounts.splice(idx, 1);
+      // Ensure there's still at least one default if any remain.
+      if (device.value.authAccounts.length > 0 && !device.value.authAccounts.some(a => a.isDefault)) {
+        device.value.authAccounts[0].isDefault = true;
+      }
+    };
+
+    /** Setting one account as default demotes the others (single-default invariant). */
+    const onSetDefaultAccount = (idx, value) => {
+      device.value.authAccounts.forEach((acc, i) => {
+        acc.isDefault = value && i === idx;
+      });
+    };
+
+    /** Refetch after the IpUpdater modal applies a new IP. */
+    const onIpUpdated = async () => {
+      await fetchEntity();
+    };
 
     const fetchData = async () => {
       const response = await fetchEntity();
@@ -591,6 +843,15 @@ export default defineComponent({
       modelList,
       loading,
       saving,
+      // Network address proxies + IP update flow
+      ipModel,
+      portModel,
+      gatewayModel,
+      onIpUpdated,
+      // Auth accounts
+      addAuthAccount,
+      removeAuthAccount,
+      onSetDefaultAccount,
       // Backup/Restore
       backingUp,
       restoring,

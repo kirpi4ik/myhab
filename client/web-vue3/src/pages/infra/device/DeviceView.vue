@@ -23,10 +23,24 @@
           <div class="text-subtitle2 text-grey-7">{{ viewItem.name || 'No name specified' }}</div>
         </div>
         <q-space/>
+        <q-btn
+          v-if="adminUrl"
+          outline
+          round
+          color="indigo-7"
+          icon="mdi-open-in-new"
+          type="a"
+          :href="adminUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Open controller admin UI ({{ adminUrl }})</q-tooltip>
+        </q-btn>
         <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           <q-tooltip>Edit Device</q-tooltip>
         </q-btn>
-        <q-btn outline round color="amber-8" icon="mdi-view-list" 
+        <q-btn outline round color="amber-8" icon="mdi-view-list"
                :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=DEVICE'" class="q-ml-sm">
           <q-tooltip>View Configurations</q-tooltip>
         </q-btn>
@@ -110,6 +124,82 @@
             </q-item-label>
             <q-item-label caption class="text-body2">
               <q-badge color="secondary" :label="viewItem.rack.name"/>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-separator class="q-my-md"/>
+
+        <!-- Network Address Section -->
+        <q-item-label header class="text-h6 text-grey-8">
+          <q-icon name="mdi-ip-network" class="q-mr-sm"/>
+          Network
+        </q-item-label>
+
+        <q-item>
+          <q-item-section>
+            <q-item-label class="text-h6">IP address</q-item-label>
+            <q-item-label caption class="text-body2">
+              <q-badge v-if="viewItem.networkAddress?.ip" color="grey-7" :label="viewItem.networkAddress.ip"/>
+              <span v-else class="text-grey-5">— not set —</span>
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <DeviceIpUpdater :device="viewItem" @updated="fetchData"/>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="viewItem.networkAddress?.gateway">
+          <q-item-section>
+            <q-item-label class="text-h6">Gateway</q-item-label>
+            <q-item-label caption class="text-body2">{{ viewItem.networkAddress.gateway }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="viewItem.networkAddress?.port">
+          <q-item-section>
+            <q-item-label class="text-h6">Port</q-item-label>
+            <q-item-label caption class="text-body2">{{ viewItem.networkAddress.port }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="adminUrl">
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-open-in-new" class="q-mr-sm"/>
+              Admin UI
+            </q-item-label>
+            <q-item-label caption class="text-body2">
+              <a :href="adminUrl" target="_blank" rel="noopener noreferrer" class="text-primary">
+                {{ adminUrl }}
+              </a>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-separator class="q-my-md"/>
+
+        <!-- Authentication Accounts Section -->
+        <q-item-label header class="text-h6 text-grey-8">
+          <q-icon name="mdi-key" class="q-mr-sm"/>
+          Authentication Accounts
+        </q-item-label>
+
+        <q-item v-if="!viewItem.authAccounts || viewItem.authAccounts.length === 0">
+          <q-item-section>
+            <q-item-label caption class="text-grey-6">No accounts configured.</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-for="acc in viewItem.authAccounts" :key="acc.id">
+          <q-item-section>
+            <q-item-label class="text-body1">
+              <q-icon name="mdi-account" class="q-mr-xs"/>
+              {{ acc.username || '— no username —' }}
+              <q-badge v-if="acc.isDefault" color="positive" label="default" class="q-ml-sm"/>
+            </q-item-label>
+            <q-item-label caption class="text-body2 text-grey-7">
+              Password: <code>{{ maskPassword(acc.password) }}</code>
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -289,9 +379,12 @@ import {useQuasar} from "quasar";
 import {DEVICE_GET_BY_ID_CHILDS, PORT_DELETE_BY_ID} from "@/graphql/queries";
 
 import {format} from 'date-fns';
+import DeviceIpUpdater from '@/components/DeviceIpUpdater.vue';
+import {useDeviceAdminUrl} from '@/composables';
 
 export default defineComponent({
   name: 'DeviceView',
+  components: { DeviceIpUpdater },
   setup() {
     const uri = '/admin/devices';
     const $q = useQuasar();
@@ -300,6 +393,12 @@ export default defineComponent({
     const {client} = useApolloClient();
     const router = useRouter();
     const route = useRoute();
+
+    // Resolve the controller admin-UI URL on the frontend by reading the
+    // per-model pattern from ConfigProvider (graphql `config(key:...)`) and
+    // substituting placeholders from the device's own data. Recomputes when
+    // viewItem changes (refetched after IP update / account edit).
+    const { adminUrl } = useDeviceAdminUrl(viewItem);
 
     const pagination = ref({
       sortBy: 'id',
@@ -360,6 +459,15 @@ export default defineComponent({
     const getStatusLabel = (status) => {
       if (!status) return 'Unknown';
       return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    };
+
+    /**
+     * Mask account passwords for display. Returns dots of fixed length so the
+     * actual length isn't leaked, and a single '—' when the field is empty.
+     */
+    const maskPassword = (pw) => {
+      if (!pw) return '—';
+      return '•'.repeat(8);
     };
 
     /**
@@ -486,6 +594,7 @@ export default defineComponent({
       uri,
       fetchData,
       viewItem,
+      adminUrl,
       loading,
       removeItem,
       portColumns,
@@ -495,6 +604,7 @@ export default defineComponent({
       newPort,
       viewZone,
       formatDate,
+      maskPassword,
       getStatusColor,
       getStatusLabel,
       getStatusIcon
