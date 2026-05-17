@@ -65,7 +65,15 @@ class DeviceService implements EventPublisher {
             maxResults(1)
         }
 
-        if (devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport") && deviceController.getConfigurationByKey(CfgKey.DEVICE.DEVICE_ADMIN_PORT_AUTO_IMPORT).value) {
+        // Per-device autoimport is opt-in: missing Configuration row OR a non-"true"
+        // value means "do not auto-create ports for this device". The previous
+        // chain `.getConfigurationByKey(...).value` NPE'd when the row was
+        // absent and silently dropped every incoming MQTT message for new
+        // devices, leaving their auto-discovered ports (e.g. ESP `esp_ip_address`)
+        // missing from the DB forever.
+        def perDeviceAutoImportCfg = deviceController.getConfigurationByKey(CfgKey.DEVICE.DEVICE_ADMIN_PORT_AUTO_IMPORT)
+        boolean perDeviceAutoImport = Boolean.parseBoolean((perDeviceAutoImportCfg?.value ?: '').trim())
+        if (devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport") && perDeviceAutoImport) {
             if (deviceController.model == DeviceModel.MEGAD_2561_RTC) {
                 devicePort = megaDriverService.readPortConfigFromController(deviceController.code, portInternalRef, portInternalRef)
             } else {

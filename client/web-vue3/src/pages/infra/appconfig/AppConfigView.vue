@@ -14,11 +14,21 @@
             </div>
           </div>
           <div class="col-auto q-gutter-sm">
-            <q-btn 
-              icon="mdi-refresh" 
-              color="info" 
-              :loading="refreshing" 
-              label="Refresh from GIT" 
+            <q-btn
+              icon="mdi-plus-circle"
+              color="positive"
+              label="Add Configuration"
+              @click="openAddDialog"
+              :disable="loading || saving || adding"
+              unelevated
+            >
+              <q-tooltip>Create a new configuration entry</q-tooltip>
+            </q-btn>
+            <q-btn
+              icon="mdi-refresh"
+              color="info"
+              :loading="refreshing"
+              label="Refresh from GIT"
               @click="onRefresh"
               unelevated
             >
@@ -230,6 +240,100 @@
       </q-card>
     </q-dialog>
 
+    <!-- Add Configuration Dialog -->
+    <q-dialog
+      v-model="addDialog"
+      transition-show="slide-up"
+      transition-hide="slide-down"
+      persistent
+    >
+      <q-card style="min-width: 600px">
+        <q-card-section class="bg-positive text-white">
+          <div class="text-h6">
+            <q-icon name="mdi-plus-circle" class="q-mr-sm"/>
+            Add Configuration
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
+        <q-form @submit.prevent="onAdd" ref="addFormRef">
+          <q-card-section class="q-gutter-md">
+            <!-- New Key -->
+            <q-input
+              v-model="newKey"
+              label="Configuration Key *"
+              filled
+              dense
+              clearable
+              autofocus
+              hint="Dot-separated, e.g. knowledge.meteo.device.id"
+              :rules="keyRules"
+              lazy-rules
+            >
+              <template v-slot:prepend>
+                <q-icon name="mdi-key"/>
+              </template>
+            </q-input>
+
+            <!-- New Value -->
+            <q-input
+              v-model="newValue"
+              label="Value *"
+              filled
+              dense
+              clearable
+              type="textarea"
+              rows="3"
+              hint="Initial value for the new configuration"
+              :rules="[val => !!val || 'Value is required']"
+              lazy-rules
+            >
+              <template v-slot:prepend>
+                <q-icon name="mdi-text-box"/>
+              </template>
+            </q-input>
+
+            <!-- Commit Message -->
+            <q-input
+              v-model="newCommitMessage"
+              label="Commit Message"
+              filled
+              dense
+              clearable
+              hint="Optional message for the GIT commit (defaults to 'Add config: <key>')"
+            >
+              <template v-slot:prepend>
+                <q-icon name="mdi-source-commit"/>
+              </template>
+            </q-input>
+          </q-card-section>
+
+          <q-separator/>
+
+          <q-card-actions align="right">
+            <q-btn
+              flat
+              label="Cancel"
+              color="grey"
+              v-close-popup
+              icon="mdi-close"
+              :disable="adding"
+            />
+            <q-btn
+              unelevated
+              type="submit"
+              label="Save & Commit"
+              color="positive"
+              icon="mdi-content-save"
+              :loading="adding"
+              :disable="!newKey || !newValue"
+            />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
+
     <!-- Loading State -->
     <q-inner-loading :showing="loading">
       <q-spinner-gears size="50px" color="primary"/>
@@ -266,6 +370,26 @@ export default defineComponent({
     const editValue = ref('');
     const editOriginalValue = ref('');
     const commitMessage = ref('');
+
+    // Add dialog state
+    const addDialog = ref(false);
+    const addFormRef = ref(null);
+    const newKey = ref('');
+    const newValue = ref('');
+    const newCommitMessage = ref('');
+    const adding = ref(false);
+
+    /**
+     * Validation rules for the new-config key field. Mirrors the dotted
+     * convention already used across the app (e.g. knowledge.meteo.device.id,
+     * device.adminurl.pattern.MEGAD_2561_RTC) and forbids whitespace / leading
+     * digits / weird punctuation that would clash with the YAML overlay.
+     */
+    const keyRules = [
+      v => !!(v && v.trim()) || 'Key is required',
+      v => /^[a-zA-Z][a-zA-Z0-9_.-]*$/.test((v || '').trim()) ||
+        'Use letters, digits, dots, dashes, underscores; must start with a letter',
+    ];
     
     // Table pagination
     const pagination = ref({
@@ -461,6 +585,86 @@ export default defineComponent({
       });
     };
 
+    /**
+     * Reset and open the Add dialog.
+     */
+    const openAddDialog = () => {
+      newKey.value = '';
+      newValue.value = '';
+      newCommitMessage.value = '';
+      addDialog.value = true;
+    };
+
+    /**
+     * Submit the new config. APP_CONFIG_UPDATE is an upsert server-side
+     * (ConfigProvider.setAndCommit creates the key when absent), so we reuse it.
+     * Before calling, guard against accidental overwrites: if the key already
+     * exists in the loaded list, prompt for confirmation.
+     */
+    const onAdd = async () => {
+      const formOk = await addFormRef.value?.validate?.();
+      if (formOk === false) return;
+      const trimmedKey = (newKey.value || '').trim();
+      if (!trimmedKey || !newValue.value) return;
+
+      const existing = configList.value.find(c => c.key === trimmedKey);
+      if (existing) {
+        const proceed = await new Promise((resolve) => {
+          $q.dialog({
+            title: 'Key already exists',
+            message: `<code>${trimmedKey}</code> is already set to:<br/><code>${existing.value ?? ''}</code><br/><br/>Overwrite with the new value?`,
+            html: true,
+            ok: { label: 'Overwrite', color: 'negative', icon: 'mdi-content-save-edit' },
+            cancel: { label: 'Cancel', color: 'grey', flat: true },
+            persistent: true,
+          }).onOk(() => resolve(true))
+            .onCancel(() => resolve(false))
+            .onDismiss(() => resolve(false));
+        });
+        if (!proceed) return;
+      }
+
+      adding.value = true;
+      try {
+        const response = await client.mutate({
+          mutation: APP_CONFIG_UPDATE,
+          variables: {
+            key: trimmedKey,
+            value: newValue.value,
+            commitMessage: (newCommitMessage.value || '').trim() || `Add config: ${trimmedKey}`,
+          },
+          fetchPolicy: 'no-cache',
+        });
+        const result = response.data.appConfigUpdate;
+        if (result?.success) {
+          $q.notify({
+            color: 'positive',
+            message: existing ? 'Configuration overwritten and committed to GIT' : 'Configuration added and committed to GIT',
+            icon: 'mdi-check-circle',
+            position: 'top',
+          });
+          addDialog.value = false;
+          fetchData();
+        } else {
+          $q.notify({
+            color: 'negative',
+            message: result?.error || 'Failed to add configuration',
+            icon: 'mdi-alert-circle',
+            position: 'top',
+          });
+        }
+      } catch (error) {
+        $q.notify({
+          color: 'negative',
+          message: `Failed to add configuration: ${error.message}`,
+          icon: 'mdi-alert-circle',
+          position: 'top',
+        });
+      } finally {
+        adding.value = false;
+      }
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -482,7 +686,18 @@ export default defineComponent({
       editValue,
       editOriginalValue,
       commitMessage,
-      
+
+      // Add dialog
+      addDialog,
+      addFormRef,
+      newKey,
+      newValue,
+      newCommitMessage,
+      adding,
+      keyRules,
+      openAddDialog,
+      onAdd,
+
       // Methods
       getTypeColor,
       fetchData,

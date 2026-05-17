@@ -21,6 +21,21 @@ type Query{
     deviceBackupList(deviceId: ID!): [DeviceBackupSummary!]!
     """Current authenticated user (id + username). Used by the SPA on app load to populate currentUser."""
     me: MeResult
+    """
+    On-demand fetch of a device's current IP from MQTT, without requiring an
+    `esp_ip_address` DevicePort to already exist in the DB. Subscribes briefly
+    to the broker for the model-appropriate IP-broadcast topic and returns
+    the latest payload (retained messages arrive immediately on subscribe).
+    Returns null when the broker has no value for the topic within ~3s.
+    """
+    deviceFetchIpFromMqtt(deviceCode: String!): DeviceIpFromMqttResult
+}
+
+"""Result of an on-demand MQTT IP fetch (see Query.deviceFetchIpFromMqtt)."""
+type DeviceIpFromMqttResult {
+    ip: String
+    topic: String!
+    error: String
 }
 
 """One row in the sprinkler scheduler: a job linked to a sprinkler peripheral."""

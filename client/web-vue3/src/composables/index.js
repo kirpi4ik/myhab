@@ -8,3 +8,4 @@ export { useEntityList } from './useEntityList';
 export { useSvgInteraction } from './useSvgInteraction';
 export { usePeripheralState } from './usePeripheralState';
 export { usePeripheralControl } from './usePeripheralControl';
+export { useDeviceAdminUrl } from './useDeviceAdminUrl';

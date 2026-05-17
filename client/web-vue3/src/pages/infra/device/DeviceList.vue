@@ -78,6 +78,25 @@
           </q-td>
         </template>
 
+        <template v-slot:body-cell-ip="props">
+          <q-td :props="props">
+            <q-badge v-if="props.row.ip" color="grey-7" :label="props.row.ip">
+              <q-tooltip>{{ props.row.ip }}<span v-if="props.row.port">:{{ props.row.port }}</span></q-tooltip>
+            </q-badge>
+            <span v-else class="text-grey-5">-</span>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-status="props">
+          <q-td :props="props">
+            <q-badge
+              :color="getStatusColor(props.row.status)"
+              :label="getStatusLabel(props.row.status)"
+              :icon="getStatusIcon(props.row.status)"
+            />
+          </q-td>
+        </template>
+
         <template v-slot:body-cell-tsCreated="props">
           <q-td :props="props">
             {{ formatDate(props.row.tsCreated) }}
@@ -138,6 +157,8 @@ export default defineComponent({
       { name: 'model', label: 'Model', field: 'model', align: 'left', sortable: true },
       { name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true },
       { name: 'rack', label: 'Rack', field: 'rack', align: 'left', sortable: true },
+      { name: 'ip', label: 'IP', field: 'ip', align: 'left', sortable: true },
+      { name: 'status', label: 'Status', field: 'status', align: 'left', sortable: true },
       { name: 'portsCount', label: 'Ports', field: 'portsCount', align: 'left', sortable: true },
       { name: 'tsCreated', label: 'Created', field: 'tsCreated', align: 'left', sortable: true },
       { 
@@ -165,6 +186,35 @@ export default defineComponent({
       }
     };
 
+    /**
+     * Map a Device.status enum value to badge color/label/icon.
+     * Mirrors the helpers in DeviceView so both surfaces render consistently.
+     * `null`/`Unknown` is rendered as grey so newly-added devices that haven't
+     * been probed yet stand out without screaming "OFFLINE".
+     */
+    const getStatusColor = (status) => {
+      switch ((status || '').toUpperCase()) {
+        case 'ONLINE': return 'positive';
+        case 'OFFLINE': return 'negative';
+        case 'DISABLED': return 'warning';
+        default: return 'grey-6';
+      }
+    };
+
+    const getStatusLabel = (status) => {
+      if (!status) return 'Unknown';
+      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    };
+
+    const getStatusIcon = (status) => {
+      switch ((status || '').toUpperCase()) {
+        case 'ONLINE': return 'mdi-check-circle';
+        case 'OFFLINE': return 'mdi-close-circle';
+        case 'DISABLED': return 'mdi-pause-circle';
+        default: return 'mdi-help-circle';
+      }
+    };
+
     const {
       filteredItems,
       loading,
@@ -189,6 +239,9 @@ export default defineComponent({
         model: device.model || '-',
         type: device.type?.name || null,
         rack: device.rack?.name || '-',
+        ip: device.networkAddress?.ip || null,
+        port: device.networkAddress?.port || null,
+        status: device.status || null,
         portsCount: device.ports?.length || 0,
         tsCreated: device.tsCreated,
         tsUpdated: device.tsUpdated
@@ -208,7 +261,10 @@ export default defineComponent({
       editItem,
       createItem,
       deleteItem,
-      formatDate
+      formatDate,
+      getStatusColor,
+      getStatusLabel,
+      getStatusIcon
     };
   }
 });

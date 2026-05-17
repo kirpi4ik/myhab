@@ -57,7 +57,7 @@ class Device extends BaseEntity implements Configurable<Device> {
             }
             input false
         }
-        
+
         // Custom update mutation to properly handle zones many-to-many relationship
         mutation('deviceUpdateCustom', Device) {
             argument('id', Long)
@@ -112,7 +112,49 @@ class Device extends BaseEntity implements Configurable<Device> {
                     
                     // Save basic changes first
                     existingDevice.save(flush: true, failOnError: true)
-                    
+
+                    // Update authAccounts — diff against existing by id.
+                    // Input rows with an id update the matching account (username/password/isDefault).
+                    // Input rows without an id create new accounts. Existing accounts not listed
+                    // in the input are deleted. Only one account may be flagged isDefault; the
+                    // last one with isDefault=true wins, the rest are coerced to false.
+                    def authInput = deviceData.authAccounts
+                    if (authInput != null) {
+                        def existingAccounts = DeviceAccount.findAllByDevice(existingDevice)
+                        def inputList = (authInput instanceof Collection) ? authInput.toList() : authInput.toList()
+                        def inputIds = inputList.collect { it?.id as Long }.findAll { it != null } as Set
+
+                        // Delete accounts not present in input
+                        existingAccounts.findAll { !(it.id in inputIds) }.each { it.delete(flush: true) }
+
+                        // Enforce single-default: keep the last-flagged default, demote earlier ones.
+                        Long lastDefaultIndex = -1L
+                        inputList.eachWithIndex { acc, idx ->
+                            if (acc?.isDefault) lastDefaultIndex = idx
+                        }
+
+                        inputList.eachWithIndex { acc, idx ->
+                            boolean isDefault = acc?.isDefault && idx == lastDefaultIndex
+                            Long accId = acc?.id as Long
+                            if (accId) {
+                                DeviceAccount dbAcc = DeviceAccount.get(accId)
+                                if (dbAcc != null && dbAcc.device?.id == existingDevice.id) {
+                                    if (acc.username != null) dbAcc.username = acc.username
+                                    if (acc.password != null) dbAcc.password = acc.password
+                                    dbAcc.isDefault = isDefault
+                                    dbAcc.save(flush: true, failOnError: true)
+                                }
+                            } else {
+                                new DeviceAccount(
+                                        username: acc?.username,
+                                        password: acc?.password,
+                                        isDefault: isDefault,
+                                        device: existingDevice
+                                ).save(flush: true, failOnError: true)
+                            }
+                        }
+                    }
+
                     // Update zones - rebuild the collection using explicit join table
                     if (deviceData.zones != null) {
                         def newZoneIds = deviceData.zones?.collect { it?.id as Long }?.findAll { it != null } ?: []
@@ -156,8 +198,14 @@ class NetworkAddress {
     String ip
     String gateway
     String port
+    // The whole NetworkAddress is `nullable: true, cascade: "all"` on Device
+    // (see Device.constraints), so every embedded field must also accept null
+    // to support partial states — e.g. an ESP that reports its IP via MQTT
+    // before anyone has set the controller's HTTP port.
     static constraints = {
+        ip nullable: true
         gateway nullable: true
+        port nullable: true
     }
 }
 

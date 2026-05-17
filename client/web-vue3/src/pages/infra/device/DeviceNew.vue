@@ -151,6 +151,69 @@
 
         <q-separator/>
 
+        <!-- Network Address -->
+        <q-card-section>
+          <div class="text-subtitle2 text-weight-medium q-mb-sm">
+            <q-icon name="mdi-ip-network" class="q-mr-xs"/>
+            Network Address
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md">
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-5">
+              <q-input
+                v-model="netIp"
+                label="IP"
+                hint="IPv4 address used to reach the controller"
+                clearable
+                clear-icon="close"
+                color="orange"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-ip"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-3">
+              <q-input
+                v-model="netPort"
+                label="Port"
+                hint="HTTP port (default 80)"
+                clearable
+                clear-icon="close"
+                color="orange"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-numeric"/>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input
+                v-model="netGateway"
+                label="Gateway"
+                hint="Optional default gateway"
+                clearable
+                clear-icon="close"
+                color="orange"
+                filled
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="mdi-router-network"/>
+                </template>
+              </q-input>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator/>
+
         <!-- Actions -->
         <EntityFormActions
           :saving="saving"
@@ -342,7 +405,7 @@
 </template>
 
 <script>
-import {defineComponent, onMounted, ref} from 'vue';
+import {defineComponent, onMounted, ref, computed} from 'vue';
 import {useRouter} from 'vue-router';
 import {useApolloClient} from "@vue/apollo-composable";
 import {useQuasar} from 'quasar';
@@ -402,7 +465,8 @@ export default defineComponent({
         description: '',
         type: null,
         model: null,
-        rack: null
+        rack: null,
+        networkAddress: { ip: '', gateway: '', port: '' }
       },
       transformBeforeSave: (data) => {
         const transformed = {...data};
@@ -420,8 +484,45 @@ export default defineComponent({
             delete transformed.type;
           }
         }
+        // Drop networkAddress when all sub-fields are blank; otherwise normalize
+        // to plain { ip, gateway, port }.
+        if (transformed.networkAddress) {
+          const na = transformed.networkAddress;
+          const ip = (na.ip || '').trim();
+          const gateway = (na.gateway || '').trim();
+          const port = (na.port || '').toString().trim();
+          if (!ip && !gateway && !port) {
+            delete transformed.networkAddress;
+          } else {
+            transformed.networkAddress = {
+              ip: ip || null,
+              gateway: gateway || null,
+              port: port || null,
+            };
+          }
+        }
         return transformed;
       }
+    });
+
+    // Bindings for the Network Address inputs (lazily create the sub-object).
+    const ensureNetworkAddress = () => {
+      if (!device.value.networkAddress) {
+        device.value.networkAddress = { ip: '', gateway: '', port: '' };
+      }
+      return device.value.networkAddress;
+    };
+    const netIp = computed({
+      get: () => device.value?.networkAddress?.ip || '',
+      set: (v) => { ensureNetworkAddress().ip = v; },
+    });
+    const netPort = computed({
+      get: () => device.value?.networkAddress?.port || '',
+      set: (v) => { ensureNetworkAddress().port = v; },
+    });
+    const netGateway = computed({
+      get: () => device.value?.networkAddress?.gateway || '',
+      set: (v) => { ensureNetworkAddress().gateway = v; },
     });
 
     const fetchData = () => {
@@ -565,6 +666,10 @@ export default defineComponent({
       typeList,
       modelList,
       saving,
+      // Network address bindings
+      netIp,
+      netPort,
+      netGateway,
       // Discovery
       discoverDialogVisible,
       discovering,

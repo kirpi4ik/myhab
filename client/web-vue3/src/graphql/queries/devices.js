@@ -54,6 +54,7 @@ export const DEVICE_LIST_ALL = gql`
       model
       name
       description
+      status
       type {
         name
       }
@@ -61,6 +62,10 @@ export const DEVICE_LIST_ALL = gql`
         id
         name
         description
+      }
+      networkAddress {
+        ip
+        port
       }
       ports {
         id
@@ -148,6 +153,21 @@ export const DEVICES_DISCOVER = gql`
   }
 `;
 
+/**
+ * Ask the backend to fetch a device's current IP directly from the MQTT broker
+ * (without requiring the corresponding `esp_ip_address` DevicePort to exist in
+ * the DB). Used by DeviceIpUpdater when the port-based lookup turns up empty.
+ */
+export const DEVICE_FETCH_IP_FROM_MQTT = gql`
+  query deviceFetchIpFromMqtt($deviceCode: String!) {
+    deviceFetchIpFromMqtt(deviceCode: $deviceCode) {
+      ip
+      topic
+      error
+    }
+  }
+`;
+
 export const DEVICE_BACKUP_LIST = gql`
   query deviceBackupList($deviceId: ID!) {
     deviceBackupList(deviceId: $deviceId) {
@@ -228,6 +248,7 @@ export const DEVICE_GET_BY_ID_CHILDS = gql`
       }
       networkAddress {
         ip
+        gateway
         port
       }
       rack {
