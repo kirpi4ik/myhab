@@ -95,18 +95,10 @@ export default configure(function (ctx) {
       // https: true,
       port: 10002,
       open: true, // opens browser window automatically
-      // Forward backend-served paths to the Grails app so dev-mode hits don't 404.
-      // Used by the Navimow OAuth callback (mirrors Home Assistant's path on
-      // purpose — Navimow's redirect_uri whitelist is tied to that shape).
-      // The popup origin stays on the dev server so the postMessage back to
+      // No /auth/external proxy needed: the Navimow OAuth callback is now a
+      // public SPA route that calls navimowOAuthComplete via GraphQL. The
+      // popup origin stays on the dev server so the postMessage back to
       // DeviceEdit isn't blocked by cross-origin rules.
-      proxy: [
-        {
-          context: ['/auth/external'],
-          target: 'http://localhost:8181',
-          changeOrigin: true,
-        },
-      ],
       client: {
         overlay: {
           warnings: false,

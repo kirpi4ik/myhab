@@ -221,6 +221,38 @@ class Mutation implements EventPublisher {
     }
 
     /**
+     * Finish the Navimow OAuth2 flow. Called by the SPA's
+     * {@code /auth/external/callback} page after Navimow redirects the user
+     * back with {@code code} and {@code state}. Wraps
+     * {@link org.myhab.services.navimow.NavimowOAuthService#handleCallback}
+     * so the SPA can do the exchange via GraphQL instead of via the legacy
+     * controller path (which doesn't reach the backend in some reverse-proxy
+     * deployments where only {@code /graphql} and SPA paths are forwarded).
+     */
+    DataFetcher navimowOAuthComplete() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String code = environment.getArgument("code") as String
+                String state = environment.getArgument("state") as String
+                try {
+                    Map result = navimowOAuthService.handleCallback(code, state)
+                    return [
+                            success   : result.success as Boolean,
+                            deviceId  : result.deviceId,
+                            deviceCode: result.deviceCode,
+                            error     : result.error
+                    ]
+                } catch (Exception e) {
+                    log.error("navimowOAuthComplete failed: state=${state?.take(8)}…", e)
+                    return [success: false, deviceId: null, deviceCode: null,
+                            error  : "OAuth completion failed: ${e.message}"]
+                }
+            }
+        }
+    }
+
+    /**
      * Push a stored backup down to the physical controller (with restart).
      */
     DataFetcher deviceRestoreToController() {

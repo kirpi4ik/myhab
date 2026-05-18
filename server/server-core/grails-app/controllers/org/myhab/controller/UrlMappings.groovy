@@ -41,6 +41,15 @@ class UrlMappings {
             "/peripherals/**"(uri: "/index.html")
             "/shared/**"(uri: "/index.html")
             "/messages"(uri: "/index.html")
+            "/settings"(uri: "/index.html")
+            "/solar-reports"(uri: "/index.html")
+            // Navimow OAuth2 callback — served as SPA so the page works behind
+            // any reverse proxy that already forwards the SPA paths. The
+            // SPA's NavimowOAuthCallback.vue exchanges `code`/`state` via the
+            // `navimowOAuthComplete` GraphQL mutation. Path intentionally
+            // mirrors Home Assistant's so Navimow's redirect_uri whitelist
+            // (tied to client_id=homeassistant) accepts us.
+            "/auth/external/callback"(uri: "/index.html")
         } else {
             "/"(controller: "application", action: "index")
             "/error"(controller: "application", action: "index")

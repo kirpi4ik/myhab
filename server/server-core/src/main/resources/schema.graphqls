@@ -175,6 +175,16 @@ type Mutation {
     backend captures + stores the access token automatically.
     """
     navimowOAuthStart(deviceId: ID!, callerOrigin: String!): NavimowOAuthStartResult
+    """
+    Finish a Navimow OAuth2 flow. The SPA callback page (`/auth/external/callback`)
+    receives the `code` and `state` query params back from Navimow and calls
+    this mutation to exchange them for an access token. The token is stored
+    against the originating device's Configuration sidecar. Used instead of
+    the controller-rendered HTML page so the callback path goes through the
+    same SPA + GraphQL routing that every reverse-proxy deployment already
+    serves correctly.
+    """
+    navimowOAuthComplete(code: String!, state: String!): NavimowOAuthCompleteResult
 }
 
 """Result of {@link Query.navimowOAuthStart}."""
@@ -182,6 +192,16 @@ type NavimowOAuthStartResult {
     success: Boolean!
     """Full URL the UI should open in a new browser tab/popup."""
     authorizeUrl: String
+    error: String
+}
+
+"""Result of {@link Mutation.navimowOAuthComplete}."""
+type NavimowOAuthCompleteResult {
+    success: Boolean!
+    """ID of the device the token was stored against (null on failure)."""
+    deviceId: ID
+    """Display code of the device, e.g. for the success message in the SPA."""
+    deviceCode: String
     error: String
 }
 
