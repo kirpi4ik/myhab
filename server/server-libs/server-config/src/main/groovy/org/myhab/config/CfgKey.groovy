@@ -30,4 +30,45 @@ class CfgKey {
             return key
         }
     }
+
+    /**
+     * App-level UI configuration. These keys are stored as Configuration rows
+     * with entityType=CONFIG and entityId=0, and are exposed to the SPA in a
+     * single round trip via the `uiConfigList` GraphQL query. Components read
+     * the values from the `useAppConfigStore` Pinia store, hydrated at boot.
+     *
+     * Values previously lived in `client/web-vue3/.env*` files — migrating
+     * here removes the rebuild-and-redeploy cycle every time a device id
+     * changes in the database.
+     */
+    enum UI implements Key {
+        UI_DEVICE_DOOR_LOCK_ID('ui.device.door_lock.id'),
+        UI_DEVICE_WATER_PUMP_ID('ui.device.water_pump.id'),
+        UI_DEVICE_HEAT_PUMP_ID('ui.device.heat_pump.id'),
+        UI_DEVICE_ELECTRIC_METER_01_ID('ui.device.electric_meter_01.id'),
+        UI_DEVICE_NAVIMOW_ID('ui.device.navimow.id'),
+        UI_DEVICE_METEO_STATION_ID('ui.device.meteo_station.id'),
+        UI_DEVICE_SOLAR_PLANT_ID('ui.device.solar_plant.id'),
+        UI_DEVICE_SOLAR_METER_ID('ui.device.solar_meter.id'),
+        UI_ZONE_INT_ID('ui.zone.int.id'),
+        UI_ZONE_EXT_ID('ui.zone.ext.id'),
+        UI_ZONE_ETAJ_ID('ui.zone.etaj.id'),
+        UI_ZONE_PARTER_ID('ui.zone.parter.id'),
+        UI_ZONE_LAN_ID('ui.zone.lan.id'),
+        UI_ZONE_GARDEN_ID('ui.zone.garden.id'),
+        UI_GRAFANA_URL('ui.grafana.url'),
+        UI_GRAFANA_DASHBOARD_SOLAR_ID('ui.grafana.dashboard.solar.id'),
+        UI_DATE_FORMAT_LONG('ui.date.format.long'),
+
+        def key
+
+        UI(key) {
+            this.key = key
+        }
+
+        @Override
+        def key() {
+            return key
+        }
+    }
 }

@@ -143,6 +143,7 @@ import {
   PERIPHERAL_GET_BY_ID
 } from "@/graphql/queries";
 import {peripheralService} from '@/_services/controls';
+import {useAppConfigStore} from 'src/store/app-config.store';
 
 import _ from "lodash";
 import {format} from "date-fns";
@@ -159,6 +160,8 @@ export default defineComponent({
     TimeoutSelector
   },
   setup(props, {emit}) {
+    const appConfig = useAppConfigStore();
+    const waterPumpId = appConfig.getNumber('ui.device.water_pump.id');
     const asset = ref({});
     const expirationTime = ref(null);
     const {client} = useApolloClient();
@@ -217,7 +220,7 @@ export default defineComponent({
       try {
         const response = await client.query({
           query: PERIPHERAL_GET_BY_ID,
-          variables: {id: process.env.WATER_PUMP_ID},
+          variables: {id: waterPumpId},
           fetchPolicy: 'network-only',
         });
         

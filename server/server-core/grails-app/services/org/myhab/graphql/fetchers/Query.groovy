@@ -133,6 +133,26 @@ class Query {
         }
     }
 
+    /**
+     * UI-facing app config — every Configuration row with entityType=CONFIG,
+     * entityId=0, key starting with `ui.`. The SPA calls this once at boot
+     * and stores the result in a Pinia store keyed by config key, so widgets
+     * can read device/zone IDs (etc.) synchronously after boot. Replaces
+     * the per-component `process.env.X` reads we had before.
+     */
+    def uiConfigList() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                return Configuration.createCriteria().list {
+                    eq('entityType', EntityType.CONFIG)
+                    eq('entityId', 0L)
+                    like('key', 'ui.%')
+                }.collect { c -> [key: c.key, value: c.value] }
+            }
+        }
+    }
+
     def deviceModelList() {
         return new DataFetcher() {
             @Override

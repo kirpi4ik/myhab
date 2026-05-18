@@ -172,25 +172,28 @@ import { authzService } from '@/_services';
 import { PERIPHERAL_GET_BY_ID, PUSH_EVENT } from '@/graphql/queries';
 import EventLogger from 'components/EventLogger.vue';
 import ShareWidgetDialog from 'components/ShareWidgetDialog.vue';
+import { useAppConfigStore } from 'src/store/app-config.store';
 
 // Composables
 const { client } = useApolloClient();
 const $q = useQuasar();
+const appConfig = useAppConfigStore();
+const doorLockId = appConfig.getNumber('ui.device.door_lock.id');
 
 // State
 const loading = ref(false);
 const unlocking = ref(false);
 const confirmDialog = ref(false);
 const shareDialogVisible = ref(false);
-const peripheral = ref({ 
-	id: process.env.DOOR_LOCK_ID 
+const peripheral = ref({
+	id: doorLockId
 });
 
 /**
  * Load peripheral details from the server
  */
 const loadPeripheral = async () => {
-	if (!process.env.DOOR_LOCK_ID) {
+	if (!doorLockId) {
 		$q.notify({
 			color: 'warning',
 			message: 'Door lock ID is not configured',
@@ -205,7 +208,7 @@ const loadPeripheral = async () => {
 	try {
 		const response = await client.query({
 			query: PERIPHERAL_GET_BY_ID,
-			variables: { id: process.env.DOOR_LOCK_ID },
+			variables: { id: doorLockId },
 			fetchPolicy: 'network-only',
 		});
 

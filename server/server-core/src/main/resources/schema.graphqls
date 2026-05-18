@@ -5,6 +5,13 @@ type Query{
     cacheAll(cacheName: String): [CacheResult]
     config(key: String!): String
     appConfigList: [AppConfigEntry]
+    """
+    All UI-facing application configuration entries — Configuration rows
+    with entityType=CONFIG, entityId=0, key starting with `ui.`. The SPA
+    fetches this once at boot and hydrates a Pinia store so widgets can
+    read device/zone IDs (etc.) synchronously without per-page round trips.
+    """
+    uiConfigList: [UiConfigEntry!]!
     deviceModelList:[String!]!
     jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
     """Jobs linked to a sprinkler peripheral, for the sprinkler scheduler UI. Ordered by peripheral name."""
@@ -71,6 +78,12 @@ type AppConfigEntry {
     key: String!
     value: String
     type: String
+}
+
+"""One row of UI-facing application configuration. Returned by `uiConfigList`."""
+type UiConfigEntry {
+    key: String!
+    value: String
 }
 
 type JobExecutionHistoryResult {

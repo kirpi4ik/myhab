@@ -24,7 +24,7 @@ export default configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-webpack/boot-files
-    boot: ['error-handler', 'i18n', 'axios', 'graphql', 'pwa'],
+    boot: ['error-handler', 'i18n', 'axios', 'graphql', 'app-config', 'user-prefs', 'pwa'],
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#sourcefiles
     sourceFiles: {
