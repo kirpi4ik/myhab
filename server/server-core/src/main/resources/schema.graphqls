@@ -146,6 +146,30 @@ type Mutation {
     deviceRestoreToController(deviceId: ID!, backupId: ID!): MutationResponse
     """Sync the database Device + DevicePort model from a stored backup."""
     deviceSyncFromBackup(deviceId: ID!, backupId: ID!): MutationResponse
+    """
+    Send a control command to a Segway Navimow mower. Action is one of
+    START, STOP, PAUSE, RESUME, DOCK (case-insensitive). Routes via the
+    cloud REST API; success/failure reflects Segway's response — the mower
+    may take a few seconds to actually transition state.
+    """
+    mowerCommand(deviceId: ID!, action: String!): MutationResponse
+    """
+    Begin a Navimow OAuth2 flow for a NAVIMOW_SEGWAY device. The caller
+    passes its own browser-visible origin (e.g. `https://myhab.example.com`)
+    so the backend can build a matching `redirect_uri` for the callback at
+    `/auth/external/callback`. Returns the full authorize URL the UI should
+    open in a popup; the user signs in on Navimow's hosted page and the
+    backend captures + stores the access token automatically.
+    """
+    navimowOAuthStart(deviceId: ID!, callerOrigin: String!): NavimowOAuthStartResult
+}
+
+"""Result of {@link Query.navimowOAuthStart}."""
+type NavimowOAuthStartResult {
+    success: Boolean!
+    """Full URL the UI should open in a new browser tab/popup."""
+    authorizeUrl: String
+    error: String
 }
 
 type EventDataResponse {

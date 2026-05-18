@@ -12,5 +12,11 @@ enum DeviceModel {
     CAM_ONVIF,
     HUAWEI_SUN2000_12KTL_M2,
     HUAWEI_DONGLE,
-    OPEN_METEO_API
+    OPEN_METEO_API,
+    /**
+     * Segway Navimow robotic lawn mower. One value covers the whole H / i
+     * series — the cloud REST API is uniform across SKUs, so we only need
+     * separate enum members if a future feature actually diverges per model.
+     */
+    NAVIMOW_SEGWAY
 }

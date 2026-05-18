@@ -310,6 +310,35 @@
 
         <q-separator/>
 
+        <!-- Navimow (Segway) OAuth — only visible for mower devices -->
+        <template v-if="isNavimow">
+          <q-card-section>
+            <div class="text-subtitle2 text-weight-medium q-mb-sm">
+              <q-icon name="mdi-key-link" class="q-mr-xs"/>
+              Navimow Account
+            </div>
+            <div class="text-caption text-grey-7 q-mb-sm">
+              Sign in with your Segway account to grant myHAB an access token. The token is stored
+              in the device's <code>cfg.key.device.oauth.access_token</code> configuration row and
+              auto-refreshes the base URL the first time. Re-authorise whenever the token expires
+              (typically every 1&ndash;2 days &mdash; Navimow's token endpoint does not currently
+              issue a refresh token).
+            </div>
+            <q-btn
+              color="indigo-7"
+              icon="mdi-login-variant"
+              label="Connect Navimow account"
+              :loading="navimowAuthorizing"
+              :disable="navimowAuthorizing"
+              @click="onNavimowAuthorize"
+              no-caps
+              unelevated
+            />
+          </q-card-section>
+
+          <q-separator/>
+        </template>
+
         <!-- Configuration Management -->
         <q-card-section>
           <div class="text-subtitle2 text-weight-medium q-mb-sm">
@@ -510,6 +539,7 @@ import {
   DEVICE_RESTORE_TO_CONTROLLER,
   DEVICE_SYNC_FROM_BACKUP,
   DEVICE_UPDATE_CUSTOM,
+  NAVIMOW_OAUTH_START,
   RACK_LIST_ALL
 } from '@/graphql/queries';
 
@@ -539,6 +569,10 @@ export default defineComponent({
     const backupsList = ref([]);
     const selectedBackupId = ref(null);
     const restoreTarget = ref(null);
+
+    // Navimow OAuth state
+    const navimowAuthorizing = ref(false);
+    let navimowMessageListener = null;
 
     // Use CRUD composable
     const {
@@ -662,6 +696,85 @@ export default defineComponent({
     /** Refetch after the IpUpdater modal applies a new IP. */
     const onIpUpdated = async () => {
       await fetchEntity();
+    };
+
+    /**
+     * True when the current device is a Segway Navimow mower — used to gate the
+     * "Connect Navimow account" section so it doesn't clutter unrelated device
+     * edit forms.
+     */
+    const isNavimow = computed(() => device.value?.model === 'NAVIMOW_SEGWAY');
+
+    /**
+     * Kick off the Navimow OAuth flow:
+     *   1. Ask the backend for the authorize URL (includes our redirect_uri).
+     *   2. Open it in a popup so the user can sign in to their Segway account.
+     *   3. Listen for the postMessage the callback page emits when done, then
+     *      refresh the device so the new token Configuration row shows up.
+     */
+    const onNavimowAuthorize = async () => {
+      if (navimowAuthorizing.value) return;
+      navimowAuthorizing.value = true;
+
+      // Tear down any stale listener from a previous attempt.
+      if (navimowMessageListener) {
+        window.removeEventListener('message', navimowMessageListener);
+        navimowMessageListener = null;
+      }
+
+      try {
+        const { data } = await client.mutate({
+          mutation: NAVIMOW_OAUTH_START,
+          variables: { deviceId: device.value.id, callerOrigin: window.location.origin },
+          fetchPolicy: 'no-cache',
+        });
+        const result = data?.navimowOAuthStart;
+        if (!result?.success || !result.authorizeUrl) {
+          $q.notify({ type: 'negative', message: `Could not start OAuth: ${result?.error || 'unknown error'}`, icon: 'mdi-alert-circle' });
+          return;
+        }
+
+        // Listen for the success message before opening the popup so we don't
+        // race a fast callback.
+        navimowMessageListener = (ev) => {
+          if (ev.origin !== window.location.origin) return;
+          if (ev.data?.type !== 'navimow-oauth') return;
+          if (ev.data.success) {
+            $q.notify({ type: 'positive', message: 'Navimow account connected — token saved.', icon: 'mdi-check-circle' });
+            fetchEntity();
+          } else {
+            $q.notify({ type: 'negative', message: ev.data.error || 'OAuth callback failed', icon: 'mdi-alert-circle', timeout: 8000 });
+          }
+          window.removeEventListener('message', navimowMessageListener);
+          navimowMessageListener = null;
+          navimowAuthorizing.value = false;
+        };
+        window.addEventListener('message', navimowMessageListener);
+
+        const popup = window.open(result.authorizeUrl, 'navimow-oauth', 'width=540,height=720');
+        if (!popup) {
+          $q.notify({ type: 'warning', message: 'Popup blocked. Allow popups for this site and retry.', icon: 'mdi-alert' });
+          window.removeEventListener('message', navimowMessageListener);
+          navimowMessageListener = null;
+          return;
+        }
+        // Safety: if the user closes the popup without completing, release the spinner.
+        const watcher = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(watcher);
+            if (navimowMessageListener) {
+              // Give the postMessage a beat to land first.
+              setTimeout(() => { navimowAuthorizing.value = false; }, 500);
+            }
+          }
+        }, 1000);
+      } catch (err) {
+        $q.notify({ type: 'negative', message: `OAuth start failed: ${err.message}`, icon: 'mdi-alert-circle' });
+      } finally {
+        // Spinner cleared by the message listener / popup-watcher in the happy path.
+        // Only clear here if no listener was registered.
+        if (!navimowMessageListener) navimowAuthorizing.value = false;
+      }
     };
 
     const fetchData = async () => {
@@ -864,6 +977,10 @@ export default defineComponent({
       onShowRestoreDialog,
       onPushToController,
       onSyncFromBackup,
+      // Navimow OAuth
+      isNavimow,
+      navimowAuthorizing,
+      onNavimowAuthorize,
       formatDate
     };
   }

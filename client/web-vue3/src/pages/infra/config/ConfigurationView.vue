@@ -170,6 +170,13 @@
 
         <q-card-section class="q-gutter-md">
           <!-- Key Select -->
+          <!--
+            new-value-mode="add-unique" + @new-value handler are what actually
+            accept a typed-but-unknown key (e.g. cfg.key.device.navimow.* on a
+            device that's never had a Configuration row before). Without them
+            q-select silently refuses any value not in `options`, and the
+            "Add Configuration" button stays disabled forever.
+          -->
           <q-select
             v-model="newCfgKey"
             :options="keyOptionsFiltered"
@@ -178,8 +185,11 @@
             hide-selected
             fill-input
             input-debounce="300"
+            new-value-mode="add-unique"
             @filter="filterFn"
-            hint="Select or type a configuration key"
+            @new-value="onNewKey"
+            @keyup.enter="onKeySelectEnter"
+            hint="Select an existing key or type a new one (press Enter to add)"
             filled
             dense
             :rules="[val => !!val || 'Key is required']"
@@ -187,11 +197,19 @@
             <template v-slot:prepend>
               <q-icon name="mdi-key"/>
             </template>
-            <template v-slot:no-option>
-              <q-item>
+            <template v-slot:no-option="{ inputValue }">
+              <q-item v-if="inputValue" clickable @click="onNewKey(inputValue, val => (newCfgKey = val))">
+                <q-item-section avatar>
+                  <q-icon name="mdi-plus-circle" color="positive"/>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>Create "{{ inputValue }}"</q-item-label>
+                  <q-item-label caption>This key doesn't exist for {{ entityType }} yet</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item v-else>
                 <q-item-section class="text-grey">
-                  <q-item-label>No results</q-item-label>
-                  <q-item-label caption>Type to create a new key</q-item-label>
+                  <q-item-label>Start typing to filter or create a new key</q-item-label>
                 </q-item-section>
               </q-item>
             </template>
@@ -516,6 +534,30 @@ export default defineComponent({
       });
     };
 
+    /**
+     * Quasar's new-value-mode callback. Trimmed/non-empty values are committed
+     * via the `done` callback which sets v-model in the parent q-select. Called
+     * automatically on Enter/Tab when the typed input doesn't match an option.
+     */
+    const onNewKey = (inputValue, done) => {
+      const trimmed = (inputValue || '').trim();
+      if (!trimmed) return;
+      done(trimmed, 'add-unique');
+    };
+
+    /**
+     * Belt-and-braces: if Quasar's internal Enter handler doesn't fire (e.g.
+     * the dropdown is closed because the user filtered to zero matches), grab
+     * the input's current value and commit it as a new key. Matches how the
+     * "no-option" slot's Create… item works.
+     */
+    const onKeySelectEnter = (evt) => {
+      const v = (evt?.target?.value || '').trim();
+      if (!v) return;
+      if (newCfgKey.value === v) return; // already committed via Quasar's internal path
+      newCfgKey.value = v;
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -534,7 +576,9 @@ export default defineComponent({
       onAdd,
       onUpdate,
       removeItem,
-      filterFn
+      filterFn,
+      onNewKey,
+      onKeySelectEnter
     };
   }
 });

@@ -77,6 +77,10 @@
       <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
         <nibe-heat-pump-widget :device-id="heatPumpDeviceId"/>
       </div>
+      <!-- Navimow Mower -->
+      <div v-if="navimowDeviceId" class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+        <navimow-widget :device-id="navimowDeviceId"/>
+      </div>
     </div>
 
     <q-resize-observer @resize="onResize"/>
@@ -93,6 +97,7 @@ import HeatPump from "components/HeatPump";
 import MeteoStationCard from "components/MeteoStationCard.vue";
 import SolarPlantWidget from "components/SolarPlantWidget.vue";
 import NibeHeatPumpWidget from "components/NibeHeatPumpWidget.vue";
+import NavimowWidget from "components/NavimowWidget.vue";
 import PeripheralLock from 'components/PeripheralLock.vue';
 import SprinklersDashComponent from "components/SprinklersDashComponent";
 import WaterPump from "components/WaterPump";
@@ -106,6 +111,7 @@ export default defineComponent({
     MeteoStationCard,
     SolarPlantWidget,
     NibeHeatPumpWidget,
+    NavimowWidget,
     PeripheralLock,
     SprinklersDashComponent
   },
@@ -119,6 +125,7 @@ export default defineComponent({
     // Device IDs from environment
     const heatPumpDeviceId = Number(process.env.HEAT_PUMP_DEVICE_ID);
     const eMeterDeviceId = Number(process.env.ELECTRIC_METER_01_DEVICE_ID);
+    const navimowDeviceId = Number(process.env.NAVIMOW_DEVICE_ID);
     const meteoStationDeviceId = 2000; // Virtual Meteo Station device
     const solarPlantDeviceId = 1000; // Huawei Solar Inverter device
     const solarMeterDeviceId = 1001; // Huawei Solar Meter device
@@ -238,6 +245,7 @@ export default defineComponent({
       quickAccessCards,
       heatPumpDeviceId,
       eMeterDeviceId,
+      navimowDeviceId,
       meteoStationDeviceId,
       solarPlantDeviceId,
       solarMeterDeviceId,

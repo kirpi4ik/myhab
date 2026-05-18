@@ -26,6 +26,8 @@ import org.myhab.jobs.HeatingControlJob
 import org.myhab.jobs.EventLogReaderJob
 import org.myhab.jobs.MeteoStationSyncJob
 import org.myhab.jobs.HuaweiInfoSyncJob
+import org.myhab.jobs.NavimowInfoSyncJob
+import org.myhab.services.navimow.NavimowApiClient
 import org.myhab.jobs.PortValueSyncTriggerJob
 import org.myhab.jobs.SwitchOFFOnTimeoutJob
 import org.myhab.jobs.RandomColorsJob
@@ -59,6 +61,7 @@ def heatingControlInterval = config?.getProperty('quartz.jobs.heatingControl.int
 def eventLogReaderInterval = config?.getProperty('quartz.jobs.eventLogReader.interval', Integer, 60)
 def meteoStationSyncInterval = config?.getProperty('quartz.jobs.meteoStationSync.interval', Integer, 1800)
 def huaweiInfoSyncInterval = config?.getProperty('quartz.jobs.huaweiInfoSync.interval', Integer, 300)
+def navimowInfoSyncInterval = config?.getProperty('quartz.jobs.navimowInfoSync.interval', Integer, 30)
 def portValueSyncTriggerInterval = config?.getProperty('quartz.jobs.portValueSyncTrigger.interval', Integer, 60)
 def switchOffOnTimeoutInterval = config?.getProperty('quartz.jobs.switchOffOnTimeout.interval', Integer, 30)
 def randomColorsInterval = config?.getProperty('quartz.jobs.randomColors.interval', Integer, 5)
@@ -73,6 +76,8 @@ def heatingControlEnabled = config?.getProperty('quartz.jobs.heatingControl.enab
 def eventLogReaderEnabled = config?.getProperty('quartz.jobs.eventLogReader.enabled', Boolean, false)
 def meteoStationSyncEnabled = config?.getProperty('quartz.jobs.meteoStationSync.enabled', Boolean, true)
 def huaweiInfoSyncEnabled = config?.getProperty('quartz.jobs.huaweiInfoSync.enabled', Boolean, true)
+// Opt-in: keep OFF until per-device Navimow Configuration rows are populated
+def navimowInfoSyncEnabled = config?.getProperty('quartz.jobs.navimowInfoSync.enabled', Boolean, false)
 def portValueSyncTriggerEnabled = config?.getProperty('quartz.jobs.portValueSyncTrigger.enabled', Boolean, true)
 def switchOffOnTimeoutEnabled = config?.getProperty('quartz.jobs.switchOffOnTimeout.enabled', Boolean, true)
 def randomColorsEnabled = config?.getProperty('quartz.jobs.randomColors.enabled', Boolean, false)
@@ -88,6 +93,7 @@ if (heatingControlEnabled) enabledTriggers << 'heatingControlTrigger'
 if (eventLogReaderEnabled) enabledTriggers << 'eventLogReaderTrigger'
 if (meteoStationSyncEnabled) enabledTriggers << 'meteoStationSyncTrigger'
 if (huaweiInfoSyncEnabled) enabledTriggers << 'huaweiInfoSyncTrigger'
+if (navimowInfoSyncEnabled) enabledTriggers << 'navimowInfoSyncTrigger'
 if (portValueSyncTriggerEnabled) enabledTriggers << 'portValueSyncTriggerTrigger'
 if (switchOffOnTimeoutEnabled) enabledTriggers << 'switchOffOnTimeoutTrigger'
 if (randomColorsEnabled) enabledTriggers << 'randomColorsTrigger'
@@ -132,6 +138,13 @@ beans = {
     }
     mQTTMessageHandler(MQTTMessageHandler)
     mQTTMessageHandler(MQTTMessageHandler)
+
+    // Stateless REST client for Segway's Navimow cloud. Registered explicitly
+    // because the class name doesn't end in "Service", so Grails' service-folder
+    // auto-discovery skips it. Without this bean, NavimowInfoSyncJob's
+    // `NavimowApiClient navimowApiClient` field stays null and the first poll
+    // tick blows up with an NPE on getStatuses().
+    navimowApiClient(NavimowApiClient)
 
     telegramBotHandler(TelegramBotHandler) {
         configProvider = ref("configProvider")
@@ -282,7 +295,25 @@ beans = {
         repeatCount = SimpleTrigger.REPEAT_INDEFINITELY
         group = 'STATIC_JOBS'
     }
-    
+
+    // NavimowInfoSyncJob - Segway Navimow mower cloud REST polling
+    // Configurable via: quartz.jobs.navimowInfoSync.enabled and interval (OFF by default)
+    navimowInfoSyncJobDetail(JobDetailFactoryBean) {
+        jobClass = NavimowInfoSyncJob
+        durability = true
+        requestsRecovery = false
+        group = 'STATIC_JOBS'
+        description = 'Segway Navimow Cloud Sync - Spring Managed'
+    }
+
+    navimowInfoSyncTrigger(SimpleTriggerFactoryBean) {
+        jobDetail = ref('navimowInfoSyncJobDetail')
+        startDelay = 45000L
+        repeatInterval = navimowInfoSyncInterval * 1000L
+        repeatCount = SimpleTrigger.REPEAT_INDEFINITELY
+        group = 'STATIC_JOBS'
+    }
+
     // PortValueSyncTriggerJob - MQTT port value sync trigger
     portValueSyncTriggerJobDetail(JobDetailFactoryBean) {
         jobClass = PortValueSyncTriggerJob
