@@ -168,6 +168,31 @@ export const DEVICE_FETCH_IP_FROM_MQTT = gql`
   }
 `;
 
+/**
+ * Begin an OAuth2 flow for a Segway Navimow mower. The backend returns the
+ * URL the UI should open in a popup; the user signs in on Navimow's hosted
+ * page and the callback at /auth/external/callback finishes the exchange.
+ */
+export const NAVIMOW_OAUTH_START = gql`
+  mutation navimowOAuthStart($deviceId: ID!, $callerOrigin: String!) {
+    navimowOAuthStart(deviceId: $deviceId, callerOrigin: $callerOrigin) {
+      success
+      authorizeUrl
+      error
+    }
+  }
+`;
+
+/** Send a control command to a Navimow mower. */
+export const MOWER_COMMAND = gql`
+  mutation mowerCommand($deviceId: ID!, $action: String!) {
+    mowerCommand(deviceId: $deviceId, action: $action) {
+      success
+      error
+    }
+  }
+`;
+
 export const DEVICE_BACKUP_LIST = gql`
   query deviceBackupList($deviceId: ID!) {
     deviceBackupList(deviceId: $deviceId) {

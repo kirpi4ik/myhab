@@ -24,7 +24,7 @@ export default configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-webpack/boot-files
-    boot: ['error-handler', 'i18n', 'axios', 'graphql', 'pwa'],
+    boot: ['error-handler', 'i18n', 'axios', 'graphql', 'app-config', 'user-prefs', 'pwa'],
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#sourcefiles
     sourceFiles: {
@@ -95,6 +95,18 @@ export default configure(function (ctx) {
       // https: true,
       port: 10002,
       open: true, // opens browser window automatically
+      // Forward backend-served paths to the Grails app so dev-mode hits don't 404.
+      // Used by the Navimow OAuth callback (mirrors Home Assistant's path on
+      // purpose — Navimow's redirect_uri whitelist is tied to that shape).
+      // The popup origin stays on the dev server so the postMessage back to
+      // DeviceEdit isn't blocked by cross-origin rules.
+      proxy: [
+        {
+          context: ['/auth/external'],
+          target: 'http://localhost:8181',
+          changeOrigin: true,
+        },
+      ],
       client: {
         overlay: {
           warnings: false,

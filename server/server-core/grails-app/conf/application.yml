@@ -65,7 +65,15 @@ quartz:
     huaweiInfoSync:
       enabled: true
       interval: 300  # seconds
-    
+
+    # Segway Navimow lawn mower cloud sync (REST poll)
+    # OFF by default — flip to true after configuring per-device:
+    #   cfg.key.device.oauth.access_token, cfg.key.device.navimow.api.base_url,
+    #   cfg.key.device.navimow.device.id
+    navimowInfoSync:
+      enabled: true
+      interval: 30  # seconds
+
     # Nibe heat pump data sync
     nibeInfoSync:
       enabled: true

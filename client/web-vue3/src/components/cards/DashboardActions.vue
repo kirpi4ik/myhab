@@ -3,34 +3,34 @@
     <!-- Quick Access Cards Section -->
     <div class="row q-col-gutter-md q-mb-md">
       <template v-if="hasAccess">
-        <div 
-          v-for="card in quickAccessCards" 
-          :key="card.title || card.component" 
+        <div
+          v-for="widget in visibleQuickAccess"
+          :key="widget.id"
           class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
         >
           <!-- Standard action card -->
-          <q-card v-if="card.actions" class="dashboard-card small-card" :class="card.cardClass">
+          <q-card v-if="widget.kind === 'actionCard'" class="dashboard-card small-card" :class="widget.actionCard.cardClass">
             <div class="card-header-wrapper">
               <q-card-section class="card-header">
                 <div class="header-content">
                   <div class="header-icon-wrapper">
-                    <q-icon :name="card.icon" size="32px" class="header-icon"/>
+                    <q-icon :name="widget.actionCard.icon" size="32px" class="header-icon"/>
                     <div class="icon-glow"></div>
                   </div>
                   <div class="header-title">
-                    {{ card.title }}
+                    {{ widget.actionCard.title }}
                   </div>
                 </div>
               </q-card-section>
             </div>
-            
+
             <div class="card-actions-wrapper">
               <q-card-actions class="card-actions">
-                <template v-for="(action, index) in card.actions" :key="action.label">
-                  <q-btn 
+                <template v-for="(action, index) in widget.actionCard.actions" :key="action.label">
+                  <q-btn
                     flat
-                    class="action-btn" 
-                    no-caps 
+                    class="action-btn"
+                    no-caps
                     :to="action.route"
                   >
                     <div class="action-btn-content">
@@ -38,8 +38,8 @@
                       <span class="action-label">{{ action.label }}</span>
                     </div>
                   </q-btn>
-                  <div 
-                    v-if="index < card.actions.length - 1" 
+                  <div
+                    v-if="index < widget.actionCard.actions.length - 1"
                     class="action-divider"
                   >
                     <q-separator vertical class="action-separator"/>
@@ -47,16 +47,16 @@
                 </template>
               </q-card-actions>
             </div>
-            
+
             <!-- Bottom accent bar -->
             <div class="accent-bar"></div>
           </q-card>
-          
+
           <!-- Component card -->
-          <component 
-            v-else-if="card.component" 
-            :is="card.component" 
-            v-bind="card.props"
+          <component
+            v-else-if="widget.kind === 'component'"
+            :is="widget.component"
+            v-bind="widget.props ? widget.props() : {}"
             class="small-card"
           />
         </div>
@@ -65,17 +65,15 @@
 
     <!-- Device Monitoring Section -->
     <div class="row q-col-gutter-md">
-      <!-- Weather Station -->
-      <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-        <meteo-station-card :device-id="meteoStationDeviceId" :location-name="'Halchiu, Romania'"/>
-      </div>
-      <!-- Solar Power Plant -->
-      <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-        <solar-plant-widget :device-id="solarPlantDeviceId" :meter-device-id="solarMeterDeviceId"/>
-      </div>
-      <!-- Heat Pump -->
-      <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-        <nibe-heat-pump-widget :device-id="heatPumpDeviceId"/>
+      <div
+        v-for="widget in visibleMonitoring"
+        :key="widget.id"
+        class="col-lg-4 col-md-6 col-sm-12 col-xs-12"
+      >
+        <component
+          :is="widget.component"
+          v-bind="widget.props ? widget.props() : {}"
+        />
       </div>
     </div>
 
@@ -87,12 +85,13 @@
 import {defineComponent, computed} from 'vue';
 
 import {authzService} from '@/_services';
+import {useUserPrefsStore} from 'src/store/user-prefs.store';
+import {useDashboardWidgets} from 'src/composables/useDashboardWidgets';
 
-import ElectricMeter from "components/ElectricMeter";
-import HeatPump from "components/HeatPump";
 import MeteoStationCard from "components/MeteoStationCard.vue";
 import SolarPlantWidget from "components/SolarPlantWidget.vue";
 import NibeHeatPumpWidget from "components/NibeHeatPumpWidget.vue";
+import NavimowWidget from "components/NavimowWidget.vue";
 import PeripheralLock from 'components/PeripheralLock.vue';
 import SprinklersDashComponent from "components/SprinklersDashComponent";
 import WaterPump from "components/WaterPump";
@@ -101,27 +100,19 @@ export default defineComponent({
   name: 'DashboardActions',
   components: {
     WaterPump,
-    HeatPump,
-    ElectricMeter,
     MeteoStationCard,
     SolarPlantWidget,
     NibeHeatPumpWidget,
+    NavimowWidget,
     PeripheralLock,
     SprinklersDashComponent
   },
   setup() {
-    // Zone IDs from environment
-    const zoneIntId = Number(process.env.VUE_APP_CONF_ZONE_INT_ID);
-    const zoneExtId = Number(process.env.VUE_APP_CONF_ZONE_EXT_ID);
-    const zoneEtajId = Number(process.env.VUE_APP_CONF_ZONE_ETAJ_ID);
-    const zoneParterId = Number(process.env.VUE_APP_CONF_ZONE_PARTER_ID);
-    
-    // Device IDs from environment
-    const heatPumpDeviceId = Number(process.env.HEAT_PUMP_DEVICE_ID);
-    const eMeterDeviceId = Number(process.env.ELECTRIC_METER_01_DEVICE_ID);
-    const meteoStationDeviceId = 2000; // Virtual Meteo Station device
-    const solarPlantDeviceId = 1000; // Huawei Solar Inverter device
-    const solarMeterDeviceId = 1001; // Huawei Solar Meter device
+    const userPrefs = useUserPrefsStore();
+    // Composable returns a fresh list per call; cheap to recompute each tick
+    // (no async work, no DB calls), and keeps prop factories from going stale
+    // if appConfig values are ever updated at runtime.
+    const widgets = computed(() => useDashboardWidgets());
 
     /**
      * Check if current user has any of the specified roles
@@ -130,7 +121,7 @@ export default defineComponent({
       if (!authzService.currentUserValue?.permissions) {
         return false;
       }
-      return authzService.currentUserValue.permissions.some(userRole => 
+      return authzService.currentUserValue.permissions.some(userRole =>
         roles.includes(userRole)
       );
     };
@@ -141,90 +132,18 @@ export default defineComponent({
     const hasAccess = computed(() => hasRole(['ROLE_ADMIN', 'ROLE_USER']));
 
     /**
-     * Quick access cards configuration
+     * Apply per-user visibility filter. Until the user-prefs store loads,
+     * `isWidgetVisible` returns true for everything → no flash of hidden
+     * widgets that then disappear.
      */
-    const quickAccessCards = computed(() => [
-      {
-        title: 'Iluminat',
-        icon: 'fas fa-lightbulb',
-        cardClass: 'card-light',
-        actions: [
-          {
-            label: 'Interior',
-            icon: 'mdi-home-outline',
-            route: `/zones/${zoneIntId}?category=LIGHT`
-          },
-          {
-            label: 'Exterior',
-            icon: 'mdi-home-city-outline',
-            route: `/zones/${zoneExtId}?category=LIGHT`
-          }
-        ]
-      },
-      {
-        title: 'Climatizare',
-        icon: 'fas fa-fire',
-        cardClass: 'card-heat',
-        actions: [
-          {
-            label: 'Parter',
-            icon: 'mdi-stairs-down',
-            route: `/zones/${zoneParterId}?category=HEAT`
-          },
-          {
-            label: 'Etaj',
-            icon: 'mdi-stairs-up',
-            route: `/zones/${zoneEtajId}?category=HEAT`
-          }
-        ]
-      },
-      {
-        title: 'Prize',
-        icon: 'mdi-electric-switch',
-        cardClass: 'card-switch',
-        actions: [
-          {
-            label: 'Interior',
-            icon: 'mdi-home-outline',
-            route: `/zones/${zoneIntId}?category=SWITCH`
-          },
-          {
-            label: 'Exterior',
-            icon: 'mdi-home-city-outline',
-            route: `/zones/${zoneExtId}?category=SWITCH`
-          }
-        ]
-      },
-      {
-        title: 'Temperatura',
-        icon: 'fas fa-temperature-high',
-        cardClass: 'card-temp',
-        actions: [
-          {
-            label: 'Interior',
-            icon: 'mdi-home-thermometer-outline',
-            route: `/zones/${zoneIntId}?category=TEMP`
-          },
-          {
-            label: 'Exterior',
-            icon: 'mdi-thermometer',
-            route: `/zones/${zoneExtId}?category=TEMP`
-          }
-        ]
-      },
-      // Peripheral control components
-      {
-        component: 'peripheral-lock'
-      },
-      {
-        component: 'sprinklers-dash-component',
-        props: { peripheral: { state: true } }
-      },
-      {
-        component: 'water-pump',
-        props: { peripheral: { state: true } }
-      }
-    ]);
+    const isVisible = (widget) => userPrefs.isWidgetVisible(widget.id);
+
+    const visibleQuickAccess = computed(() =>
+      widgets.value.filter(w => w.section === 'quickAccess' && isVisible(w))
+    );
+    const visibleMonitoring = computed(() =>
+      widgets.value.filter(w => w.section === 'monitoring' && isVisible(w))
+    );
 
     /**
      * Handle resize events
@@ -235,12 +154,8 @@ export default defineComponent({
 
     return {
       hasAccess,
-      quickAccessCards,
-      heatPumpDeviceId,
-      eMeterDeviceId,
-      meteoStationDeviceId,
-      solarPlantDeviceId,
-      solarMeterDeviceId,
+      visibleQuickAccess,
+      visibleMonitoring,
       onResize
     };
   }

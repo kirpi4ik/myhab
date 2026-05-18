@@ -426,6 +426,20 @@ const routes = [
         }
       },
       {
+        path: '/settings',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "Settings",
+          authorize: [Role.Admin, Role.User]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/Settings.vue'),
+          }
+        ],
+      },
+      {
         path: adminPrefix + '/shared-widgets',
         component: () => import('pages/infra/share/SharedWidgetList'),
         meta: {

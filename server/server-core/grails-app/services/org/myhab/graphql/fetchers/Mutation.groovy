@@ -53,6 +53,10 @@ class Mutation implements EventPublisher {
     SpringSecurityService springSecurityService
     @Autowired
     MegaDriverService megaDriverService
+    @Autowired
+    org.myhab.services.dsl.action.NavimowCommandService navimowCommandService
+    @Autowired
+    org.myhab.services.navimow.NavimowOAuthService navimowOAuthService
 
 
     DataFetcher pushEvent() {
@@ -159,6 +163,58 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("deviceBackupConfig failed for device id={}", deviceId, e)
                     return [success: false, error: "Backup failed: ${e.message}"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Send a start / stop / pause / resume / dock command to a Segway Navimow
+     * mower. Delegates to {@link org.myhab.services.dsl.action.NavimowCommandService},
+     * which talks to Segway's REST API. Returns {@code success=false} with the
+     * Segway error code in {@code error} when the cloud rejects the command
+     * (token expired, mower already in target state, etc.).
+     */
+    DataFetcher mowerCommand() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                Long deviceId = environment.getArgument("deviceId") as Long
+                String action = environment.getArgument("action") as String
+                try {
+                    navimowCommandService.execute([deviceId: deviceId, action: action])
+                    return [success: true, error: null]
+                } catch (org.myhab.services.navimow.NavimowApiException e) {
+                    log.warn("mowerCommand rejected: device=${deviceId} action=${action} code=${e.errorCode} msg=${e.message}")
+                    return [success: false, error: e.message]
+                } catch (Exception e) {
+                    log.error("mowerCommand failed: device=${deviceId} action=${action}", e)
+                    return [success: false, error: "Command failed: ${e.message}"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Begin a Navimow OAuth2 flow. Returns the URL the UI should pop in a new
+     * tab. The callback at /auth/external/callback finishes the exchange and
+     * persists the token onto the device's Configuration sidecar — no further
+     * call is needed from the client.
+     */
+    DataFetcher navimowOAuthStart() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                Long deviceId = environment.getArgument("deviceId") as Long
+                String callerOrigin = environment.getArgument("callerOrigin") as String
+                try {
+                    String url = navimowOAuthService.startAuthorization(deviceId, callerOrigin)
+                    return [success: true, authorizeUrl: url, error: null]
+                } catch (org.myhab.services.navimow.NavimowApiException e) {
+                    return [success: false, authorizeUrl: null, error: e.message]
+                } catch (Exception e) {
+                    log.error("navimowOAuthStart failed: device=${deviceId}", e)
+                    return [success: false, authorizeUrl: null, error: "OAuth start failed: ${e.message}"]
                 }
             }
         }

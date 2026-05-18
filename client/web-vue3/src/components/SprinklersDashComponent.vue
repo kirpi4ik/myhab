@@ -136,6 +136,7 @@ import {format} from "date-fns";
 import EventLogger from "components/EventLogger";
 import humanizeDuration from 'humanize-duration';
 import TimeoutSelector from "components/TimeoutSelector.vue";
+import {useAppConfigStore} from 'src/store/app-config.store';
 
 export default defineComponent({
   name: 'SprinklersDashComponent',
@@ -144,8 +145,9 @@ export default defineComponent({
     TimeoutSelector
   },
   setup(props, {emit}) {
-    const zoneLanId = process.env.VUE_APP_CONF_ZONE_LAN_ID;
-    const zoneGardenId = process.env.VUE_APP_CONF_ZONE_GARDEN_ID;
+    const appConfig = useAppConfigStore();
+    const zoneLanId = appConfig.getNumber('ui.zone.lan.id');
+    const zoneGardenId = appConfig.getNumber('ui.zone.garden.id');
 
     const asset = ref({});
     const expirationTime = ref(null);

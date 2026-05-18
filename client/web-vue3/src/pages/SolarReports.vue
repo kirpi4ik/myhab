@@ -129,7 +129,7 @@
                 <div class="column items-center">
                   <q-icon name="mdi-alert-circle-outline" size="xl" class="q-mb-md"/>
                   <div class="text-subtitle1">Dashboard URL not configured</div>
-                  <div class="text-caption">Please configure GRAFANA_DASHBOARD_1_ID in settings</div>
+                  <div class="text-caption">Please set ui.grafana.dashboard.solar.id via the Configuration UI</div>
                 </div>
               </div>
             </q-card-section>
@@ -149,18 +149,18 @@
           <q-separator/>
           <q-card-section>
             <div class="text-body1 q-mb-md">
-              To configure Grafana dashboard URLs, add the following environment variables or configuration:
+              Configure Grafana dashboard URLs in the Configuration UI (Admin → Configurations, entity = CONFIG):
             </div>
             <q-list bordered separator>
               <q-item>
                 <q-item-section>
-                  <q-item-label class="text-weight-medium">GRAFANA_URL</q-item-label>
+                  <q-item-label class="text-weight-medium">ui.grafana.url</q-item-label>
                   <q-item-label caption>Grafana server base URL (e.g., http://localhost:3000)</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item>
                 <q-item-section>
-                  <q-item-label class="text-weight-medium">GRAFANA_DASHBOARD_1_ID</q-item-label>
+                  <q-item-label class="text-weight-medium">ui.grafana.dashboard.solar.id</q-item-label>
                   <q-item-label caption>Dashboard ID from Grafana URL (/d/dashboard-id/...)</q-item-label>
                 </q-item-section>
               </q-item>
@@ -169,8 +169,8 @@
               <strong>Example:</strong> If your dashboard URL is<br>
               <code>http://grafana.madhouse.app/d/abc123/solar-plant</code><br>
               Then set:<br>
-              • GRAFANA_URL=http://grafana.madhouse.app<br>
-              • GRAFANA_DASHBOARD_1_ID=abc123
+              • ui.grafana.url=http://grafana.madhouse.app<br>
+              • ui.grafana.dashboard.solar.id=abc123
             </div>
           </q-card-section>
           <q-card-actions align="right">
@@ -196,6 +196,7 @@
 
 <script>
 import { defineComponent, ref, computed, onMounted } from 'vue';
+import { useAppConfigStore } from 'src/store/app-config.store';
 
 export default defineComponent({
   name: 'SolarReports',
@@ -216,10 +217,12 @@ export default defineComponent({
       { label: 'Custom', value: 'custom' }
     ];
 
-    // Base Grafana URLs - configured via environment variables
-    // Add these to your .env file or set them in deployment
-    const grafanaBaseUrl = process.env.GRAFANA_URL || 'http://localhost:3000';
-    const grafanaDashboardId = process.env.GRAFANA_DASHBOARD_1_ID || '';
+    // Base Grafana URLs - sourced from the backend Configuration table
+    // (ui.grafana.url / ui.grafana.dashboard.solar.id). Editable at runtime
+    // via the ConfigurationView UI without rebuilding the frontend.
+    const appConfig = useAppConfigStore();
+    const grafanaBaseUrl = appConfig.get('ui.grafana.url', 'http://localhost:3000');
+    const grafanaDashboardId = appConfig.get('ui.grafana.dashboard.solar.id', '');
 
     /**
      * Build Grafana dashboard URL with time range parameters

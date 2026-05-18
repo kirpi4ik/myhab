@@ -207,4 +207,43 @@ enum MQTTTopic {
             return topic(topicTypes)
         }
     }
+
+    /**
+     * Topic shape for Segway Navimow (a virtual cloud-only device, like
+     * METEO_STATION). The {@code /mower/} and {@code /mower-status} path
+     * segments are intentionally unique so the regexes don't overlap with
+     * ESP_READ ({@code .../state}), METEO_STATION_READ ({@code .../sensor/.../value}),
+     * ESP_STATUS ({@code .../status}) etc., all of which are checked before
+     * the Navimow blocks in {@link MqttTopicService#message}.
+     *
+     * <p>{@code NavimowInfoSyncJob} publishes to WRITE_SINGLE_VAL; the broker
+     * echoes the message back via the {@code myhab/#} subscription;
+     * {@link MqttTopicService#message} routes it via READ_SINGLE_VAL into the
+     * regular {@link org.myhab.services.PortValueService#updatePort} pipeline.
+     * Status flips happen via STATUS_WRITE on the same loop.</p>
+     */
+    class NAVIMOW implements DeviceTopic {
+        static String topic(TopicTypes topicType) {
+            switch (topicType) {
+                case TopicTypes.LISTEN:
+                    return "$MYHAB_PREFIX/#"
+                case TopicTypes.READ_SINGLE_VAL:
+                    return "$MYHAB_PREFIX/(\\w+)/mower/([\\w._]+)/value"
+                case TopicTypes.WRITE_SINGLE_VAL:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/mower/\$map.portCode/value"
+                case TopicTypes.STATUS:
+                    return "$MYHAB_PREFIX/(\\w+)/mower-status"
+                case TopicTypes.STATUS_WRITE:
+                    return "$MYHAB_PREFIX/\$map.deviceCode/mower-status"
+                case TopicTypes.STAT_IP:   // Navimow has no controller IP we expose
+                case TopicTypes.STAT_PORT:
+                default: return null
+            }
+        }
+
+        @Override
+        String topicByType(TopicTypes topicTypes) {
+            return topic(topicTypes)
+        }
+    }
 }

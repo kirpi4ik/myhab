@@ -16,6 +16,7 @@ A comprehensive home automation platform for monitoring and controlling your sma
   - [Energy Monitoring](#energy-monitoring)
   - [Heating Management](#heating-management)
   - [Weather Information](#weather-information)
+  - [Robotic Lawn Mower](#robotic-lawn-mower)
   - [Telegram Bot Control](#telegram-bot-control)
   - [Mobile Access](#mobile-access)
 - [Architecture](#architecture)
@@ -52,6 +53,7 @@ The platform excels at:
 | **Solar Monitoring** | Real-time tracking of Huawei solar inverter production and grid export |
 | **Heat Pump Integration** | Full NIBE F1145 heat pump monitoring with temperature sensors and energy stats |
 | **Weather Station** | Automatic weather data from Open-Meteo with forecasts |
+| **Robotic Lawn Mower** | Segway Navimow control + live status (battery, state, error events) with one-click cloud sign-in |
 | **Telegram Bot** | Remote control via Telegram with role-based access |
 | **PWA Support** | Install as a native app on mobile devices |
 | **Scenario Automation** | Create custom automation scenarios with triggers and actions |
@@ -156,6 +158,32 @@ Automatic weather data integration via Open-Meteo:
 - Wind conditions
 
 Weather data updates automatically every hour and integrates with heating automation for energy-efficient climate control.
+
+### Robotic Lawn Mower
+
+Manage a Segway Navimow robotic mower from the same dashboard you use for everything else.
+
+**Dashboard widget**
+- Mower hero image, current state badge (Docked / Mowing / Paused / Returning / Charging / Idle / Error)
+- Battery level with colour-graded bar (green ≥50%, amber 20–49%, red <20%) and the cloud-reported label (e.g. *FULL*)
+- Quick-action buttons — **Start**, **Pause**, **Resume**, **Return to dock** — auto-enabled based on the current state (e.g. Pause is greyed when the mower isn't mowing)
+- Live updates via WebSocket whenever the periodic poll sees a state change — no page refresh needed
+- One-click access to the full device admin page
+
+**Cloud account connection**
+- One-button OAuth flow under Devices → *navimow* → **Connect Navimow account** — a popup signs you in with your Segway credentials and stores the access token automatically
+- Token expiry (typically every 1–2 days) raises a notification telling you exactly which device needs re-authorising, so it's never a mystery
+- Optional Application Configuration keys override the regional API endpoint / OAuth client for installs outside the EU region
+
+**Notifications**
+- Errors / stuck mower (red)
+- State transitions (info)
+- Work completed — mowing → docked/charging without errors (info)
+- Low-battery threshold crossed or autonomous return-to-dock (warn)
+- Token-expiry needing re-auth (warn)
+
+**Scenario / DSL integration**
+Mower commands are also callable from automation scenarios as `mowerCommand([deviceId: …, action: 'DOCK'])`, so you can wire schedule-based mowing into the same scenario engine that drives heating and lights.
 
 ### Telegram Bot Control
 
@@ -287,6 +315,8 @@ Supported device protocols:
 | NIBE | `nibe/{device}/status` | Heat pump data |
 | Huawei Inverter | `inverter/{device}/{parameter}` | Solar inverter metrics |
 | ONVIF Camera | `onvif/{device}/presence` | Camera presence detection |
+| Open-Meteo (virtual) | `myhab/{device}/sensor/{port}/value` | Weather station — values fanned through the broker loopback |
+| Navimow (virtual) | `myhab/{device}/mower/{port}/value`, `myhab/{device}/mower-status` | Segway mower — REST poll publishes to broker, broker echo persists like a real device |
 
 **GraphQL API**
 
@@ -386,6 +416,8 @@ Quartz-based job scheduler handles:
 | Heating Control | 120s | Thermostat automation |
 | Huawei Sync | 120s | Solar inverter data collection |
 | NIBE Sync | 60s | Heat pump data collection |
+| NIBE Token Refresh | 300s | Refresh NIBE OAuth access token before it expires |
+| Navimow Sync | 30s | Poll Segway cloud for mower status; auto-create ports + notify on errors |
 | Meteo Sync | 3600s | Weather data updates |
 | Statistics | Hourly/Daily/Monthly | Energy statistics aggregation |
 | Auto-Off Timeout | 30s | Automatic device shutdown |

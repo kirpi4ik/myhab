@@ -51,7 +51,8 @@ class MqttTopicService {
             [name: 'MEGA', instance: new MQTTTopic.MEGA()],
             [name: 'COMMON', instance: new MQTTTopic.COMMON()],
             [name: 'ONVIF', instance: new MQTTTopic.ONVIF()],
-            [name: 'METEO_STATION', instance: new MQTTTopic.METEO_STATION()]
+            [name: 'METEO_STATION', instance: new MQTTTopic.METEO_STATION()],
+            [name: 'NAVIMOW', instance: new MQTTTopic.NAVIMOW()]
         ]
         
         // READ topic types (incoming messages from devices)
@@ -83,7 +84,8 @@ class MqttTopicService {
             [model: DeviceModel.CAM_ONVIF, topic: new MQTTTopic.ONVIF()],
             [model: DeviceModel.HUAWEI_SUN2000_12KTL_M2, topic: new MQTTTopic.INVERTER()],
             [model: DeviceModel.ELECTRIC_METER_DTS, topic: new MQTTTopic.ELECTRIC_METER_DTS()],
-            [model: DeviceModel.OPEN_METEO_API, topic: new MQTTTopic.METEO_STATION()]
+            [model: DeviceModel.OPEN_METEO_API, topic: new MQTTTopic.METEO_STATION()],
+            [model: DeviceModel.NAVIMOW_SEGWAY, topic: new MQTTTopic.NAVIMOW()]
         ]
         
         deviceMappings.each { mapping ->
@@ -189,7 +191,17 @@ class MqttTopicService {
                     eventType: TopicName.EVT_DEVICE_STATUS.id()
                 )
             }
-            
+
+            if (topicName ==~ TOPIC_PATTERNS.NAVIMOW_STATUS) {
+                matcher = topicName =~ TOPIC_PATTERNS.NAVIMOW_STATUS
+                return new MQTTMessage(
+                    deviceType: DeviceModel.NAVIMOW_SEGWAY,
+                    deviceCode: matcher[0][1],
+                    portStrValue: message.payload,
+                    eventType: TopicName.EVT_DEVICE_STATUS.id()
+                )
+            }
+
             // ========== READ_SINGLE_VAL PATTERNS ==========
             if (topicName ==~ TOPIC_PATTERNS.ESP_READ) {
                 matcher = topicName =~ TOPIC_PATTERNS.ESP_READ
@@ -280,7 +292,18 @@ class MqttTopicService {
                     eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
                 )
             }
-            
+
+            if (topicName ==~ TOPIC_PATTERNS.NAVIMOW_READ) {
+                matcher = topicName =~ TOPIC_PATTERNS.NAVIMOW_READ
+                return new MQTTMessage(
+                    deviceType: DeviceModel.NAVIMOW_SEGWAY,
+                    deviceCode: matcher[0][1],
+                    portCode: matcher[0][2],
+                    portStrValue: message.payload,
+                    eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
+                )
+            }
+
             // ========== STAT_IP PATTERNS ==========
             if (topicName ==~ TOPIC_PATTERNS.ESP_STAT_IP) {
                 matcher = topicName =~ TOPIC_PATTERNS.ESP_STAT_IP
