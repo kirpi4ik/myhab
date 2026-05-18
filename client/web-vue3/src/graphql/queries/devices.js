@@ -183,6 +183,22 @@ export const NAVIMOW_OAUTH_START = gql`
   }
 `;
 
+/**
+ * Finish a Navimow OAuth2 flow. Called by the SPA callback page
+ * (/auth/external/callback) after Navimow redirects with `code` and `state`.
+ * Exchanges them via the backend and stores the access token on the device.
+ */
+export const NAVIMOW_OAUTH_COMPLETE = gql`
+  mutation navimowOAuthComplete($code: String!, $state: String!) {
+    navimowOAuthComplete(code: $code, state: $state) {
+      success
+      deviceId
+      deviceCode
+      error
+    }
+  }
+`;
+
 /** Send a control command to a Navimow mower. */
 export const MOWER_COMMAND = gql`
   mutation mowerCommand($deviceId: ID!, $action: String!) {

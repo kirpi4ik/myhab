@@ -22,11 +22,6 @@ class UrlMappings {
         put "/api/users/$id/avatar"(controller: "userAvatar", action: "update")
         "/login/auth"(controller: "login", action: "auth")
 
-        // Navimow OAuth2 callback — public path mirroring Home Assistant's
-        // shape so Navimow's redirect_uri whitelist (likely tied to
-        // client_id=homeassistant) has the best chance of accepting us.
-        get "/auth/external/callback"(controller: "navimowOAuth", action: "callback")
-
         if (Environment.current == Environment.PRODUCTION) {
             "/"(uri: "/index.html")
             "/error"(uri: "/index.html")
@@ -41,6 +36,15 @@ class UrlMappings {
             "/peripherals/**"(uri: "/index.html")
             "/shared/**"(uri: "/index.html")
             "/messages"(uri: "/index.html")
+            "/settings"(uri: "/index.html")
+            "/solar-reports"(uri: "/index.html")
+            // Navimow OAuth2 callback — served as SPA so the page works behind
+            // any reverse proxy that already forwards the SPA paths. The
+            // SPA's NavimowOAuthCallback.vue exchanges `code`/`state` via the
+            // `navimowOAuthComplete` GraphQL mutation. Path intentionally
+            // mirrors Home Assistant's so Navimow's redirect_uri whitelist
+            // (tied to client_id=homeassistant) accepts us.
+            "/auth/external/callback"(uri: "/index.html")
         } else {
             "/"(controller: "application", action: "index")
             "/error"(controller: "application", action: "index")

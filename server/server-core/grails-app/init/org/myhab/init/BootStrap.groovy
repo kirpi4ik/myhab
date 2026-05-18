@@ -107,14 +107,19 @@ class BootStrap {
     }
 
     /**
-     * Insert missing UI config rows; never overwrite existing values. Runs on
-     * every startup but is a no-op when the keys already exist, so it's safe
-     * to keep around long-term.
+     * Upsert UI config rows from {@link #UI_CONFIG_DEFAULTS}. Insert any
+     * missing keys; update existing keys whose stored value differs from the
+     * default. This makes BootStrap.groovy the source of truth for ui.*
+     * defaults — editing a value here and restarting the backend propagates
+     * to the database. Operators can still edit values at runtime via the
+     * Configuration UI, but those edits are reverted on the next restart
+     * unless the BootStrap default is updated to match.
      */
     private void seedUiConfigDefaults() {
         try {
             Configuration.withNewTransaction {
                 int inserted = 0
+                int updated = 0
                 UI_CONFIG_DEFAULTS.each { String key, String value ->
                     Configuration existing = Configuration.findByEntityTypeAndEntityIdAndKey(
                             EntityType.CONFIG, 0L, key)
@@ -126,10 +131,17 @@ class BootStrap {
                                 value: value
                         ).save(flush: true, failOnError: true)
                         inserted++
+                    } else if (existing.value != value) {
+                        existing.value = value
+                        existing.save(flush: true, failOnError: true)
+                        // Configuration.beforeUpdate publishes EVT_CFG_VALUE_CHANGED,
+                        // which the SPA picks up via its WebSocket listener — so
+                        // already-connected dashboards reflect the new value live.
+                        updated++
                     }
                 }
-                if (inserted > 0) {
-                    log.info("Seeded ${inserted} UI config default(s) into Configuration table")
+                if (inserted > 0 || updated > 0) {
+                    log.info("UI config sync: ${inserted} inserted, ${updated} updated")
                 }
             }
         } catch (Exception e) {

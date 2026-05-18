@@ -467,6 +467,15 @@ const routes = [
     component: () => import('pages/public/GateAccessWidget'),
     meta: { public: true }
   },
+  {
+    // SPA-served OAuth2 callback for the Navimow integration. Path matches
+    // what's registered with Navimow as the redirect_uri (mirrors HA's
+    // /auth/external/callback). The page calls the navimowOAuthComplete
+    // GraphQL mutation, then posts a message back to the opener and closes.
+    path: '/auth/external/callback',
+    component: () => import('pages/public/NavimowOAuthCallback.vue'),
+    meta: { public: true }
+  },
   // Always leave this as last one,
   // but you can also remove it
   {
