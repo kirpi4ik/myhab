@@ -618,23 +618,23 @@ class MqttTopicService {
             log.warn("Cannot publish status: device or model is null (device code: ${device?.code})")
             return
         }
-        
+
         if (!status) {
             log.warn("Cannot publish status: status is null for device ${device.code}")
             return
         }
-        
+
         def deviceTopic = getDeviceTopic(device.model)
         if (!deviceTopic) {
             log.warn("Cannot publish status: unsupported device model ${device.model} for device ${device.code}")
             return
         }
-        
+
         try {
             def topicTemplate = deviceTopic.topicByType(STATUS_WRITE)
             def template = getOrCreateTemplate(topicTemplate)
             def topicStr = template.make([map: new MQTTMessage(deviceCode: device.code)]).toString()
-            
+
             mqttPublishGateway.sendToMqtt(topicStr, status.name().toLowerCase())
         } catch (Exception e) {
             log.error("Error publishing status for device ${device.code}", e)

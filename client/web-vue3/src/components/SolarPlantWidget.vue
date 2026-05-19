@@ -322,7 +322,7 @@
 </template>
 
 <script>
-import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import { useApolloClient } from "@vue/apollo-composable";
 import { useRouter } from 'vue-router';
 import { useWebSocketListener } from "@/composables";
@@ -332,15 +332,19 @@ import _ from "lodash";
 export default defineComponent({
   name: 'SolarPlantWidget',
   props: {
+    // No defaults: the parent (DashboardActions via useDashboardWidgets)
+    // resolves these from the app-config store. If hydration races the
+    // first render (e.g. fresh login redirect) we get null briefly — the
+    // setup() below guards loadDetails() against that.
     deviceId: {
       type: Number,
-      required: true,
-      default: 1000 // Huawei inverter device ID
+      required: false,
+      default: null,
     },
     meterDeviceId: {
       type: Number,
       required: false,
-      default: 1001 // Huawei meter device ID
+      default: null,
     },
   },
   setup(props) {
@@ -745,6 +749,12 @@ export default defineComponent({
     // ============================================================================
 
     const loadDetails = () => {
+      // Skip when the parent hasn't resolved the device IDs yet (e.g. the
+      // app-config store is still hydrating right after login). The
+      // watch() below re-fires loadDetails as soon as both IDs arrive.
+      if (!deviceId.value || !meterDeviceId.value) {
+        return;
+      }
       // Load both inverter and meter devices
       Promise.all([
         client.query({
@@ -758,14 +768,19 @@ export default defineComponent({
           fetchPolicy: 'network-only',
         })
       ]).then(([inverterData, meterData]) => {
+        // Backend returns `{device: null}` when an id doesn't resolve. Bail
+        // out gracefully rather than NPE'ing on `.ports`.
+        if (!inverterData?.data?.device || !meterData?.data?.device) {
+          return;
+        }
         device.value = inverterData.data.device;
-        
+
         // Merge ports from both devices
         const allPorts = [
           ...inverterData.data.device.ports,
           ...meterData.data.device.ports
         ];
-        
+
         // Map ports by internal reference
         deviceDetails.value = _.reduce(
           allPorts,
@@ -775,7 +790,7 @@ export default defineComponent({
           },
           {}
         );
-        
+
         // Collect port IDs for WebSocket filtering (both devices)
         portIds.value = allPorts.map(port => port.id);
       });
@@ -783,6 +798,13 @@ export default defineComponent({
 
     onMounted(() => {
       loadDetails();
+    });
+
+    // Re-fetch when device IDs first resolve (post-login hydrate race).
+    watch([deviceId, meterDeviceId], ([d, m]) => {
+      if (d && m && !device.value) {
+        loadDetails();
+      }
     });
 
     // Listen for real-time port value updates via WebSocket

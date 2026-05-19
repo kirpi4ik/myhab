@@ -178,7 +178,7 @@ import { useAppConfigStore } from 'src/store/app-config.store';
 const { client } = useApolloClient();
 const $q = useQuasar();
 const appConfig = useAppConfigStore();
-const doorLockId = appConfig.getNumber('ui.device.door_lock.id');
+const doorLockId = appConfig.getNumber('specialDevices.doorLockMain.peripheral.id');
 
 // State
 const loading = ref(false);

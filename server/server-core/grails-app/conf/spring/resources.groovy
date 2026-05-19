@@ -27,6 +27,7 @@ import org.myhab.jobs.EventLogReaderJob
 import org.myhab.jobs.MeteoStationSyncJob
 import org.myhab.jobs.HuaweiInfoSyncJob
 import org.myhab.jobs.NavimowInfoSyncJob
+import org.myhab.jobs.NavimowTokenRefreshJob
 import org.myhab.services.navimow.NavimowApiClient
 import org.myhab.jobs.PortValueSyncTriggerJob
 import org.myhab.jobs.SwitchOFFOnTimeoutJob
@@ -62,6 +63,7 @@ def eventLogReaderInterval = config?.getProperty('quartz.jobs.eventLogReader.int
 def meteoStationSyncInterval = config?.getProperty('quartz.jobs.meteoStationSync.interval', Integer, 1800)
 def huaweiInfoSyncInterval = config?.getProperty('quartz.jobs.huaweiInfoSync.interval', Integer, 300)
 def navimowInfoSyncInterval = config?.getProperty('quartz.jobs.navimowInfoSync.interval', Integer, 30)
+def navimowTokenRefreshInterval = config?.getProperty('quartz.jobs.navimowTokenRefresh.interval', Integer, 600)
 def portValueSyncTriggerInterval = config?.getProperty('quartz.jobs.portValueSyncTrigger.interval', Integer, 60)
 def switchOffOnTimeoutInterval = config?.getProperty('quartz.jobs.switchOffOnTimeout.interval', Integer, 30)
 def randomColorsInterval = config?.getProperty('quartz.jobs.randomColors.interval', Integer, 5)
@@ -78,6 +80,9 @@ def meteoStationSyncEnabled = config?.getProperty('quartz.jobs.meteoStationSync.
 def huaweiInfoSyncEnabled = config?.getProperty('quartz.jobs.huaweiInfoSync.enabled', Boolean, true)
 // Opt-in: keep OFF until per-device Navimow Configuration rows are populated
 def navimowInfoSyncEnabled = config?.getProperty('quartz.jobs.navimowInfoSync.enabled', Boolean, false)
+// Opt-in: refreshing OAuth tokens only makes sense once OAuth has completed
+// at least once (otherwise there's no refresh_token to spend).
+def navimowTokenRefreshEnabled = config?.getProperty('quartz.jobs.navimowTokenRefresh.enabled', Boolean, false)
 def portValueSyncTriggerEnabled = config?.getProperty('quartz.jobs.portValueSyncTrigger.enabled', Boolean, true)
 def switchOffOnTimeoutEnabled = config?.getProperty('quartz.jobs.switchOffOnTimeout.enabled', Boolean, true)
 def randomColorsEnabled = config?.getProperty('quartz.jobs.randomColors.enabled', Boolean, false)
@@ -94,6 +99,7 @@ if (eventLogReaderEnabled) enabledTriggers << 'eventLogReaderTrigger'
 if (meteoStationSyncEnabled) enabledTriggers << 'meteoStationSyncTrigger'
 if (huaweiInfoSyncEnabled) enabledTriggers << 'huaweiInfoSyncTrigger'
 if (navimowInfoSyncEnabled) enabledTriggers << 'navimowInfoSyncTrigger'
+if (navimowTokenRefreshEnabled) enabledTriggers << 'navimowTokenRefreshTrigger'
 if (portValueSyncTriggerEnabled) enabledTriggers << 'portValueSyncTriggerTrigger'
 if (switchOffOnTimeoutEnabled) enabledTriggers << 'switchOffOnTimeoutTrigger'
 if (randomColorsEnabled) enabledTriggers << 'randomColorsTrigger'
@@ -310,6 +316,27 @@ beans = {
         jobDetail = ref('navimowInfoSyncJobDetail')
         startDelay = 45000L
         repeatInterval = navimowInfoSyncInterval * 1000L
+        repeatCount = SimpleTrigger.REPEAT_INDEFINITELY
+        group = 'STATIC_JOBS'
+    }
+
+    // NavimowTokenRefreshJob - Segway OAuth2 token refresh
+    // Configurable via: quartz.jobs.navimowTokenRefresh.enabled and interval (OFF by default).
+    // Default interval 600s (10 min) is well inside Segway's ~1h access-token TTL.
+    navimowTokenRefreshJobDetail(JobDetailFactoryBean) {
+        jobClass = NavimowTokenRefreshJob
+        durability = true
+        requestsRecovery = false
+        group = 'STATIC_JOBS'
+        description = 'Segway Navimow OAuth2 Token Refresh - Spring Managed'
+    }
+
+    navimowTokenRefreshTrigger(SimpleTriggerFactoryBean) {
+        jobDetail = ref('navimowTokenRefreshJobDetail')
+        // Delay the first refresh past the initial sync window so OAuth + auto-
+        // discovery have settled before we try to spend the refresh token.
+        startDelay = 60000L
+        repeatInterval = navimowTokenRefreshInterval * 1000L
         repeatCount = SimpleTrigger.REPEAT_INDEFINITELY
         group = 'STATIC_JOBS'
     }

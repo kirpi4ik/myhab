@@ -17,6 +17,7 @@ import org.myhab.domain.device.port.PortType
 import org.myhab.services.NotificationService
 import org.myhab.services.navimow.NavimowApiClient
 import org.myhab.services.navimow.NavimowApiException
+import org.myhab.services.navimow.NavimowOAuthService
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -86,6 +87,7 @@ class NavimowInfoSyncJob implements Job {
 
     MqttTopicService mqttTopicService
     NavimowApiClient navimowApiClient
+    NavimowOAuthService navimowOAuthService
     NotificationService notificationService
     def configProvider
 
@@ -129,17 +131,49 @@ class NavimowInfoSyncJob implements Job {
         try {
             statuses = navimowApiClient.getStatuses(token, baseUrl, [segwayId])
         } catch (NavimowApiException ex) {
-            log.error("NavimowInfoSyncJob: getStatuses failed for ${device.code}: ${ex.message}")
-            // Surface a one-time WARN notification when an auth-related error is
-            // the cause, so the user knows to re-run the "Connect Navimow account"
-            // flow without having to read bootRun logs. Gated by the current
-            // device.status — only fires on the ONLINE→OFFLINE transition, so
-            // repeated 30s ticks while the token is dead don't spam the bell.
-            if (device.status == DeviceStatus.ONLINE && isAuthFailure(ex)) {
-                notifyTokenExpired(device, ex)
+            // Auth-related failure → try a one-shot refresh inline so this same
+            // tick can recover. The periodic NavimowTokenRefreshJob keeps tokens
+            // fresh, but it runs every ~10 min — without this we'd still flip
+            // OFFLINE for up to that window after each TTL expiry.
+            if (isAuthFailure(ex)) {
+                log.info("NavimowInfoSyncJob: auth failure for ${device.code} (${ex.errorCode ?: ex.message}); attempting token refresh inline")
+                Map refreshResult = null
+                try {
+                    refreshResult = navimowOAuthService.refreshAccessToken(device)
+                } catch (Exception refreshEx) {
+                    log.warn("NavimowInfoSyncJob: inline refresh threw for ${device.code}: ${refreshEx.message}")
+                }
+                if (refreshResult?.success) {
+                    // Re-read the token from Configuration (refreshAccessToken
+                    // persists it there) and retry the original call once.
+                    String newToken = readConfig(device, CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key())
+                    try {
+                        statuses = navimowApiClient.getStatuses(newToken, baseUrl, [segwayId])
+                        log.info("NavimowInfoSyncJob: ${device.code} recovered after inline token refresh")
+                    } catch (NavimowApiException retryEx) {
+                        log.error("NavimowInfoSyncJob: retry after refresh still failed for ${device.code}: ${retryEx.message}")
+                        if (device.status == DeviceStatus.ONLINE) {
+                            notifyTokenExpired(device, retryEx)
+                        }
+                        safePublishStatus(device, DeviceStatus.OFFLINE)
+                        return
+                    }
+                } else {
+                    log.error("NavimowInfoSyncJob: getStatuses failed for ${device.code}: ${ex.message}; refresh also failed (${refreshResult?.error})")
+                    // Surface a one-time WARN notification on the ONLINE→OFFLINE
+                    // transition only so we don't spam every 30s while the
+                    // refresh_token itself is dead and re-OAuth is required.
+                    if (device.status == DeviceStatus.ONLINE) {
+                        notifyTokenExpired(device, ex)
+                    }
+                    safePublishStatus(device, DeviceStatus.OFFLINE)
+                    return
+                }
+            } else {
+                log.error("NavimowInfoSyncJob: getStatuses failed for ${device.code}: ${ex.message}")
+                safePublishStatus(device, DeviceStatus.OFFLINE)
+                return
             }
-            safePublishStatus(device, DeviceStatus.OFFLINE)
-            return
         }
 
         Map status = statuses[segwayId]
@@ -336,12 +370,18 @@ class NavimowInfoSyncJob implements Job {
         int threshold = readLowBatteryThreshold()
         String label = "Navimow ${device.code}"
 
+        // Dedup keys carry the device id so multiple mowers don't suppress each
+        // other. Cooldown windows are tuned per-event-type: tight enough to
+        // catch a single oscillation cycle (~30s tick), wide enough to survive
+        // genuine multi-minute churn without spamming the inbox.
+
         // 1) Errors — new errorCode that didn't exist before (or changed).
         if (newError && !newError.trim().isEmpty() && newError != prevError && newError != 'null' && newError != '0') {
             notificationService.notifyAdmins(MessageLevel.ERROR,
                     "${label}: error ${newError}",
                     "${label} reported error code ${newError}${newErrorMessage ? ' (' + newErrorMessage + ')' : ''}.",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.error.${newError}", 60)
         }
 
         // 2) State transitions — any change.
@@ -349,7 +389,8 @@ class NavimowInfoSyncJob implements Job {
             notificationService.notifyAdmins(MessageLevel.INFO,
                     "${label}: ${prevState ?: '?'} → ${newState}",
                     "${label} state changed from ${prevState ?: 'unknown'} to ${newState}.",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.state.${newState}", 5)
         }
 
         // 3) Work completed — was actively mowing, now resting, with no error.
@@ -360,7 +401,8 @@ class NavimowInfoSyncJob implements Job {
             notificationService.notifyAdmins(MessageLevel.INFO,
                     "${label}: finished mowing",
                     "${label} finished its mowing job and returned to ${newState}.",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.finished_mowing", 30)
         }
 
         // 4a) Low battery — crossed the threshold downward.
@@ -369,7 +411,8 @@ class NavimowInfoSyncJob implements Job {
             notificationService.notifyAdmins(MessageLevel.WARN,
                     "${label}: low battery (${newBattery}%)",
                     "${label} battery dropped to ${newBattery}% (threshold ${threshold}%).",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.low_battery", 360)
         }
 
         // 4b) Returning to dock — caught as a state transition into 'returning'.
@@ -377,7 +420,8 @@ class NavimowInfoSyncJob implements Job {
             notificationService.notifyAdmins(MessageLevel.WARN,
                     "${label}: returning to dock",
                     "${label} is returning to its dock.",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.returning", 30)
         }
     }
 
@@ -449,8 +493,10 @@ class NavimowInfoSyncJob implements Job {
 
     /**
      * Fire a WARN admin notification telling the user to re-authenticate.
-     * Called only on the ONLINE→OFFLINE transition so we don't repeat every
-     * 30s while the token stays dead.
+     * The ONLINE→OFFLINE gate at the call site was supposed to limit this to
+     * one notification per token expiry, but the device oscillates ONLINE↔
+     * OFFLINE every 30s on multi-node clusters, producing ~150 duplicates per
+     * hour. The dedup key + 60-min cooldown is the actual safety net.
      */
     private void notifyTokenExpired(Device device, NavimowApiException ex) {
         String label = "Navimow ${device.code}"
@@ -459,7 +505,8 @@ class NavimowInfoSyncJob implements Job {
                 "${label}: re-authorize required",
                 "${label} access token was rejected by Segway (${reason}). " +
                         "Open Devices → ${device.code} → Connect Navimow account to refresh the token.",
-                'navimow')
+                'navimow',
+                "navimow.${device.id}.token_expired", 60)
     }
 
     /**

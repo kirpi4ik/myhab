@@ -117,7 +117,7 @@ class DeviceService implements EventPublisher {
         if (device != null) {
             def oldStatus = device.status
             def newStatus = DeviceStatus.fromValue(event.data.p5)
-            
+
             if (oldStatus != newStatus) {
                 device.status = newStatus
                 device.save(failOnError: false, flush: true)

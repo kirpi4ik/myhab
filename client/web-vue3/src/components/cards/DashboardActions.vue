@@ -1,81 +1,103 @@
 <template>
   <div class="dashboard-layout">
-    <!-- Quick Access Cards Section -->
-    <div class="row q-col-gutter-md q-mb-md">
-      <template v-if="hasAccess">
-        <div
-          v-for="widget in visibleQuickAccess"
-          :key="widget.id"
-          class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
-        >
-          <!-- Standard action card -->
-          <q-card v-if="widget.kind === 'actionCard'" class="dashboard-card small-card" :class="widget.actionCard.cardClass">
-            <div class="card-header-wrapper">
-              <q-card-section class="card-header">
-                <div class="header-content">
-                  <div class="header-icon-wrapper">
-                    <q-icon :name="widget.actionCard.icon" size="32px" class="header-icon"/>
-                    <div class="icon-glow"></div>
-                  </div>
-                  <div class="header-title">
-                    {{ widget.actionCard.title }}
-                  </div>
-                </div>
-              </q-card-section>
-            </div>
-
-            <div class="card-actions-wrapper">
-              <q-card-actions class="card-actions">
-                <template v-for="(action, index) in widget.actionCard.actions" :key="action.label">
-                  <q-btn
-                    flat
-                    class="action-btn"
-                    no-caps
-                    :to="action.route"
-                  >
-                    <div class="action-btn-content">
-                      <q-icon v-if="action.icon" :name="action.icon" size="20px" class="q-mr-xs"/>
-                      <span class="action-label">{{ action.label }}</span>
-                    </div>
-                  </q-btn>
-                  <div
-                    v-if="index < widget.actionCard.actions.length - 1"
-                    class="action-divider"
-                  >
-                    <q-separator vertical class="action-separator"/>
-                  </div>
-                </template>
-              </q-card-actions>
-            </div>
-
-            <!-- Bottom accent bar -->
-            <div class="accent-bar"></div>
-          </q-card>
-
-          <!-- Component card -->
-          <component
-            v-else-if="widget.kind === 'component'"
-            :is="widget.component"
-            v-bind="widget.props ? widget.props() : {}"
-            class="small-card"
-          />
+    <!--
+      Block the widget render until the app-config store has hydrated.
+      Otherwise widgets mount with deviceId=null (the store is empty on the
+      first post-login render), fire GraphQL queries with `id: null`, and
+      crash on `null.device` / `null.devicePeripheral`. The skeleton row
+      below mimics the eventual layout so the page doesn't visually jump.
+    -->
+    <div v-if="!appConfigLoaded" class="dashboard-layout-skeleton">
+      <div class="row q-col-gutter-md q-mb-md">
+        <div v-for="i in 6" :key="`qa-skel-${i}`" class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+          <q-skeleton type="QCard" height="120px"/>
         </div>
-      </template>
-    </div>
-
-    <!-- Device Monitoring Section -->
-    <div class="row q-col-gutter-md">
-      <div
-        v-for="widget in visibleMonitoring"
-        :key="widget.id"
-        class="col-lg-4 col-md-6 col-sm-12 col-xs-12"
-      >
-        <component
-          :is="widget.component"
-          v-bind="widget.props ? widget.props() : {}"
-        />
+      </div>
+      <div class="row q-col-gutter-md">
+        <div v-for="i in 4" :key="`mon-skel-${i}`" class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+          <q-skeleton type="QCard" height="180px"/>
+        </div>
       </div>
     </div>
+
+    <template v-else>
+      <!-- Quick Access Cards Section -->
+      <div class="row q-col-gutter-md q-mb-md">
+        <template v-if="hasAccess">
+          <div
+            v-for="widget in visibleQuickAccess"
+            :key="widget.id"
+            class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
+          >
+            <!-- Standard action card -->
+            <q-card v-if="widget.kind === 'actionCard'" class="dashboard-card small-card" :class="widget.actionCard.cardClass">
+              <div class="card-header-wrapper">
+                <q-card-section class="card-header">
+                  <div class="header-content">
+                    <div class="header-icon-wrapper">
+                      <q-icon :name="widget.actionCard.icon" size="32px" class="header-icon"/>
+                      <div class="icon-glow"></div>
+                    </div>
+                    <div class="header-title">
+                      {{ widget.actionCard.title }}
+                    </div>
+                  </div>
+                </q-card-section>
+              </div>
+
+              <div class="card-actions-wrapper">
+                <q-card-actions class="card-actions">
+                  <template v-for="(action, index) in widget.actionCard.actions" :key="action.label">
+                    <q-btn
+                      flat
+                      class="action-btn"
+                      no-caps
+                      :to="action.route"
+                    >
+                      <div class="action-btn-content">
+                        <q-icon v-if="action.icon" :name="action.icon" size="20px" class="q-mr-xs"/>
+                        <span class="action-label">{{ action.label }}</span>
+                      </div>
+                    </q-btn>
+                    <div
+                      v-if="index < widget.actionCard.actions.length - 1"
+                      class="action-divider"
+                    >
+                      <q-separator vertical class="action-separator"/>
+                    </div>
+                  </template>
+                </q-card-actions>
+              </div>
+
+              <!-- Bottom accent bar -->
+              <div class="accent-bar"></div>
+            </q-card>
+
+            <!-- Component card -->
+            <component
+              v-else-if="widget.kind === 'component'"
+              :is="widget.component"
+              v-bind="widget.props ? widget.props() : {}"
+              class="small-card"
+            />
+          </div>
+        </template>
+      </div>
+
+      <!-- Device Monitoring Section -->
+      <div class="row q-col-gutter-md">
+        <div
+          v-for="widget in visibleMonitoring"
+          :key="widget.id"
+          class="col-lg-4 col-md-6 col-sm-12 col-xs-12"
+        >
+          <component
+            :is="widget.component"
+            v-bind="widget.props ? widget.props() : {}"
+          />
+        </div>
+      </div>
+    </template>
 
     <q-resize-observer @resize="onResize"/>
   </div>
@@ -85,6 +107,8 @@
 import {defineComponent, computed} from 'vue';
 
 import {authzService} from '@/_services';
+import {storeToRefs} from 'pinia';
+import {useAppConfigStore} from 'src/store/app-config.store';
 import {useUserPrefsStore} from 'src/store/user-prefs.store';
 import {useDashboardWidgets} from 'src/composables/useDashboardWidgets';
 
@@ -109,6 +133,10 @@ export default defineComponent({
   },
   setup() {
     const userPrefs = useUserPrefsStore();
+    const appConfigStore = useAppConfigStore();
+    // Reactive flag — flips true once the boot file hydrates from `uiConfigList`.
+    // We gate the dashboard widgets on it so they never mount with null deviceIds.
+    const { loaded: appConfigLoaded } = storeToRefs(appConfigStore);
     // Composable returns a fresh list per call; cheap to recompute each tick
     // (no async work, no DB calls), and keeps prop factories from going stale
     // if appConfig values are ever updated at runtime.
@@ -153,6 +181,7 @@ export default defineComponent({
     };
 
     return {
+      appConfigLoaded,
       hasAccess,
       visibleQuickAccess,
       visibleMonitoring,

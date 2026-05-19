@@ -46,6 +46,17 @@ class WSocketsService implements EventPublisher, WebSocket {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_cfg_value_changed", jsonPayload: JsonOutput.toJson(event.data)))
     }
 
+    /**
+     * Forward git-backed app-config edits (mqtt.*, telegram.*, ui.*, …) to
+     * the SPA so widgets reading from {@code useAppConfigStore} stay in sync
+     * without a page reload. Published by the {@code appConfigUpdate}
+     * GraphQL mutation after a successful {@code configProvider.setAndCommit}.
+     */
+    @Subscriber('evt_app_cfg_value_changed')
+    def appCfgChanged(event) {
+        convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_app_cfg_value_changed", jsonPayload: JsonOutput.toJson(event.data)))
+    }
+
     @Subscriber('evt_heat')
     def evtHeat() {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_heat"))
