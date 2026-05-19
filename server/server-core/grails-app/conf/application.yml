@@ -74,6 +74,14 @@ quartz:
       enabled: true
       interval: 30  # seconds
 
+    # Segway Navimow OAuth2 token refresh
+    # Access tokens expire in ~1h; this job keeps them fresh by spending the
+    # refresh_token stored during the OAuth flow. Enable once you've completed
+    # the OAuth flow at least once (refresh_token has to exist to be spent).
+    navimowTokenRefresh:
+      enabled: true
+      interval: 600  # seconds (10 min — well inside Segway's TTL)
+
     # Nibe heat pump data sync
     nibeInfoSync:
       enabled: true

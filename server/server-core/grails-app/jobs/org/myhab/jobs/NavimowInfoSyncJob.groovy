@@ -17,6 +17,7 @@ import org.myhab.domain.device.port.PortType
 import org.myhab.services.NotificationService
 import org.myhab.services.navimow.NavimowApiClient
 import org.myhab.services.navimow.NavimowApiException
+import org.myhab.services.navimow.NavimowOAuthService
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -86,6 +87,7 @@ class NavimowInfoSyncJob implements Job {
 
     MqttTopicService mqttTopicService
     NavimowApiClient navimowApiClient
+    NavimowOAuthService navimowOAuthService
     NotificationService notificationService
     def configProvider
 
@@ -129,17 +131,49 @@ class NavimowInfoSyncJob implements Job {
         try {
             statuses = navimowApiClient.getStatuses(token, baseUrl, [segwayId])
         } catch (NavimowApiException ex) {
-            log.error("NavimowInfoSyncJob: getStatuses failed for ${device.code}: ${ex.message}")
-            // Surface a one-time WARN notification when an auth-related error is
-            // the cause, so the user knows to re-run the "Connect Navimow account"
-            // flow without having to read bootRun logs. Gated by the current
-            // device.status — only fires on the ONLINE→OFFLINE transition, so
-            // repeated 30s ticks while the token is dead don't spam the bell.
-            if (device.status == DeviceStatus.ONLINE && isAuthFailure(ex)) {
-                notifyTokenExpired(device, ex)
+            // Auth-related failure → try a one-shot refresh inline so this same
+            // tick can recover. The periodic NavimowTokenRefreshJob keeps tokens
+            // fresh, but it runs every ~10 min — without this we'd still flip
+            // OFFLINE for up to that window after each TTL expiry.
+            if (isAuthFailure(ex)) {
+                log.info("NavimowInfoSyncJob: auth failure for ${device.code} (${ex.errorCode ?: ex.message}); attempting token refresh inline")
+                Map refreshResult = null
+                try {
+                    refreshResult = navimowOAuthService.refreshAccessToken(device)
+                } catch (Exception refreshEx) {
+                    log.warn("NavimowInfoSyncJob: inline refresh threw for ${device.code}: ${refreshEx.message}")
+                }
+                if (refreshResult?.success) {
+                    // Re-read the token from Configuration (refreshAccessToken
+                    // persists it there) and retry the original call once.
+                    String newToken = readConfig(device, CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key())
+                    try {
+                        statuses = navimowApiClient.getStatuses(newToken, baseUrl, [segwayId])
+                        log.info("NavimowInfoSyncJob: ${device.code} recovered after inline token refresh")
+                    } catch (NavimowApiException retryEx) {
+                        log.error("NavimowInfoSyncJob: retry after refresh still failed for ${device.code}: ${retryEx.message}")
+                        if (device.status == DeviceStatus.ONLINE) {
+                            notifyTokenExpired(device, retryEx)
+                        }
+                        safePublishStatus(device, DeviceStatus.OFFLINE)
+                        return
+                    }
+                } else {
+                    log.error("NavimowInfoSyncJob: getStatuses failed for ${device.code}: ${ex.message}; refresh also failed (${refreshResult?.error})")
+                    // Surface a one-time WARN notification on the ONLINE→OFFLINE
+                    // transition only so we don't spam every 30s while the
+                    // refresh_token itself is dead and re-OAuth is required.
+                    if (device.status == DeviceStatus.ONLINE) {
+                        notifyTokenExpired(device, ex)
+                    }
+                    safePublishStatus(device, DeviceStatus.OFFLINE)
+                    return
+                }
+            } else {
+                log.error("NavimowInfoSyncJob: getStatuses failed for ${device.code}: ${ex.message}")
+                safePublishStatus(device, DeviceStatus.OFFLINE)
+                return
             }
-            safePublishStatus(device, DeviceStatus.OFFLINE)
-            return
         }
 
         Map status = statuses[segwayId]

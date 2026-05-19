@@ -200,7 +200,91 @@ class NavimowOAuthService {
         return [success: true, deviceId: deviceId, deviceCode: device.code]
     }
 
+    /**
+     * Refresh the access token for {@code device} using the stored refresh
+     * token. Mirrors {@link org.myhab.jobs.NibeTokenRefreshJob#regenerateTokens}.
+     *
+     * <p>POSTs to the same OAuth endpoint as {@link #exchangeCode} but with
+     * {@code grant_type=refresh_token}. On success, persists the new access
+     * token (and refresh token if Segway rotated it — many OAuth providers
+     * do) into the device's Configuration sidecar so the existing
+     * {@code NavimowApiClient} reads the fresh value on its next call.</p>
+     *
+     * @return {@code [success: true]} on success; {@code [success: false,
+     *         error: ...]} on any failure (missing refresh token, network
+     *         error, non-200 from token endpoint, missing access_token in
+     *         response). All failures are logged at WARN; the caller
+     *         decides whether to escalate to a user-visible notification.
+     */
+    Map refreshAccessToken(Device device) {
+        if (device == null) return [success: false, error: 'device is null']
+        String refreshToken = readConfig(device, CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN.key())
+        if (!refreshToken) {
+            return [success: false, error: "device ${device.code} has no refresh token stored"]
+        }
+
+        Map tokenResponse
+        try {
+            tokenResponse = postRefresh(refreshToken)
+        } catch (Exception ex) {
+            log.warn("Navimow token refresh: HTTP call failed for device=${device.id}: ${ex.message}")
+            return [success: false, error: ex.message]
+        }
+
+        String newAccess = (tokenResponse.access_token
+                ?: tokenResponse.accessToken
+                ?: tokenResponse.token) as String
+        String newRefresh = (tokenResponse.refresh_token ?: tokenResponse.refreshToken) as String
+        if (!newAccess) {
+            log.warn("Navimow token refresh: response had no access_token. body=${tokenResponse}")
+            return [success: false, error: "Token endpoint returned no access_token (body: ${tokenResponse})"]
+        }
+
+        try {
+            upsertConfig(device, CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key(), newAccess)
+            if (newRefresh && newRefresh != refreshToken) {
+                // Some providers rotate the refresh token on every refresh; persist
+                // the new value or the NEXT refresh will fail with "invalid_grant".
+                upsertConfig(device, CfgKey.DEVICE.DEVICE_OAUTH_REFRESH_TOKEN.key(), newRefresh)
+            }
+        } catch (Exception ex) {
+            log.error("Navimow token refresh: failed to persist new tokens for device=${device.id}: ${ex.message}", ex)
+            return [success: false, error: "Stored token failed to save: ${ex.message}"]
+        }
+
+        log.info("Navimow token refresh: device=${device.id} (${device.code}) new access=${newAccess.take(12)}… refresh-rotated=${newRefresh && newRefresh != refreshToken ? 'yes' : 'no'}")
+        return [success: true]
+    }
+
     // ----------------------------------------------------------------------
+
+    private Map postRefresh(String refreshToken) {
+        String tokenUrl = cfg('navimow.oauth.token_url', DEFAULT_TOKEN_URL)
+        String clientId = cfg('navimow.oauth.client_id', DEFAULT_CLIENT_ID)
+        String clientSecret = cfg('navimow.oauth.client_secret', DEFAULT_CLIENT_SECRET)
+
+        HttpResponse<String> response = Unirest.post(tokenUrl)
+                .header('Content-Type', 'application/x-www-form-urlencoded')
+                .header('Accept', 'application/json')
+                .field('grant_type', 'refresh_token')
+                .field('client_id', clientId)
+                .field('client_secret', clientSecret)
+                .field('refresh_token', refreshToken)
+                .asString()
+
+        if (response.status >= 400) {
+            throw new NavimowApiException("Token endpoint HTTP ${response.status}: ${response.body}")
+        }
+        Map body = new JsonSlurper().parseText(response.body ?: '{}') as Map
+        // Segway sometimes wraps responses in {code,data,desc}; unwrap if needed.
+        if (body.code != null && body.data instanceof Map) {
+            if ((body.code as Integer) != 1) {
+                throw new NavimowApiException("Token endpoint envelope code=${body.code} desc=${body.desc}")
+            }
+            return body.data as Map
+        }
+        return body
+    }
 
     private Map exchangeCode(String code, String redirectUri) {
         String tokenUrl = cfg('navimow.oauth.token_url', DEFAULT_TOKEN_URL)
