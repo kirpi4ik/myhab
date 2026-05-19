@@ -370,12 +370,18 @@ class NavimowInfoSyncJob implements Job {
         int threshold = readLowBatteryThreshold()
         String label = "Navimow ${device.code}"
 
+        // Dedup keys carry the device id so multiple mowers don't suppress each
+        // other. Cooldown windows are tuned per-event-type: tight enough to
+        // catch a single oscillation cycle (~30s tick), wide enough to survive
+        // genuine multi-minute churn without spamming the inbox.
+
         // 1) Errors — new errorCode that didn't exist before (or changed).
         if (newError && !newError.trim().isEmpty() && newError != prevError && newError != 'null' && newError != '0') {
             notificationService.notifyAdmins(MessageLevel.ERROR,
                     "${label}: error ${newError}",
                     "${label} reported error code ${newError}${newErrorMessage ? ' (' + newErrorMessage + ')' : ''}.",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.error.${newError}", 60)
         }
 
         // 2) State transitions — any change.
@@ -383,7 +389,8 @@ class NavimowInfoSyncJob implements Job {
             notificationService.notifyAdmins(MessageLevel.INFO,
                     "${label}: ${prevState ?: '?'} → ${newState}",
                     "${label} state changed from ${prevState ?: 'unknown'} to ${newState}.",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.state.${newState}", 5)
         }
 
         // 3) Work completed — was actively mowing, now resting, with no error.
@@ -394,7 +401,8 @@ class NavimowInfoSyncJob implements Job {
             notificationService.notifyAdmins(MessageLevel.INFO,
                     "${label}: finished mowing",
                     "${label} finished its mowing job and returned to ${newState}.",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.finished_mowing", 30)
         }
 
         // 4a) Low battery — crossed the threshold downward.
@@ -403,7 +411,8 @@ class NavimowInfoSyncJob implements Job {
             notificationService.notifyAdmins(MessageLevel.WARN,
                     "${label}: low battery (${newBattery}%)",
                     "${label} battery dropped to ${newBattery}% (threshold ${threshold}%).",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.low_battery", 360)
         }
 
         // 4b) Returning to dock — caught as a state transition into 'returning'.
@@ -411,7 +420,8 @@ class NavimowInfoSyncJob implements Job {
             notificationService.notifyAdmins(MessageLevel.WARN,
                     "${label}: returning to dock",
                     "${label} is returning to its dock.",
-                    'navimow')
+                    'navimow',
+                    "navimow.${device.id}.returning", 30)
         }
     }
 
@@ -483,8 +493,10 @@ class NavimowInfoSyncJob implements Job {
 
     /**
      * Fire a WARN admin notification telling the user to re-authenticate.
-     * Called only on the ONLINE→OFFLINE transition so we don't repeat every
-     * 30s while the token stays dead.
+     * The ONLINE→OFFLINE gate at the call site was supposed to limit this to
+     * one notification per token expiry, but the device oscillates ONLINE↔
+     * OFFLINE every 30s on multi-node clusters, producing ~150 duplicates per
+     * hour. The dedup key + 60-min cooldown is the actual safety net.
      */
     private void notifyTokenExpired(Device device, NavimowApiException ex) {
         String label = "Navimow ${device.code}"
@@ -493,7 +505,8 @@ class NavimowInfoSyncJob implements Job {
                 "${label}: re-authorize required",
                 "${label} access token was rejected by Segway (${reason}). " +
                         "Open Devices → ${device.code} → Connect Navimow account to refresh the token.",
-                'navimow')
+                'navimow',
+                "navimow.${device.id}.token_expired", 60)
     }
 
     /**

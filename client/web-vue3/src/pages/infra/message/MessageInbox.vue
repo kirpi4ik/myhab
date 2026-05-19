@@ -49,7 +49,51 @@
       <div class="row" style="min-height: calc(100vh - 220px)">
         <!-- Left panel: message list -->
         <div :class="leftPanelClass" class="message-list-panel">
-          <q-scroll-area style="height: calc(100vh - 270px)">
+          <!-- Selection / bulk-action toolbar.
+               The checkbox doubles as "select all visible". The Mark / Archive
+               buttons only show when selection is non-empty. Calls the
+               messageBatchUpdateState GraphQL mutation in a single round trip. -->
+          <div class="row items-center q-px-md q-py-sm bulk-toolbar">
+            <q-checkbox
+              :model-value="allVisibleSelected"
+              :indeterminate-value="null"
+              @update:model-value="toggleSelectAll"
+              dense
+              :disable="filteredMessages.length === 0"
+            />
+            <div class="text-caption text-grey-7 q-ml-sm">
+              <template v-if="selectedCount > 0">{{ selectedCount }} selected</template>
+              <template v-else>Select all visible</template>
+            </div>
+            <q-space/>
+            <template v-if="selectedCount > 0">
+              <q-btn
+                flat dense no-caps
+                color="positive"
+                icon="mdi-email-open"
+                label="Read"
+                @click="bulkUpdate('READ')"
+                class="q-mr-xs"
+              />
+              <q-btn
+                flat dense no-caps
+                color="blue"
+                icon="mdi-email-mark-as-unread"
+                label="New"
+                @click="bulkUpdate('NEW')"
+                class="q-mr-xs"
+              />
+              <q-btn
+                flat dense no-caps
+                color="grey-7"
+                icon="mdi-archive"
+                label="Archive"
+                @click="bulkUpdate('ARCHIVE')"
+              />
+            </template>
+          </div>
+          <q-separator/>
+          <q-scroll-area style="height: calc(100vh - 320px)">
             <q-list separator>
               <q-item
                 v-for="msg in filteredMessages"
@@ -61,6 +105,13 @@
                 @click="selectMessage(msg)"
                 :class="{ 'text-weight-bold': msg.state === 'NEW' }"
               >
+                <q-item-section side @click.stop>
+                  <q-checkbox
+                    :model-value="isSelected(msg.id)"
+                    @update:model-value="toggleSelected(msg.id)"
+                    dense
+                  />
+                </q-item-section>
                 <q-item-section avatar>
                   <q-icon
                     :name="levelIcon(msg.level)"
@@ -193,7 +244,8 @@ import { useQuasar } from 'quasar';
 import { formatDistanceToNow, format, parseISO } from 'date-fns';
 import {
   MY_MESSAGES,
-  MESSAGE_UPDATE_STATE
+  MESSAGE_UPDATE_STATE,
+  MESSAGE_BATCH_UPDATE_STATE
 } from '@/graphql/queries';
 
 export default defineComponent({
@@ -209,6 +261,37 @@ export default defineComponent({
     const stateFilter = ref(null);
     const levelFilter = ref(null);
     const searchText = ref('');
+
+    // Multi-select state for bulk actions. Stored as a plain Set wrapped in
+    // a ref so adding/removing forces Vue reactivity (Set mutations aren't
+    // reactive on their own — we assign a fresh Set on every change).
+    const selectedIds = ref(new Set());
+    const selectedCount = computed(() => selectedIds.value.size);
+    const isSelected = (id) => selectedIds.value.has(String(id));
+    const toggleSelected = (id) => {
+      const next = new Set(selectedIds.value);
+      const k = String(id);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      selectedIds.value = next;
+    };
+    const allVisibleSelected = computed(() => {
+      if (filteredMessages.value.length === 0) return false;
+      return filteredMessages.value.every(m => selectedIds.value.has(String(m.id)));
+    });
+    const toggleSelectAll = () => {
+      if (allVisibleSelected.value) {
+        // Clear only the currently-visible IDs; preserve any off-screen
+        // selections (unlikely with our filter-clears-selection rule, but
+        // future-proofs the behaviour).
+        const next = new Set(selectedIds.value);
+        filteredMessages.value.forEach(m => next.delete(String(m.id)));
+        selectedIds.value = next;
+      } else {
+        const next = new Set(selectedIds.value);
+        filteredMessages.value.forEach(m => next.add(String(m.id)));
+        selectedIds.value = next;
+      }
+    };
 
     const stateOptions = [
       { label: 'All', value: null },
@@ -264,6 +347,56 @@ export default defineComponent({
       selectedMessage.value = msg;
       if (msg.state === 'NEW') {
         await updateState(msg, 'READ');
+      }
+    };
+
+    /**
+     * Flip every selected message to the given state in a single GraphQL
+     * round trip via the existing messageBatchUpdateState mutation. Updates
+     * the local list in place + clears the selection on success.
+     */
+    const bulkUpdate = async (newState) => {
+      const ids = Array.from(selectedIds.value);
+      if (ids.length === 0) return;
+      try {
+        const response = await client.mutate({
+          mutation: MESSAGE_BATCH_UPDATE_STATE,
+          variables: { ids, state: newState },
+          fetchPolicy: 'no-cache',
+        });
+        if (response.data?.messageBatchUpdateState?.success) {
+          const idSet = new Set(ids);
+          messages.value = messages.value.map(m =>
+            idSet.has(String(m.id)) ? { ...m, state: newState } : m
+          );
+          // Keep the detail pane in sync if the currently-open message was bulk-updated.
+          if (selectedMessage.value && idSet.has(String(selectedMessage.value.id))) {
+            selectedMessage.value = { ...selectedMessage.value, state: newState };
+          }
+          selectedIds.value = new Set();
+          $q.notify({
+            color: 'positive',
+            message: `${ids.length} message(s) updated to ${newState}`,
+            icon: 'mdi-check-circle',
+            position: 'top',
+            timeout: 2500,
+          });
+        } else {
+          $q.notify({
+            color: 'negative',
+            message: response.data?.messageBatchUpdateState?.error || 'Bulk update failed',
+            icon: 'mdi-alert-circle',
+            position: 'top',
+          });
+        }
+      } catch (e) {
+        console.error('Failed to bulk-update messages', e);
+        $q.notify({
+          color: 'negative',
+          message: 'Bulk update failed',
+          icon: 'mdi-alert-circle',
+          position: 'top',
+        });
       }
     };
 
@@ -373,6 +506,14 @@ export default defineComponent({
 
     watch(() => route.query.id, () => applyQuerySelection());
 
+    // Filters change the set of currently-visible messages. Off-screen
+    // selections would be confusing (the bulk action would silently affect
+    // rows the user can't see), so wipe selection whenever the visible set
+    // changes.
+    watch([stateFilter, levelFilter, searchText], () => {
+      selectedIds.value = new Set();
+    });
+
     onMounted(async () => {
       await fetchMessages();
       await applyQuerySelection();
@@ -398,7 +539,14 @@ export default defineComponent({
       leftPanelClass,
       rightPanelClass,
       showDetailPanel,
-      fetchMessages
+      fetchMessages,
+      // Bulk-selection bindings
+      selectedCount,
+      isSelected,
+      toggleSelected,
+      allVisibleSelected,
+      toggleSelectAll,
+      bulkUpdate,
     };
   }
 });
