@@ -25,6 +25,28 @@ import org.myhab.utils.HttpErrorUtil
 class NavimowApiClient {
 
     /**
+     * Fetch the list of Navimow vehicles the authenticated account owns.
+     * Used by {@link org.myhab.services.navimow.NavimowOAuthService} right
+     * after token exchange to auto-populate the per-device Segway vehicle
+     * id (which the user otherwise has to copy by hand from the Segway app).
+     *
+     * <p>Each returned map is the raw Segway entry — at minimum it carries
+     * an {@code id} or {@code deviceId} field; depending on the firmware
+     * also {@code name}, {@code model}, {@code sn}, etc.</p>
+     *
+     * @throws NavimowApiException on HTTP failure or {@code code != 1}.
+     */
+    List<Map> listAuthorizedDevices(String token, String baseUrl) {
+        // Segway returns {"code":1,"data":{"payload":{"devices":[...]}}}.
+        // The body is conventionally empty for this call — the auth comes
+        // entirely from the Bearer token. We POST with an empty JSON object
+        // to stay consistent with the other /openapi/smarthome/* endpoints.
+        Map data = post(token, baseUrl, '/openapi/smarthome/authList', [:])
+        Map payload = (data?.payload ?: [:]) as Map
+        return (payload.devices ?: []) as List<Map>
+    }
+
+    /**
      * Fetch current statuses for one or more mowers in a single call.
      *
      * @return map keyed by Segway device id ({@code String}) to the raw status

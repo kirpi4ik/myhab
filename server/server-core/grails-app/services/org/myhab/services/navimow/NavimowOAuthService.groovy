@@ -61,6 +61,7 @@ class NavimowOAuthService {
 
     HazelcastInstance hazelcastInstance
     def configProvider
+    NavimowApiClient navimowApiClient
 
     /**
      * Begin an OAuth flow for the given Navimow Device.
@@ -153,6 +154,7 @@ class NavimowOAuthService {
             return [success: false, error: "Token endpoint returned no access_token (body: ${tokenResponse})"]
         }
 
+        String resolvedBaseUrl
         try {
             upsertConfig(device, CfgKey.DEVICE.DEVICE_OAUTH_ACCESS_TOKEN.key(), accessToken)
             if (refreshToken) {
@@ -160,13 +162,38 @@ class NavimowOAuthService {
             }
             // Auto-populate base_url if the device doesn't have one yet — gives
             // first-time users a one-click setup (token + base URL together).
-            if (!readConfig(device, CfgKey.DEVICE.DEVICE_NAVIMOW_API_BASE_URL.key())) {
-                upsertConfig(device, CfgKey.DEVICE.DEVICE_NAVIMOW_API_BASE_URL.key(),
-                        cfg('navimow.api.base_url', DEFAULT_API_BASE_URL))
+            resolvedBaseUrl = readConfig(device, CfgKey.DEVICE.DEVICE_NAVIMOW_API_BASE_URL.key())
+            if (!resolvedBaseUrl) {
+                resolvedBaseUrl = cfg('navimow.api.base_url', DEFAULT_API_BASE_URL)
+                upsertConfig(device, CfgKey.DEVICE.DEVICE_NAVIMOW_API_BASE_URL.key(), resolvedBaseUrl)
             }
         } catch (Exception ex) {
             log.error("Navimow OAuth: failed to persist token for device=${deviceId}: ${ex.message}", ex)
             return [success: false, error: "Stored token failed to save: ${ex.message}"]
+        }
+
+        // Auto-populate the Segway vehicle id by calling /openapi/smarthome/authList
+        // with the freshly-issued token. Without this the NavimowInfoSyncJob bails
+        // out every tick with "missing one of token/base_url/segway_device_id" and
+        // no ports get auto-created. Failures here are non-fatal — the user can
+        // always paste the id manually via the device admin page.
+        if (!readConfig(device, CfgKey.DEVICE.DEVICE_NAVIMOW_DEVICE_ID.key())) {
+            try {
+                List<Map> authorized = navimowApiClient.listAuthorizedDevices(accessToken, resolvedBaseUrl)
+                if (authorized.isEmpty()) {
+                    log.warn("Navimow OAuth: /authList returned no devices for token=${accessToken.take(12)}… — Segway vehicle id will need to be entered manually")
+                } else {
+                    String segwayId = (authorized[0].id ?: authorized[0].deviceId) as String
+                    if (segwayId) {
+                        upsertConfig(device, CfgKey.DEVICE.DEVICE_NAVIMOW_DEVICE_ID.key(), segwayId)
+                        log.info("Navimow OAuth: auto-discovered Segway vehicle id ${segwayId} for device=${deviceId} (${authorized.size()} authorized vehicle(s))")
+                    } else {
+                        log.warn("Navimow OAuth: /authList entry has no id field — needs manual entry. Entry=${authorized[0]}")
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("Navimow OAuth: /authList lookup failed (${ex.message}); Segway vehicle id will need to be entered manually")
+            }
         }
 
         log.info("Navimow OAuth success: device=${deviceId} (${device.code}) token=${accessToken.take(12)}… refresh=${refreshToken ? 'yes' : 'no'}")
