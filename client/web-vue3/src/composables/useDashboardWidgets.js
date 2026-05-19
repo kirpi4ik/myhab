@@ -8,24 +8,17 @@ import { useAppConfigStore } from 'src/store/app-config.store';
  *   - Settings.vue         → renders a checkbox per item, bound to the
  *                            per-user `hiddenWidgets` set
  *
- * Each entry:
- *   - id            stable identifier persisted in user prefs (never rename)
- *   - label         human-readable name shown in Settings
- *   - section       'quickAccess' (top row) | 'monitoring' (bottom row)
- *   - kind          'actionCard' (header + button group) | 'component' (single Vue component)
- *   - component     for kind === 'component': component name in the parent's `components` map
- *   - props         () => object — factory so values stay reactive when appConfig updates
- *   - actionCard    for kind === 'actionCard': {title, icon, cardClass, actions:[{label,icon,route}]}
- *   - roleGate      optional list of roles; the parent applies the gate (no per-widget auth here)
- *   - defaultVisible if false, widget is hidden by default (currently unused — all default to true)
+ * Keys are read from the git-backed ConfigProvider via `useAppConfigStore`.
+ * They live in the same namespaces the backend already uses
+ * (`specialDevices.*`, `grafana.*`, `ui.*`) so a single config repo entry
+ * serves both sides — no duplication.
  *
- * Adding a new dashboard widget = adding an entry here. No further wiring needed
- * beyond registering the component in DashboardActions.vue's `components` map.
+ * Adding a new dashboard widget = adding an entry here + (if it references
+ * a new entity) extending the config.yaml in the deployment's config repo.
  */
 export function useDashboardWidgets() {
 	const appConfig = useAppConfigStore();
-
-	const z = (key) => appConfig.getNumber(key);
+	const n = (key) => appConfig.getNumber(key);
 
 	return [
 		// ──────── Quick access: action cards (header + button row) ────────
@@ -40,8 +33,8 @@ export function useDashboardWidgets() {
 				icon: 'fas fa-lightbulb',
 				cardClass: 'card-light',
 				actions: [
-					{ label: 'Interior', icon: 'mdi-home-outline', route: `/zones/${z('ui.zone.int.id')}?category=LIGHT` },
-					{ label: 'Exterior', icon: 'mdi-home-city-outline', route: `/zones/${z('ui.zone.ext.id')}?category=LIGHT` },
+					{ label: 'Interior', icon: 'mdi-home-outline', route: `/zones/${n('specialZones.int.id')}?category=LIGHT` },
+					{ label: 'Exterior', icon: 'mdi-home-city-outline', route: `/zones/${n('specialZones.ext.id')}?category=LIGHT` },
 				],
 			},
 		},
@@ -56,8 +49,8 @@ export function useDashboardWidgets() {
 				icon: 'fas fa-fire',
 				cardClass: 'card-heat',
 				actions: [
-					{ label: 'Parter', icon: 'mdi-stairs-down', route: `/zones/${z('ui.zone.parter.id')}?category=HEAT` },
-					{ label: 'Etaj', icon: 'mdi-stairs-up', route: `/zones/${z('ui.zone.etaj.id')}?category=HEAT` },
+					{ label: 'Parter', icon: 'mdi-stairs-down', route: `/zones/${n('specialZones.parter.id')}?category=HEAT` },
+					{ label: 'Etaj', icon: 'mdi-stairs-up', route: `/zones/${n('specialZones.etaj.id')}?category=HEAT` },
 				],
 			},
 		},
@@ -72,8 +65,8 @@ export function useDashboardWidgets() {
 				icon: 'mdi-electric-switch',
 				cardClass: 'card-switch',
 				actions: [
-					{ label: 'Interior', icon: 'mdi-home-outline', route: `/zones/${z('ui.zone.int.id')}?category=SWITCH` },
-					{ label: 'Exterior', icon: 'mdi-home-city-outline', route: `/zones/${z('ui.zone.ext.id')}?category=SWITCH` },
+					{ label: 'Interior', icon: 'mdi-home-outline', route: `/zones/${n('specialZones.int.id')}?category=SWITCH` },
+					{ label: 'Exterior', icon: 'mdi-home-city-outline', route: `/zones/${n('specialZones.ext.id')}?category=SWITCH` },
 				],
 			},
 		},
@@ -88,8 +81,8 @@ export function useDashboardWidgets() {
 				icon: 'fas fa-temperature-high',
 				cardClass: 'card-temp',
 				actions: [
-					{ label: 'Interior', icon: 'mdi-home-thermometer-outline', route: `/zones/${z('ui.zone.int.id')}?category=TEMP` },
-					{ label: 'Exterior', icon: 'mdi-thermometer', route: `/zones/${z('ui.zone.ext.id')}?category=TEMP` },
+					{ label: 'Interior', icon: 'mdi-home-thermometer-outline', route: `/zones/${n('specialZones.int.id')}?category=TEMP` },
+					{ label: 'Exterior', icon: 'mdi-thermometer', route: `/zones/${n('specialZones.ext.id')}?category=TEMP` },
 				],
 			},
 		},
@@ -131,7 +124,7 @@ export function useDashboardWidgets() {
 			kind: 'component',
 			component: 'meteo-station-card',
 			defaultVisible: true,
-			props: () => ({ deviceId: z('ui.device.meteo_station.id'), locationName: 'Halchiu, Romania' }),
+			props: () => ({ deviceId: n('specialDevices.meteoStation.deviceId'), locationName: 'Halchiu, Romania' }),
 		},
 		{
 			id: 'solar_plant',
@@ -141,8 +134,8 @@ export function useDashboardWidgets() {
 			component: 'solar-plant-widget',
 			defaultVisible: true,
 			props: () => ({
-				deviceId: z('ui.device.solar_plant.id'),
-				meterDeviceId: z('ui.device.solar_meter.id'),
+				deviceId: n('specialDevices.solarPlant.deviceId'),
+				meterDeviceId: n('specialDevices.solarMeter.deviceId'),
 			}),
 		},
 		{
@@ -152,7 +145,9 @@ export function useDashboardWidgets() {
 			kind: 'component',
 			component: 'nibe-heat-pump-widget',
 			defaultVisible: true,
-			props: () => ({ deviceId: z('ui.device.heat_pump.id') }),
+			// Different from specialDevices.heatPump.id (a peripheral) — this is the
+			// myhab Device row id used by NibeHeatPumpWidget's GraphQL query.
+			props: () => ({ deviceId: n('specialDevices.heatPump.deviceId') }),
 		},
 		{
 			id: 'navimow',
@@ -161,7 +156,7 @@ export function useDashboardWidgets() {
 			kind: 'component',
 			component: 'navimow-widget',
 			defaultVisible: true,
-			props: () => ({ deviceId: z('ui.device.navimow.id') }),
+			props: () => ({ deviceId: n('specialDevices.navimow.deviceId') }),
 		},
 	];
 }

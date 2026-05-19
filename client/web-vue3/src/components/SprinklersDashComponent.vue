@@ -146,8 +146,8 @@ export default defineComponent({
   },
   setup(props, {emit}) {
     const appConfig = useAppConfigStore();
-    const zoneLanId = appConfig.getNumber('ui.zone.lan.id');
-    const zoneGardenId = appConfig.getNumber('ui.zone.garden.id');
+    const zoneLanId = appConfig.getNumber('specialZones.lan.id');
+    const zoneGardenId = appConfig.getNumber('specialZones.garden.id');
 
     const asset = ref({});
     const expirationTime = ref(null);

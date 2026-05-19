@@ -6,10 +6,12 @@ type Query{
     config(key: String!): String
     appConfigList: [AppConfigEntry]
     """
-    All UI-facing application configuration entries — Configuration rows
-    with entityType=CONFIG, entityId=0, key starting with `ui.`. The SPA
-    fetches this once at boot and hydrates a Pinia store so widgets can
-    read device/zone IDs (etc.) synchronously without per-page round trips.
+    UI-only subset of the git-backed ConfigProvider — every config key
+    starting with `ui.`. Separate from `appConfigList` (which returns
+    everything, including secrets like mqtt.password / telegram.token) so
+    regular authenticated users can hydrate their dashboard at boot without
+    being exposed to credentials. The git repo is still the source of truth;
+    edits flow through the standard `appConfigUpdate` mutation.
     """
     uiConfigList: [UiConfigEntry!]!
     deviceModelList:[String!]!
@@ -80,7 +82,7 @@ type AppConfigEntry {
     type: String
 }
 
-"""One row of UI-facing application configuration. Returned by `uiConfigList`."""
+"""One row of the UI-only ConfigProvider subset. Returned by `uiConfigList`."""
 type UiConfigEntry {
     key: String!
     value: String

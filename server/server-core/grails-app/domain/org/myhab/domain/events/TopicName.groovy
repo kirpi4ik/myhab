@@ -17,6 +17,15 @@ enum TopicName {
     EVT_ASYNC_PORT_VALUE_CHANGED,
     EVT_UI_UPDATE_PORT_VALUE,
     EVT_CFG_VALUE_CHANGED,
+    /**
+     * Fired when an entry in the git-backed ConfigProvider changes (via the
+     * `appConfigUpdate` GraphQL mutation). Distinct from EVT_CFG_VALUE_CHANGED
+     * which is for DB-backed Configuration rows (per-entity config); this one
+     * is for global app config (mqtt.*, telegram.*, ui.*, etc.). The SPA
+     * listens for this to keep its `useAppConfigStore` in sync without
+     * reloading.
+     */
+    EVT_APP_CFG_VALUE_CHANGED,
     EVT_STAT_VALUE_CHANGED,
     POWER;
 

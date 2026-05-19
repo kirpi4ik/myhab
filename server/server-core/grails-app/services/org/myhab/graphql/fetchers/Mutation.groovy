@@ -449,7 +449,9 @@ class Mutation implements EventPublisher {
     }
 
     /**
-     * Update an application configuration value and commit to GIT
+     * Update an application configuration value and commit to GIT. On success,
+     * publish {@link org.myhab.domain.events.TopicName#EVT_APP_CFG_VALUE_CHANGED}
+     * so the SPA can refresh its in-memory copy without a page reload.
      */
     DataFetcher appConfigUpdate() {
         return new DataFetcher() {
@@ -459,15 +461,28 @@ class Mutation implements EventPublisher {
                     String key = environment.getArgument("key")
                     String value = environment.getArgument("value")
                     String commitMessage = environment.getArgument("commitMessage")
-                    
+
                     if (!key || key.trim().isEmpty()) {
                         return [success: false, error: "Configuration key is required"]
                     }
-                    
+
                     boolean success = configProvider.setAndCommit(key, value, commitMessage)
-                    
+
                     if (success) {
                         log.info("App config updated: ${key} = ${value}")
+                        // Broadcast to connected SPAs so widgets reading from
+                        // useAppConfigStore reflect the new value live.
+                        // Payload shape mirrors EVT_CFG_VALUE_CHANGED for
+                        // consistency: p4=key, p5=value.
+                        publish(org.myhab.domain.events.TopicName.EVT_APP_CFG_VALUE_CHANGED.id(),
+                                new org.myhab.domain.common.Event().with {
+                                    p0 = org.myhab.domain.events.TopicName.EVT_APP_CFG_VALUE_CHANGED.id()
+                                    p1 = 'APP_CONFIG'
+                                    p4 = key
+                                    p5 = value
+                                    p6 = 'system'
+                                    it
+                                })
                         return [success: true, error: null]
                     } else {
                         return [success: false, error: "Failed to update configuration"]
