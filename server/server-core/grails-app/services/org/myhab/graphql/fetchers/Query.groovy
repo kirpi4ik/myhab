@@ -73,9 +73,7 @@ class Query {
                 def cacheKey = environment.getArgument("cacheKey")
                 // Convert cacheKey to String to match mutation's String.valueOf()
                 def cachedValue = hazelcastInstance.getMap(cacheName).get(String.valueOf(cacheKey))
-                // Return actual null instead of string "null" when cache is empty
-                def expireOn = cachedValue ? cachedValue["expireOn"] : null
-                return [cacheName: cacheName, cacheKey: cacheKey, cachedValue: expireOn]
+                return [cacheName: cacheName, cacheKey: cacheKey, cachedValue: extractExpireOn(cachedValue)]
 
             }
         }
@@ -87,27 +85,43 @@ class Query {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 String cacheName = environment.getArgument("cacheName")
                 def result = []
-                
+
                 if (cacheName) {
                     // If specific cache name is provided, only query that cache
                     hazelcastInstance.getMap(cacheName).entrySet().each { entry ->
-                        // Return actual null instead of string "null" when cache is empty
-                        def expireOn = entry.value ? entry.value["expireOn"] : null
-                        result << [cacheName: cacheName, cacheKey: entry.key, cachedValue: expireOn]
+                        result << [cacheName: cacheName, cacheKey: entry.key, cachedValue: extractExpireOn(entry.value)]
                     }
                 } else {
                     // If no cache name provided, query all caches
                     CacheMap.values().each { cMap ->
                         hazelcastInstance.getMap(cMap.name).entrySet().each { entry ->
-                            // Return actual null instead of string "null" when cache is empty
-                            def expireOn = entry.value ? entry.value["expireOn"] : null
-                            result << [cacheName: cMap.name, cacheKey: entry.key, cachedValue: expireOn]
+                            result << [cacheName: cMap.name, cacheKey: entry.key, cachedValue: extractExpireOn(entry.value)]
                         }
                     }
                 }
                 return result
             }
         }
+    }
+
+    /**
+     * Pull the {@code expireOn} timestamp out of a Hazelcast cache entry value.
+     * The EXPIRE / OAUTH_STATE / TOKENS maps store {@code [expireOn: ..., ...]}
+     * Map values, but the NOTIFICATION_DEDUP map (added with the per-key
+     * cooldown work) stores a bare {@code Long} — relying on
+     * {@code value['expireOn']} via Groovy property access throws
+     * {@code No such property: expireOn for class: java.lang.Long}, which
+     * surfaced as an intermittent GraphQL error on ZoneCombinedView / dashboard
+     * cards every time {@code cacheAll} iterated all maps. Treat non-Map values
+     * as "no expireOn" instead of failing the whole query.
+     */
+    private static Object extractExpireOn(Object cachedValue) {
+        if (cachedValue == null) return null
+        if (cachedValue instanceof Map) return cachedValue.get('expireOn')
+        // Bare scalars (e.g. NOTIFICATION_DEDUP's timestamp Long) have no
+        // expireOn property. Hazelcast's per-entry TTL handles their lifetime,
+        // and they're not user-facing — return null cleanly.
+        return null
     }
 
     def config() {

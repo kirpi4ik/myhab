@@ -225,6 +225,7 @@
 		"grid_import": "Grid Import",
 		"grid_export": "Grid Export",
 		"phase_consumption": "Phase Consumption",
+		"production_now": "Production/Consumption now",
 		"phase_a": "Phase A",
 		"phase_b": "Phase B",
 		"phase_c": "Phase C",
