@@ -12,6 +12,13 @@ on:
 env:
   QENV: production
 
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
 
@@ -28,6 +35,8 @@ jobs:
       - name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
       - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
       - name: Setup node
         uses: actions/setup-node@v6.2.0
         with:
@@ -60,7 +69,14 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Get version
         id: get_version
-        run: echo "version=$(cat src/main/docker/version.txt)-${GITHUB_SHA::6}" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(grep -m1 '^projectVersion=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/master" ]; then
+            echo "dockertag=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "dockertag=$VERSION-${GITHUB_SHA::6}" >> $GITHUB_OUTPUT
+          fi
       - name: Build docker and push
         uses: docker/build-push-action@v6.19.2
         with:
@@ -68,7 +84,7 @@ jobs:
           file: build/docker/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: kirpi4ik/myhab:${{steps.get_version.outputs.version}}
+          tags: kirpi4ik/myhab:${{steps.get_version.outputs.dockertag}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Build docker and push latest
@@ -81,3 +97,29 @@ jobs:
           tags: kirpi4ik/myhab:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Create GitHub tag & release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.get_version.outputs.version }}" \
+            --target "${GITHUB_SHA}" \
+            --title "v${{ steps.get_version.outputs.version }}" \
+            --generate-notes
+      - name: Bump dev version and commit
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
+        run: |
+          ./gradlew bumpVersion
+          ./gradlew syncVersions
+          NEXT=$(grep -m1 '^projectVersion=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gradle.properties client/web-vue3/package.json client/web-vue3/.env client/web-vue3/.env.prod
+          git commit -m "chore: bump dev version to ${NEXT} [skip ci]"
+          # Push with a PAT that can bypass branch protection. Drop the GITHUB_TOKEN
+          # auth header that actions/checkout injected, otherwise it overrides the PAT.
+          # Loop prevention now relies on the [skip ci] tag in the commit message above.
+          git config --unset-all "http.https://github.com/.extraheader" 2>/dev/null || true
+          git push "https://x-access-token:${RELEASE_PAT}@github.com/${GITHUB_REPOSITORY}.git" HEAD:master
