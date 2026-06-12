@@ -5,6 +5,7 @@ export { useWebSocketListener, useWebSocketListeners } from './useWebSocketListe
 export { useNotifications } from './useNotifications';
 export { useEntityCRUD } from './useEntityCRUD';
 export { useEntityList } from './useEntityList';
+export { useTableFilters } from './useTableFilters';
 export { useSvgInteraction } from './useSvgInteraction';
 export { usePeripheralState } from './usePeripheralState';
 export { usePeripheralControl } from './usePeripheralControl';
