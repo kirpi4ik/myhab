@@ -73,9 +73,7 @@ class Query {
                 def cacheKey = environment.getArgument("cacheKey")
                 // Convert cacheKey to String to match mutation's String.valueOf()
                 def cachedValue = hazelcastInstance.getMap(cacheName).get(String.valueOf(cacheKey))
-                // Return actual null instead of string "null" when cache is empty
-                def expireOn = cachedValue ? cachedValue["expireOn"] : null
-                return [cacheName: cacheName, cacheKey: cacheKey, cachedValue: expireOn]
+                return [cacheName: cacheName, cacheKey: cacheKey, cachedValue: extractExpireOn(cachedValue)]
 
             }
         }
@@ -87,27 +85,43 @@ class Query {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 String cacheName = environment.getArgument("cacheName")
                 def result = []
-                
+
                 if (cacheName) {
                     // If specific cache name is provided, only query that cache
                     hazelcastInstance.getMap(cacheName).entrySet().each { entry ->
-                        // Return actual null instead of string "null" when cache is empty
-                        def expireOn = entry.value ? entry.value["expireOn"] : null
-                        result << [cacheName: cacheName, cacheKey: entry.key, cachedValue: expireOn]
+                        result << [cacheName: cacheName, cacheKey: entry.key, cachedValue: extractExpireOn(entry.value)]
                     }
                 } else {
                     // If no cache name provided, query all caches
                     CacheMap.values().each { cMap ->
                         hazelcastInstance.getMap(cMap.name).entrySet().each { entry ->
-                            // Return actual null instead of string "null" when cache is empty
-                            def expireOn = entry.value ? entry.value["expireOn"] : null
-                            result << [cacheName: cMap.name, cacheKey: entry.key, cachedValue: expireOn]
+                            result << [cacheName: cMap.name, cacheKey: entry.key, cachedValue: extractExpireOn(entry.value)]
                         }
                     }
                 }
                 return result
             }
         }
+    }
+
+    /**
+     * Pull the {@code expireOn} timestamp out of a Hazelcast cache entry value.
+     * The EXPIRE / OAUTH_STATE / TOKENS maps store {@code [expireOn: ..., ...]}
+     * Map values, but the NOTIFICATION_DEDUP map (added with the per-key
+     * cooldown work) stores a bare {@code Long} — relying on
+     * {@code value['expireOn']} via Groovy property access throws
+     * {@code No such property: expireOn for class: java.lang.Long}, which
+     * surfaced as an intermittent GraphQL error on ZoneCombinedView / dashboard
+     * cards every time {@code cacheAll} iterated all maps. Treat non-Map values
+     * as "no expireOn" instead of failing the whole query.
+     */
+    private static Object extractExpireOn(Object cachedValue) {
+        if (cachedValue == null) return null
+        if (cachedValue instanceof Map) return cachedValue.get('expireOn')
+        // Bare scalars (e.g. NOTIFICATION_DEDUP's timestamp Long) have no
+        // expireOn property. Hazelcast's per-entry TTL handles their lifetime,
+        // and they're not user-facing — return null cleanly.
+        return null
     }
 
     def config() {
@@ -122,7 +136,9 @@ class Query {
     }
 
     /**
-     * Get all application configuration entries from GIT
+     * Get all application configuration entries from GIT. Includes secrets
+     * (mqtt.password, telegram.token, opsgenie.apiKey, …) so use the
+     * narrower `uiConfigList` for non-admin SPA bootstrapping.
      */
     def appConfigList() {
         return new DataFetcher() {
@@ -134,21 +150,46 @@ class Query {
     }
 
     /**
-     * UI-facing app config — every Configuration row with entityType=CONFIG,
-     * entityId=0, key starting with `ui.`. The SPA calls this once at boot
-     * and stores the result in a Pinia store keyed by config key, so widgets
-     * can read device/zone IDs (etc.) synchronously after boot. Replaces
-     * the per-component `process.env.X` reads we had before.
+     * UI-safe subset of {@link #appConfigList}. The SPA calls this once at
+     * boot and hydrates the `useAppConfigStore` Pinia store, so widgets read
+     * device/zone IDs (and other UI defaults) synchronously after boot.
+     * Edits flow through the standard `appConfigUpdate` mutation; the git
+     * repo is the long-term source of truth.
+     *
+     * We expose this separately from `appConfigList` because the broader
+     * config tree contains secrets (mqtt.password, telegram.token,
+     * opsgenie.apiKey, …). The allowlist below names only the top-level
+     * branches whose contents are safe to ship to every authenticated user:
+     *   - {@code specialDevices.*} — well-known device/peripheral IDs
+     *     (door lock, water pump, heat pump, navimow, etc.)
+     *   - {@code specialZones.*}   — well-known zone IDs (int/ext/etaj/
+     *     parter/lan/garden) referenced by the dashboard quick-access cards
+     *   - {@code grafana.*}        — public Grafana embed URL + dashboard
+     *     IDs (no API keys)
+     *   - {@code surveillance.*}   — public video stream URL
+     *   - {@code ui.*}             — pure-UI formatting (date format, etc.)
+     *
+     * Add a new top-level branch only if every key under it is safe for
+     * non-admin users to read.
      */
+    private static final List<String> UI_SAFE_PREFIXES = [
+            'specialDevices.',
+            'specialZones.',
+            'grafana.',
+            'surveillance.',
+            'ui.',
+    ].asImmutable()
+
     def uiConfigList() {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
-                return Configuration.createCriteria().list {
-                    eq('entityType', EntityType.CONFIG)
-                    eq('entityId', 0L)
-                    like('key', 'ui.%')
-                }.collect { c -> [key: c.key, value: c.value] }
+                return configProvider.getAll()
+                        .findAll { Map row ->
+                            String key = row?.key
+                            key != null && UI_SAFE_PREFIXES.any { String p -> key.startsWith(p) }
+                        }
+                        .collect { Map row -> [key: row.key, value: row.value] }
             }
         }
     }

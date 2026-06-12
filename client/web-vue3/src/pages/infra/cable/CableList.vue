@@ -33,10 +33,19 @@
         </div>
       </q-card-section>
 
+      <!-- Filter Section -->
+      <q-card-section class="q-pt-none">
+        <table-filter-bar
+          :fields="filterFields"
+          :rows="filteredItems"
+          v-model="filters"
+        />
+      </q-card-section>
+
       <!-- Table Section -->
-      <q-table 
-        :rows="filteredItems" 
-        :columns="columns" 
+      <q-table
+        :rows="filteredRows"
+        :columns="columns"
         :loading="loading"
         row-key="id"
         flat
@@ -138,14 +147,16 @@
 
 <script>
 import {defineComponent, onMounted, ref} from "vue";
-import {useEntityList} from '@/composables';
+import {useEntityList, useTableFilters} from '@/composables';
 import {CABLE_DELETE, CABLE_LIST_ALL} from "@/graphql/queries";
 import {format} from 'date-fns';
 import {labelService} from '@/_services';
 import {useQuasar} from 'quasar';
+import TableFilterBar from '@/components/filters/TableFilterBar.vue';
 
 export default defineComponent({
   name: 'CableList',
+  components: {TableFilterBar},
   setup() {
     const $q = useQuasar();
     const labelLoading = ref(null);
@@ -194,13 +205,24 @@ export default defineComponent({
         location: cable.rack?.name || '-',
         category: cable.category?.name || null,
         description: cable.description,
-        patchPanel: cable.patchPanel 
-          ? `${cable.patchPanel.name} (${cable.patchPanelPort}/${cable.patchPanel.size})` 
+        patchPanel: cable.patchPanel
+          ? `${cable.patchPanel.name} (${cable.patchPanelPort}/${cable.patchPanel.size})`
           : null,
+        patchPanelName: cable.patchPanel?.name || null,
         tsCreated: cable.tsCreated,
         tsUpdated: cable.tsUpdated
       })
     });
+
+    // Structured per-field filters, layered on top of the text-search (filteredItems)
+    const filterFields = [
+      {key: 'location', label: 'Rack', type: 'select'},
+      {key: 'category', label: 'Category', type: 'select'},
+      {key: 'patchPanelName', label: 'Panel Port', type: 'select'},
+      {key: 'code', label: 'Code', type: 'text'},
+      {key: 'description', label: 'Description', type: 'text'},
+    ];
+    const {filters, filteredRows} = useTableFilters(filteredItems, filterFields);
 
     /**
      * Format date for display
@@ -266,6 +288,9 @@ export default defineComponent({
 
     return {
       filteredItems,
+      filteredRows,
+      filterFields,
+      filters,
       loading,
       filter,
       columns,

@@ -129,9 +129,22 @@ task syncVersionToEnvFiles() {
 task syncVersions(dependsOn: [syncVersionToPackageJson, syncVersionToEnvFiles]) {
     description = 'Sync version from gradle.properties to all project files'
     group = 'versioning'
-    
+
     doLast {
         logger.quiet "✅ All versions synchronized to ${projectVersion}"
+    }
+}
+
+task bumpVersion() {
+    description = 'Increment the patch component of projectVersion in gradle.properties'
+    group = 'versioning'
+
+    doLast {
+        def parts = projectVersion.toString().tokenize('.')
+        def next = "${parts[0]}.${parts[1]}.${(parts[2] as int) + 1}"
+        def propsFile = new File("${rootDir}/gradle.properties")
+        propsFile.text = propsFile.text.replaceFirst(/(?m)^projectVersion=.*$/, "projectVersion=${next}")
+        logger.quiet "Bumped projectVersion ${projectVersion} → ${next}"
     }
 }
 

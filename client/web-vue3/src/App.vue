@@ -21,17 +21,18 @@ export default defineComponent({
       const wsStore = useWebSocketStore();
       const appConfig = useAppConfigStore();
 
-      // Keep the app-config Pinia store in sync with backend Configuration
-      // edits. ConfigurationService publishes EVT_CFG_VALUE_CHANGED whenever
-      // a row is updated (including BootStrap's upsert on restart and any
-      // ConfigurationView UI edit). Filter to ui.* keys under
-      // entityType=CONFIG, entityId=0 — that's the namespace served by
-      // uiConfigList. Components that read via appConfig.getNumber(...) /
-      // appConfig.get(...) reactively re-render on the next tick.
-      useWebSocketListener('evt_cfg_value_changed', (payload) => {
-        if (payload?.p2 === 'CONFIG' && String(payload?.p3) === '0'
-            && typeof payload?.p4 === 'string' && payload.p4.startsWith('ui.')) {
-          appConfig.updateOne(payload.p4, payload.p5);
+      // Keep the app-config Pinia store in sync with edits made via the
+      // /admin/appconfig page. The Mutation.appConfigUpdate fetcher publishes
+      // EVT_APP_CFG_VALUE_CHANGED after a successful commit to the git-backed
+      // ConfigProvider. We mirror the backend's `uiConfigList` allowlist so
+      // we don't accept secret keys (mqtt.password etc.) into the SPA store.
+      // Components that read via appConfig.getNumber(...) / appConfig.get(...)
+      // reactively re-render on the next tick.
+      const UI_SAFE_PREFIXES = ['specialDevices.', 'specialZones.', 'grafana.', 'surveillance.', 'ui.'];
+      useWebSocketListener('evt_app_cfg_value_changed', (payload) => {
+        const key = payload?.p4;
+        if (typeof key === 'string' && UI_SAFE_PREFIXES.some(p => key.startsWith(p))) {
+          appConfig.updateOne(key, payload.p5);
         }
       });
 

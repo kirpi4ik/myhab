@@ -161,7 +161,7 @@ export default defineComponent({
   },
   setup(props, {emit}) {
     const appConfig = useAppConfigStore();
-    const waterPumpId = appConfig.getNumber('ui.device.water_pump.id');
+    const waterPumpId = appConfig.getNumber('specialDevices.water.peripheral.id');
     const asset = ref({});
     const expirationTime = ref(null);
     const {client} = useApolloClient();

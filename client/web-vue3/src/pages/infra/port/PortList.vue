@@ -33,9 +33,18 @@
         </div>
       </q-card-section>
 
+      <!-- Filter Section -->
+      <q-card-section class="q-pt-none">
+        <table-filter-bar
+          :fields="filterFields"
+          :rows="filteredItems"
+          v-model="filters"
+        />
+      </q-card-section>
+
       <!-- Table Section -->
       <q-table
-        :rows="filteredItems"
+        :rows="filteredRows"
         :columns="columns"
         :loading="loading"
         row-key="id"
@@ -132,11 +141,13 @@
 
 <script>
 import {defineComponent, onMounted} from "vue";
-import {useEntityList} from '@/composables';
+import {useEntityList, useTableFilters} from '@/composables';
 import {PORT_DELETE_BY_ID, PORT_LIST_ALL} from "@/graphql/queries";
+import TableFilterBar from '@/components/filters/TableFilterBar.vue';
 
 export default defineComponent({
   name: 'PortList',
+  components: {TableFilterBar},
   setup() {
     // Define columns for the table
     const columns = [
@@ -192,6 +203,17 @@ export default defineComponent({
       })
     });
 
+    // Structured per-field filters, layered on top of the text-search (filteredItems)
+    const filterFields = [
+      {key: 'deviceName', label: 'Device', type: 'select'},
+      {key: 'type', label: 'Type', type: 'select'},
+      {key: 'state', label: 'State', type: 'select'},
+      {key: 'internalRef', label: 'Ref ID', type: 'text'},
+      {key: 'name', label: 'Name', type: 'text'},
+      {key: 'description', label: 'Description', type: 'text'},
+    ];
+    const {filters, filteredRows} = useTableFilters(filteredItems, filterFields);
+
     /**
      * Get color for state badge
      */
@@ -213,6 +235,9 @@ export default defineComponent({
 
     return {
       filteredItems,
+      filteredRows,
+      filterFields,
+      filters,
       loading,
       filter,
       columns,
