@@ -33,9 +33,18 @@
         </div>
       </q-card-section>
 
+      <!-- Filter Section -->
+      <q-card-section class="q-pt-none">
+        <table-filter-bar
+          :fields="filterFields"
+          :rows="filteredItems"
+          v-model="filters"
+        />
+      </q-card-section>
+
       <!-- Table Section -->
       <q-table
-        :rows="filteredItems"
+        :rows="filteredRows"
         :columns="columns"
         :loading="loading"
         row-key="id"
@@ -124,12 +133,14 @@
 
 <script>
 import {defineComponent, onMounted} from "vue";
-import {useEntityList} from '@/composables';
+import {useEntityList, useTableFilters} from '@/composables';
 import {PERIPHERAL_DELETE, PERIPHERAL_LIST_ALL} from "@/graphql/queries";
 import {format} from 'date-fns';
+import TableFilterBar from '@/components/filters/TableFilterBar.vue';
 
 export default defineComponent({
   name: 'PeripheralList',
+  components: {TableFilterBar},
   setup() {
     // Define columns for the table
     const columns = [
@@ -182,6 +193,15 @@ export default defineComponent({
       })
     });
 
+    // Structured per-field filters, layered on top of the text-search (filteredItems)
+    const filterFields = [
+      {key: 'model', label: 'Model', type: 'select'},
+      {key: 'category', label: 'Category', type: 'select'},
+      {key: 'name', label: 'Name', type: 'text'},
+      {key: 'description', label: 'Description', type: 'text'},
+    ];
+    const {filters, filteredRows} = useTableFilters(filteredItems, filterFields);
+
     /**
      * Format date for display
      */
@@ -218,6 +238,9 @@ export default defineComponent({
 
     return {
       filteredItems,
+      filteredRows,
+      filterFields,
+      filters,
       loading,
       filter,
       columns,
