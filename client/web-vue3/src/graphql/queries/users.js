@@ -79,6 +79,16 @@ export const ME = gql`
 		me {
 			id
 			username
+			language
+		}
+	}
+`;
+
+export const ME_UPDATE_LANGUAGE = gql`
+	mutation meUpdateLanguage($language: String) {
+		meUpdateLanguage(language: $language) {
+			success
+			error
 		}
 	}
 `;

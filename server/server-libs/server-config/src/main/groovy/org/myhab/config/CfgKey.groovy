@@ -31,6 +31,30 @@ class CfgKey {
         }
     }
 
+    // Voice-assistant feature: toggle, LLM provider/model and (optionally) the
+    // API key used to map a spoken transcript to a peripheral + action. Stored
+    // in the git-backed ConfigProvider (a trusted, server-only Gitea instance).
+    // The API key is read from VOICE_LLM_APIKEY first and falls back to the
+    // provider's env var (ANTHROPIC_API_KEY / OPENAI_API_KEY) when absent.
+    // Code-side defaults are applied in VoiceCommandService.
+    enum VOICE implements Key {
+        VOICE_ENABLED('feature.voice.enabled'),
+        VOICE_LLM_PROVIDER('feature.voice.llm.provider'),
+        VOICE_LLM_MODEL('feature.voice.llm.model'),
+        VOICE_LLM_APIKEY('feature.voice.llm.apikey')
+
+        def key
+
+        VOICE(key) {
+            this.key = key
+        }
+
+        @Override
+        def key() {
+            return key
+        }
+    }
+
     // Global QR-code feature: toggle, content template and rendering options.
     // Stored in the git-backed ConfigProvider (overrides.yaml). Code-side
     // defaults are applied in LabelService when a key is absent.

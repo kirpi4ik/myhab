@@ -30,7 +30,14 @@ const currentUserSubject = new BehaviorSubject(safeJsonParse(localStorage.getIte
 function ensureCurrentUserIds() {
 	const current = currentUserSubject.value;
 	const token = current?.access_token || current?.token;
-	if (!token || (current?.id != null && current?.username != null)) {
+	if (!token) {
+		return Promise.resolve(current);
+	}
+	// Refetch when ids are missing, or when `language` was never loaded
+	// (undefined). A user who explicitly has no preference stores `null`,
+	// which is "loaded" and does not trigger another fetch.
+	const needsFetch = current?.id == null || current?.username == null || current?.language === undefined;
+	if (!needsFetch) {
 		return Promise.resolve(current);
 	}
 	return import('@/boot/graphql')
@@ -38,14 +45,36 @@ function ensureCurrentUserIds() {
 		.then((response) => response?.data?.me || null)
 		.then((data) => {
 			if (data?.id != null || data?.username != null) {
-				const updated = { ...current, ...data };
+				const updated = { ...current, ...data, language: data.language ?? null };
 				localStorage.setItem('currentUser', JSON.stringify(updated));
 				currentUserSubject.next(updated);
+				applyUserLocaleSafe(updated.language);
 				return updated;
 			}
 			return current;
 		})
 		.catch(() => current);
+}
+
+/**
+ * Apply the user's preferred locale (browser fallback when null). Loaded
+ * lazily to mirror the boot/graphql import style and avoid any module cycle.
+ */
+function applyUserLocaleSafe(language) {
+	import('@/_services/locale.service')
+		.then(({ applyUserLocale }) => applyUserLocale(language))
+		.catch(() => { /* locale application is best-effort */ });
+}
+
+/**
+ * Merge a partial update into the current user (localStorage + subject).
+ * Used e.g. when the user changes their preferred language in Settings.
+ */
+function updateCurrentUser(patch) {
+	const merged = { ...(currentUserSubject.value || {}), ...patch };
+	localStorage.setItem('currentUser', JSON.stringify(merged));
+	currentUserSubject.next(merged);
+	return merged;
 }
 
 export const authzService = {
@@ -57,6 +86,7 @@ export const authzService = {
 	},
 	hasAnyRole,
 	ensureCurrentUserIds,
+	updateCurrentUser,
 };
 
 /**

@@ -112,6 +112,42 @@
 			"download_error": "Failed to download label: {error}"
 		}
 	},
+	"settings": {
+		"language": {
+			"title": "Language",
+			"caption": "Choose the interface language. Your choice is saved to your account and used on every device. Leave it on automatic to follow your browser.",
+			"label": "Interface language",
+			"auto": "Automatic (browser)",
+			"login_required": "You must be logged in to change your language.",
+			"saved": "Language updated",
+			"save_error": "Failed to save language preference"
+		}
+	},
+	"voice": {
+		"menu": "Voice Control",
+		"title": "Voice Control",
+		"subtitle": "Speak a command to turn a peripheral on or off",
+		"start": "Start listening",
+		"stop": "Stop",
+		"listening": "Listening…",
+		"processing": "Working on it…",
+		"tap_to_speak": "Tap the microphone and say a command",
+		"transcript": "Command",
+		"transcript_placeholder": "e.g. turn on the terrace light",
+		"send": "Send",
+		"result": {
+			"done": "{name} turned {action}",
+			"failed": "Sorry, I couldn't run that command"
+		},
+		"errors": {
+			"not_supported": "Voice input is not supported in this browser. Use Chrome on Android.",
+			"denied": "Microphone permission denied. Allow microphone access and try again.",
+			"no_speech": "No speech detected. Please try again.",
+			"no_mic": "No microphone found on this device.",
+			"network": "Speech recognition needs a network connection.",
+			"generic": "Voice error: {message}"
+		}
+	},
 	"navigation": {
 		"home": "Home",
 		"dashboard": "Dashboard",
