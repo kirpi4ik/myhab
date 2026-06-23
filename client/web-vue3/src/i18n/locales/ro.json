@@ -112,6 +112,42 @@
       "download_error": "Descărcarea etichetei a eșuat: {error}"
     }
   },
+  "settings": {
+    "language": {
+      "title": "Limbă",
+      "caption": "Alege limba interfeței. Alegerea este salvată în contul tău și folosită pe toate dispozitivele. Lasă pe automat pentru a urma browserul.",
+      "label": "Limba interfeței",
+      "auto": "Automat (browser)",
+      "login_required": "Trebuie să fii autentificat pentru a schimba limba.",
+      "saved": "Limba a fost actualizată",
+      "save_error": "Salvarea preferinței de limbă a eșuat"
+    }
+  },
+  "voice": {
+    "menu": "Control vocal",
+    "title": "Control vocal",
+    "subtitle": "Rostește o comandă pentru a porni sau opri un periferic",
+    "start": "Începe ascultarea",
+    "stop": "Oprește",
+    "listening": "Ascult…",
+    "processing": "Se procesează…",
+    "tap_to_speak": "Atinge microfonul și rostește o comandă",
+    "transcript": "Comandă",
+    "transcript_placeholder": "ex. aprinde lumina de pe terasă",
+    "send": "Trimite",
+    "result": {
+      "done": "{name} — {action}",
+      "failed": "Ne pare rău, nu am putut executa comanda"
+    },
+    "errors": {
+      "not_supported": "Introducerea vocală nu este suportată în acest browser. Folosește Chrome pe Android.",
+      "denied": "Acces la microfon refuzat. Permite accesul la microfon și încearcă din nou.",
+      "no_speech": "Nu s-a detectat vorbire. Te rugăm încearcă din nou.",
+      "no_mic": "Nu s-a găsit niciun microfon pe acest dispozitiv.",
+      "network": "Recunoașterea vocală necesită conexiune la rețea.",
+      "generic": "Eroare vocală: {message}"
+    }
+  },
   "navigation": {
     "home": "Acasa",
     "dashboard": "Dashboard",

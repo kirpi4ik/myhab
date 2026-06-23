@@ -141,6 +141,17 @@ type MutationResponse {
     error : String
 }
 
+"""Result of resolving + executing a spoken voice command (see Mutation.voiceCommand)."""
+type VoiceCommandResult {
+    success: Boolean!
+    error: String
+    transcript: String
+    action: String
+    peripheralId: ID
+    peripheralName: String
+    spokenResponse: String
+}
+
 type BradCrumbLink {
     name : String
     type : String
@@ -158,6 +169,10 @@ type Mutation {
     appConfigRefresh: MutationResponse
     """Update the global QR-code label settings (commits to the git-backed config)."""
     qrConfigUpdate(enabled: Boolean!, contentTemplate: String!, position: String!, size: Int): MutationResponse
+    """Map a transcribed phrase to a peripheral on/off/toggle and execute it."""
+    voiceCommand(transcript: String!, locale: String): VoiceCommandResult
+    """Set the authenticated user's preferred UI language (null/empty clears it = follow browser)."""
+    meUpdateLanguage(language: String): MutationResponse
     """Update the state of a single message (NEW, READ, ARCHIVE)."""
     messageUpdateState(id: ID!, state: String!): MutationResponse
     """Update the state of multiple messages at once."""
@@ -325,4 +340,6 @@ type DeviceBackupResult {
 type MeResult {
     id: ID
     username: String
+    """Preferred UI language (e.g. 'en' / 'ro'); null means follow the browser."""
+    language: String
 }

@@ -57,6 +57,8 @@ class Mutation implements EventPublisher {
     org.myhab.services.dsl.action.NavimowCommandService navimowCommandService
     @Autowired
     org.myhab.services.navimow.NavimowOAuthService navimowOAuthService
+    @Autowired
+    org.myhab.services.VoiceCommandService voiceCommandService
 
 
     DataFetcher pushEvent() {
@@ -546,6 +548,68 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("Failed to update QR config", e)
                     return [success: false, error: e.message ?: "Failed to update QR configuration"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Resolve a transcribed voice phrase to a peripheral + action and execute it.
+     * Delegates to {@link org.myhab.services.VoiceCommandService}, which grounds
+     * the LLM with the live peripheral catalog, validates the resolved id, and
+     * publishes an {@code evt_switch} event (handled by UIMessageService).
+     */
+    DataFetcher voiceCommand() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String transcript = environment.getArgument("transcript") as String
+                String locale = environment.getArgument("locale") as String
+                String username = 'voice'
+                try {
+                    def principal = springSecurityService?.principal
+                    username = principal instanceof String ? principal : (principal?.username ?: 'voice')
+                } catch (Exception ignored) { /* unauthenticated fallback */ }
+                try {
+                    return voiceCommandService.handleTranscript(transcript, locale, username)
+                } catch (Exception e) {
+                    log.error("voiceCommand failed for transcript='${transcript}'", e)
+                    return [success: false, error: "Voice command failed: ${e.message}",
+                            transcript: transcript, action: null, peripheralId: null,
+                            peripheralName: null, spokenResponse: null]
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the authenticated user's preferred UI language. Self-scoped — always
+     * updates the principal's own User row. A null/blank value clears the
+     * preference so the client falls back to the browser language.
+     */
+    DataFetcher meUpdateLanguage() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    String language = environment.getArgument("language") as String
+                    def principal = springSecurityService?.principal
+                    String username = principal instanceof String ? principal : (principal?.username ?: principal?.toString())
+                    if (!username) {
+                        return [success: false, error: "Not authenticated"]
+                    }
+                    org.myhab.domain.User.withTransaction {
+                        org.myhab.domain.User user = org.myhab.domain.User.findByUsername(username)
+                        if (!user) {
+                            return [success: false, error: "User not found"]
+                        }
+                        user.language = language?.trim() ? language.trim() : null
+                        user.save(flush: true, failOnError: true)
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to update user language", e)
+                    return [success: false, error: e.message ?: "Failed to update language"]
                 }
             }
         }

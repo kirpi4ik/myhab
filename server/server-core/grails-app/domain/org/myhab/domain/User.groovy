@@ -35,6 +35,8 @@ class User extends BaseEntity {
     Set<PeripheralAccessToken> peripheralAccessTokens
     /** User avatar image (PNG/JPEG, max 3KB). Not exposed via GraphQL; use REST GET /api/users/:id/avatar */
     byte[] avatar
+    /** Preferred UI language (BCP-47 base code, e.g. 'en' / 'ro'). Null = follow browser. */
+    String language
 
     User(String username, String password) {
         this()
@@ -132,6 +134,7 @@ class User extends BaseEntity {
         phoneNr nullable: true
         telegramUsername nullable: true
         avatar nullable: true, maxSize: 3 * 1024
+        language nullable: true
     }
 
     static hasMany = [favJobs: Job, peripheralAccessTokens: PeripheralAccessToken]

@@ -5,6 +5,40 @@
 			<div class="text-h5">Settings</div>
 		</div>
 
+		<q-card flat bordered class="q-mb-md">
+			<q-card-section>
+				<div class="text-h6">{{ $t('settings.language.title') }}</div>
+				<div class="text-caption text-grey-7 q-mb-md">
+					{{ $t('settings.language.caption') }}
+				</div>
+
+				<q-banner v-if="!isLoggedIn" class="bg-orange-1 text-orange-9 q-mb-md" dense>
+					<template v-slot:avatar>
+						<q-icon name="mdi-alert" />
+					</template>
+					{{ $t('settings.language.login_required') }}
+				</q-banner>
+
+				<q-select
+					:model-value="languagePref"
+					:options="languageOptions"
+					:label="$t('settings.language.label')"
+					:disable="!isLoggedIn || savingLanguage"
+					:loading="savingLanguage"
+					emit-value
+					map-options
+					outlined
+					dense
+					style="max-width: 320px"
+					@update:model-value="onLanguageChange"
+				>
+					<template v-slot:prepend>
+						<q-icon name="mdi-translate" />
+					</template>
+				</q-select>
+			</q-card-section>
+		</q-card>
+
 		<q-card flat bordered>
 			<q-card-section>
 				<div class="text-h6">Dashboard widgets</div>
@@ -64,10 +98,14 @@
 </template>
 
 <script>
-import { defineComponent, computed, reactive } from 'vue';
+import { defineComponent, computed, reactive, ref } from 'vue';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
+import { useApolloClient } from '@vue/apollo-composable';
 
 import { authzService } from '@/_services';
+import { applyUserLocale, localeOptions } from '@/_services/locale.service';
+import { ME_UPDATE_LANGUAGE } from '@/graphql/queries';
 import { useUserPrefsStore } from 'src/store/user-prefs.store';
 import { useDashboardWidgets } from 'src/composables/useDashboardWidgets';
 
@@ -75,10 +113,44 @@ export default defineComponent({
 	name: 'SettingsPage',
 	setup() {
 		const $q = useQuasar();
+		const { t } = useI18n({ useScope: 'global' });
+		const { client } = useApolloClient();
 		const prefs = useUserPrefsStore();
 		const widgets = computed(() => useDashboardWidgets());
 
 		const isLoggedIn = computed(() => authzService.currentUserValue?.id != null);
+
+		// Language preference: null = automatic (follow browser).
+		const languagePref = ref(authzService.currentUserValue?.language ?? null);
+		const languageOptions = computed(() => localeOptions(t('settings.language.auto')));
+		const savingLanguage = ref(false);
+
+		const onLanguageChange = async (value) => {
+			const previous = languagePref.value;
+			languagePref.value = value;
+			savingLanguage.value = true;
+			try {
+				const response = await client.mutate({
+					mutation: ME_UPDATE_LANGUAGE,
+					variables: { language: value },
+					fetchPolicy: 'no-cache',
+				});
+				const result = response.data.meUpdateLanguage;
+				if (result?.success) {
+					authzService.updateCurrentUser({ language: value ?? null });
+					applyUserLocale(value); // null -> browser fallback
+					$q.notify({ color: 'positive', icon: 'mdi-check-circle', message: t('settings.language.saved'), timeout: 2000 });
+				} else {
+					languagePref.value = previous;
+					$q.notify({ color: 'negative', icon: 'mdi-alert', message: result?.error || t('settings.language.save_error') });
+				}
+			} catch (err) {
+				languagePref.value = previous;
+				$q.notify({ color: 'negative', icon: 'mdi-alert', message: t('settings.language.save_error') });
+			} finally {
+				savingLanguage.value = false;
+			}
+		};
 
 		const sections = computed(() => {
 			const all = widgets.value;
@@ -115,6 +187,10 @@ export default defineComponent({
 			isVisible,
 			saving,
 			onToggle,
+			languagePref,
+			languageOptions,
+			savingLanguage,
+			onLanguageChange,
 		};
 	},
 });

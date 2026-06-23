@@ -454,6 +454,20 @@ const routes = [
         ],
       },
       {
+        path: '/voice',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "Voice Control",
+          authorize: [Role.Admin, Role.User]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/VoiceControl'),
+          }
+        ],
+      },
+      {
         path: '/settings',
         component: () => import('layouts/CenterLayout'),
         meta: {

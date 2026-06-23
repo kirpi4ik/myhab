@@ -45,6 +45,14 @@
 						<q-item-label>{{ $t('qr.scan.menu') }}</q-item-label>
 					</q-item-section>
 				</q-item>
+				<q-item to="/voice" active-class="q-item-no-link-highlighting">
+					<q-item-section avatar>
+						<q-icon name="mdi-microphone" />
+					</q-item-section>
+					<q-item-section>
+						<q-item-label>{{ $t('voice.menu') }}</q-item-label>
+					</q-item-section>
+				</q-item>
 
 				<q-expansion-item
 					v-if="isAdmin"
