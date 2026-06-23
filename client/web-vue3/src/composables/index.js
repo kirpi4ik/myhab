@@ -10,3 +10,4 @@ export { useSvgInteraction } from './useSvgInteraction';
 export { usePeripheralState } from './usePeripheralState';
 export { usePeripheralControl } from './usePeripheralControl';
 export { useDeviceAdminUrl } from './useDeviceAdminUrl';
+export { useEntityRouter, parseEntityToken, ENTITY_ROUTES } from './useEntityRouter';

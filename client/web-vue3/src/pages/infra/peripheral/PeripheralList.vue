@@ -6,15 +6,15 @@
         <div class="row items-center">
           <div class="text-h5 text-primary">
             <q-icon name="mdi-devices" class="q-mr-sm"/>
-            Peripheral List
+            {{ $t('peripheral.list.title') }}
           </div>
           <q-space/>
-          <q-input 
-            v-model="filter" 
-            dense 
+          <q-input
+            v-model="filter"
+            dense
             outlined
-            debounce="300" 
-            placeholder="Search peripherals..."
+            debounce="300"
+            :placeholder="$t('peripheral.list.search')"
             clearable
             class="q-mr-sm"
             style="min-width: 250px"
@@ -26,7 +26,7 @@
           <q-btn
             color="primary"
             icon="mdi-plus-circle"
-            label="Add Peripheral"
+            :label="$t('peripheral.list.add')"
             @click="createItem"
             :disable="loading"
           />
@@ -58,7 +58,7 @@
       >
         <template v-slot:body-cell-name="props">
           <q-td :props="props">
-            <q-badge color="primary" :label="props.row.name || 'Unnamed'"/>
+            <q-badge color="primary" :label="props.row.name || $t('fields.unnamed')"/>
           </q-td>
         </template>
 
@@ -96,32 +96,42 @@
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
             <q-btn-group>
-              <q-btn 
-                icon="mdi-eye" 
-                @click.stop="viewItem(props.row)" 
-                color="blue-6" 
+              <q-btn
+                icon="mdi-eye"
+                @click.stop="viewItem(props.row)"
+                color="blue-6"
                 flat
                 size="sm"
               >
-                <q-tooltip>View</q-tooltip>
+                <q-tooltip>{{ $t('actions.view') }}</q-tooltip>
               </q-btn>
-              <q-btn 
-                icon="mdi-pencil" 
-                color="amber-7" 
-                @click.stop="editItem(props.row)" 
+              <q-btn
+                icon="mdi-pencil"
+                color="amber-7"
+                @click.stop="editItem(props.row)"
                 flat
                 size="sm"
               >
-                <q-tooltip>Edit</q-tooltip>
+                <q-tooltip>{{ $t('actions.edit') }}</q-tooltip>
               </q-btn>
-              <q-btn 
-                icon="mdi-delete" 
-                color="red-7" 
-                @click.stop="deleteItem(props.row)" 
+              <q-btn
+                icon="mdi-label-outline"
+                color="teal-7"
+                @click.stop="downloadLabel(props.row)"
+                flat
+                size="sm"
+                :loading="labelLoading === props.row.id"
+              >
+                <q-tooltip>{{ $t('qr.label.download') }}</q-tooltip>
+              </q-btn>
+              <q-btn
+                icon="mdi-delete"
+                color="red-7"
+                @click.stop="deleteItem(props.row)"
                 flat
                 size="sm"
               >
-                <q-tooltip>Delete</q-tooltip>
+                <q-tooltip>{{ $t('actions.delete') }}</q-tooltip>
               </q-btn>
             </q-btn-group>
           </q-td>
@@ -132,9 +142,12 @@
 </template>
 
 <script>
-import {defineComponent, onMounted} from "vue";
+import {defineComponent, onMounted, ref} from "vue";
+import {useQuasar} from "quasar";
+import {useI18n} from "vue-i18n";
 import {useEntityList, useTableFilters} from '@/composables';
 import {PERIPHERAL_DELETE, PERIPHERAL_LIST_ALL} from "@/graphql/queries";
+import {labelService} from '@/_services';
 import {format} from 'date-fns';
 import TableFilterBar from '@/components/filters/TableFilterBar.vue';
 
@@ -142,19 +155,22 @@ export default defineComponent({
   name: 'PeripheralList',
   components: {TableFilterBar},
   setup() {
+    const $q = useQuasar();
+    const {t} = useI18n({useScope: 'global'});
+    const labelLoading = ref(null);
     // Define columns for the table
     const columns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true, style: 'max-width: 60px'},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'model', label: 'Model', field: 'model', align: 'left', sortable: true},
-      {name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
-      {name: 'portsCount', label: 'Ports', field: 'portsCount', align: 'left', sortable: true},
-      {name: 'tsCreated', label: 'Created', field: 'tsCreated', align: 'left', sortable: true},
+      {name: 'id', label: t('fields.id'), field: 'id', align: 'left', sortable: true, style: 'max-width: 60px'},
+      {name: 'name', label: t('fields.name'), field: 'name', align: 'left', sortable: true},
+      {name: 'model', label: t('fields.model'), field: 'model', align: 'left', sortable: true},
+      {name: 'category', label: t('fields.category'), field: 'category', align: 'left', sortable: true},
+      {name: 'description', label: t('fields.description'), field: 'description', align: 'left', sortable: true},
+      {name: 'portsCount', label: t('fields.ports'), field: 'portsCount', align: 'left', sortable: true},
+      {name: 'tsCreated', label: t('fields.created'), field: 'tsCreated', align: 'left', sortable: true},
       {
-        name: 'actions', 
-        label: 'Actions', 
-        field: '', 
+        name: 'actions',
+        label: t('table.header.actions'),
+        field: '',
         align: 'right', 
         sortable: false,
         headerClasses: 'bg-grey-2',
@@ -231,6 +247,21 @@ export default defineComponent({
       return colors[category] || 'grey-7';
     };
 
+    /**
+     * Download a printable label (with QR if enabled) for a peripheral.
+     */
+    const downloadLabel = async (row) => {
+      labelLoading.value = row.id;
+      try {
+        await labelService.downloadPeripheralLabel(row.id, {template: 'brother_18mm'});
+        $q.notify({color: 'positive', message: t('qr.label.download_success'), icon: 'mdi-check-circle', position: 'top', timeout: 2000});
+      } catch (error) {
+        $q.notify({color: 'negative', message: t('qr.label.download_error', {error: error.message}), icon: 'mdi-alert-circle', position: 'top'});
+      } finally {
+        labelLoading.value = null;
+      }
+    };
+
     // Fetch data on mount
     onMounted(() => {
       fetchList();
@@ -249,7 +280,9 @@ export default defineComponent({
       createItem,
       deleteItem,
       formatDate,
-      getCategoryColor
+      getCategoryColor,
+      downloadLabel,
+      labelLoading
     };
   }
 });

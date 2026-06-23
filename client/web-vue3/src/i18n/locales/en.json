@@ -63,14 +63,68 @@
 			"actions": "Actions"
 		}
 	},
-	"breadcrumb": {
+	"qr": {
+		"config": {
+			"menu": "QR Code Settings",
+			"title": "QR Code Settings",
+			"subtitle": "Configure whether printable labels include a QR code, and what it encodes",
+			"enabled_on": "QR code generation is enabled",
+			"enabled_off": "QR code generation is disabled",
+			"template_label": "QR content template",
+			"template_hint": "The default token myhab://<entityType>/<id> must stay at the start so the in-app scanner can recover the entity. Click a variable to insert it at the cursor.",
+			"template_required": "Template is required",
+			"resolved_example": "Resolved example (sample data):",
+			"position": "QR position on label",
+			"size": "QR size (px, 0 = fit to label height)",
+			"preview_section": "Preview a real label",
+			"cable_id": "Cable ID",
+			"preview_btn": "Preview label",
+			"preview_hint": "Uses current saved settings; forces QR on for the preview.",
+			"save": "Save & Commit",
+			"load_error": "Failed to load QR settings",
+			"template_required_notify": "Content template is required",
+			"save_success": "QR settings saved and committed",
+			"save_error": "Failed to save QR settings",
+			"preview_failed": "Preview failed: {error}"
+		},
+		"scan": {
+			"menu": "Scan QR",
+			"title": "Scan QR Code",
+			"subtitle": "Point the camera at a printed label to open the component",
+			"starting_camera": "Starting camera…",
+			"unrecognized": "Unrecognized QR code. Expected a myHAB label (myhab://TYPE/ID).",
+			"try_again": "Try again",
+			"no_route": "No page for entity type \"{type}\"",
+			"errors": {
+				"denied": "Camera permission denied. Allow camera access and reload.",
+				"not_found": "No camera found on this device.",
+				"not_supported": "Camera requires a secure (HTTPS) context.",
+				"in_use": "Camera is already in use by another application.",
+				"overconstrained": "No suitable camera found.",
+				"stream_unsupported": "This browser does not support camera streaming.",
+				"insecure": "Camera access requires HTTPS.",
+				"generic": "Camera error: {message}"
+			}
+		},
+		"label": {
+			"download": "Download Label",
+			"download_success": "Label downloaded successfully",
+			"download_error": "Failed to download label: {error}"
+		}
+	},
+	"navigation": {
 		"home": "Home",
 		"dashboard": "Dashboard",
+		"infrastructure": "Infrastructure",
 		"peripherals": "Peripherals",
+		"settings": "Settings",
+		"maintenance": "Maintenance",
 		"peripheral": {
+			"list": "Peripherals",
 			"details": "Details",
 			"edit": "Edit",
-			"create": "New Peripheral"
+			"create": "New Peripheral",
+			"categories": "Categories"
 		},
 		"ports": {
 			"list": "Ports",
@@ -102,6 +156,19 @@
 			"edit": "Edit",
 			"create": "New Cable"
 		},
+		"scenarios": "Scenarios",
+		"scenario": {
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Scenario"
+		},
+		"jobs": "Scheduled Jobs",
+		"job": {
+			"details": "Details",
+			"edit": "Edit",
+			"create": "New Job"
+		},
+		"graphiql": "GraphiQL",
 		"configurations": "Configuration"
 	},
 	"peripheral": {
@@ -113,10 +180,27 @@
 			"connectedTo": "Connected to "
 		},
 		"list": {
-			"nav_title": "Peripherals List"
+			"nav_title": "Peripherals List",
+			"title": "Peripheral List",
+			"search": "Search peripherals...",
+			"add": "Add Peripheral"
 		},
 		"view": {
-			"nav_title": "Peripheral Details:"
+			"nav_title": "Peripheral Details:",
+			"unnamed": "Unnamed Peripheral",
+			"no_model": "No model specified",
+			"edit_tooltip": "Edit Peripheral",
+			"configurations_tooltip": "View Configurations",
+			"view_category_tooltip": "View Category",
+			"linked_jobs": "Linked job(s)",
+			"view_job_tooltip": "View Job",
+			"connected_ports": "Connected Ports",
+			"no_ports": "No ports connected",
+			"located_zones": "Located in Zones",
+			"no_zones": "Not assigned to any zones",
+			"connected_cables": "Connected Cables",
+			"no_cables": "No cables connected",
+			"load_error": "Failed to load peripheral details"
 		},
 		"create": {
 			"nav_title": "Peripherals"
@@ -126,6 +210,45 @@
 		}
 	},
 	"device": {
+		"list": {
+			"title": "Device List",
+			"search": "Search devices...",
+			"add": "Add Device"
+		},
+		"view": {
+			"unnamed": "Unnamed Device",
+			"no_name": "No name specified",
+			"admin_ui_tooltip": "Open controller admin UI ({url})",
+			"edit_tooltip": "Edit Device",
+			"configurations_tooltip": "View Configurations",
+			"network": "Network",
+			"ip_address": "IP address",
+			"ip_not_set": "— not set —",
+			"admin_ui": "Admin UI",
+			"auth_accounts": "Authentication Accounts",
+			"no_accounts": "No accounts configured.",
+			"no_username": "— no username —",
+			"default_badge": "default",
+			"password": "Password",
+			"connected_ports": "Connected Ports",
+			"add_port": "Add Port",
+			"add_port_tooltip": "Add new port to this device",
+			"delete_port_tooltip": "Delete Port",
+			"no_ports": "No ports connected",
+			"located_zones": "Located in Zones",
+			"no_zones": "Not assigned to any zones",
+			"load_error": "Failed to load device details",
+			"port_delete_title": "Confirm Deletion",
+			"port_delete_confirm": "Are you sure you want to delete port \"{name}\"?",
+			"port_delete_success": "Port deleted successfully",
+			"port_delete_error": "Failed to delete port"
+		},
+		"status": {
+			"online": "Online",
+			"offline": "Offline",
+			"disabled": "Disabled",
+			"unknown": "Unknown"
+		},
 		"edit": {
 			"nav_title": "Edit Device:"
 		},
@@ -172,6 +295,29 @@
 			"state": "State"
 		}
 	},
+	"fields": {
+		"id": "ID",
+		"code": "Code",
+		"code_new": "Code New",
+		"name": "Name",
+		"model": "Model",
+		"type": "Type",
+		"description": "Description",
+		"rack": "Rack",
+		"category": "Category",
+		"ip": "IP",
+		"port": "Port",
+		"gateway": "Gateway",
+		"status": "Status",
+		"ports": "Ports",
+		"value": "Value",
+		"device": "Device",
+		"internal_ref": "Internal Ref",
+		"created": "Created",
+		"updated": "Last Updated",
+		"no_code": "No Code",
+		"unnamed": "Unnamed"
+	},
 	"configurations": {
 		"list": {
 			"title": "Configurations"
@@ -187,7 +333,8 @@
 	"common": {
 		"close": "Close",
 		"alert": "Alert",
-		"cancel": "Cancel"
+		"cancel": "Cancel",
+		"timestamps": "Timestamps"
 	},
 	"door": {
 		"small_gate": "Small Gate",

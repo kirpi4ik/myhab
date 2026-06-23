@@ -81,6 +81,9 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.6.0'
     implementation 'org.kohsuke:groovy-sandbox:1.19'
     implementation 'org.jsoup:jsoup:1.15.3'
+    // QR code generation for printable labels (LabelService)
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.google.zxing:javase:3.5.3'
     implementation 'com.konghq:unirest-java:3.13.8'
     //Telegram bot api
     implementation 'org.telegram:telegrambots-spring-boot-starter:6.9.7.1' // Upgraded from 6.8.0

@@ -5,21 +5,27 @@
         <q-avatar size="103px" class="absolute-center shadow-10" :color="getCategoryColor(viewItem.category?.name)">
           <q-icon :name="getCategoryIcon(viewItem.category?.name)" size="xl" color="white"/>
         </q-avatar>
-        <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+        <q-btn flat color="secondary" @click="$router.go(-1)" align="right" :label="$t('actions.nav.back')" icon="mdi-arrow-left"/>
       </q-card-section>
 
       <q-card-section class="row items-center">
         <div class="column">
-          <div class="text-h4 text-secondary">{{ viewItem.name || 'Unnamed Peripheral' }}</div>
-          <div class="text-subtitle2 text-grey-7">{{ viewItem.model || 'No model specified' }}</div>
+          <div class="text-h4 text-secondary">{{ viewItem.name || $t('peripheral.view.unnamed') }}</div>
+          <div class="text-subtitle2 text-grey-7">{{ viewItem.model || $t('peripheral.view.no_model') }}</div>
         </div>
         <q-space/>
         <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
-          <q-tooltip>Edit Peripheral</q-tooltip>
+          <q-tooltip>{{ $t('peripheral.view.edit_tooltip') }}</q-tooltip>
         </q-btn>
-        <q-btn outline round color="amber-8" icon="mdi-view-list" 
+        <q-btn outline round color="teal-7" icon="mdi-label-outline"
+               @click="downloadLabel"
+               :loading="labelLoading"
+               class="q-ml-sm">
+          <q-tooltip>{{ $t('qr.label.download') }}</q-tooltip>
+        </q-btn>
+        <q-btn outline round color="amber-8" icon="mdi-view-list"
                :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=PERIPHERAL'" class="q-ml-sm">
-          <q-tooltip>View Configurations</q-tooltip>
+          <q-tooltip>{{ $t('peripheral.view.configurations_tooltip') }}</q-tooltip>
         </q-btn>
       </q-card-section>
 
@@ -31,7 +37,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-identifier" class="q-mr-sm"/>
-              ID
+              {{ $t('fields.id') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ viewItem.id }}</q-item-label>
           </q-item-section>
@@ -41,10 +47,10 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-label" class="q-mr-sm"/>
-              Name
+              {{ $t('fields.name') }}
             </q-item-label>
             <q-item-label caption class="text-body2">
-              <q-badge color="primary" :label="viewItem.name || 'Unnamed'"/>
+              <q-badge color="primary" :label="viewItem.name || $t('fields.unnamed')"/>
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -53,7 +59,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-cube-outline" class="q-mr-sm"/>
-              Model
+              {{ $t('fields.model') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ viewItem.model }}</q-item-label>
           </q-item-section>
@@ -63,7 +69,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-text" class="q-mr-sm"/>
-              Description
+              {{ $t('fields.description') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ viewItem.description }}</q-item-label>
           </q-item-section>
@@ -73,7 +79,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-shape" class="q-mr-sm"/>
-              Category
+              {{ $t('fields.category') }}
             </q-item-label>
             <q-item-label caption class="text-body2">
               <q-badge 
@@ -81,15 +87,15 @@
                 :label="viewItem.category.name"
                 class="q-mr-sm"
               />
-              <q-btn 
-                icon="mdi-eye" 
-                :to="'/admin/pcategories/'+viewItem.category.id+'/view'" 
-                size="sm" 
-                flat 
-                dense 
+              <q-btn
+                icon="mdi-eye"
+                :to="'/admin/pcategories/'+viewItem.category.id+'/view'"
+                size="sm"
+                flat
+                dense
                 color="blue-6"
               >
-                <q-tooltip>View Category</q-tooltip>
+                <q-tooltip>{{ $t('peripheral.view.view_category_tooltip') }}</q-tooltip>
               </q-btn>
             </q-item-label>
           </q-item-section>
@@ -99,7 +105,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-briefcase-clock" class="q-mr-sm"/>
-              Linked job(s)
+              {{ $t('peripheral.view.linked_jobs') }}
             </q-item-label>
             <q-item-label caption class="text-body2">
               <q-btn
@@ -114,7 +120,7 @@
                 class="q-mr-sm"
               >
                 {{ job.name }}
-                <q-tooltip>View Job</q-tooltip>
+                <q-tooltip>{{ $t('peripheral.view.view_job_tooltip') }}</q-tooltip>
               </q-btn>
             </q-item-label>
           </q-item-section>
@@ -123,7 +129,7 @@
         <q-separator class="q-my-md"/>
 
         <!-- Connected Ports Section -->
-        <q-item-label header class="text-h6 text-grey-8">Connected Ports</q-item-label>
+        <q-item-label header class="text-h6 text-grey-8">{{ $t('peripheral.view.connected_ports') }}</q-item-label>
 
       </q-list>
 
@@ -147,7 +153,7 @@
                 <q-badge color="info" :label="props.row.internalRef || '-'"/>
               </q-td>
               <q-td key="name">
-                <q-badge color="primary" :label="props.row.name || 'Unnamed'"/>
+                <q-badge color="primary" :label="props.row.name || $t('fields.unnamed')"/>
               </q-td>
               <q-td key="value">
                 {{ props.row.value || '-' }}
@@ -159,10 +165,10 @@
           </template>
         </q-table>
       </div>
-      
+
       <div v-else class="q-pa-md text-center text-grey-6">
         <q-icon name="mdi-ethernet-off" size="md"/>
-        <div>No ports connected</div>
+        <div>{{ $t('peripheral.view.no_ports') }}</div>
       </div>
 
      
@@ -173,7 +179,7 @@
       <div class="q-pa-md">
         <div class="text-h6 text-grey-8 q-mb-md">
           <q-icon name="mdi-map-marker-multiple" class="q-mr-sm"/>
-          Located in Zones
+          {{ $t('peripheral.view.located_zones') }}
         </div>
         
         <q-table
@@ -192,7 +198,7 @@
                 {{ props.row.id }}
               </q-td>
               <q-td key="name">
-                <q-badge color="secondary" :label="props.row.name || 'Unnamed'"/>
+                <q-badge color="secondary" :label="props.row.name || $t('fields.unnamed')"/>
               </q-td>
               <q-td key="description">
                 {{ props.row.description || '-' }}
@@ -203,7 +209,7 @@
 
         <div v-else class="text-center text-grey-6 q-pa-md">
           <q-icon name="mdi-map-marker-off" size="md"/>
-          <div>Not assigned to any zones</div>
+          <div>{{ $t('peripheral.view.no_zones') }}</div>
         </div>
       </div>
 
@@ -213,7 +219,7 @@
       <div class="q-pa-md">
         <div class="text-h6 text-grey-8 q-mb-md">
           <q-icon name="mdi-cable-data" class="q-mr-sm"/>
-          Connected Cables
+          {{ $t('peripheral.view.connected_cables') }}
         </div>
         
         <q-table
@@ -250,7 +256,7 @@
 
         <div v-else class="text-center text-grey-6 q-pa-md">
           <q-icon name="mdi-cable-data" size="md"/>
-          <div>No cables connected</div>
+          <div>{{ $t('peripheral.view.no_cables') }}</div>
         </div>
       </div>
 
@@ -259,13 +265,13 @@
         <q-separator class="q-my-md"/>
 
         <!-- Timestamps Section -->
-        <q-item-label header class="text-h6 text-grey-8">Timestamps</q-item-label>
+        <q-item-label header class="text-h6 text-grey-8">{{ $t('common.timestamps') }}</q-item-label>
 
         <q-item v-if="viewItem.tsCreated">
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-calendar-plus" class="q-mr-sm"/>
-              Created
+              {{ $t('fields.created') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsCreated) }}</q-item-label>
           </q-item-section>
@@ -275,7 +281,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-calendar-edit" class="q-mr-sm"/>
-              Last Updated
+              {{ $t('fields.updated') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsUpdated) }}</q-item-label>
           </q-item-section>
@@ -285,10 +291,10 @@
       <!-- Actions -->
       <q-card-actions>
         <q-btn color="primary" :to="uri +'/'+ $route.params.idPrimary+'/edit'" icon="mdi-pencil">
-          Edit
+          {{ $t('actions.edit') }}
         </q-btn>
         <q-btn color="grey" @click="$router.go(-1)" icon="mdi-arrow-left">
-          Back
+          {{ $t('actions.nav.back') }}
         </q-btn>
       </q-card-actions>
     </q-card>
@@ -307,8 +313,10 @@ import {useApolloClient, useQuery} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router";
 
 import {useQuasar} from "quasar";
+import {useI18n} from "vue-i18n";
 
 import {PERIPHERAL_GET_BY_ID, JOB_LIST_WITH_PERIPHERAL} from "@/graphql/queries";
+import {labelService} from '@/_services';
 
 import {format} from 'date-fns';
 
@@ -317,8 +325,10 @@ export default defineComponent({
   setup() {
     const uri = '/admin/peripherals';
     const $q = useQuasar();
+    const {t} = useI18n({useScope: 'global'});
     const viewItem = ref();
     const loading = ref(false);
+    const labelLoading = ref(false);
     const {client} = useApolloClient();
     const router = useRouter();
     const route = useRoute();
@@ -339,25 +349,25 @@ export default defineComponent({
     });
 
     const zoneColumns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+      {name: 'id', label: t('fields.id'), field: 'id', align: 'left', sortable: true},
+      {name: 'name', label: t('fields.name'), field: 'name', align: 'left', sortable: true},
+      {name: 'description', label: t('fields.description'), field: 'description', align: 'left', sortable: true},
     ];
 
     const portColumns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'internalRef', label: 'Internal Ref', field: 'internalRef', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'value', label: 'Value', field: 'value', align: 'left', sortable: true},
-      {name: 'device', label: 'Device', field: row => row.device?.code || '-', align: 'left', sortable: true},
+      {name: 'id', label: t('fields.id'), field: 'id', align: 'left', sortable: true},
+      {name: 'internalRef', label: t('fields.internal_ref'), field: 'internalRef', align: 'left', sortable: true},
+      {name: 'name', label: t('fields.name'), field: 'name', align: 'left', sortable: true},
+      {name: 'value', label: t('fields.value'), field: 'value', align: 'left', sortable: true},
+      {name: 'device', label: t('fields.device'), field: row => row.device?.code || '-', align: 'left', sortable: true},
     ];
 
     const cableColumns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true},
-      {name: 'codeNew', label: 'Code New', field: 'codeNew', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
-      {name: 'category', label: 'Category', field: row => row.category?.name || '-', align: 'left', sortable: true},
+      {name: 'id', label: t('fields.id'), field: 'id', align: 'left', sortable: true},
+      {name: 'code', label: t('fields.code'), field: 'code', align: 'left', sortable: true},
+      {name: 'codeNew', label: t('fields.code_new'), field: 'codeNew', align: 'left', sortable: true},
+      {name: 'description', label: t('fields.description'), field: 'description', align: 'left', sortable: true},
+      {name: 'category', label: t('fields.category'), field: row => row.category?.name || '-', align: 'left', sortable: true},
     ];
 
     /**
@@ -425,7 +435,7 @@ export default defineComponent({
         loading.value = false;
         $q.notify({
           color: 'negative',
-          message: 'Failed to load peripheral details',
+          message: t('peripheral.view.load_error'),
           icon: 'mdi-alert-circle',
           position: 'top'
         });
@@ -454,6 +464,21 @@ export default defineComponent({
       router.push({path: `/admin/cables/${row.id}/view`});
     };
 
+    /**
+     * Download a printable label (with QR if enabled) for the current peripheral.
+     */
+    const downloadLabel = async () => {
+      labelLoading.value = true;
+      try {
+        await labelService.downloadPeripheralLabel(route.params.idPrimary, {template: 'brother_18mm'});
+        $q.notify({color: 'positive', message: t('qr.label.download_success'), icon: 'mdi-check-circle', position: 'top', timeout: 2000});
+      } catch (error) {
+        $q.notify({color: 'negative', message: t('qr.label.download_error', {error: error.message}), icon: 'mdi-alert-circle', position: 'top'});
+      } finally {
+        labelLoading.value = false;
+      }
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -463,6 +488,8 @@ export default defineComponent({
       fetchData,
       viewItem,
       loading,
+      labelLoading,
+      downloadLabel,
       linkedJobs,
       pagination,
       zoneColumns,
