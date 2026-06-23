@@ -63,6 +63,55 @@
       "actions": "Actiune"
     }
   },
+  "qr": {
+    "config": {
+      "menu": "Setări cod QR",
+      "title": "Setări cod QR",
+      "subtitle": "Configurați dacă etichetele tipăribile includ un cod QR și ce conține acesta",
+      "enabled_on": "Generarea codului QR este activată",
+      "enabled_off": "Generarea codului QR este dezactivată",
+      "template_label": "Șablon conținut QR",
+      "template_hint": "Tokenul implicit myhab://<entityType>/<id> trebuie să rămână la început pentru ca scanerul din aplicație să poată identifica entitatea. Apăsați o variabilă pentru a o insera la cursor.",
+      "template_required": "Șablonul este obligatoriu",
+      "resolved_example": "Exemplu rezultat (date demonstrative):",
+      "position": "Poziția QR pe etichetă",
+      "size": "Dimensiune QR (px, 0 = potrivire la înălțimea etichetei)",
+      "preview_section": "Previzualizați o etichetă reală",
+      "cable_id": "ID Cablu",
+      "preview_btn": "Previzualizare etichetă",
+      "preview_hint": "Folosește setările salvate curent; forțează QR activ pentru previzualizare.",
+      "save": "Salvează și publică",
+      "load_error": "Încărcarea setărilor QR a eșuat",
+      "template_required_notify": "Șablonul de conținut este obligatoriu",
+      "save_success": "Setările QR au fost salvate și publicate",
+      "save_error": "Salvarea setărilor QR a eșuat",
+      "preview_failed": "Previzualizarea a eșuat: {error}"
+    },
+    "scan": {
+      "menu": "Scanează QR",
+      "title": "Scanează cod QR",
+      "subtitle": "Îndreptați camera spre o etichetă tipărită pentru a deschide componenta",
+      "starting_camera": "Se pornește camera…",
+      "unrecognized": "Cod QR nerecunoscut. Se aștepta o etichetă myHAB (myhab://TIP/ID).",
+      "try_again": "Încercați din nou",
+      "no_route": "Nu există pagină pentru tipul de entitate „{type}”",
+      "errors": {
+        "denied": "Acces la cameră refuzat. Permiteți accesul la cameră și reîncărcați.",
+        "not_found": "Nu a fost găsită nicio cameră pe acest dispozitiv.",
+        "not_supported": "Camera necesită un context securizat (HTTPS).",
+        "in_use": "Camera este deja utilizată de o altă aplicație.",
+        "overconstrained": "Nu a fost găsită o cameră potrivită.",
+        "stream_unsupported": "Acest browser nu acceptă transmisia de la cameră.",
+        "insecure": "Accesul la cameră necesită HTTPS.",
+        "generic": "Eroare cameră: {message}"
+      }
+    },
+    "label": {
+      "download": "Descarcă etichetă",
+      "download_success": "Eticheta a fost descărcată cu succes",
+      "download_error": "Descărcarea etichetei a eșuat: {error}"
+    }
+  },
   "navigation": {
     "home": "Acasa",
     "dashboard": "Dashboard",
@@ -131,10 +180,27 @@
       "connectedTo": "Conectat la "
     },
     "list": {
-      "nav_title": "Lista periferice"
+      "nav_title": "Lista periferice",
+      "title": "Listă periferice",
+      "search": "Caută periferice...",
+      "add": "Adaugă periferic"
     },
     "view": {
-      "nav_title": "Detalii Periferic :"
+      "nav_title": "Detalii Periferic :",
+      "unnamed": "Periferic fără nume",
+      "no_model": "Niciun model specificat",
+      "edit_tooltip": "Editează perifericul",
+      "configurations_tooltip": "Vezi configurările",
+      "view_category_tooltip": "Vezi categoria",
+      "linked_jobs": "Sarcini asociate",
+      "view_job_tooltip": "Vezi sarcina",
+      "connected_ports": "Porturi conectate",
+      "no_ports": "Niciun port conectat",
+      "located_zones": "Localizat în zone",
+      "no_zones": "Neatribuit niciunei zone",
+      "connected_cables": "Cabluri conectate",
+      "no_cables": "Niciun cablu conectat",
+      "load_error": "Încărcarea detaliilor perifericului a eșuat"
     },
     "create": {
       "nav_title": "Periferice"
@@ -144,6 +210,45 @@
     }
   },
   "device": {
+    "list": {
+      "title": "Listă dispozitive",
+      "search": "Caută dispozitive...",
+      "add": "Adaugă dispozitiv"
+    },
+    "view": {
+      "unnamed": "Dispozitiv fără nume",
+      "no_name": "Niciun nume specificat",
+      "admin_ui_tooltip": "Deschide interfața de administrare a controllerului ({url})",
+      "edit_tooltip": "Editează dispozitivul",
+      "configurations_tooltip": "Vezi configurările",
+      "network": "Rețea",
+      "ip_address": "Adresă IP",
+      "ip_not_set": "— nesetat —",
+      "admin_ui": "Interfață administrare",
+      "auth_accounts": "Conturi de autentificare",
+      "no_accounts": "Niciun cont configurat.",
+      "no_username": "— fără utilizator —",
+      "default_badge": "implicit",
+      "password": "Parolă",
+      "connected_ports": "Porturi conectate",
+      "add_port": "Adaugă port",
+      "add_port_tooltip": "Adaugă un port nou la acest dispozitiv",
+      "delete_port_tooltip": "Șterge portul",
+      "no_ports": "Niciun port conectat",
+      "located_zones": "Localizat în zone",
+      "no_zones": "Neatribuit niciunei zone",
+      "load_error": "Încărcarea detaliilor dispozitivului a eșuat",
+      "port_delete_title": "Confirmă ștergerea",
+      "port_delete_confirm": "Sigur doriți să ștergeți portul „{name}”?",
+      "port_delete_success": "Portul a fost șters cu succes",
+      "port_delete_error": "Ștergerea portului a eșuat"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "disabled": "Dezactivat",
+      "unknown": "Necunoscut"
+    },
     "edit": {
       "nav_title": "Editare dispozitiv :"
     },
@@ -190,6 +295,29 @@
       "state": "Stare"
     }
   },
+  "fields": {
+    "id": "ID",
+    "code": "Cod",
+    "code_new": "Cod nou",
+    "name": "Denumire",
+    "model": "Model",
+    "type": "Tip",
+    "description": "Descriere",
+    "rack": "Rack",
+    "category": "Categorie",
+    "ip": "IP",
+    "port": "Port",
+    "gateway": "Gateway",
+    "status": "Stare",
+    "ports": "Porturi",
+    "value": "Valoare",
+    "device": "Dispozitiv",
+    "internal_ref": "Ref. internă",
+    "created": "Creat",
+    "updated": "Ultima actualizare",
+    "no_code": "Fără cod",
+    "unnamed": "Fără nume"
+  },
   "configurations": {
     "list": {
       "title": "Configurarile"
@@ -205,7 +333,8 @@
   "common": {
     "close": "Inchide",
     "alert": "Alerta",
-    "cancel": "Anuleaza"
+    "cancel": "Anuleaza",
+    "timestamps": "Marcaje temporale"
   },
   "door": {
     "small_gate": "Poarta mica",

@@ -38,6 +38,17 @@ type Query{
     Returns null when the broker has no value for the topic within ~3s.
     """
     deviceFetchIpFromMqtt(deviceCode: String!): DeviceIpFromMqttResult
+    """Global QR-code label settings (git-backed ConfigProvider)."""
+    qrConfig: QrConfig
+}
+
+"""Global QR-code feature settings, surfaced for the QR settings page."""
+type QrConfig {
+    enabled: Boolean!
+    contentTemplate: String!
+    position: String!
+    size: Int!
+    availableVariables: [String!]!
 }
 
 """Result of an on-demand MQTT IP fetch (see Query.deviceFetchIpFromMqtt)."""
@@ -145,6 +156,8 @@ type Mutation {
     scenarioDelete(id: ID!): MutationResponse
     appConfigUpdate(key: String!, value: String!, commitMessage: String): MutationResponse
     appConfigRefresh: MutationResponse
+    """Update the global QR-code label settings (commits to the git-backed config)."""
+    qrConfigUpdate(enabled: Boolean!, contentTemplate: String!, position: String!, size: Int): MutationResponse
     """Update the state of a single message (NEW, READ, ARCHIVE)."""
     messageUpdateState(id: ID!, state: String!): MutationResponse
     """Update the state of multiple messages at once."""

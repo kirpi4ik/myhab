@@ -5,13 +5,13 @@
         <q-avatar size="103px" class="absolute-center shadow-10" color="indigo-7">
           <q-icon name="mdi-devices" size="xl" color="white"/>
         </q-avatar>
-        <q-btn flat color="secondary" @click="$router.go(-1)" align="right" label="Back" icon="mdi-arrow-left"/>
+        <q-btn flat color="secondary" @click="$router.go(-1)" align="right" :label="$t('actions.nav.back')" icon="mdi-arrow-left"/>
       </q-card-section>
 
       <q-card-section class="row items-center">
         <div class="column">
           <div class="row items-center q-gutter-sm">
-            <div class="text-h4 text-secondary">{{ viewItem.code || 'Unnamed Device' }}</div>
+            <div class="text-h4 text-secondary">{{ viewItem.code || $t('device.view.unnamed') }}</div>
             <q-badge 
               v-if="viewItem.status"
               :color="getStatusColor(viewItem.status)"
@@ -20,7 +20,7 @@
               class="q-ml-sm"
             />
           </div>
-          <div class="text-subtitle2 text-grey-7">{{ viewItem.name || 'No name specified' }}</div>
+          <div class="text-subtitle2 text-grey-7">{{ viewItem.name || $t('device.view.no_name') }}</div>
         </div>
         <q-space/>
         <q-btn
@@ -35,14 +35,20 @@
           rel="noopener noreferrer"
           class="q-mr-sm"
         >
-          <q-tooltip>Open controller admin UI ({{ adminUrl }})</q-tooltip>
+          <q-tooltip>{{ $t('device.view.admin_ui_tooltip', { url: adminUrl }) }}</q-tooltip>
         </q-btn>
         <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
-          <q-tooltip>Edit Device</q-tooltip>
+          <q-tooltip>{{ $t('device.view.edit_tooltip') }}</q-tooltip>
+        </q-btn>
+        <q-btn outline round color="teal-7" icon="mdi-label-outline"
+               @click="downloadLabel"
+               :loading="labelLoading"
+               class="q-ml-sm">
+          <q-tooltip>{{ $t('qr.label.download') }}</q-tooltip>
         </q-btn>
         <q-btn outline round color="amber-8" icon="mdi-view-list"
                :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=DEVICE'" class="q-ml-sm">
-          <q-tooltip>View Configurations</q-tooltip>
+          <q-tooltip>{{ $t('device.view.configurations_tooltip') }}</q-tooltip>
         </q-btn>
       </q-card-section>
 
@@ -54,7 +60,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-identifier" class="q-mr-sm"/>
-              ID
+              {{ $t('fields.id') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ viewItem.id }}</q-item-label>
           </q-item-section>
@@ -64,10 +70,10 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-barcode" class="q-mr-sm"/>
-              Code
+              {{ $t('fields.code') }}
             </q-item-label>
             <q-item-label caption class="text-body2">
-              <q-badge color="primary" :label="viewItem.code || 'No Code'"/>
+              <q-badge color="primary" :label="viewItem.code || $t('fields.no_code')"/>
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -76,10 +82,10 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-label" class="q-mr-sm"/>
-              Name
+              {{ $t('fields.name') }}
             </q-item-label>
             <q-item-label caption class="text-body2">
-              <q-badge color="secondary" :label="viewItem.name || 'Unnamed'"/>
+              <q-badge color="secondary" :label="viewItem.name || $t('fields.unnamed')"/>
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -88,7 +94,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-text" class="q-mr-sm"/>
-              Description
+              {{ $t('fields.description') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ viewItem.description }}</q-item-label>
           </q-item-section>
@@ -98,7 +104,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-cube-outline" class="q-mr-sm"/>
-              Model
+              {{ $t('fields.model') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ viewItem.model }}</q-item-label>
           </q-item-section>
@@ -108,7 +114,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-shape" class="q-mr-sm"/>
-              Type
+              {{ $t('fields.type') }}
             </q-item-label>
             <q-item-label caption class="text-body2">
               <q-badge color="info" :label="viewItem.type.name"/>
@@ -120,7 +126,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-server" class="q-mr-sm"/>
-              Rack Location
+              {{ $t('device.fields.rack.label') }}
             </q-item-label>
             <q-item-label caption class="text-body2">
               <q-badge color="secondary" :label="viewItem.rack.name"/>
@@ -133,15 +139,15 @@
         <!-- Network Address Section -->
         <q-item-label header class="text-h6 text-grey-8">
           <q-icon name="mdi-ip-network" class="q-mr-sm"/>
-          Network
+          {{ $t('device.view.network') }}
         </q-item-label>
 
         <q-item>
           <q-item-section>
-            <q-item-label class="text-h6">IP address</q-item-label>
+            <q-item-label class="text-h6">{{ $t('device.view.ip_address') }}</q-item-label>
             <q-item-label caption class="text-body2">
               <q-badge v-if="viewItem.networkAddress?.ip" color="grey-7" :label="viewItem.networkAddress.ip"/>
-              <span v-else class="text-grey-5">— not set —</span>
+              <span v-else class="text-grey-5">{{ $t('device.view.ip_not_set') }}</span>
             </q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -151,14 +157,14 @@
 
         <q-item v-if="viewItem.networkAddress?.gateway">
           <q-item-section>
-            <q-item-label class="text-h6">Gateway</q-item-label>
+            <q-item-label class="text-h6">{{ $t('fields.gateway') }}</q-item-label>
             <q-item-label caption class="text-body2">{{ viewItem.networkAddress.gateway }}</q-item-label>
           </q-item-section>
         </q-item>
 
         <q-item v-if="viewItem.networkAddress?.port">
           <q-item-section>
-            <q-item-label class="text-h6">Port</q-item-label>
+            <q-item-label class="text-h6">{{ $t('fields.port') }}</q-item-label>
             <q-item-label caption class="text-body2">{{ viewItem.networkAddress.port }}</q-item-label>
           </q-item-section>
         </q-item>
@@ -167,7 +173,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-open-in-new" class="q-mr-sm"/>
-              Admin UI
+              {{ $t('device.view.admin_ui') }}
             </q-item-label>
             <q-item-label caption class="text-body2">
               <a :href="adminUrl" target="_blank" rel="noopener noreferrer" class="text-primary">
@@ -182,12 +188,12 @@
         <!-- Authentication Accounts Section -->
         <q-item-label header class="text-h6 text-grey-8">
           <q-icon name="mdi-key" class="q-mr-sm"/>
-          Authentication Accounts
+          {{ $t('device.view.auth_accounts') }}
         </q-item-label>
 
         <q-item v-if="!viewItem.authAccounts || viewItem.authAccounts.length === 0">
           <q-item-section>
-            <q-item-label caption class="text-grey-6">No accounts configured.</q-item-label>
+            <q-item-label caption class="text-grey-6">{{ $t('device.view.no_accounts') }}</q-item-label>
           </q-item-section>
         </q-item>
 
@@ -195,11 +201,11 @@
           <q-item-section>
             <q-item-label class="text-body1">
               <q-icon name="mdi-account" class="q-mr-xs"/>
-              {{ acc.username || '— no username —' }}
-              <q-badge v-if="acc.isDefault" color="positive" label="default" class="q-ml-sm"/>
+              {{ acc.username || $t('device.view.no_username') }}
+              <q-badge v-if="acc.isDefault" color="positive" :label="$t('device.view.default_badge')" class="q-ml-sm"/>
             </q-item-label>
             <q-item-label caption class="text-body2 text-grey-7">
-              Password: <code>{{ maskPassword(acc.password) }}</code>
+              {{ $t('device.view.password') }}: <code>{{ maskPassword(acc.password) }}</code>
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -207,13 +213,13 @@
         <q-separator class="q-my-md"/>
 
         <!-- Timestamps Section -->
-        <q-item-label header class="text-h6 text-grey-8">Timestamps</q-item-label>
+        <q-item-label header class="text-h6 text-grey-8">{{ $t('common.timestamps') }}</q-item-label>
 
         <q-item v-if="viewItem.tsCreated">
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-calendar-plus" class="q-mr-sm"/>
-              Created
+              {{ $t('fields.created') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsCreated) }}</q-item-label>
           </q-item-section>
@@ -223,7 +229,7 @@
           <q-item-section>
             <q-item-label class="text-h6">
               <q-icon name="mdi-calendar-edit" class="q-mr-sm"/>
-              Last Updated
+              {{ $t('fields.updated') }}
             </q-item-label>
             <q-item-label caption class="text-body2">{{ formatDate(viewItem.tsUpdated) }}</q-item-label>
           </q-item-section>
@@ -238,17 +244,17 @@
         <div class="row items-center q-mb-md">
           <div class="text-h6 text-grey-8">
             <q-icon name="mdi-ethernet" class="q-mr-sm"/>
-            Connected Ports
+            {{ $t('device.view.connected_ports') }}
           </div>
           <q-space/>
-          <q-btn 
-            icon="mdi-plus-circle" 
-            color="positive" 
-            label="Add Port" 
+          <q-btn
+            icon="mdi-plus-circle"
+            color="positive"
+            :label="$t('device.view.add_port')"
             @click="newPort"
             size="sm"
           >
-            <q-tooltip>Add new port to this device</q-tooltip>
+            <q-tooltip>{{ $t('device.view.add_port_tooltip') }}</q-tooltip>
           </q-btn>
         </div>
         
@@ -281,14 +287,14 @@
                 <span v-else class="text-grey-6">-</span>
               </q-td>
               <q-td key="actions">
-                <q-btn 
-                  icon="mdi-delete" 
-                  @click.stop="removeItem(props.row)" 
-                  color="red-7" 
-                  flat 
+                <q-btn
+                  icon="mdi-delete"
+                  @click.stop="removeItem(props.row)"
+                  color="red-7"
+                  flat
                   dense
                 >
-                  <q-tooltip>Delete Port</q-tooltip>
+                  <q-tooltip>{{ $t('device.view.delete_port_tooltip') }}</q-tooltip>
                 </q-btn>
               </q-td>
             </q-tr>
@@ -297,11 +303,11 @@
 
         <div v-else class="text-center text-grey-6 q-pa-md">
           <q-icon name="mdi-ethernet-off" size="md"/>
-          <div>No ports connected</div>
-          <q-btn 
-            icon="mdi-plus-circle" 
-            color="positive" 
-            label="Add Port" 
+          <div>{{ $t('device.view.no_ports') }}</div>
+          <q-btn
+            icon="mdi-plus-circle"
+            color="positive"
+            :label="$t('device.view.add_port')"
             @click="newPort"
             class="q-mt-md"
           />
@@ -314,7 +320,7 @@
       <div class="q-pa-md">
         <div class="text-h6 text-grey-8 q-mb-md">
           <q-icon name="mdi-map-marker-multiple" class="q-mr-sm"/>
-          Located in Zones
+          {{ $t('device.view.located_zones') }}
         </div>
         
         <q-table
@@ -333,7 +339,7 @@
                 {{ props.row.id }}
               </q-td>
               <q-td key="name">
-                <q-badge color="secondary" :label="props.row.name || 'Unnamed'"/>
+                <q-badge color="secondary" :label="props.row.name || $t('fields.unnamed')"/>
               </q-td>
               <q-td key="description">
                 {{ props.row.description || '-' }}
@@ -344,7 +350,7 @@
 
         <div v-else class="text-center text-grey-6 q-pa-md">
           <q-icon name="mdi-map-marker-off" size="md"/>
-          <div>Not assigned to any zones</div>
+          <div>{{ $t('device.view.no_zones') }}</div>
         </div>
       </div>
 
@@ -353,10 +359,10 @@
       <!-- Actions -->
       <q-card-actions>
         <q-btn color="primary" :to="uri +'/'+ $route.params.idPrimary+'/edit'" icon="mdi-pencil">
-          Edit
+          {{ $t('actions.edit') }}
         </q-btn>
         <q-btn color="grey" @click="$router.go(-1)" icon="mdi-arrow-left">
-          Back
+          {{ $t('actions.nav.back') }}
         </q-btn>
       </q-card-actions>
     </q-card>
@@ -375,12 +381,14 @@ import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router";
 
 import {useQuasar} from "quasar";
+import {useI18n} from "vue-i18n";
 
 import {DEVICE_GET_BY_ID_CHILDS, PORT_DELETE_BY_ID} from "@/graphql/queries";
 
 import {format} from 'date-fns';
 import DeviceIpUpdater from '@/components/DeviceIpUpdater.vue';
 import {useDeviceAdminUrl} from '@/composables';
+import {labelService} from '@/_services';
 
 export default defineComponent({
   name: 'DeviceView',
@@ -388,8 +396,10 @@ export default defineComponent({
   setup() {
     const uri = '/admin/devices';
     const $q = useQuasar();
+    const {t} = useI18n({useScope: 'global'});
     const viewItem = ref();
     const loading = ref(false);
+    const labelLoading = ref(false);
     const {client} = useApolloClient();
     const router = useRouter();
     const route = useRoute();
@@ -408,18 +418,18 @@ export default defineComponent({
     });
 
     const portColumns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'internalRef', label: 'Ref ID', field: 'internalRef', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
-      {name: 'value', label: 'Value', field: 'value', align: 'left', sortable: true},
-      {name: 'actions', label: 'Actions', field: row => '', align: 'right', sortable: false}
+      {name: 'id', label: t('fields.id'), field: 'id', align: 'left', sortable: true},
+      {name: 'internalRef', label: t('fields.internal_ref'), field: 'internalRef', align: 'left', sortable: true},
+      {name: 'name', label: t('fields.name'), field: 'name', align: 'left', sortable: true},
+      {name: 'description', label: t('fields.description'), field: 'description', align: 'left', sortable: true},
+      {name: 'value', label: t('fields.value'), field: 'value', align: 'left', sortable: true},
+      {name: 'actions', label: t('table.header.actions'), field: row => '', align: 'right', sortable: false}
     ];
 
     const zoneColumns = [
-      {name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true},
-      {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-      {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
+      {name: 'id', label: t('fields.id'), field: 'id', align: 'left', sortable: true},
+      {name: 'name', label: t('fields.name'), field: 'name', align: 'left', sortable: true},
+      {name: 'description', label: t('fields.description'), field: 'description', align: 'left', sortable: true},
     ];
 
     /**
@@ -457,8 +467,9 @@ export default defineComponent({
      * Get status badge label
      */
     const getStatusLabel = (status) => {
-      if (!status) return 'Unknown';
-      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+      const key = (status || '').toLowerCase();
+      const known = ['online', 'offline', 'disabled'];
+      return known.includes(key) ? t(`device.status.${key}`) : t('device.status.unknown');
     };
 
     /**
@@ -504,7 +515,7 @@ export default defineComponent({
         loading.value = false;
         $q.notify({
           color: 'negative',
-          message: 'Failed to load device details',
+          message: t('device.view.load_error'),
           icon: 'mdi-alert-circle',
           position: 'top'
         });
@@ -517,18 +528,18 @@ export default defineComponent({
      */
     const removeItem = (toDelete) => {
       $q.dialog({
-        title: 'Confirm Deletion',
-        message: `Are you sure you want to delete port "${toDelete.name}"?`,
+        title: t('device.view.port_delete_title'),
+        message: t('device.view.port_delete_confirm', {name: toDelete.name}),
         ok: {
           push: true,
           color: 'negative',
-          label: "Delete",
+          label: t('actions.delete'),
           icon: 'mdi-delete'
         },
         cancel: {
           push: true,
           color: 'grey',
-          label: 'Cancel'
+          label: t('actions.cancel')
         },
         persistent: true
       }).onOk(() => {
@@ -540,7 +551,7 @@ export default defineComponent({
           if (response.data.devicePortDelete.success) {
             $q.notify({
               color: 'positive',
-              message: 'Port deleted successfully',
+              message: t('device.view.port_delete_success'),
               icon: 'mdi-check-circle',
               position: 'top'
             });
@@ -548,7 +559,7 @@ export default defineComponent({
           } else {
             $q.notify({
               color: 'negative',
-              message: response.data.devicePortDelete.error || 'Failed to delete port',
+              message: response.data.devicePortDelete.error || t('device.view.port_delete_error'),
               icon: 'mdi-alert-circle',
               position: 'top'
             });
@@ -556,7 +567,7 @@ export default defineComponent({
         }).catch(error => {
           $q.notify({
             color: 'negative',
-            message: 'Failed to delete port',
+            message: t('device.view.port_delete_error'),
             icon: 'mdi-alert-circle',
             position: 'top'
           });
@@ -586,6 +597,21 @@ export default defineComponent({
       router.push({path: `/admin/zones/${row.id}/view`});
     };
 
+    /**
+     * Download a printable label (with QR if enabled) for the current device.
+     */
+    const downloadLabel = async () => {
+      labelLoading.value = true;
+      try {
+        await labelService.downloadDeviceLabel(route.params.idPrimary, {template: 'brother_18mm'});
+        $q.notify({color: 'positive', message: t('qr.label.download_success'), icon: 'mdi-check-circle', position: 'top', timeout: 2000});
+      } catch (error) {
+        $q.notify({color: 'negative', message: t('qr.label.download_error', {error: error.message}), icon: 'mdi-alert-circle', position: 'top'});
+      } finally {
+        labelLoading.value = false;
+      }
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -596,6 +622,8 @@ export default defineComponent({
       viewItem,
       adminUrl,
       loading,
+      labelLoading,
+      downloadLabel,
       removeItem,
       portColumns,
       zoneColumns,

@@ -6,15 +6,15 @@
         <div class="row items-center">
           <div class="text-h5 text-primary">
             <q-icon name="mdi-devices" class="q-mr-sm"/>
-            Device List
+            {{ $t('device.list.title') }}
           </div>
           <q-space/>
-          <q-input 
-            v-model="filter" 
-            dense 
+          <q-input
+            v-model="filter"
+            dense
             outlined
-            debounce="300" 
-            placeholder="Search devices..."
+            debounce="300"
+            :placeholder="$t('device.list.search')"
             clearable
             class="q-mr-sm"
             style="min-width: 250px"
@@ -26,7 +26,7 @@
           <q-btn
             color="primary"
             icon="mdi-plus-circle"
-            label="Add Device"
+            :label="$t('device.list.add')"
             @click="createItem"
             :disable="loading"
           />
@@ -58,13 +58,13 @@
       >
         <template v-slot:body-cell-code="props">
           <q-td :props="props">
-            <q-badge color="primary" :label="props.row.code || 'No Code'"/>
+            <q-badge color="primary" :label="props.row.code || $t('fields.no_code')"/>
           </q-td>
         </template>
 
         <template v-slot:body-cell-name="props">
           <q-td :props="props">
-            <q-badge color="secondary" :label="props.row.name || 'Unnamed'"/>
+            <q-badge color="secondary" :label="props.row.name || $t('fields.unnamed')"/>
           </q-td>
         </template>
 
@@ -115,32 +115,42 @@
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
             <q-btn-group>
-              <q-btn 
-                icon="mdi-eye" 
-                color="blue-6" 
-                @click.stop="viewItem(props.row)" 
+              <q-btn
+                icon="mdi-eye"
+                color="blue-6"
+                @click.stop="viewItem(props.row)"
                 flat
                 dense
               >
-                <q-tooltip>View</q-tooltip>
+                <q-tooltip>{{ $t('actions.view') }}</q-tooltip>
               </q-btn>
-              <q-btn 
-                icon="mdi-pencil" 
-                color="amber-7" 
-                @click.stop="editItem(props.row)" 
+              <q-btn
+                icon="mdi-pencil"
+                color="amber-7"
+                @click.stop="editItem(props.row)"
                 flat
                 dense
               >
-                <q-tooltip>Edit</q-tooltip>
+                <q-tooltip>{{ $t('actions.edit') }}</q-tooltip>
               </q-btn>
-              <q-btn 
-                icon="mdi-delete" 
-                color="red-7" 
-                @click.stop="deleteItem(props.row)" 
+              <q-btn
+                icon="mdi-label-outline"
+                color="teal-7"
+                @click.stop="downloadLabel(props.row)"
+                flat
+                dense
+                :loading="labelLoading === props.row.id"
+              >
+                <q-tooltip>{{ $t('qr.label.download') }}</q-tooltip>
+              </q-btn>
+              <q-btn
+                icon="mdi-delete"
+                color="red-7"
+                @click.stop="deleteItem(props.row)"
                 flat
                 dense
               >
-                <q-tooltip>Delete</q-tooltip>
+                <q-tooltip>{{ $t('actions.delete') }}</q-tooltip>
               </q-btn>
             </q-btn-group>
           </q-td>
@@ -151,31 +161,37 @@
 </template>
 
 <script>
-import { defineComponent, onMounted } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
 import { format } from 'date-fns';
+import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useEntityList, useTableFilters } from '@/composables';
 import { DEVICE_DELETE, DEVICE_LIST_ALL } from '@/graphql/queries';
+import { labelService } from '@/_services';
 import TableFilterBar from '@/components/filters/TableFilterBar.vue';
 
 export default defineComponent({
   name: 'DeviceList',
   components: { TableFilterBar },
   setup() {
+    const $q = useQuasar();
+    const { t } = useI18n({ useScope: 'global' });
+    const labelLoading = ref(null);
     const columns = [
-      { name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true },
-      { name: 'code', label: 'Code', field: 'code', align: 'left', sortable: true },
-      { name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true },
-      { name: 'model', label: 'Model', field: 'model', align: 'left', sortable: true },
-      { name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true },
-      { name: 'rack', label: 'Rack', field: 'rack', align: 'left', sortable: true },
-      { name: 'ip', label: 'IP', field: 'ip', align: 'left', sortable: true },
-      { name: 'status', label: 'Status', field: 'status', align: 'left', sortable: true },
-      { name: 'portsCount', label: 'Ports', field: 'portsCount', align: 'left', sortable: true },
-      { name: 'tsCreated', label: 'Created', field: 'tsCreated', align: 'left', sortable: true },
-      { 
-        name: 'actions', 
-        label: 'Actions', 
-        field: () => '', 
+      { name: 'id', label: t('fields.id'), field: 'id', align: 'left', sortable: true },
+      { name: 'code', label: t('fields.code'), field: 'code', align: 'left', sortable: true },
+      { name: 'name', label: t('fields.name'), field: 'name', align: 'left', sortable: true },
+      { name: 'model', label: t('fields.model'), field: 'model', align: 'left', sortable: true },
+      { name: 'type', label: t('fields.type'), field: 'type', align: 'left', sortable: true },
+      { name: 'rack', label: t('fields.rack'), field: 'rack', align: 'left', sortable: true },
+      { name: 'ip', label: t('fields.ip'), field: 'ip', align: 'left', sortable: true },
+      { name: 'status', label: t('fields.status'), field: 'status', align: 'left', sortable: true },
+      { name: 'portsCount', label: t('fields.ports'), field: 'portsCount', align: 'left', sortable: true },
+      { name: 'tsCreated', label: t('fields.created'), field: 'tsCreated', align: 'left', sortable: true },
+      {
+        name: 'actions',
+        label: t('table.header.actions'),
+        field: () => '',
         align: 'right', 
         sortable: false,
         headerClasses: 'bg-grey-2',
@@ -213,8 +229,9 @@ export default defineComponent({
     };
 
     const getStatusLabel = (status) => {
-      if (!status) return 'Unknown';
-      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+      const key = (status || '').toLowerCase();
+      const known = ['online', 'offline', 'disabled'];
+      return known.includes(key) ? t(`device.status.${key}`) : t('device.status.unknown');
     };
 
     const getStatusIcon = (status) => {
@@ -223,6 +240,21 @@ export default defineComponent({
         case 'OFFLINE': return 'mdi-close-circle';
         case 'DISABLED': return 'mdi-pause-circle';
         default: return 'mdi-help-circle';
+      }
+    };
+
+    /**
+     * Download a printable label (with QR if enabled) for a device.
+     */
+    const downloadLabel = async (row) => {
+      labelLoading.value = row.id;
+      try {
+        await labelService.downloadDeviceLabel(row.id, { template: 'brother_18mm' });
+        $q.notify({ color: 'positive', message: t('qr.label.download_success'), icon: 'mdi-check-circle', position: 'top', timeout: 2000 });
+      } catch (error) {
+        $q.notify({ color: 'negative', message: t('qr.label.download_error', { error: error.message }), icon: 'mdi-alert-circle', position: 'top' });
+      } finally {
+        labelLoading.value = null;
       }
     };
 
@@ -289,7 +321,9 @@ export default defineComponent({
       formatDate,
       getStatusColor,
       getStatusLabel,
-      getStatusIcon
+      getStatusIcon,
+      downloadLabel,
+      labelLoading
     };
   }
 });

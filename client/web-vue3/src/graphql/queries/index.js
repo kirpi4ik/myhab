@@ -11,6 +11,7 @@ export * from './timeseries';
 export * from './scenarios';
 export * from './jobs';
 export * from './appConfig';
+export * from './qrConfig';
 export * from './messages';
 export * from './sharedWidgets';
 

@@ -31,4 +31,25 @@ class CfgKey {
         }
     }
 
+    // Global QR-code feature: toggle, content template and rendering options.
+    // Stored in the git-backed ConfigProvider (overrides.yaml). Code-side
+    // defaults are applied in LabelService when a key is absent.
+    enum QR implements Key {
+        QR_ENABLED('feature.qr.enabled'),
+        QR_CONTENT_TEMPLATE('feature.qr.content.template'),
+        QR_POSITION('feature.qr.position'),
+        QR_SIZE('feature.qr.size')
+
+        def key
+
+        QR(key) {
+            this.key = key
+        }
+
+        @Override
+        def key() {
+            return key
+        }
+    }
+
 }

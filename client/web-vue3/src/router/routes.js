@@ -418,12 +418,40 @@ const routes = [
         ],
       },
       {
+        path: adminPrefix + '/qrconfig',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "qrconfig",
+          authorize: [Role.Admin]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/qrconfig/QrConfigView'),
+          }
+        ],
+      },
+      {
         path: '/messages',
         component: () => import('pages/infra/message/MessageInbox'),
         meta: {
           name: "Messages",
           authorize: [Role.Admin, Role.User]
         }
+      },
+      {
+        path: '/scan',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "Scan QR",
+          authorize: [Role.Admin, Role.User]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/ScanQr'),
+          }
+        ],
       },
       {
         path: '/settings',

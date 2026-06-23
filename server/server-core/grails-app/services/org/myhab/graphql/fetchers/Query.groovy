@@ -45,6 +45,8 @@ class Query {
     MegaDriverService megaDriverService
     @Autowired
     org.myhab.async.mqtt.MqttRetainedFetchService mqttRetainedFetchService
+    @Autowired
+    org.myhab.services.LabelService labelService
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
@@ -131,6 +133,16 @@ class Query {
                 String key = environment.getArgument("key") as String
                 def config = configProvider.get(String, key)
                 return config
+            }
+        }
+    }
+
+    /** Global QR-code label settings for the QR settings page. */
+    def qrConfig() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                return labelService.getQrConfig()
             }
         }
     }

@@ -514,6 +514,43 @@ class Mutation implements EventPublisher {
         }
     }
 
+    /**
+     * Persist the global QR-code label settings to the git-backed config.
+     * Writes the feature.qr.* keys via ConfigProvider.setAndCommit.
+     */
+    DataFetcher qrConfigUpdate() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    Boolean enabled = environment.getArgument("enabled") as Boolean
+                    String contentTemplate = environment.getArgument("contentTemplate") as String
+                    String position = environment.getArgument("position") as String
+                    Integer size = environment.getArgument("size") as Integer
+
+                    if (!contentTemplate || contentTemplate.trim().isEmpty()) {
+                        return [success: false, error: "Content template is required"]
+                    }
+                    String pos = position?.equalsIgnoreCase('left') ? 'left' : 'right'
+
+                    boolean ok = configProvider.setAndCommit(org.myhab.config.CfgKey.QR.QR_ENABLED.key(), enabled.toString(), "Update QR config: enabled")
+                    ok = configProvider.setAndCommit(org.myhab.config.CfgKey.QR.QR_CONTENT_TEMPLATE.key(), contentTemplate.trim(), "Update QR config: content template") && ok
+                    ok = configProvider.setAndCommit(org.myhab.config.CfgKey.QR.QR_POSITION.key(), pos, "Update QR config: position") && ok
+                    ok = configProvider.setAndCommit(org.myhab.config.CfgKey.QR.QR_SIZE.key(), ((size ?: 0).toString()), "Update QR config: size") && ok
+
+                    if (ok) {
+                        log.info("QR config updated: enabled=${enabled}, position=${pos}, size=${size}")
+                        return [success: true, error: null]
+                    }
+                    return [success: false, error: "Failed to persist QR configuration"]
+                } catch (Exception e) {
+                    log.error("Failed to update QR config", e)
+                    return [success: false, error: e.message ?: "Failed to update QR configuration"]
+                }
+            }
+        }
+    }
+
     DataFetcher messageUpdateState() {
         return new DataFetcher() {
             @Override

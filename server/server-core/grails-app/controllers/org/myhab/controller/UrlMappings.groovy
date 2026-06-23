@@ -18,6 +18,8 @@ class UrlMappings {
         
         // Label generation API (kept as REST — GraphQL doesn't serve binary PNG)
         get "/api/labels/cable/$id"(controller: "label", action: "generateCableLabel")
+        get "/api/labels/device/$id"(controller: "label", action: "generateDeviceLabel")
+        get "/api/labels/peripheral/$id"(controller: "label", action: "generatePeripheralLabel")
         get "/api/users/$id/avatar"(controller: "userAvatar", action: "show")
         put "/api/users/$id/avatar"(controller: "userAvatar", action: "update")
         "/login/auth"(controller: "login", action: "auth")
