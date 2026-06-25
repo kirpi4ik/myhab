@@ -13,12 +13,15 @@ A comprehensive home automation platform for monitoring and controlling your sma
 - [User Guide](#user-guide)
   - [Dashboard and Navigation](#dashboard-and-navigation)
   - [Device Control](#device-control)
+  - [Voice Assistant](#voice-assistant)
+  - [QR Code Labels & Scanning](#qr-code-labels--scanning)
   - [Energy Monitoring](#energy-monitoring)
   - [Heating Management](#heating-management)
   - [Weather Information](#weather-information)
   - [Robotic Lawn Mower](#robotic-lawn-mower)
   - [Telegram Bot Control](#telegram-bot-control)
   - [Mobile Access](#mobile-access)
+  - [Language & Personalization](#language--personalization)
 - [Architecture](#architecture)
   - [System Overview](#system-overview)
   - [Technology Stack](#technology-stack)
@@ -41,7 +44,7 @@ The platform excels at:
 - **Energy Intelligence** - Track solar production, grid consumption, and optimize energy usage
 - **Climate Automation** - Automated heating control with heat pump integration
 - **Real-time Monitoring** - Live updates via WebSocket and MQTT protocols
-- **Remote Access** - Control your home from anywhere via web, mobile app, or Telegram
+- **Remote Access** - Control your home from anywhere via web, mobile app, voice, or Telegram
 
 ---
 
@@ -54,7 +57,10 @@ The platform excels at:
 | **Heat Pump Integration** | Full NIBE F1145 heat pump monitoring with temperature sensors and energy stats |
 | **Weather Station** | Automatic weather data from Open-Meteo with forecasts |
 | **Robotic Lawn Mower** | Segway Navimow control + live status (battery, state, error events) with one-click cloud sign-in |
+| **AI Voice Assistant** | Control your home by speaking in natural language (English & Romanian) — an LLM agent switches peripherals/zones, runs scenarios, and answers questions about current state, with optional natural neural voice replies |
+| **QR Code Labels** | Generate printable QR labels for cables, devices and peripherals, then scan them to jump straight to the right screen |
 | **Telegram Bot** | Remote control via Telegram with role-based access |
+| **Bilingual UI** | English & Romanian interface with a per-user language preference (falls back to the browser language) |
 | **PWA Support** | Install as a native app on mobile devices |
 | **Scenario Automation** | Create custom automation scenarios with triggers and actions |
 | **Time-Series Data** | Historical data storage and statistics for energy analysis |
@@ -91,6 +97,43 @@ Each device shows its current state, last update time, and provides appropriate 
 - Sliders for dimmable lights
 - Confirmation dialogs for critical actions (gates, locks)
 - Real-time state synchronization across all connected clients
+
+### Voice Assistant
+
+Control your home by speaking, in natural language — English or Romanian — from the web app or installed PWA (Voice page, or the microphone entry in the sidebar).
+
+**How it works**
+- Tap the microphone and say a command, e.g. *"turn off the terrace lights"*, *"aprinde lumina din birou"*, *"run movie mode"*, or *"is the garage door open?"*.
+- Speech is transcribed in the browser and sent to the backend, where an LLM agent maps it to actions against your **actual** devices and executes them through the same engine the UI uses.
+- The assistant replies out loud — with optional Google neural text-to-speech for a natural voice, otherwise the browser's built-in voice.
+
+**What it can do**
+- Switch a single peripheral, or an entire **zone** at once (*"turn off everything on the terrace"*)
+- Run predefined **scenarios / automations** by name
+- Answer **questions about current state** (open/closed, temperature, on/off) without changing anything
+- Ask a **clarifying question** when a command is ambiguous and continue the conversation (multi-turn)
+
+**Accuracy & safety**
+- The assistant can only choose from your live catalog of peripherals, zones and scenarios — it cannot invent a device, and every action is validated server-side before it runs.
+- Add **voice aliases** (alternate names, e.g. Romanian) to a peripheral or zone in its edit screen to improve recognition.
+
+**Providers & setup**
+- Pluggable LLM provider — **Anthropic (Claude)** or **OpenAI** — chosen by configuration; the API key is read from the git-backed configuration or an environment variable.
+- Natural voice uses **Google Cloud Text-to-Speech** (service-account credentials), and gracefully falls back to the browser voice if unavailable.
+- The feature is disabled by default and enabled via the `feature.voice.*` configuration keys.
+
+### QR Code Labels & Scanning
+
+Generate printable labels with QR codes for your hardware, then scan them to jump straight to the right screen — no manual searching.
+
+**Generation**
+- Print Brother-style labels for **cables, devices and peripherals**, optionally embedding a QR code.
+- A dedicated QR settings page controls whether labels carry a QR, what it encodes (a template with variables), and its size and position.
+- The QR encodes a stable, base-URL-free token (`myhab://TYPE/ID`), so a printed label keeps working even if your deployment URL changes.
+
+**Scanning**
+- The in-app scanner (Scan QR) reads a label with the device camera and navigates directly to that cable, device or peripheral.
+- Pure web (PWA) using the camera — no native app required.
 
 ### Energy Monitoring
 
@@ -228,6 +271,14 @@ Access myHAB on any device:
 2. Click "Install" when prompted (or use browser menu)
 3. Access from your home screen like a native app
 
+### Language & Personalization
+
+myHAB ships a fully bilingual interface — **English and Romanian**.
+
+- Pick your language from **Settings**; the choice is saved to your account and applied on every device and browser you sign in from.
+- Left on **Automatic**, the interface follows your browser's language, falling back to English.
+- The same language also drives the voice assistant's speech recognition and spoken replies.
+
 ---
 
 ## Architecture
@@ -248,7 +299,7 @@ myHAB follows a modern three-tier architecture with clear separation of concerns
 ┌───────────────────────────▼─────────────────────────────────────┐
 │                      Backend Server                              │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │                   Grails 5 Application                    │   │
+│  │                 Grails 6.1 Application                    │   │
 │  │  ┌────────────┐ ┌────────────┐ ┌────────────────────┐    │   │
 │  │  │  GraphQL   │ │  Services  │ │  Scheduled Jobs    │    │   │
 │  │  │    API     │ │   Layer    │ │  (Quartz)          │    │   │
@@ -275,28 +326,34 @@ myHAB follows a modern three-tier architecture with clear separation of concerns
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | Framework | Vue 3 | Reactive UI components |
-| UI Library | Quasar Framework | Material Design components |
-| API Client | Apollo Client | GraphQL queries and mutations |
-| Real-time | WebSocket | Live updates from server |
-| Build Tool | Vite/Webpack | Module bundling |
+| UI Library | Quasar 2 | Material Design components |
+| State | Pinia | Client-side state management |
+| API Client | Apollo Client 3 | GraphQL queries and mutations |
+| Real-time | WebSocket (STOMP) | Live updates from server |
+| Voice input | Web Speech API | In-browser speech recognition |
+| Build Tool | Quasar CLI (Webpack) | Module bundling |
 | PWA | Workbox | Service worker and caching |
 
 **Backend**
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| Framework | Grails 5 (Groovy) | Web application framework |
+| Runtime | Java 17 | JVM runtime |
+| Framework | Grails 6.1 (Groovy 3) | Web application framework |
 | API | GraphQL | Flexible data queries |
 | ORM | GORM | Database abstraction |
-| Security | Spring Security | Authentication and authorization |
+| Security | Spring Security 6 (OAuth2 + JWT) | Authentication and authorization |
 | Scheduling | Quartz | Timed job execution |
 | Messaging | Spring Integration | MQTT message handling |
+| Voice AI | Anthropic / OpenAI APIs | Natural-language command understanding |
+| Speech | Google Cloud Text-to-Speech | Neural voice responses |
+| Labels / QR | ZXing | QR code generation |
 
 **Infrastructure**
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | Database | PostgreSQL | Persistent data storage |
 | Message Broker | Mosquitto (MQTT) | Device communication |
-| Caching | In-memory | Performance optimization |
+| Caching | Hazelcast | Distributed in-memory caching |
 
 ### Communication Layer
 
@@ -322,9 +379,10 @@ Supported device protocols:
 
 The GraphQL API provides:
 - Flexible queries for entities (devices, ports, zones, users, etc.)
-- Mutations for state changes and event publishing
-- Subscriptions for real-time updates
+- Mutations for state changes, event publishing and voice commands
 - Navigation and breadcrumb support
+
+Real-time state changes are pushed separately over WebSocket (STOMP), not GraphQL subscriptions.
 
 **WebSocket**
 
@@ -428,7 +486,7 @@ Jobs can be enabled/disabled and intervals adjusted via configuration without co
 ### Security
 
 **Authentication**
-- OAuth 2.0 token-based authentication
+- OAuth 2.0 / JWT token-based authentication
 - Session management with refresh tokens
 - Password encryption using secure hashing
 
@@ -439,7 +497,7 @@ Jobs can be enabled/disabled and intervals adjusted via configuration without co
 
 **Data Protection**
 - Secure credential storage in database
-- API keys and tokens in configuration
+- Provider API keys and secrets (LLM, TTS, integrations) kept in environment variables or the git-backed configuration store
 - HTTPS for all client-server communication
 
 ---
@@ -476,9 +534,15 @@ myhab/
 The project uses Gradle for building:
 
 - `./gradlew build` - Build entire project
-- `./gradlew bootRun` - Run backend server
-- `npm run serve` - Run frontend development server
-- `npm run pwa:build` - Build PWA for production
+- `./gradlew bootRun` - Run backend server (port 8181)
+- `./gradlew serve` / `./gradlew servePWA` - Run the frontend dev server (port 10002) via Gradle
+
+Frontend (from `client/web-vue3`, using Yarn):
+
+- `yarn serve` - Run frontend development server (port 10002)
+- `yarn build` - Build the SPA for production
+- `yarn pwa:build` - Build the PWA for production
+- `yarn lint` / `yarn format` - Lint and format the codebase
 
 ### Configuration
 

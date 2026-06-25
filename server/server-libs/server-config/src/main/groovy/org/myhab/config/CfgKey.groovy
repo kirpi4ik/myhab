@@ -41,7 +41,16 @@ class CfgKey {
         VOICE_ENABLED('feature.voice.enabled'),
         VOICE_LLM_PROVIDER('feature.voice.llm.provider'),
         VOICE_LLM_MODEL('feature.voice.llm.model'),
-        VOICE_LLM_APIKEY('feature.voice.llm.apikey')
+        VOICE_LLM_APIKEY('feature.voice.llm.apikey'),
+        // Natural neural text-to-speech for the spoken response. The credential
+        // is config-first with env fallback (GOOGLE_TTS_API_KEY). NOTE: Google
+        // Cloud TTS rejects API keys — VOICE_TTS_APIKEY must hold a *service
+        // account JSON key* (exchanged for an OAuth2 token by GoogleAuth).
+        VOICE_TTS_ENABLED('feature.voice.tts.enabled'),
+        VOICE_TTS_PROVIDER('feature.voice.tts.provider'),
+        VOICE_TTS_APIKEY('feature.voice.tts.apikey'),
+        VOICE_TTS_VOICE_RO('feature.voice.tts.voice.ro'),
+        VOICE_TTS_VOICE_EN('feature.voice.tts.voice.en')
 
         def key
 

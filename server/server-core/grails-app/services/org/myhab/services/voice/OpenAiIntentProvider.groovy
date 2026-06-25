@@ -6,13 +6,9 @@ import groovy.util.logging.Slf4j
 import kong.unirest.HttpResponse
 
 /**
- * {@link VoiceIntentProvider} backed by the OpenAI Chat Completions API.
- *
- * <p>Uses function-calling ({@code tools} + forced {@code tool_choice}) to get
- * the same structured output as the Anthropic provider — the shared
- * {@link VoiceIntentPrompts#COMMAND_SCHEMA} is sent as the function parameters,
- * and the arguments come back as a JSON string we parse. OpenAI caches long
- * prompt prefixes automatically, so no explicit cache directive is needed.</p>
+ * {@link VoiceIntentProvider} backed by the OpenAI Chat Completions API with
+ * function-calling tool use. The neutral conversation is translated to OpenAI
+ * messages per call; OpenAI caches long prompt prefixes automatically.
  */
 @Slf4j
 class OpenAiIntentProvider implements VoiceIntentProvider {
@@ -26,27 +22,69 @@ class OpenAiIntentProvider implements VoiceIntentProvider {
     String defaultModel() { 'gpt-4o-mini' }
 
     @Override
-    Map resolveIntent(String transcript, List<Map> catalog, String model, String apiKey) {
+    LlmTurn converse(String systemPrompt, String catalogJson, List<Map> messages,
+                     List<Map> tools, String model, String apiKey) {
         if (!apiKey?.trim()) {
             throw new IllegalStateException('OpenAI API key is not set')
         }
 
-        String systemContent = "${VoiceIntentPrompts.SYSTEM_PROMPT}\n\n" +
-                "Controllable peripherals (JSON):\n${VoiceIntentPrompts.catalogJson(catalog)}"
+        List nativeMessages = [[role: 'system', content: "${systemPrompt}\n\nCatalog (JSON):\n${catalogJson}".toString()]]
+        messages.each { nativeMessages.addAll(toNative(it)) }
 
         Map body = [
-            model      : model,
-            messages   : [
-                [role: 'system', content: systemContent.toString()],
-                [role: 'user', content: transcript]
-            ],
-            tools      : [[type    : 'function',
-                           function: [name       : VoiceIntentPrompts.TOOL_NAME,
-                                      description : VoiceIntentPrompts.TOOL_DESCRIPTION,
-                                      parameters  : VoiceIntentPrompts.COMMAND_SCHEMA]]],
-            tool_choice: [type: 'function', function: [name: VoiceIntentPrompts.TOOL_NAME]]
+            model   : model,
+            messages: nativeMessages,
+            tools   : tools.collect {
+                [type: 'function', function: [name: it.name, description: it.description, parameters: it.input_schema]]
+            },
+            tool_choice: 'auto'
         ]
 
+        Map env = post(body, apiKey)
+
+        LlmTurn turn = new LlmTurn()
+        Map message = (((env.choices ?: []) as List) ? (env.choices[0].message as Map) : null)
+        if (message) {
+            turn.finalText = (message.content as String)?.trim() ?: null
+            (message.tool_calls ?: []).each { tc ->
+                Map fn = tc.function as Map
+                Map input = [:]
+                if (fn?.arguments) {
+                    try {
+                        input = new JsonSlurper().parseText(fn.arguments as String) as Map
+                    } catch (Exception ignored) {
+                        // Malformed tool args → leave empty; tool validation will reject it gracefully.
+                        input = [:]
+                    }
+                }
+                turn.toolCalls << new ToolCall(id: tc.id as String, name: fn?.name as String, input: input)
+            }
+        }
+        return turn
+    }
+
+    /** Translate one neutral message into one or more OpenAI messages. */
+    private static List<Map> toNative(Map msg) {
+        switch (msg.role) {
+            case 'assistant':
+                Map m = [role: 'assistant', content: msg.text ?: null]
+                if (msg.toolCalls) {
+                    m.tool_calls = (msg.toolCalls).collect { tc ->
+                        [id: tc.id, type: 'function',
+                         function: [name: tc.name, arguments: JsonOutput.toJson(tc.input ?: [:])]]
+                    }
+                }
+                return [m]
+            case 'tool':
+                return (msg.toolResults ?: []).collect { r ->
+                    [role: 'tool', tool_call_id: r.id, content: (r.content ?: '')]
+                }
+            default: // user
+                return [[role: 'user', content: msg.text ?: '']]
+        }
+    }
+
+    private static Map post(Map body, String apiKey) {
         HttpResponse<String> response
         try {
             response = VoiceHttp.INSTANCE.post(API_URL)
@@ -57,20 +95,10 @@ class OpenAiIntentProvider implements VoiceIntentProvider {
         } catch (Exception ex) {
             throw new IllegalStateException("OpenAI transport error: ${ex.message}", ex)
         }
-
         if (response.status >= 400) {
             log.warn("OpenAI HTTP ${response.status}: ${response.body}")
             throw new IllegalStateException("OpenAI HTTP ${response.status}")
         }
-
-        Map env = new JsonSlurper().parseText(response.body ?: '{}') as Map
-        List choices = (env.choices ?: []) as List
-        Map message = (choices ? choices[0].message : null) as Map
-        List toolCalls = (message?.tool_calls ?: []) as List
-        String args = toolCalls ? toolCalls[0].function?.arguments : null
-        if (!args) {
-            throw new IllegalStateException('OpenAI returned no tool call')
-        }
-        return new JsonSlurper().parseText(args) as Map
+        return new JsonSlurper().parseText(response.body ?: '{}') as Map
     }
 }

@@ -6,14 +6,10 @@ import groovy.util.logging.Slf4j
 import kong.unirest.HttpResponse
 
 /**
- * {@link VoiceIntentProvider} backed by the Anthropic Messages API.
- *
- * <p>Mirrors the Unirest + JsonSlurper conventions of
- * {@link org.myhab.services.navimow.NavimowApiClient}. The model is forced to
- * emit structured output via a single tool ({@code set_command}). The system
- * prompt and the (rarely-changing) catalog are sent as a cached block
- * ({@code cache_control: ephemeral}) so repeated commands bill the static
- * context at the cache rate.</p>
+ * {@link VoiceIntentProvider} backed by the Anthropic Messages API with
+ * multi-tool, multi-turn tool use. The system prompt + catalog are sent as a
+ * cached block ({@code cache_control: ephemeral}); the neutral conversation is
+ * translated to Anthropic content blocks per call.
  */
 @Slf4j
 class AnthropicIntentProvider implements VoiceIntentProvider {
@@ -28,27 +24,64 @@ class AnthropicIntentProvider implements VoiceIntentProvider {
     String defaultModel() { 'claude-haiku-4-5' }
 
     @Override
-    Map resolveIntent(String transcript, List<Map> catalog, String model, String apiKey) {
+    LlmTurn converse(String systemPrompt, String catalogJson, List<Map> messages,
+                     List<Map> tools, String model, String apiKey) {
         if (!apiKey?.trim()) {
             throw new IllegalStateException('Anthropic API key is not set')
         }
 
         Map body = [
-            model      : model,
-            max_tokens : 256,
-            system     : [
-                [type: 'text', text: VoiceIntentPrompts.SYSTEM_PROMPT],
-                [type: 'text',
-                 text: "Controllable peripherals (JSON):\n${VoiceIntentPrompts.catalogJson(catalog)}".toString(),
+            model     : model,
+            max_tokens: 512,
+            system    : [
+                [type: 'text', text: systemPrompt],
+                [type: 'text', text: "Catalog (JSON):\n${catalogJson}".toString(),
                  cache_control: [type: 'ephemeral']]
             ],
-            tools      : [[name        : VoiceIntentPrompts.TOOL_NAME,
-                           description : VoiceIntentPrompts.TOOL_DESCRIPTION,
-                           input_schema: VoiceIntentPrompts.COMMAND_SCHEMA]],
-            tool_choice: [type: 'tool', name: VoiceIntentPrompts.TOOL_NAME],
-            messages   : [[role: 'user', content: transcript]]
+            tools     : tools.collect { [name: it.name, description: it.description, input_schema: it.input_schema] },
+            messages  : messages.collect { toNative(it) }
         ]
 
+        Map env = post(body, apiKey)
+
+        LlmTurn turn = new LlmTurn()
+        List content = (env.content ?: []) as List
+        StringBuilder text = new StringBuilder()
+        content.each { block ->
+            if (block.type == 'text') {
+                text.append(block.text ?: '')
+            } else if (block.type == 'tool_use') {
+                turn.toolCalls << new ToolCall(id: block.id as String, name: block.name as String,
+                        input: (block.input ?: [:]) as Map)
+            }
+        }
+        turn.finalText = text.toString().trim() ?: null
+        return turn
+    }
+
+    /** Translate one neutral message into an Anthropic message. */
+    private static Map toNative(Map msg) {
+        switch (msg.role) {
+            case 'assistant':
+                List blocks = []
+                if (msg.text) {
+                    blocks << [type: 'text', text: msg.text]
+                }
+                (msg.toolCalls ?: []).each { tc ->
+                    blocks << [type: 'tool_use', id: tc.id, name: tc.name, input: (tc.input ?: [:])]
+                }
+                return [role: 'assistant', content: blocks]
+            case 'tool':
+                List blocks = (msg.toolResults ?: []).collect { r ->
+                    [type: 'tool_result', tool_use_id: r.id, content: (r.content ?: '')]
+                }
+                return [role: 'user', content: blocks]
+            default: // user
+                return [role: 'user', content: msg.text ?: '']
+        }
+    }
+
+    private static Map post(Map body, String apiKey) {
         HttpResponse<String> response
         try {
             response = VoiceHttp.INSTANCE.post(API_URL)
@@ -60,18 +93,10 @@ class AnthropicIntentProvider implements VoiceIntentProvider {
         } catch (Exception ex) {
             throw new IllegalStateException("Anthropic transport error: ${ex.message}", ex)
         }
-
         if (response.status >= 400) {
             log.warn("Anthropic HTTP ${response.status}: ${response.body}")
             throw new IllegalStateException("Anthropic HTTP ${response.status}")
         }
-
-        Map env = new JsonSlurper().parseText(response.body ?: '{}') as Map
-        List content = (env.content ?: []) as List
-        Map toolUse = content.find { it.type == 'tool_use' } as Map
-        if (!toolUse?.input) {
-            throw new IllegalStateException('Anthropic returned no tool_use block')
-        }
-        return toolUse.input as Map
+        return new JsonSlurper().parseText(response.body ?: '{}') as Map
     }
 }

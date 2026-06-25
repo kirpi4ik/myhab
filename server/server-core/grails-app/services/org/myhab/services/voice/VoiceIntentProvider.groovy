@@ -1,17 +1,15 @@
 package org.myhab.services.voice
 
 /**
- * Maps a spoken transcript to a single peripheral + action, grounded by the
- * catalog of controllable peripherals. Implementations wrap one LLM vendor
- * (Anthropic, OpenAI, …); {@link org.myhab.services.VoiceCommandService} picks
- * one by name from the {@code feature.voice.llm.provider} config and stays
- * otherwise unaware of the vendor.
+ * One LLM vendor (Anthropic, OpenAI, …) behind a vendor-neutral, multi-turn
+ * tool-use API. {@link org.myhab.services.VoiceCommandService} owns the agentic
+ * loop and the (neutral) conversation history; a provider is a pure translator:
+ * neutral request in → one native round-trip → normalized {@link LlmTurn} out.
  *
- * <p>All implementations must return strict structured output — never prose —
- * shaped as {@code [peripheralId, action, confidence, spokenResponse]} or
- * {@code [error: "..."]} when nothing confidently matches. The caller validates
- * the returned id against the catalog, so an implementation only has to forward
- * the model's choice, not enforce it.</p>
+ * <p>The neutral message list and the tool definitions are described in
+ * {@link VoiceTools}. The system prompt and catalog JSON are passed separately
+ * so a provider can place them in a cache-friendly prefix (e.g. Anthropic
+ * {@code cache_control}).</p>
  */
 interface VoiceIntentProvider {
 
@@ -22,9 +20,14 @@ interface VoiceIntentProvider {
     String defaultModel()
 
     /**
-     * @param catalog list of {@code [id, name, category, zones]} maps — the only
-     *                ids the model may choose from.
-     * @return the structured intent map, or {@code [error: ...]}.
+     * Run a single LLM turn.
+     *
+     * @param systemPrompt the shared system instructions
+     * @param catalogJson  the controllable-entity catalog as JSON (cacheable)
+     * @param messages     neutral conversation history (see {@link VoiceTools})
+     * @param tools        neutral tool definitions ({@link VoiceTools#TOOLS})
+     * @return tool calls to execute, or a final spoken text when the model is done
      */
-    Map resolveIntent(String transcript, List<Map> catalog, String model, String apiKey)
+    LlmTurn converse(String systemPrompt, String catalogJson, List<Map> messages,
+                     List<Map> tools, String model, String apiKey)
 }

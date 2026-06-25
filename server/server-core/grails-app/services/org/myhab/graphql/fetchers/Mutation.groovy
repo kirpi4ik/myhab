@@ -565,18 +565,19 @@ class Mutation implements EventPublisher {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 String transcript = environment.getArgument("transcript") as String
                 String locale = environment.getArgument("locale") as String
+                String sessionId = environment.getArgument("sessionId") as String
                 String username = 'voice'
                 try {
                     def principal = springSecurityService?.principal
                     username = principal instanceof String ? principal : (principal?.username ?: 'voice')
                 } catch (Exception ignored) { /* unauthenticated fallback */ }
                 try {
-                    return voiceCommandService.handleTranscript(transcript, locale, username)
+                    return voiceCommandService.handleTranscript(transcript, locale, sessionId, username)
                 } catch (Exception e) {
                     log.error("voiceCommand failed for transcript='${transcript}'", e)
                     return [success: false, error: "Voice command failed: ${e.message}",
-                            transcript: transcript, action: null, peripheralId: null,
-                            peripheralName: null, spokenResponse: null]
+                            transcript: transcript, spokenResponse: null, sessionId: sessionId,
+                            awaitingReply: false, actions: []]
                 }
             }
         }

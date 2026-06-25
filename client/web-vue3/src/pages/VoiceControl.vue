@@ -1,14 +1,25 @@
 <template>
   <q-page padding>
     <q-card flat bordered class="voice-card">
-      <q-card-section>
-        <div class="text-h5 text-primary">
-          <q-icon name="mdi-microphone" class="q-mr-sm"/>
-          {{ $t('voice.title') }}
+      <q-card-section class="row items-center">
+        <div>
+          <div class="text-h5 text-primary">
+            <q-icon name="mdi-microphone" class="q-mr-sm"/>
+            {{ $t('voice.title') }}
+          </div>
+          <div class="text-subtitle2 text-grey-7">{{ $t('voice.subtitle') }}</div>
         </div>
-        <div class="text-subtitle2 text-grey-7">
-          {{ $t('voice.subtitle') }}
-        </div>
+        <q-space/>
+        <q-btn
+          v-if="exchange.length"
+          flat
+          dense
+          round
+          icon="mdi-broom"
+          @click="resetConversation"
+        >
+          <q-tooltip>{{ $t('voice.reset') }}</q-tooltip>
+        </q-btn>
       </q-card-section>
 
       <q-separator/>
@@ -24,6 +35,24 @@
       </q-card-section>
 
       <template v-else>
+        <!-- Conversation log -->
+        <q-card-section v-if="exchange.length" class="exchange">
+          <div
+            v-for="(msg, i) in exchange"
+            :key="i"
+            class="row q-mb-sm"
+            :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+          >
+            <q-chat-message
+              :text="[msg.text]"
+              :sent="msg.role === 'user'"
+              :name="msg.role === 'user' ? $t('voice.you') : $t('voice.assistant')"
+              :bg-color="msg.role === 'user' ? 'primary' : 'grey-3'"
+              :text-color="msg.role === 'user' ? 'white' : 'black'"
+            />
+          </div>
+        </q-card-section>
+
         <q-card-section class="column items-center q-gutter-md">
           <q-btn
             round
@@ -42,7 +71,7 @@
             <span v-else>{{ $t('voice.tap_to_speak') }}</span>
           </div>
 
-          <!-- Live / final transcript -->
+          <!-- Live / final transcript (also accepts typed input) -->
           <q-input
             v-model="transcript"
             outlined
@@ -65,26 +94,6 @@
               </q-btn>
             </template>
           </q-input>
-        </q-card-section>
-
-        <q-separator/>
-
-        <!-- Result of the last command -->
-        <q-card-section v-if="result">
-          <q-banner
-            dense
-            :class="result.success ? 'bg-green-1 text-green-9' : 'bg-red-1 text-red-9'"
-          >
-            <template v-slot:avatar>
-              <q-icon :name="result.success ? 'mdi-check-circle' : 'mdi-alert-circle'"/>
-            </template>
-            <template v-if="result.success">
-              {{ result.spokenResponse || $t('voice.result.done', {name: result.peripheralName, action: result.action}) }}
-            </template>
-            <template v-else>
-              {{ result.error || $t('voice.result.failed') }}
-            </template>
-          </q-banner>
         </q-card-section>
       </template>
 
@@ -123,14 +132,12 @@ export default defineComponent({
     const listening = ref(false);
     const processing = ref(false);
     const transcript = ref('');
-    const result = ref(null);
+    const exchange = ref([]);          // [{role:'user'|'assistant', text}]
+    const sessionId = ref(null);       // continues a multi-turn conversation
 
     let recognition = null;
+    let currentAudio = null;
 
-    /**
-     * Lazily build a SpeechRecognition instance. en-US only in v1 (see plan);
-     * interim results give a live caption, then onresult fires the command.
-     */
     const buildRecognition = () => {
       const rec = new SpeechRecognition();
       rec.lang = speechLang.value;
@@ -144,7 +151,6 @@ export default defineComponent({
           text += event.results[i][0].transcript;
         }
         transcript.value = text.trim();
-        // Submit once we have a final result.
         const last = event.results[event.results.length - 1];
         if (last && last.isFinal) {
           submit(transcript.value);
@@ -171,14 +177,10 @@ export default defineComponent({
       return rec;
     };
 
-    const toggleListening = () => {
-      if (!supported.value) return;
-      if (listening.value) {
-        recognition?.stop();
-        listening.value = false;
-        return;
-      }
-      result.value = null;
+    const startListening = () => {
+      if (!supported.value || listening.value) return;
+      // Don't capture our own voice playback.
+      stopAudio();
       transcript.value = '';
       try {
         recognition = buildRecognition();
@@ -190,49 +192,98 @@ export default defineComponent({
       }
     };
 
-    /**
-     * Speak a short confirmation back, if the browser supports it.
-     */
-    const speak = (text) => {
-      if (!text || !window.speechSynthesis) return;
-      try {
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = speechLang.value;
-        window.speechSynthesis.speak(utter);
-      } catch (e) {
-        // Non-fatal — speech synthesis is a nice-to-have.
+    const toggleListening = () => {
+      if (!supported.value) return;
+      if (listening.value) {
+        recognition?.stop();
+        listening.value = false;
+        return;
+      }
+      startListening();
+    };
+
+    const stopAudio = () => {
+      if (currentAudio) {
+        try { currentAudio.pause(); } catch (e) { /* ignore */ }
+        currentAudio = null;
+      }
+      if (window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
       }
     };
 
     /**
-     * Send the transcript to the backend, which resolves + executes it.
+     * Speak the reply: prefer the server's neural MP3 (natural voice), else fall
+     * back to the browser's SpeechSynthesis. After playback, auto-listen when the
+     * assistant is awaiting a reply (a clarifying question).
      */
+    const playResponse = (r) => {
+      const text = r.spokenResponse;
+      const followUp = () => { if (r.awaitingReply) startListening(); };
+
+      if (r.audioContent) {
+        try {
+          currentAudio = new Audio(`data:${r.audioMime || 'audio/mpeg'};base64,${r.audioContent}`);
+          currentAudio.onended = followUp;
+          currentAudio.onerror = followUp;
+          currentAudio.play().catch(() => followUp());
+          return;
+        } catch (e) { /* fall through to browser TTS */ }
+      }
+
+      if (text && window.speechSynthesis) {
+        try {
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.lang = speechLang.value;
+          utter.onend = followUp;
+          utter.onerror = followUp;
+          window.speechSynthesis.speak(utter);
+          return;
+        } catch (e) { /* ignore */ }
+      }
+      followUp();
+    };
+
+    const resetConversation = () => {
+      stopAudio();
+      sessionId.value = null;
+      exchange.value = [];
+      transcript.value = '';
+    };
+
     const submit = (text) => {
       if (!text || !text.trim() || processing.value) return;
+      const phrase = text.trim();
       processing.value = true;
-      result.value = null;
+      exchange.value.push({role: 'user', text: phrase});
+      transcript.value = '';
+
       client.mutate({
         mutation: VOICE_COMMAND,
-        variables: {transcript: text.trim(), locale: speechLang.value},
+        variables: {transcript: phrase, locale: speechLang.value, sessionId: sessionId.value},
         fetchPolicy: 'no-cache',
       }).then(response => {
         processing.value = false;
         const r = response.data.voiceCommand;
-        result.value = r;
+        if (r?.sessionId) sessionId.value = r.sessionId;
         if (r?.success) {
-          speak(r.spokenResponse || t('voice.result.done', {name: r.peripheralName, action: r.action}));
+          const reply = r.spokenResponse || t('voice.result.done', {name: '', action: ''});
+          exchange.value.push({role: 'assistant', text: reply});
+          playResponse(r);
+        } else {
+          const err = r?.error || t('voice.result.failed');
+          exchange.value.push({role: 'assistant', text: err});
         }
       }).catch(error => {
         processing.value = false;
-        result.value = {success: false, error: t('voice.result.failed')};
+        exchange.value.push({role: 'assistant', text: t('voice.result.failed')});
         console.error('Voice command failed:', error);
       });
     };
 
     onBeforeUnmount(() => {
-      try {
-        recognition?.abort();
-      } catch (e) { /* ignore */ }
+      stopAudio();
+      try { recognition?.abort(); } catch (e) { /* ignore */ }
     });
 
     return {
@@ -240,9 +291,10 @@ export default defineComponent({
       listening,
       processing,
       transcript,
-      result,
+      exchange,
       toggleListening,
       submit,
+      resetConversation,
     };
   }
 });
@@ -252,5 +304,9 @@ export default defineComponent({
 .voice-card {
   max-width: 560px;
   margin: 0 auto;
+}
+.exchange {
+  max-height: 40vh;
+  overflow-y: auto;
 }
 </style>
