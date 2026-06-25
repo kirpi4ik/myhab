@@ -34,6 +34,7 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
         }
         service.providers = ['anthropic': provider]
         service.schedulerService = Mock(SchedulerService)
+        service.navimowCommandService = Mock(org.myhab.services.dsl.action.NavimowCommandService)
         // Hazelcast: return a real map so load/save round-trips work.
         def map = [:]
         service.hazelcastInstance = Mock(HazelcastInstance) {
@@ -47,7 +48,8 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
         service.metaClass.buildCatalog = { ->
             [peripherals: [[id: 15L, name: 'Terrace Light', category: 'LIGHT', zones: ['Terrace'], aliases: []]],
              zones      : [[id: 7L, name: 'Terrace', peripherals: ['Terrace Light', 'Terrace Lamp'], aliases: []]],
-             scenarios  : [[jobId: 3L, name: 'Movie mode', description: 'Dim + TV']]]
+             scenarios  : [[jobId: 3L, name: 'Movie mode', description: 'Dim + TV']],
+             mowers     : [[deviceId: 5L, name: 'Navimow']]]
         }
         service.metaClass.publish = { String ns, Object data -> published << [ns: ns, data: data] }
     }
@@ -152,6 +154,34 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
         and:
             result.success
             result.spokenResponse == 'Sorry, I could not start movie mode.'
+            published.isEmpty()
+    }
+
+    void "mower_command sends the action to the Navimow service"() {
+        when:
+            Map result = service.handleTranscript('start mowing', 'en-US', null, 'tester')
+
+        then:
+            2 * provider.converse(_, _, _, _, _, _) >>> [
+                toolTurn(VoiceTools.MOWER_COMMAND, [deviceId: 5, action: 'START']),
+                textTurn('Starting the mower.')
+            ]
+            1 * service.navimowCommandService.execute([deviceId: 5L, action: 'START'])
+            published.isEmpty()
+            result.success
+            !result.awaitingReply
+    }
+
+    void "an out-of-catalog mower id is rejected and sends nothing"() {
+        when:
+            service.handleTranscript('start the other mower', 'en-US', null, 'tester')
+
+        then:
+            2 * provider.converse(_, _, _, _, _, _) >>> [
+                toolTurn(VoiceTools.MOWER_COMMAND, [deviceId: 999, action: 'START']),
+                textTurn('I could not find that mower.')
+            ]
+            0 * service.navimowCommandService.execute(_)
             published.isEmpty()
     }
 

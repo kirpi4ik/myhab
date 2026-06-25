@@ -19,13 +19,14 @@ class VoiceTools {
     static final String CONTROL_ENTITY = 'control_entity'
     static final String RUN_SCENARIO = 'run_scenario'
     static final String QUERY_STATE = 'query_state'
+    static final String MOWER_COMMAND = 'mower_command'
 
     static final String SYSTEM_PROMPT = '''\
 You are the voice assistant of a home-automation system. The user speaks short \
 commands or questions in any language (often English or Romanian). You are given \
 a JSON catalog of controllable peripherals, zones (areas/rooms, each listing the \
-peripherals inside it) and runnable scenarios. Use the tools to act, then give a \
-brief spoken reply.
+peripherals inside it), runnable scenarios and robotic lawn mowers. Use the tools \
+to act, then give a brief spoken reply.
 
 Rules:
 - Match the user's words (names, zones, aliases) to catalog entries, tolerating \
@@ -40,6 +41,9 @@ tool. The user will answer.
 - For "run/start <name>" of an automation, use run_scenario.
 - For questions about current state ("is the door open?", "temperature?"), use \
 query_state and answer from the returned values; do not change anything.
+- To control a robotic lawn mower (Navimow), use mower_command with the mower's \
+deviceId from the catalog and one of START / STOP / PAUSE / RESUME / DOCK \
+("start mowing" → START, "send the mower home" → DOCK).
 - Keep spoken replies short and natural, in the same language the user used.'''
 
     /** Neutral tool definitions: {name, description, input_schema (JSON Schema)}. */
@@ -77,6 +81,18 @@ query_state and answer from the returned values; do not change anything.
                     id        : [type: 'integer']
                 ],
                 required  : ['entityType', 'id']
+            ]
+        ],
+        [
+            name        : MOWER_COMMAND,
+            description : 'Control a Segway Navimow robotic lawn mower: start/stop/pause/resume mowing or send it back to the dock.',
+            input_schema: [
+                type      : 'object',
+                properties: [
+                    deviceId: [type: 'integer', description: 'The deviceId of the mower from the catalog (mowers list).'],
+                    action  : [type: 'string', enum: ['START', 'STOP', 'PAUSE', 'RESUME', 'DOCK']]
+                ],
+                required  : ['deviceId', 'action']
             ]
         ]
     ]
