@@ -52,6 +52,21 @@
               <q-icon name="mdi-text"/>
             </template>
           </q-input>
+
+          <q-input
+            v-model="aliases"
+            label="Voice aliases"
+            hint="Alternate names for voice control, comma-separated (e.g. Romanian names)"
+            clearable
+            clear-icon="close"
+            color="orange"
+            filled
+            dense
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-bullhorn-variant-outline"/>
+            </template>
+          </q-input>
         </q-card-section>
 
         <q-separator/>
@@ -143,10 +158,12 @@ import { useEntityCRUD } from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
 
-import { 
+import {
   ZONE_GET_BY_ID_MINIMAL,
   ZONES_GET_ALL,
-  ZONE_VALUE_UPDATE
+  ZONE_VALUE_UPDATE,
+  CONFIGURATION_SET_VALUE,
+  CONFIGURATION_GET_LIST_VALUE
 } from '@/graphql/queries';
 
 export default defineComponent({
@@ -162,6 +179,8 @@ export default defineComponent({
     
     // Additional data
     const zoneList = ref([]);
+    const aliases = ref('');           // voice aliases, comma-separated (Configuration sidecar)
+    const ALIAS_KEY = 'feature.voice.alias';
     
     // Use CRUD composable
     const {
@@ -206,7 +225,17 @@ export default defineComponent({
     const fetchData = async () => {
       // Fetch zone data
       await fetchEntity();
-      
+
+      // Load current voice aliases (Configuration sidecar) for this zone.
+      client.query({
+        query: CONFIGURATION_GET_LIST_VALUE,
+        variables: { key: ALIAS_KEY, entityId: Number(route.params.idPrimary), entityType: 'ZONE' },
+        fetchPolicy: 'network-only',
+      }).then(response => {
+        const values = (response.data.configListByKey || []).map(c => c.value).filter(Boolean);
+        aliases.value = values.join(', ');
+      }).catch(() => { /* no aliases yet */ });
+
       // Fetch all zones for parent/sub-zone selection
       client.query({
         query: ZONES_GET_ALL,
@@ -270,7 +299,23 @@ export default defineComponent({
             // Skip cache update
           }
         });
-        
+
+        // Persist voice aliases (Configuration sidecar).
+        try {
+          await client.mutate({
+            mutation: CONFIGURATION_SET_VALUE,
+            variables: {
+              key: ALIAS_KEY,
+              value: (aliases.value || '').trim(),
+              entityId: route.params.idPrimary,
+              entityType: 'ZONE',
+            },
+            fetchPolicy: 'no-cache',
+          });
+        } catch (e) {
+          console.error('Failed to save voice aliases:', e);
+        }
+
         saving.value = false;
         
         $q.notify({
@@ -303,6 +348,7 @@ export default defineComponent({
       zone,
       zoneList,
       availableSubZones,
+      aliases,
       loading,
       saving,
       onSave

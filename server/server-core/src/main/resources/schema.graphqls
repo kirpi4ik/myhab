@@ -146,10 +146,21 @@ type VoiceCommandResult {
     success: Boolean!
     error: String
     transcript: String
+    """Natural-language reply to speak/show to the user (confirmation, answer, or clarifying question)."""
+    spokenResponse: String
+    """Conversation id to pass back on the next turn (multi-turn clarification)."""
+    sessionId: String
+    """True when the assistant likely expects a reply (asked a question / answered without acting)."""
+    awaitingReply: Boolean
+    """Human-readable list of actions executed this turn (for UI/audit)."""
+    actions: [String]
+    """Base64 MP3 of the spoken reply when server-side TTS is enabled; null otherwise."""
+    audioContent: String
+    audioMime: String
+    # --- single-action convenience (may be null in multi-action/zone/scenario turns) ---
     action: String
     peripheralId: ID
     peripheralName: String
-    spokenResponse: String
 }
 
 type BradCrumbLink {
@@ -169,8 +180,8 @@ type Mutation {
     appConfigRefresh: MutationResponse
     """Update the global QR-code label settings (commits to the git-backed config)."""
     qrConfigUpdate(enabled: Boolean!, contentTemplate: String!, position: String!, size: Int): MutationResponse
-    """Map a transcribed phrase to a peripheral on/off/toggle and execute it."""
-    voiceCommand(transcript: String!, locale: String): VoiceCommandResult
+    """Resolve+execute a spoken phrase via the agentic voice loop. Pass sessionId to continue a multi-turn conversation."""
+    voiceCommand(transcript: String!, locale: String, sessionId: String): VoiceCommandResult
     """Set the authenticated user's preferred UI language (null/empty clears it = follow browser)."""
     meUpdateLanguage(language: String): MutationResponse
     """Update the state of a single message (NEW, READ, ARCHIVE)."""

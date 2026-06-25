@@ -6,15 +6,17 @@ import {gql} from '@apollo/client/core';
  * UI can confirm what happened.
  */
 export const VOICE_COMMAND = gql`
-  mutation voiceCommand($transcript: String!, $locale: String) {
-    voiceCommand(transcript: $transcript, locale: $locale) {
+  mutation voiceCommand($transcript: String!, $locale: String, $sessionId: String) {
+    voiceCommand(transcript: $transcript, locale: $locale, sessionId: $sessionId) {
       success
       error
       transcript
-      action
-      peripheralId
-      peripheralName
       spokenResponse
+      sessionId
+      awaitingReply
+      actions
+      audioContent
+      audioMime
     }
   }
 `;

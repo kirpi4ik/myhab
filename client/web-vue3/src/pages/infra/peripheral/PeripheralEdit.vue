@@ -83,13 +83,13 @@
             </template>
           </q-input>
 
-          <q-select 
+          <q-select
             v-model="peripheral.category"
             :options="categoryList"
             option-label="name"
-            label="Category" 
-            map-options 
-            filled 
+            label="Category"
+            map-options
+            filled
             dense
             clearable
           >
@@ -97,6 +97,21 @@
               <q-icon name="mdi-shape"/>
             </template>
           </q-select>
+
+          <q-input
+            v-model="aliases"
+            label="Voice aliases"
+            hint="Alternate names for voice control, comma-separated (e.g. Romanian names)"
+            clearable
+            clear-icon="close"
+            color="orange"
+            filled
+            dense
+          >
+            <template v-slot:prepend>
+              <q-icon name="mdi-bullhorn-variant-outline"/>
+            </template>
+          </q-input>
         </q-card-section>
 
         <q-separator/>
@@ -246,6 +261,8 @@ export default defineComponent({
     const { client } = useApolloClient();
     const categoryList = ref([]);
     const deviceList = ref([]);
+    const aliases = ref('');           // voice aliases, comma-separated (Configuration sidecar)
+    const ALIAS_KEY = 'feature.voice.alias';
 
     const {
       entity: peripheral,
@@ -336,6 +353,9 @@ export default defineComponent({
      */
     const fetchData = async () => {
       const response = await fetchEntity();
+      // Load the current voice aliases from the peripheral's configurations.
+      const aliasCfg = peripheral.value?.configurations?.find(cfg => cfg.key === ALIAS_KEY);
+      aliases.value = aliasCfg?.value || '';
       if (response) {
         deviceList.value = response.deviceList || [];
         
@@ -372,6 +392,22 @@ export default defineComponent({
 
       if (!validateRequired(peripheral.value, ['name', 'description'])) {
         return;
+      }
+
+      // Persist voice aliases (Configuration sidecar) alongside the peripheral.
+      try {
+        await client.mutate({
+          mutation: CONFIGURATION_SET_VALUE,
+          variables: {
+            key: ALIAS_KEY,
+            value: (aliases.value || '').trim(),
+            entityId: peripheral.value.id,
+            entityType: 'PERIPHERAL',
+          },
+          fetchPolicy: 'no-cache',
+        });
+      } catch (e) {
+        console.error('Failed to save voice aliases:', e);
       }
 
       await updateEntity();
