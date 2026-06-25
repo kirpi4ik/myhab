@@ -10,12 +10,15 @@ import org.myhab.config.CfgKey
 import org.myhab.config.ConfigProvider
 import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
+import org.myhab.domain.device.Device
+import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DevicePeripheral
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.infra.Zone
 import org.myhab.domain.job.EventData
 import org.myhab.domain.job.Job
 import org.myhab.domain.job.JobState
+import org.myhab.services.dsl.action.NavimowCommandService
 import org.myhab.services.voice.AnthropicIntentProvider
 import org.myhab.services.voice.GoogleTtsProvider
 import org.myhab.services.voice.LlmTurn
@@ -49,6 +52,7 @@ class VoiceCommandService implements EventPublisher {
     ConfigProvider configProvider
     SchedulerService schedulerService
     HazelcastInstance hazelcastInstance
+    NavimowCommandService navimowCommandService
 
     /** LLM providers by name; selected via feature.voice.llm.provider. Replaceable in tests. */
     Map<String, VoiceIntentProvider> providers = [
@@ -182,7 +186,10 @@ class VoiceCommandService implements EventPublisher {
                 }.sort { it.id },
             scenarios  : Job.findAllByState(JobState.ACTIVE).findAll { it.scenario }.collect { j ->
                 [jobId: j.id, name: j.name, description: j.description]
-            }.sort { it.jobId }
+            }.sort { it.jobId },
+            mowers     : Device.findAllByModel(DeviceModel.NAVIMOW_SEGWAY).collect { d ->
+                [deviceId: d.id, name: d.name ?: d.code]
+            }.sort { it.deviceId }
         ]
     }
 
@@ -206,6 +213,7 @@ class VoiceCommandService implements EventPublisher {
             case VoiceTools.CONTROL_ENTITY: return execControl(tc, catalog, transcript, username)
             case VoiceTools.RUN_SCENARIO:   return execScenario(tc, catalog)
             case VoiceTools.QUERY_STATE:    return execQuery(tc)
+            case VoiceTools.MOWER_COMMAND:  return execMower(tc, catalog)
             default: return [content: "Unknown tool: ${tc.name}", stateChange: false]
         }
     }
@@ -246,6 +254,20 @@ class VoiceCommandService implements EventPublisher {
             [name: it.name ?: it.internalRef, state: it.state?.toString(), value: it.value]
         }
         return [content: JsonOutput.toJson([entityType: entityType, id: id, ports: ports]), stateChange: false]
+    }
+
+    private Map execMower(ToolCall tc, Map catalog) {
+        Long deviceId = tc.input.deviceId == null ? null : (tc.input.deviceId as Long)
+        String action = (tc.input.action as String)?.toUpperCase()
+        Map mower = (catalog.mowers as List<Map>).find { it.deviceId == deviceId }
+        if (!mower) {
+            return [content: "No mower with deviceId ${deviceId} in the catalog", stateChange: false]
+        }
+        // Throws NavimowApiException on rejection — caught by the loop and fed back to the model.
+        navimowCommandService.execute([deviceId: deviceId, action: action])
+        return [content   : "Mower '${mower.name}': ${action} sent",
+                stateChange: true,
+                action    : "MOWER ${action} '${mower.name}'".toString()]
     }
 
     private boolean validateEntity(String entityType, Long id, Map catalog) {

@@ -110,6 +110,7 @@ Control your home by speaking, in natural language — English or Romanian — f
 **What it can do**
 - Switch a single peripheral, or an entire **zone** at once (*"turn off everything on the terrace"*)
 - Run predefined **scenarios / automations** by name
+- Control the **robotic lawn mower** — start / pause / resume mowing or send it back to the dock
 - Answer **questions about current state** (open/closed, temperature, on/off) without changing anything
 - Ask a **clarifying question** when a command is ambiguous and continue the conversation (multi-turn)
 
