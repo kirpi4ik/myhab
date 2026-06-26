@@ -10,9 +10,24 @@ class BootStrap {
     def telegramBotHandler
     def schedulerService
     def quartzScheduler  // Inject Quartz Scheduler
+    def grailsApplication
 
     def init = { servletContext ->
 //        telegramBotHandler.sendMessage("INFO", "🚀 Salut! sistemul myHAB tocmai a pornit")
+
+        // DSL naming alias: scenarios call `mowerCommand([deviceId:…, action:'START'])`,
+        // which ScenarioService.methodMissing resolves as the bean `mowerCommandService`.
+        // Grails registers the service as `navimowCommandService`, so we alias the
+        // friendlier name (also used by the GraphQL `mowerCommand` mutation) to it.
+        try {
+            def beanFactory = grailsApplication.mainContext.autowireCapableBeanFactory
+            if (!beanFactory.containsBean('mowerCommandService')) {
+                beanFactory.registerAlias('navimowCommandService', 'mowerCommandService')
+                log.info("Registered DSL alias mowerCommandService -> navimowCommandService")
+            }
+        } catch (Exception e) {
+            log.error("Failed to register mowerCommandService alias: ${e.message}", e)
+        }
 
         KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
         String password = "changeit";

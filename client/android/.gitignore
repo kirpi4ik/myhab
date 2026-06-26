@@ -1,0 +1,15 @@
+*.iml
+.gradle/
+.idea/
+build/
+local.properties
+.cxx/
+captures/
+.externalNativeBuild/
+
+# Built APKs copied here by build-apk.ps1
+dist/
+
+# Wake-word model is large / swappable — keep the binary out of git (commit the
+# small wake_word.json config if you like).
+app/src/main/assets/*.tflite
