@@ -14,11 +14,14 @@ import org.myhab.services.navimow.NavimowApiException
 /**
  * DSL action that controls a Segway Navimow mower over its cloud REST API.
  *
- * <p>Wires the scenario DSL (and the GraphQL {@code mowerCommand} mutation)
- * into {@link NavimowApiClient}. Implements {@link DslCommand} so that bare
- * calls like {@code mowerCommand([deviceId: 42, action: 'DOCK'])} resolve
- * via {@link org.myhab.services.dsl.ScenarioService#methodMissing}, the same
- * way {@code switchOn} → {@link PowerService} works.</p>
+ * <p>Wires the scenario DSL and the GraphQL {@code mowerCommand} mutation into
+ * {@link NavimowApiClient}. Implements {@link DslCommand} so that bare scenario
+ * calls like {@code mowerCommand([deviceId: 42, action: 'DOCK'])} resolve via
+ * {@link org.myhab.services.dsl.ScenarioService#methodMissing}, which looks up a
+ * bean named {@code mowerCommandService}. Grails registers this service under its
+ * conventional name {@code navimowCommandService}; the {@code mowerCommandService}
+ * alias is registered in {@code BootStrap} so the friendlier name works in
+ * scenarios — the same way {@code switchOn} → {@link PowerService} works.</p>
  *
  * <p>Failure mode: any problem (missing config, unknown action, Segway-side
  * rejection) is rethrown as {@link NavimowApiException}. The GraphQL resolver

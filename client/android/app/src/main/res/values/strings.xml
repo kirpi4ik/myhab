@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">myHAB Voice</string>
+
+    <!-- Wake-word foreground service notification -->
+    <string name="wake_channel_name">Wake word listening</string>
+    <string name="wake_notification_title">myHAB is listening</string>
+    <string name="wake_notification_text">Say \"Hey myHAB\" to give a command</string>
+</resources>
