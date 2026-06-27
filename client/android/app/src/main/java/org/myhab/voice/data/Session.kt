@@ -23,7 +23,7 @@ object Session {
     private const val K_SPEAKER_ENABLED = "speakerEnabled"
 
     /** Emulator → host loopback. On a real device, set the LAN address in Settings. */
-    private const val DEFAULT_BASE_URL = "http://10.0.2.2:8181"
+    private const val DEFAULT_BASE_URL = "https://madhouse.app"
     private const val DEFAULT_LANGUAGE = "en"
 
     private lateinit var appContext: Context

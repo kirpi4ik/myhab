@@ -183,14 +183,6 @@
 							</q-item-section>
 						</q-item>
 						<q-item-label header class="text-weight-bolder text-white">{{ $t('navigation.settings') }}</q-item-label>
-						<q-item to="/settings" active-class="q-item-no-link-highlighting">
-							<q-item-section avatar>
-								<q-icon name="mdi-cog" />
-							</q-item-section>
-							<q-item-section>
-								<q-item-label>Settings</q-item-label>
-							</q-item-section>
-						</q-item>
 						<q-item to="/admin/appconfig" active-class="q-item-no-link-highlighting">
 							<q-item-section avatar>
 								<q-icon name="mdi-cog-sync" />
