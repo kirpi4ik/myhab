@@ -267,7 +267,7 @@ class Query {
     }
 
     /**
-     * Active jobs that have a linked sprinkler peripheral (for scheduler UI).
+     * Jobs linked to a peripheral in the SPRINKLER category (for the scheduler UI).
      * Ordered by peripheral name. Timeout from key.on.timeout in seconds, default 60 minutes.
      */
     def sprinklerScheduleJobs() {
@@ -275,8 +275,8 @@ class Query {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def jobs = Job.where {
-                    peripheral != null
-                }.list(sort: 'peripheral.name', order: 'asc')
+                    peripheral != null && peripheral.category.name == 'SPRINKLER'
+                }.list().sort { it.peripheral.name ?: '' }
                 return jobs.collect { job ->
                     def peripheral = job.peripheral
                     def timeoutConfig = Configuration.findByEntityIdAndEntityTypeAndKey(

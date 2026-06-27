@@ -49,7 +49,18 @@
             <img v-else src="~assets/avatar.png" alt="Avatar"/>
           </q-avatar>
           <q-menu>
-            <q-list style="min-width: 100px">
+            <q-list style="min-width: 160px">
+              <q-item style="max-width: 420px" clickable v-ripple v-close-popup to="/settings">
+                <q-item-section avatar>
+                  <q-avatar>
+                    <q-icon name="mdi-cog"/>
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ $t('navigation.settings') }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator/>
               <q-item style="max-width: 420px" clickable v-ripple @click="authzService.logout()">
                 <q-item-section avatar>
                   <q-avatar>

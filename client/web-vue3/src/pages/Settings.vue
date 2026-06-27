@@ -2,7 +2,7 @@
 	<q-page class="q-pa-md">
 		<div class="row q-mb-md items-center">
 			<q-icon name="mdi-cog" size="32px" class="q-mr-sm text-primary"/>
-			<div class="text-h5">Settings</div>
+			<div class="text-h5">{{ $t('navigation.settings') }}</div>
 		</div>
 
 		<q-card flat bordered class="q-mb-md">

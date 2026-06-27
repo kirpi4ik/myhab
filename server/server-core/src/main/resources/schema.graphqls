@@ -16,7 +16,7 @@ type Query{
     uiConfigList: [UiConfigEntry!]!
     deviceModelList:[String!]!
     jobExecutionHistoryByJobId(jobId: ID!, limit: Int): [JobExecutionHistoryResult]
-    """Jobs linked to a sprinkler peripheral, for the sprinkler scheduler UI. Ordered by peripheral name."""
+    """Jobs linked to a peripheral in the SPRINKLER category, for the sprinkler scheduler UI. Ordered by peripheral name."""
     sprinklerScheduleJobs: [SprinklerScheduleEntry!]!
     """Messages for the current authenticated user, optionally filtered by level and/or state."""
     myMessages(level: String, state: String): [UserMessageResult!]!
