@@ -14,10 +14,17 @@
         <q-btn outline round color="amber-8" icon="mdi-pencil" :to="uri +'/'+ $route.params.idPrimary+'/edit'">
           <q-tooltip>Edit Port</q-tooltip>
         </q-btn>
-        <q-btn outline round color="amber-8" icon="mdi-view-list" 
+        <q-btn outline round color="amber-8" icon="mdi-view-list"
                :to="'/admin/configurations/'+ $route.params.idPrimary+'?type=PORT'" class="q-ml-sm">
           <q-tooltip>View Configurations</q-tooltip>
         </q-btn>
+        <event-logger
+          entity-type="PORT"
+          :entity-id="viewItem.id"
+          :entity-name="viewItem.name"
+          trigger-color="amber-8"
+          class="q-ml-sm"
+        />
       </q-card-section>
 
       <!-- Device Expansion -->
@@ -306,8 +313,13 @@ import {PORT_GET_BY_ID, PORT_VALUES_RECENT} from "@/graphql/queries";
 
 import {format} from 'date-fns';
 
+import EventLogger from 'components/EventLogger.vue';
+
 export default defineComponent({
   name: 'PortView',
+  components: {
+    EventLogger
+  },
   setup() {
     const uri = '/admin/ports';
     const $q = useQuasar();

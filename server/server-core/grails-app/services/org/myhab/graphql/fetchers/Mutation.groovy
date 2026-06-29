@@ -61,11 +61,33 @@ class Mutation implements EventPublisher {
     org.myhab.services.VoiceCommandService voiceCommandService
 
 
+    /**
+     * Resolve the authenticated username from the security context, or
+     * {@code 'anonymous'} when there is no real principal. Used to attribute
+     * server-side audit actions to the real user rather than trusting
+     * client-supplied fields.
+     */
+    private String currentUsername() {
+        try {
+            def principal = springSecurityService?.principal
+            if (principal && principal != 'anonymousUser') {
+                return principal.hasProperty('username') ? principal.username : principal.toString()
+            }
+        } catch (Exception ignored) {
+        }
+        return 'anonymous'
+    }
+
     DataFetcher pushEvent() {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) throws Exception {
                 def pushedEvent = environment.getArgument("input")
+                // Server-stamp the origin + actor: pushEvent is the web client's
+                // control channel, so attribute it to WEB_UI and the authenticated
+                // user rather than trusting the spoofable client-supplied p3/p6.
+                pushedEvent['p3'] = 'WEB_UI'
+                pushedEvent['p6'] = currentUsername()
                 publish("${pushedEvent['p0']}", pushedEvent)
                 return pushedEvent
             }
@@ -374,7 +396,7 @@ class Mutation implements EventPublisher {
             Object get(DataFetchingEnvironment environment) throws Exception {
                 try {
                     Long jobId = environment.getArgument("jobId") as Long
-                    schedulerService.triggerJob(jobId)
+                    schedulerService.triggerJob(jobId, currentUsername())
                     log.info("Job ${jobId} triggered successfully")
                     return [success: true, error: null]
                 } catch (Exception e) {

@@ -725,7 +725,7 @@ class MegaDriverService implements EventPublisher {
 
     @Subscriber('2561.run.scenario')
     def runScenario(event) {
-        dslService.execute(event?.data?.scenarioBody)
+        dslService.execute(event?.data?.scenarioBody, 'EVENT')
     }
 
     // ==================== Private Helpers ====================

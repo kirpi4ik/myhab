@@ -211,7 +211,7 @@ class VoiceCommandService implements EventPublisher {
     private Map executeTool(ToolCall tc, Map catalog, String transcript, String username) {
         switch (tc.name) {
             case VoiceTools.CONTROL_ENTITY: return execControl(tc, catalog, transcript, username)
-            case VoiceTools.RUN_SCENARIO:   return execScenario(tc, catalog)
+            case VoiceTools.RUN_SCENARIO:   return execScenario(tc, catalog, username)
             case VoiceTools.QUERY_STATE:    return execQuery(tc)
             case VoiceTools.MOWER_COMMAND:  return execMower(tc, catalog)
             default: return [content: "Unknown tool: ${tc.name}", stateChange: false]
@@ -235,13 +235,13 @@ class VoiceCommandService implements EventPublisher {
                 action    : "${action} ${entityType} '${label}'".toString()]
     }
 
-    private Map execScenario(ToolCall tc, Map catalog) {
+    private Map execScenario(ToolCall tc, Map catalog, String username = 'voice') {
         Long jobId = tc.input.jobId == null ? null : (tc.input.jobId as Long)
         Map scenario = (catalog.scenarios as List<Map>).find { it.jobId == jobId }
         if (!scenario) {
             return [content: "No scenario with jobId ${jobId} in the catalog", stateChange: false]
         }
-        schedulerService.triggerJob(jobId)
+        schedulerService.triggerJob(jobId, username)
         return [content   : "Started scenario '${scenario.name}'",
                 stateChange: true,
                 action    : "RUN scenario '${scenario.name}'".toString()]

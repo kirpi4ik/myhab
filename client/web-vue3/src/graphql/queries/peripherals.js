@@ -199,6 +199,8 @@ export const PERIPHERAl_EVENT_LOGS = gql`
       p3
       p1
       p0
+      p5
+      actionId
     }
   }
 `;
@@ -215,6 +217,8 @@ export const PERIPHERAL_EVENT_LOGS_MULTIPLE = gql`
       p3
       p1
       p0
+      p5
+      actionId
     }
   }
 `;

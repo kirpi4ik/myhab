@@ -7,9 +7,13 @@ import org.myhab.domain.EntityType
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortAction
 import org.myhab.domain.device.DevicePeripheral
+import org.myhab.domain.events.AuditSource
+import org.myhab.init.cache.CacheMap
 import grails.events.EventPublisher
 import grails.gorm.transactions.Transactional
 import groovy.util.logging.Slf4j
+
+import java.util.concurrent.TimeUnit
 
 /**
  * PowerService handles power control operations for device ports in the MyHAB system.
@@ -49,6 +53,8 @@ import groovy.util.logging.Slf4j
 class PowerService implements EventPublisher {
 
     def mqttTopicService
+    def auditService
+    def hazelcastInstance
 
     /**
      * Execute a power action on the specified device ports.
@@ -197,12 +203,30 @@ class PowerService implements EventPublisher {
                 }
             }
 
+            // Audit context — who/what initiated this command. Defaults keep
+            // legacy callers working (SYSTEM); real callers thread these in.
+            AuditSource source = AuditSource.from(params.source)
+            String actor = params.actor ?: 'SYSTEM'
+
             ports.each { port ->
+                Long peripheralId = port.peripherals?.find()?.id
+                // Correlation id linking this command to the device's MQTT echo.
+                String actionId = UUID.randomUUID().toString()
                 try {
                     log.debug("Power switch: ${port.name} (id: ${port.id}, device: ${port.device?.code}) - action: ${params.action}")
                     mqttTopicService.publish(port, [params.action])
+                    // Park the actionId so PortValueService can stamp the same id on
+                    // the device-confirmation row (the device can't echo it itself).
+                    storePendingAction(port.id, params.action, actionId)
+                    // Audit the real, executed command — one row per resolved
+                    // port, reflecting what actually happened (unresolved ports
+                    // were already filtered out above, so they produce no row).
+                    writeAudit(port.id, params.action, source, actor, [peripheralId: peripheralId, actionId: actionId])
                 } catch (Exception e) {
                     log.error("Failed to publish MQTT command for port ${port.id} (${port.name}): ${e.message}", e)
+                    // No pending entry on failure — no echo is expected.
+                    writeAudit(port.id, params.action, source, actor,
+                            [peripheralId: peripheralId, status: 'FAILED', error: e.message, actionId: actionId])
                 }
             }
             
@@ -222,6 +246,33 @@ class PowerService implements EventPublisher {
      * @param peripheral target peripheral
      * @param timeoutSec override value, in seconds (must be &gt; 0)
      */
+    /**
+     * Write one audit row for an executed (or failed) port command. A failure to
+     * write the audit row is logged but never aborts the MQTT batch.
+     */
+    private void writeAudit(Long portId, PortAction action, AuditSource source, String actor, Map details) {
+        try {
+            auditService.logStateChange(EntityType.PORT, portId, action, source, actor, details)
+        } catch (Exception e) {
+            log.error("Failed to write audit row for port ${portId}: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Park the actionId for an in-flight command so the device's MQTT state echo can
+     * be correlated back to it. Keyed by "portId:action" with a short per-entry TTL
+     * (the entry self-clears if the device never confirms). A Hazelcast failure must
+     * not abort the command batch.
+     */
+    private void storePendingAction(Long portId, PortAction action, String actionId) {
+        try {
+            hazelcastInstance?.getMap(CacheMap.PENDING_ACTION.name)
+                    ?.put("${portId}:${action.name()}".toString(), [actionId: actionId], 30, TimeUnit.SECONDS)
+        } catch (Exception e) {
+            log.warn("Failed to store pending action for port ${portId}: ${e.message}")
+        }
+    }
+
     private void upsertTimeoutOverride(DevicePeripheral peripheral, Integer timeoutSec) {
         Configuration.withNewTransaction {
             Configuration existing = Configuration.where {

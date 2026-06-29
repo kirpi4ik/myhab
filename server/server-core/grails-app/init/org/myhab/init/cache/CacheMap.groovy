@@ -12,7 +12,12 @@ enum CacheMap {
     // so the cooldown window self-clears without a dedicated reaper job.
     // Cluster-replicated so a notification fired on node A within the window
     // suppresses a duplicate on node B.
-    NOTIFICATION_DEDUP("notification_dedup")
+    NOTIFICATION_DEDUP("notification_dedup"),
+    // Short-lived correlation between a commanded port action and the device's
+    // MQTT state echo. PowerService stores {actionId} keyed by "portId:action"
+    // with a per-entry TTL; PortValueService pops it on the echo so the command
+    // row and its confirmation row share one actionId. Self-clears via TTL.
+    PENDING_ACTION("pending_action")
 
     String name
 

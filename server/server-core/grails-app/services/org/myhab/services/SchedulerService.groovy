@@ -72,6 +72,7 @@ class SchedulerService {
                             .withMisfireHandlingInstructionDoNothing())  // Don't fire immediately on misfire/reschedule
                     .withDescription(job.description)
                     .usingJobData(DSLJob.JOB_ID, jobId.toString())  // Store at trigger level as String
+                    .usingJobData(DSLJob.TRIGGER_ACTOR, "CRON")  // Scheduled execution → audit actor CRON
                     .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))
                     .build()
                     
@@ -210,32 +211,40 @@ class SchedulerService {
         }
     }
 
-    def triggerJob(Long jobId) {
+    /**
+     * Fire a job now (one-time trigger).
+     *
+     * @param actor audit actor/origin for the run — the real username for a
+     *              manual trigger, or {@code EVENT} for event-driven runs.
+     *              Defaults to {@code MANUAL}.
+     */
+    def triggerJob(Long jobId, String actor = 'MANUAL') {
         def job = Job.get(jobId)
         if (!job) {
             log.warn("Job with id ${jobId} not found")
             return
         }
-        
+
         if (job.state == JobState.ACTIVE) {
             String quartzJobId = "job_${jobId}"
             String quartzGroupId = "job_group_${jobId}"
             JobKey jobKey = JobKey.jobKey(quartzJobId, quartzGroupId)
-            
+
             // Check if job exists in Quartz, if not, schedule it first
             if (!quartzScheduler.checkExists(jobKey)) {
                 log.info("Job ${jobId} not scheduled in Quartz, scheduling it first")
                 scheduleJobInQuartz(jobId)
             }
-            
+
             // Now trigger the job with JobDataMap containing the jobId
             // NOTE: triggerJob(jobKey) creates a one-time trigger with EMPTY JobDataMap
             // We must pass the jobId explicitly since it's stored at trigger level, not job level
             if (quartzScheduler.checkExists(jobKey)) {
                 JobDataMap jobDataMap = new JobDataMap()
                 jobDataMap.put(DSLJob.JOB_ID, jobId.toString())
+                jobDataMap.put(DSLJob.TRIGGER_ACTOR, actor ?: 'MANUAL')
                 quartzScheduler.triggerJob(jobKey, jobDataMap)
-                log.info("Job ${jobId} triggered successfully")
+                log.info("Job ${jobId} triggered successfully (actor: ${actor})")
             } else {
                 log.warn("Failed to schedule job ${jobId} before triggering")
                 throw new IllegalStateException("Job ${jobId} could not be scheduled")

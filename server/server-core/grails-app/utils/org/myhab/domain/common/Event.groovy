@@ -8,4 +8,5 @@ class Event extends BaseEntity {
     String p4 // event parameter( like port action : on/off/rev  - see PortAction.class)
     String p5 // optional json parameter
     String p6 // event producer reference(username)
+    String actionId // correlation id linking a command row to its device-confirmation row (and any related rows)
 }
