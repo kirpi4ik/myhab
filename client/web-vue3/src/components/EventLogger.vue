@@ -1,10 +1,10 @@
 <template>
-  <q-btn 
-    size="sm" 
-    flat 
-    round 
-    class="text-white" 
-    icon="mdi-history" 
+  <q-btn
+    size="sm"
+    flat
+    round
+    :color="triggerColor"
+    icon="mdi-history"
     @click="openLog"
   >
     <q-tooltip>Event History</q-tooltip>
@@ -21,13 +21,14 @@
       <!-- Header -->
       <q-bar class="event-logger-header">
         <q-icon name="mdi-history" size="20px"/>
-        <div class="header-title">Event History - {{ peripheral?.name || 'Peripheral' }}</div>
+        <div class="header-title">Event History - {{ targetName }}</div>
         <q-space/>
-        <q-btn 
-          dense 
-          flat 
+        <q-btn
+          v-if="relatedEntityIds.length"
+          dense
+          flat
           round
-          :icon="includePortEvents ? 'mdi-check-circle' : 'mdi-circle-outline'" 
+          :icon="includePortEvents ? 'mdi-check-circle' : 'mdi-circle-outline'"
           @click="togglePortEvents"
           :class="includePortEvents ? 'toggle-active' : 'toggle-inactive'"
         >
@@ -60,14 +61,14 @@
           <div class="event-info">
             <div class="event-count">
               <q-icon name="mdi-format-list-bulleted" size="18px" class="q-mr-xs"/>
-              <span class="count-number">{{ events.length }}</span>
+              <span class="count-number">{{ displayEvents.length }}</span>
               <span class="count-label">Events</span>
             </div>
             <div class="event-details">
               Showing last {{ pageSize }} events
               <span v-if="includePortEvents" class="port-info">
                 <q-icon name="mdi-information" size="14px"/>
-                {{ props.peripheral.connectedTo?.length || 0 }} port{{ (props.peripheral.connectedTo?.length || 0) !== 1 ? 's' : '' }} included
+                {{ relatedEntityIds.length }} related{{ relatedEntityIds.length !== 1 ? ' entities' : ' entity' }} included
               </span>
             </div>
           </div>
@@ -86,9 +87,9 @@
 
         <!-- Events Table with Scroll -->
         <div class="table-scroll-wrapper">
-          <q-table 
-            :rows="events" 
-            :columns="columns" 
+          <q-table
+            :rows="displayEvents"
+            :columns="columns"
             row-key="id"
             flat
             dense
@@ -119,10 +120,27 @@
 
           <template v-slot:body-cell-value="props">
             <q-td :props="props">
-              <q-badge 
-                :color="getValueColor(props.row.p4)" 
+              <q-badge
+                :color="getValueColor(props.row.p4)"
                 :label="props.row.p4"
               />
+            </q-td>
+          </template>
+
+          <template v-slot:body-cell-status="props">
+            <q-td :props="props">
+              <q-chip
+                v-if="props.row.statusLabel"
+                dense
+                size="sm"
+                :icon="props.row.statusIcon"
+                :color="props.row.statusColor"
+                text-color="white"
+              >
+                {{ props.row.statusLabel }}
+                <q-tooltip v-if="props.row.confirmedAt">Device confirmed {{ props.row.confirmedAt }}</q-tooltip>
+              </q-chip>
+              <span v-else class="text-grey-5">—</span>
             </q-td>
           </template>
 
@@ -195,11 +213,48 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { PERIPHERAl_EVENT_LOGS, PERIPHERAL_EVENT_LOGS_MULTIPLE } from '@/graphql/queries';
 
 // Props
+// Backward compatible: existing callers pass `:peripheral`. New callers (e.g.
+// PortView) can pass an entity directly via entityType/entityId/entityName and
+// optional relatedIds (e.g. a peripheral's connected port ids) for the
+// "include related events" toggle.
 const props = defineProps({
   peripheral: {
     type: Object,
-    required: true
+    required: false,
+    default: null
+  },
+  entityType: {
+    type: String,
+    default: 'PERIPHERAL'
+  },
+  entityId: {
+    type: [String, Number],
+    default: null
+  },
+  entityName: {
+    type: String,
+    default: null
+  },
+  relatedIds: {
+    type: Array,
+    default: () => []
+  },
+  // Trigger button color — defaults to white for colored toolbars; pages on a
+  // light background (PortView) can pass e.g. "primary".
+  triggerColor: {
+    type: String,
+    default: 'white'
   }
+});
+
+// Resolve the target entity from either the new props or the legacy peripheral.
+const targetId = computed(() => props.entityId ?? props.peripheral?.id ?? null);
+const targetName = computed(() => props.entityName ?? props.peripheral?.name ?? 'Entity');
+const relatedEntityIds = computed(() => {
+  if (props.relatedIds && props.relatedIds.length) {
+    return props.relatedIds.map((id) => String(id));
+  }
+  return (props.peripheral?.connectedTo || []).map((p) => String(p.id));
 });
 
 // Composables
@@ -253,6 +308,15 @@ const columns = [
     style: 'width: 100px'
   },
   {
+    name: 'status',
+    required: false,
+    label: 'Status',
+    align: 'center',
+    field: 'statusLabel',
+    sortable: false,
+    style: 'width: 120px'
+  },
+  {
     name: 'source',
     required: true,
     label: 'Source',
@@ -270,6 +334,55 @@ const columns = [
     sortable: true
   }
 ];
+
+/**
+ * Decorate an event row with a display status (label/color/icon).
+ */
+const STATUS_META = {
+  confirmed: { statusLabel: 'Confirmed', statusColor: 'positive', statusIcon: 'mdi-check-circle' },
+  pending: { statusLabel: 'Pending', statusColor: 'grey-6', statusIcon: 'mdi-clock-outline' },
+  external: { statusLabel: 'External', statusColor: 'blue-7', statusIcon: 'mdi-gesture-tap' },
+  single: { statusLabel: '', statusColor: 'grey-5', statusIcon: '' },
+};
+
+const decorate = (ev, status, confirm = null) => ({
+  ...ev,
+  ...(STATUS_META[status] || STATUS_META.single),
+  confirmedAt: confirm ? confirm.strDate : null,
+});
+
+/**
+ * Collapse loaded events by actionId so a commanded action and its device echo
+ * show as ONE row. Rows with no actionId (legacy) render individually.
+ *  - command + matching MQTT echo -> one row, "Confirmed"
+ *  - command only (no echo yet)   -> "Pending"
+ *  - MQTT only (no command)       -> "External" (spontaneous device change)
+ */
+const collapseByActionId = (rows) => {
+  const groups = new Map();
+  const out = [];
+  for (const ev of rows) {
+    if (!ev.actionId) {
+      out.push(decorate(ev, ev.p3 === 'MQTT' ? 'external' : 'single'));
+      continue;
+    }
+    const g = groups.get(ev.actionId) || { command: null, confirm: null };
+    if (ev.p3 === 'MQTT') g.confirm = ev;
+    else g.command = ev;
+    groups.set(ev.actionId, g);
+  }
+  for (const g of groups.values()) {
+    if (g.command) {
+      out.push(decorate(g.command, g.confirm ? 'confirmed' : 'pending', g.confirm));
+    } else if (g.confirm) {
+      out.push(decorate(g.confirm, 'external'));
+    }
+  }
+  return out.sort((a, b) => b.timestamp - a.timestamp);
+};
+
+/** Events collapsed by actionId for display (one row per logical action). */
+const displayEvents = computed(() => collapseByActionId(events.value));
 
 /**
  * Get color for event value badge
@@ -361,10 +474,10 @@ const togglePortEvents = () => {
  * Load events from the server
  */
 const loadEvents = async () => {
-  if (!props.peripheral?.id) {
+  if (targetId.value == null) {
     $q.notify({
       color: 'warning',
-      message: 'Peripheral ID is required',
+      message: 'Entity ID is required',
       icon: 'mdi-alert',
       position: 'top'
     });
@@ -375,14 +488,11 @@ const loadEvents = async () => {
 
   try {
     let response;
-    
+
     if (includePortEvents.value) {
-      // Get all connected port IDs
-      const portIds = props.peripheral.connectedTo?.map(port => String(port.id)) || [];
-      
-      // Combine peripheral ID with port IDs
-      const p2List = [String(props.peripheral.id), ...portIds];
-      
+      // Combine the entity ID with its related (e.g. connected port) IDs
+      const p2List = [String(targetId.value), ...relatedEntityIds.value];
+
       if (p2List.length === 0) {
         events.value = [];
         return;
@@ -412,11 +522,11 @@ const loadEvents = async () => {
         })
         .sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp descending (newest first)
     } else {
-      // Fetch events only for the peripheral
+      // Fetch events only for the entity itself
       response = await client.query({
         query: PERIPHERAl_EVENT_LOGS,
         variables: {
-          p2: String(props.peripheral.id),
+          p2: String(targetId.value),
           count: pageSize.value,
           offset: 0
         },
@@ -481,7 +591,7 @@ const exportToCSV = () => {
     const url = URL.createObjectURL(blob);
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `events_${props.peripheral.name || props.peripheral.id}_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`);
+    link.setAttribute('download', `events_${targetName.value || targetId.value}_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`);
     link.style.visibility = 'hidden';
     
     document.body.appendChild(link);

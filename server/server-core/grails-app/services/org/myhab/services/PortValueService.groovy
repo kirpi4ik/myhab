@@ -15,6 +15,7 @@ import grails.gorm.transactions.Transactional
 import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
 import org.myhab.domain.common.Event
+import org.myhab.domain.events.AuditSource
 import org.myhab.domain.events.TopicName
 import org.myhab.domain.job.EventData
 import org.springframework.transaction.annotation.Propagation
@@ -25,6 +26,7 @@ class PortValueService implements EventPublisher {
     def hazelcastInstance;
     def deviceService
     def configProvider
+    def auditService
 
     @Subscriber("evt_async_port_value_changed")
     void updateAsyncPort(event) {
@@ -66,6 +68,29 @@ class PortValueService implements EventPublisher {
                         p6 = "${event.data.p6}"
                         it
                     })
+
+                    // Device-confirmed state: audit switch-like transitions (ON/OFF)
+                    // so the log reflects what the device actually did, keyed by port
+                    // id and reconcilable with the command rows. Sensor/numeric values
+                    // stay in PortValue history only, to avoid flooding the audit log.
+                    if (newVal == PortAction.ON.name() || newVal == PortAction.OFF.name()) {
+                        try {
+                            // Correlate with the command that triggered this echo (if any):
+                            // pop the pending entry PowerService parked under "portId:action".
+                            // Match → reuse its actionId (command + confirmation share one id);
+                            // miss → a fresh id marks this as a spontaneous/external change.
+                            def pending = hazelcastInstance.getMap(CacheMap.PENDING_ACTION.name)
+                                    .remove("${devicePort.id}:${newVal}".toString())
+                            String actionId = pending?.actionId ?: UUID.randomUUID().toString()
+                            auditService.logStateChange(EntityType.PORT, devicePort.id,
+                                    PortAction.valueOf(newVal), AuditSource.MQTT, 'device',
+                                    [internalRef: devicePort.internalRef,
+                                     peripheralId: devicePort.peripherals?.find()?.id,
+                                     actionId: actionId])
+                        } catch (Exception ae) {
+                            log.error("Failed to write device-confirmation audit for port ${devicePort.id}: ${ae.message}", ae)
+                        }
+                    }
                 } catch (Exception ex) {
                     log.error("Error saving port value: ${ex.message}", ex)
                 }

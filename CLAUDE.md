@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-myHAB (My Home Automation Backend) — a full-stack home automation platform. Grails 6.1/Groovy backend + Vue 3/Quasar PWA frontend. Manages IoT devices (ESP32, MEGAD), solar inverters (Huawei), heat pumps (NIBE), weather data, and automation scenarios via MQTT, GraphQL, and WebSocket.
+myHAB (My Home Automation Backend) — a full-stack home automation platform. Grails 6.1/Groovy backend + Vue 3/Quasar PWA frontend + a native Android voice-assistant client. Manages IoT devices (ESP32, MEGAD), solar inverters (Huawei), heat pumps (NIBE), weather data, and automation scenarios via MQTT, GraphQL, and WebSocket.
 
 ## Build & Run Commands
 
@@ -37,13 +37,25 @@ yarn format                              # Prettier
 ./gradlew servePWA                       # Run PWA dev server
 ```
 
+### Android voice client (standalone — NOT part of the root build)
+```bash
+cd client/android
+./gradlew :app:assembleDebug             # build debug APK (arm64-only)
+./build-apk.ps1                          # build + copy versioned APK to dist/ (Windows/PowerShell)
+./build-apk.ps1 -Install                 # also adb-install on connected devices
+./build-apk.ps1 -Clean                   # clean rebuild (after NDK/dependency changes)
+```
+`client/android/` has its own Gradle wrapper (Gradle 8.9 / AGP 8.5) because the Android Gradle Plugin is incompatible with the root Grails multi-module build (Gradle 7.x). **Open only `client/android` in Android Studio**, not the repo root. First native build is slow + needs internet (CMake `FetchContent` pulls tflite-micro et al.).
+
 ## Architecture
 
-### Multi-module Gradle project
+### Multi-module Gradle project (root build)
 - `:server-core` — Main Grails 6.1 application (controllers, domain, services, jobs)
 - `:server-config` — Configuration key constants and provider interface
 - `:server-rules` — Business rules engine (heating, lighting facts)
 - `:web-vue3` — Vue 3 + Quasar frontend
+
+> The native Android client (`client/android/`) is a **separate** Gradle build, intentionally excluded from the root `settings.gradle` (see "Native Android voice client" below).
 
 ### Backend structure (`server/server-core/grails-app/`)
 - **controllers/** — REST endpoints + `UrlMappings.groovy` for routing. GraphQL is the primary API.
@@ -59,6 +71,15 @@ yarn format                              # Prettier
 - **graphql/** — GraphQL query/mutation definitions
 - **composables/** — Vue 3 composables
 - **_services/** and **_helpers/** — Service layer and utilities
+
+### Native Android voice client (`client/android/`)
+A standalone, hands-free Android companion (Kotlin + Jetpack Compose, minSdk 30 / Android 11) — a thin client over the **existing** server contract, no backend changes. Flow: wake word → on-device STT → `voiceCommand` GraphQL mutation → play the server's neural-TTS MP3 reply (falls back to Android `TextToSpeech`).
+- **Modules:** `:app` (`org.myhab.voice`) and `:microwakeword` — the wake-word NDK engine vendored from Home Assistant (Apache-2.0): real TF `audio_microfrontend` + TFLite-Micro via JNI, built for `arm64-v8a` only (real devices; no emulator).
+- **Auth:** native username/password → `POST /api/login` → JWT stored in Keystore-backed `EncryptedSharedPreferences`; re-login on `401`.
+- **Networking:** OkHttp + kotlinx.serialization (no Apollo). Default backend `https://madhouse.app`, overridable in Settings (use `http://10.0.2.2:8181` for the emulator).
+- **Wake word:** microWakeWord model + config in `app/src/main/assets/` (`wake_word.json` + `<model>.tflite`, git-ignored); runs in a foreground microphone service.
+- **Audio routing gotcha:** replies play via the legacy `STREAM_MUSIC` path (not `AudioAttributes`), which mis-routes to the earpiece on some One UI builds — see `voice/ReplyPlayer.kt`.
+- Full details + setup in `client/android/README.md`.
 
 ### Key communication patterns
 1. **Device ↔ Server**: MQTT via Spring Integration (`MqttTopicService` routes messages, `MqttPublishGateway` publishes)
@@ -80,6 +101,7 @@ Events flow through named topics (e.g., `EVT_LIGHT`, `EVT_GATE`) with parameters
 - **Vue 3** / Quasar 2.18 / Apollo Client 3.14
 - **Spring Security Core 6.0** with OAuth 2.0 token auth
 - **Hazelcast 5.3** for caching
+- **Android client:** Kotlin 1.9 / Jetpack Compose / minSdk 30 (Android 11) — standalone Gradle 8.9 + AGP 8.5, NDK + CMake for the native wake-word module
 
 ## Testing
 
@@ -101,3 +123,4 @@ GitHub Actions (`.github/workflows/gradle.yml`): triggers on push/PR to master o
 - Spring beans: `server/server-core/grails-app/conf/spring/resources.groovy`
 - Frontend config: `client/web-vue3/quasar.config.js` (build modes, plugins, dev proxy)
 - Frontend env: `client/web-vue3/src/.env`
+- Android client: `client/android/app/build.gradle.kts` (SDK/version), `gradle/libs.versions.toml` (version catalog); runtime base URL/language/wake/speaker are app settings persisted in `EncryptedSharedPreferences` (`data/Session.kt`)

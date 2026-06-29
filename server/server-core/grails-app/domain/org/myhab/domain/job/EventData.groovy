@@ -9,11 +9,6 @@ import org.myhab.domain.common.Event
 class EventData extends Event  {
     String category // event category - optional
 
-//
-//  def beforeInsert() {
-//    super.beforeInsert()
-//    entityType = EntityType.EVENT_DATA
-//  }
     static mapping = {
         table '`event_log`'
         version false
@@ -23,6 +18,7 @@ class EventData extends Event  {
         p4 nullable: true
         p5 nullable: true
         p6 nullable: true
+        actionId nullable: true
     }
     static graphql = GraphQLMapping.lazy {
         query('eventsByP2', [EventData]) {

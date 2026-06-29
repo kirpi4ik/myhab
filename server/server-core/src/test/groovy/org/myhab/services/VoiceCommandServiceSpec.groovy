@@ -109,7 +109,7 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
                 toolTurn(VoiceTools.RUN_SCENARIO, [jobId: 3]),
                 textTurn('Starting movie mode.')
             ]
-            1 * service.schedulerService.triggerJob(3L)
+            1 * service.schedulerService.triggerJob(3L, 'tester')
             published.isEmpty()
             result.success
             !result.awaitingReply
@@ -124,7 +124,7 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
                 toolTurn(VoiceTools.RUN_SCENARIO, [jobId: 999]),
                 textTurn('I could not find that scenario.')
             ]
-            0 * service.schedulerService.triggerJob(_)
+            0 * service.schedulerService.triggerJob(_, _)
             published.isEmpty()
     }
 
@@ -149,7 +149,7 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
                 toolTurn(VoiceTools.RUN_SCENARIO, [jobId: 3]),
                 textTurn('Sorry, I could not start movie mode.')
             ]
-            1 * service.schedulerService.triggerJob(3L) >> { throw new IllegalStateException('Quartz down') }
+            1 * service.schedulerService.triggerJob(3L, 'tester') >> { throw new IllegalStateException('Quartz down') }
 
         and:
             result.success

@@ -17,12 +17,21 @@ import org.springframework.context.ApplicationContext
 @Transactional
 class DSLJob implements Job {
     public static final String JOB_ID = "jobId"
+    /**
+     * Trigger-data key carrying the audit actor / origin for this execution:
+     * {@code CRON} for scheduled cron triggers, {@code EVENT} for event-driven
+     * runs, or the real username for a manual trigger. Defaults to {@code CRON}
+     * when absent (the cron-trigger case).
+     */
+    public static final String TRIGGER_ACTOR = "triggerActor"
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {
         // Get jobId from the merged job data map (includes both job and trigger data)
-        def jobIdStr = context.getMergedJobDataMap().getString(JOB_ID)
+        def mergedDataMap = context.getMergedJobDataMap()
+        def jobIdStr = mergedDataMap.getString(JOB_ID)
         def jobId = jobIdStr ? Long.parseLong(jobIdStr) : null
+        def actor = mergedDataMap.getString(TRIGGER_ACTOR) ?: "CRON"
         def job = org.myhab.domain.job.Job.findById(jobId)
 
         if (job == null) {
@@ -41,7 +50,7 @@ class DSLJob implements Job {
             ApplicationContext ctx = Holders.grailsApplication.mainContext
             DslService dslService = (DslService) ctx.getBean("dslService")
             
-            dslService.execute(job.scenario.body)
+            dslService.execute(job.scenario.body, actor)
             
             log.info("Job ${jobId} (${job.name}) executed successfully")
         } catch (Exception e) {

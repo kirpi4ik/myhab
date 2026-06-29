@@ -57,19 +57,26 @@ class DslService {
    * </pre>
    *
    * @param scenario The scenario script as a String containing Groovy DSL code
+   * @param actor    Trigger origin recorded as the audit actor for any state
+   *                 changes the script performs: {@code CRON} (scheduled),
+   *                 {@code EVENT} (device/event-driven), or the real username
+   *                 for a manual run. Defaults to {@code SYSTEM}.
    * @return The result of the script evaluation
    * @throws IllegalArgumentException if scenario is null or empty
    * @throws Exception if script evaluation fails
    */
-  def execute(String scenario) {
+  def execute(String scenario, String actor = 'SYSTEM') {
     // Validate input
     if (!scenario?.trim()) {
       log.error("Cannot execute empty or null scenario")
       throw new IllegalArgumentException("Scenario script cannot be null or empty")
     }
 
-    log.debug("Executing scenario DSL script (${scenario.length()} characters)")
+    log.debug("Executing scenario DSL script (${scenario.length()} characters), actor: ${actor}")
 
+    // Bind the audit actor for the duration of this synchronous execution so
+    // switchOn/Off/Toggle attribute their state changes correctly.
+    scenarioService.setExecutionActor(actor)
     try {
       // Configure compiler with sandbox security
       def cc = new CompilerConfiguration()
@@ -108,6 +115,8 @@ class DslService {
     } catch (Exception ex) {
       log.error("Failed to execute scenario DSL script: ${ex.message}", ex)
       throw new RuntimeException("Scenario execution failed: ${ex.message}", ex)
+    } finally {
+      scenarioService.clearExecutionActor()
     }
   }
 }

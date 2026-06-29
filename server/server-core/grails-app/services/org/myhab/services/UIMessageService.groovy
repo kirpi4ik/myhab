@@ -5,6 +5,7 @@ import org.myhab.domain.device.Device
 import org.myhab.domain.device.DevicePeripheral
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortAction
+import org.myhab.domain.events.AuditSource
 import org.myhab.domain.events.TopicName
 import org.myhab.domain.infra.Zone
 import org.myhab.domain.job.EventData
@@ -24,6 +25,7 @@ class UIMessageService implements EventPublisher {
     def powerService
     def heatService
     def intercomService
+    def auditService
 
     /**
      * Handle light, switch, and heat events
@@ -67,13 +69,31 @@ class UIMessageService implements EventPublisher {
         }
 
         def portIds = getPortIdsForEntity(entityType, event.data.p2)
-        
+
         if (portIds?.isEmpty() == false) {
-            executePowerAction(action, portIds)
-            publishEventLog(event.data)
+            // PowerService now writes the audit rows (one per resolved port,
+            // after MQTT) — carry who/what initiated this command down to it.
+            executePowerAction(action, portIds, mapSource(event.data.p3), event.data.p6)
         } else {
             log.warn("No port IDs found for entity type ${entityType} with ID ${event.data.p2}")
         }
+    }
+
+    /**
+     * Map an inbound event source string (p3) to a structured {@link AuditSource}.
+     * Channels set p3 differently ("mweb", "Voice assistant: …", "Telegram bot: …",
+     * "access control", "thermostat", "scenario_service"); this normalizes them.
+     */
+    private AuditSource mapSource(String p3) {
+        if (!p3) return AuditSource.SYSTEM
+        String s = p3.toLowerCase()
+        if (s.contains('voice')) return AuditSource.VOICE
+        if (s.contains('telegram')) return AuditSource.TELEGRAM
+        if (s.contains('web') || s == 'mweb') return AuditSource.WEB_UI
+        if (s.contains('access')) return AuditSource.ACCESS_CONTROL
+        if (s.contains('thermostat') || s.contains('heat') || s.contains('scenario')) return AuditSource.SCHEDULER
+        if (s.contains('mqtt')) return AuditSource.MQTT
+        return AuditSource.SYSTEM
     }
 
     /**
@@ -108,15 +128,15 @@ class UIMessageService implements EventPublisher {
      * @param action The action string (on/off/rev)
      * @param portIds List of port IDs to execute the action on
      */
-    private void executePowerAction(String action, List<Long> portIds) {
+    private void executePowerAction(String action, List<Long> portIds, AuditSource source = AuditSource.SYSTEM, String actor = 'SYSTEM') {
         PortAction portAction = mapActionToPortAction(action)
-        
+
         if (!portAction) {
             log.warn("Unknown or unsupported action: ${action}")
             return
         }
-        
-        powerService.execute([portIds: portIds, action: portAction])
+
+        powerService.execute([portIds: portIds, action: portAction, source: source, actor: actor])
     }
 
     /**
@@ -192,7 +212,9 @@ class UIMessageService implements EventPublisher {
             switch (event.data.p4?.toLowerCase()) {
                 case "open":
                     intercomService.doorOpen(connectedPort.deviceId, connectedPort)
-                    publishEventLog(event.data)
+                    auditService.log(TopicName.EVT_INTERCOM_DOOR_LOCK.id(), PERIPHERAL, peripheral.id,
+                            'open', mapSource(event.data.p3), event.data.p6,
+                            [unlockCode: event.data.p5])
                     break
                 default:
                     log.warn("Unknown door lock action: ${event.data.p4}")
@@ -302,9 +324,11 @@ class UIMessageService implements EventPublisher {
     @Transactional
     @Subscriber('evt_log')
     def logEvent(event) {
+        // Legacy bus shim: not-yet-migrated publishers still emit pre-built
+        // EventData here; funnel the actual save through AuditService (the single
+        // writer). Kept resilient so a bad legacy row can't break event dispatch.
         try {
-            EventData ev = event.data
-            ev.save(failOnError: true, flush: true)
+            auditService.save(event.data as EventData)
             log.debug("Event logged: ${event}")
         } catch (Exception ex) {
             log.error("Failed to log event: ${event.data}", ex)
