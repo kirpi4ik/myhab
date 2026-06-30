@@ -121,6 +121,15 @@
 			"login_required": "You must be logged in to change your language.",
 			"saved": "Language updated",
 			"save_error": "Failed to save language preference"
+		},
+		"timezone": {
+			"title": "Timezone",
+			"caption": "Choose the timezone used to display dates and times. Your choice is saved to your account and used on every device. Leave it on automatic to follow your browser.",
+			"label": "Display timezone",
+			"auto": "Automatic (browser)",
+			"login_required": "You must be logged in to change your timezone.",
+			"saved": "Timezone updated",
+			"save_error": "Failed to save timezone preference"
 		}
 	},
 	"voice": {

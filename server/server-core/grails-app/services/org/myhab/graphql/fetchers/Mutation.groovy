@@ -667,6 +667,39 @@ class Mutation implements EventPublisher {
         }
     }
 
+    /**
+     * Set the authenticated user's preferred display timezone. Self-scoped — always
+     * updates the principal's own User row. A null/blank value clears the
+     * preference so the client falls back to the browser timezone.
+     */
+    DataFetcher meUpdateTimezone() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    String timezone = environment.getArgument("timezone") as String
+                    def principal = springSecurityService?.principal
+                    String username = principal instanceof String ? principal : (principal?.username ?: principal?.toString())
+                    if (!username) {
+                        return [success: false, error: "Not authenticated"]
+                    }
+                    org.myhab.domain.User.withTransaction {
+                        org.myhab.domain.User user = org.myhab.domain.User.findByUsername(username)
+                        if (!user) {
+                            return [success: false, error: "User not found"]
+                        }
+                        user.timezone = timezone?.trim() ? timezone.trim() : null
+                        user.save(flush: true, failOnError: true)
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to update user timezone", e)
+                    return [success: false, error: e.message ?: "Failed to update timezone"]
+                }
+            }
+        }
+    }
+
     DataFetcher messageUpdateState() {
         return new DataFetcher() {
             @Override

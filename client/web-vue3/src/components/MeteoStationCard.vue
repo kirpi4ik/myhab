@@ -142,6 +142,8 @@ import { defineComponent, onMounted, ref, computed } from 'vue';
 import { useApolloClient } from '@vue/apollo-composable';
 import { useWebSocketListener } from '@/composables';
 import { DEVICE_GET_BY_ID_WITH_PORT_VALUES } from '@/graphql/queries';
+import { authzService } from '@/_services';
+import { formatTimeInZone } from '@/_helpers';
 import _ from 'lodash';
 
 export default defineComponent({
@@ -447,15 +449,19 @@ export default defineComponent({
     });
 
     /**
+     * User's preferred display timezone (IANA id), falling back to the browser zone.
+     * Weather timestamps are stored as UTC and converted to this zone for display.
+     */
+    const userTimeZone = computed(() => {
+      return authzService.currentUserValue?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    });
+
+    /**
      * Today's sunrise time
      */
     const todaySunrise = computed(() => {
       const sunrises = getPortArrayValue('daily.sunrise');
-      if (sunrises.length > 0) {
-        const time = new Date(sunrises[0]);
-        return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      }
-      return '--:--';
+      return sunrises.length > 0 ? formatTimeInZone(sunrises[0], userTimeZone.value) : '--:--';
     });
 
     /**
@@ -463,11 +469,7 @@ export default defineComponent({
      */
     const todaySunset = computed(() => {
       const sunsets = getPortArrayValue('daily.sunset');
-      if (sunsets.length > 0) {
-        const time = new Date(sunsets[0]);
-        return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      }
-      return '--:--';
+      return sunsets.length > 0 ? formatTimeInZone(sunsets[0], userTimeZone.value) : '--:--';
     });
 
     /**

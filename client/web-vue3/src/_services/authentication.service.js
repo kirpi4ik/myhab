@@ -33,10 +33,10 @@ function ensureCurrentUserIds() {
 	if (!token) {
 		return Promise.resolve(current);
 	}
-	// Refetch when ids are missing, or when `language` was never loaded
-	// (undefined). A user who explicitly has no preference stores `null`,
+	// Refetch when ids are missing, or when `language` / `timezone` were never
+	// loaded (undefined). A user who explicitly has no preference stores `null`,
 	// which is "loaded" and does not trigger another fetch.
-	const needsFetch = current?.id == null || current?.username == null || current?.language === undefined;
+	const needsFetch = current?.id == null || current?.username == null || current?.language === undefined || current?.timezone === undefined;
 	if (!needsFetch) {
 		return Promise.resolve(current);
 	}
@@ -45,7 +45,7 @@ function ensureCurrentUserIds() {
 		.then((response) => response?.data?.me || null)
 		.then((data) => {
 			if (data?.id != null || data?.username != null) {
-				const updated = { ...current, ...data, language: data.language ?? null };
+				const updated = { ...current, ...data, language: data.language ?? null, timezone: data.timezone ?? null };
 				localStorage.setItem('currentUser', JSON.stringify(updated));
 				currentUserSubject.next(updated);
 				applyUserLocaleSafe(updated.language);

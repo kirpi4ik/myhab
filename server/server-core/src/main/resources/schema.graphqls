@@ -186,6 +186,8 @@ type Mutation {
     voiceCommand(transcript: String!, locale: String, sessionId: String): VoiceCommandResult
     """Set the authenticated user's preferred UI language (null/empty clears it = follow browser)."""
     meUpdateLanguage(language: String): MutationResponse
+    """Set the authenticated user's preferred display timezone (null/empty clears it = follow browser)."""
+    meUpdateTimezone(timezone: String): MutationResponse
     """Update the state of a single message (NEW, READ, ARCHIVE)."""
     messageUpdateState(id: ID!, state: String!): MutationResponse
     """Update the state of multiple messages at once."""
@@ -355,4 +357,6 @@ type MeResult {
     username: String
     """Preferred UI language (e.g. 'en' / 'ro'); null means follow the browser."""
     language: String
+    """Preferred display timezone (IANA id, e.g. 'Europe/Chisinau'); null means follow the browser."""
+    timezone: String
 }

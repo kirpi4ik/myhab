@@ -8,6 +8,7 @@ import org.myhab.domain.device.DevicePeripheral
 import org.myhab.domain.device.port.PortAction
 import org.myhab.domain.infra.Zone
 
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
@@ -56,6 +57,8 @@ class KnowledgeService {
     static final String METEO_PORT_TIMEZONE = 'timezone'
     static final String METEO_PORT_SUNRISE = 'daily.sunrise'
     static final String METEO_PORT_SUNSET = 'daily.sunset'
+    static final String METEO_PORT_HOURLY_PRECIPITATION = 'hourly.precipitation'
+    static final String METEO_PORT_HOURLY_TIME = 'hourly.time'
 
     static final String TEMP_CATEGORY = 'TEMP'
 
@@ -98,6 +101,54 @@ class KnowledgeService {
         boolean result = precipitation > threshold
         log.debug("isRaining: meteo precipitation=${precipitation} threshold=${threshold} -> ${result}")
         return result
+    }
+
+    /**
+     * How many minutes did it rain within the last {@code lookbackMinutes}?
+     *
+     * <p>Counts, at hourly resolution, the minutes of the recent window during
+     * which precipitation exceeded {@code knowledge.rain.precipitation.threshold}.
+     * The rain need not be continuous. Based on the meteo {@code hourly.precipitation}
+     * / {@code hourly.time} arrays (Open-Meteo). Future hours are excluded.</p>
+     *
+     * <p>Typical use — skip a watering scenario when it already rained enough:</p>
+     * <pre>if (rainDuration(120) > 60) skip()  // > 60 min of rain in the last 2h</pre>
+     *
+     * @param lookbackMinutes size of the recent window, in minutes
+     * @return minutes of rain within the window; {@code 0} when data is unavailable
+     */
+    int rainDuration(int lookbackMinutes) {
+        Double threshold = readDoubleConfig(CFG_RAIN_THRESHOLD, 0.0d)
+        long minutes = 0L
+        rainSlotsInWindow(lookbackMinutes).each { slot ->
+            if (slot.precipitation > threshold) {
+                minutes += (slot.overlapMinutes as long)
+            }
+        }
+        log.debug("rainDuration: lookback=${lookbackMinutes}min -> ${minutes}min")
+        return (int) minutes
+    }
+
+    /**
+     * How much rain (mm) fell within the last {@code lookbackMinutes}?
+     *
+     * <p>Sums the meteo {@code hourly.precipitation} values overlapping the recent
+     * window, prorated by each hour's overlap fraction. Future hours are excluded.</p>
+     *
+     * <pre>if (rainAmount(120) > 5.0) skip()  // > 5 mm of rain in the last 2h</pre>
+     *
+     * @param lookbackMinutes size of the recent window, in minutes
+     * @return millimetres of rain within the window, rounded to 1 decimal;
+     *         {@code 0.0} when data is unavailable
+     */
+    double rainAmount(int lookbackMinutes) {
+        double mm = 0.0d
+        rainSlotsInWindow(lookbackMinutes).each { slot ->
+            mm += (slot.precipitation as double) * ((slot.overlapMinutes as double) / 60.0d)
+        }
+        double rounded = Math.round(mm * 10.0d) / 10.0d
+        log.debug("rainAmount: lookback=${lookbackMinutes}min -> ${rounded}mm")
+        return rounded
     }
 
     /**
@@ -230,6 +281,59 @@ class KnowledgeService {
             log.warn("Failed to parse meteo port '${internalRef}' as JSON array: ${ex.message}")
             return []
         }
+    }
+
+    /**
+     * Hourly precipitation slots overlapping the recent window {@code (now - lookback, now]}.
+     *
+     * <p>Reads the meteo {@code hourly.precipitation} / {@code hourly.time} arrays and,
+     * for each hourly slot, computes how many of its minutes fall inside the window.
+     * Open-Meteo precipitation is a preceding-hour sum, so slot {@code i} covers the
+     * interval {@code (time[i] - 1h, time[i]]}. Future portions (beyond {@code now})
+     * are clamped out.</p>
+     *
+     * @return list of {@code [overlapMinutes: long, precipitation: double]} maps for
+     *         slots with positive overlap; empty when input is invalid/unavailable.
+     */
+    private List<Map> rainSlotsInWindow(int lookbackMinutes) {
+        if (lookbackMinutes <= 0) {
+            log.warn("rainSlotsInWindow: non-positive lookbackMinutes=${lookbackMinutes}; returning empty")
+            return []
+        }
+        List times = meteoPortArray(METEO_PORT_HOURLY_TIME)
+        List precipitations = meteoPortArray(METEO_PORT_HOURLY_PRECIPITATION)
+        if (times.isEmpty() || precipitations.isEmpty()) {
+            log.warn("rainSlotsInWindow: meteo hourly precipitation/time unavailable; returning empty")
+            return []
+        }
+
+        ZoneId zone = resolveMeteoZone()
+        LocalDateTime now = ZonedDateTime.now(zone).toLocalDateTime()
+        LocalDateTime windowStart = now.minusMinutes(lookbackMinutes)
+
+        List<Map> slots = []
+        int count = Math.min(times.size(), precipitations.size())
+        for (int i = 0; i < count; i++) {
+            Double precipitation = parseDouble(precipitations[i])
+            if (precipitation == null) continue
+            LocalDateTime slotEnd
+            try {
+                slotEnd = LocalDateTime.parse(times[i].toString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            } catch (Exception ex) {
+                log.warn("rainSlotsInWindow: failed to parse hourly time '${times[i]}': ${ex.message}")
+                continue
+            }
+            LocalDateTime slotStart = slotEnd.minusHours(1)
+            LocalDateTime overlapStart = slotStart.isAfter(windowStart) ? slotStart : windowStart
+            LocalDateTime overlapEnd = slotEnd.isBefore(now) ? slotEnd : now
+            if (overlapEnd.isAfter(overlapStart)) {
+                long overlapMinutes = Duration.between(overlapStart, overlapEnd).toMinutes()
+                if (overlapMinutes > 0) {
+                    slots << [overlapMinutes: overlapMinutes, precipitation: precipitation]
+                }
+            }
+        }
+        return slots
     }
 
     /**

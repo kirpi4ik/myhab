@@ -37,6 +37,8 @@ class User extends BaseEntity {
     byte[] avatar
     /** Preferred UI language (BCP-47 base code, e.g. 'en' / 'ro'). Null = follow browser. */
     String language
+    /** Preferred display timezone (IANA id, e.g. 'Europe/Chisinau'). Null = follow browser. */
+    String timezone
 
     User(String username, String password) {
         this()
@@ -135,6 +137,7 @@ class User extends BaseEntity {
         telegramUsername nullable: true
         avatar nullable: true, maxSize: 3 * 1024
         language nullable: true
+        timezone nullable: true
     }
 
     static hasMany = [favJobs: Job, peripheralAccessTokens: PeripheralAccessToken]
