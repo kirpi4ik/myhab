@@ -171,6 +171,7 @@
 			"edit": "Edit",
 			"create": "New Port"
 		},
+		"mqtt": "MQTT Explorer",
 		"zones": "Locations",
 		"zone": {
 			"details": "Details",

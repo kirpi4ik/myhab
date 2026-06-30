@@ -178,6 +178,8 @@ type Mutation {
     scenarioDelete(id: ID!): MutationResponse
     appConfigUpdate(key: String!, value: String!, commitMessage: String): MutationResponse
     appConfigRefresh: MutationResponse
+    """Publish a raw payload to an MQTT topic (admin MQTT Explorer debug tool)."""
+    publishMqtt(topic: String!, payload: String!): MutationResponse
     """Update the global QR-code label settings (commits to the git-backed config)."""
     qrConfigUpdate(enabled: Boolean!, contentTemplate: String!, position: String!, size: Int): MutationResponse
     """Resolve+execute a spoken phrase via the agentic voice loop. Pass sessionId to continue a multi-turn conversation."""

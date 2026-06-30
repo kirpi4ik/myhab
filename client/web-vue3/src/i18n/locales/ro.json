@@ -171,6 +171,7 @@
       "edit": "Editeaza",
       "create": "Port nou"
     },
+    "mqtt": "MQTT Explorer",
     "zones": "Localizari",
     "zone": {
       "details": "Detalii",

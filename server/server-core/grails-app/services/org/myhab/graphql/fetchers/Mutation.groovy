@@ -29,6 +29,7 @@ import org.myhab.domain.job.Job
 import org.myhab.domain.job.EventSubscription
 import org.myhab.domain.device.port.PortScenarioJoin
 import org.myhab.exceptions.UnavailableDeviceException
+import org.myhab.async.mqtt.MqttPublishGateway
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -59,6 +60,8 @@ class Mutation implements EventPublisher {
     org.myhab.services.navimow.NavimowOAuthService navimowOAuthService
     @Autowired
     org.myhab.services.VoiceCommandService voiceCommandService
+    @Autowired
+    MqttPublishGateway mqttPublishGateway
 
 
     /**
@@ -514,6 +517,32 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("Failed to update app config", e)
                     return [success: false, error: e.message ?: "Failed to update configuration"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Publish a raw payload to an arbitrary MQTT topic. Backs the MQTT Explorer
+     * "Publish" box; admin-only via the GraphQL/route security. Sends straight to
+     * the broker through the existing outbound gateway — no port lookup.
+     */
+    DataFetcher publishMqtt() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String topic = environment.getArgument("topic")
+                String payload = environment.getArgument("payload")
+                if (!topic?.trim()) {
+                    return [success: false, error: "topic is required"]
+                }
+                try {
+                    mqttPublishGateway.sendToMqtt(topic, payload ?: "")
+                    log.info("MQTT Explorer publish: ${topic} = ${payload}")
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("publishMqtt failed for topic ${topic}", e)
+                    return [success: false, error: e.message ?: "Failed to publish"]
                 }
             }
         }

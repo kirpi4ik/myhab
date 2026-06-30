@@ -283,6 +283,22 @@
 
       <q-separator/>
 
+      <!-- Live MQTT Monitor (raw broker messages for this port only) -->
+      <div class="q-pa-md">
+        <div class="text-h6 text-grey-8 q-mb-md">
+          <q-icon name="mdi-transit-connection-variant" class="q-mr-sm"/>
+          MQTT Monitor (live)
+        </div>
+        <mqtt-raw-monitor
+          title="Raw MQTT for this port"
+          height="260px"
+          :max="50"
+          :filter="portMqttFilter"
+        />
+      </div>
+
+      <q-separator/>
+
       <!-- Actions -->
       <q-card-actions>
         <q-btn color="primary" :to="uri +'/'+ $route.params.idPrimary+'/edit'" icon="mdi-pencil">
@@ -314,11 +330,13 @@ import {PORT_GET_BY_ID, PORT_VALUES_RECENT} from "@/graphql/queries";
 import {format} from 'date-fns';
 
 import EventLogger from 'components/EventLogger.vue';
+import MqttRawMonitor from 'components/MqttRawMonitor.vue';
 
 export default defineComponent({
   name: 'PortView',
   components: {
-    EventLogger
+    EventLogger,
+    MqttRawMonitor
   },
   setup() {
     const uri = '/admin/ports';
@@ -440,6 +458,16 @@ export default defineComponent({
       fetchData();
     });
 
+    /**
+     * Keep only raw MQTT messages that belong to this port. The backend stamps
+     * each broadcast with the parsed deviceCode/portCode (when the topic matched
+     * a known pattern), so we match on those rather than guessing the topic shape.
+     */
+    const portMqttFilter = (msg) =>
+      !!viewItem.value &&
+      msg.deviceCode === viewItem.value.device?.code &&
+      msg.portCode === viewItem.value.internalRef;
+
     return {
       uri,
       fetchData,
@@ -454,6 +482,7 @@ export default defineComponent({
       getStateColor,
       formatDate,
       formatDateWithSeconds,
+      portMqttFilter,
       onCableRowClick: (row) => {
         router.push({path: `/admin/cables/${row.id}/view`});
       },

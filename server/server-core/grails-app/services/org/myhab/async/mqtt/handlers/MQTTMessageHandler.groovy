@@ -6,6 +6,7 @@ import grails.events.EventPublisher
 import groovy.util.logging.Slf4j
 import org.myhab.async.mqtt.MQTTMessage
 import org.myhab.async.mqtt.MqttTopicService
+import org.myhab.services.WSocketsService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.Message
 import org.springframework.messaging.MessageHandler
@@ -17,12 +18,15 @@ import org.springframework.stereotype.Component
 class MQTTMessageHandler implements MessageHandler, EventPublisher {
     @Autowired
     MqttTopicService mqttTopicService
+    @Autowired
+    WSocketsService wSocketsService
 
     @Override
     void handleMessage(Message<?> message) throws MessagingException {
         try {
             def topicName = message.headers.get("mqtt_receivedTopic") as String
             MQTTMessage msg = mqttTopicService.message(topicName, message)
+            wSocketsService.broadcastRawMqtt(topicName, message.payload as String, msg)
             if (msg != null) {
                 publish(msg.eventType, new EventData().with {
                     p0 = msg.eventType

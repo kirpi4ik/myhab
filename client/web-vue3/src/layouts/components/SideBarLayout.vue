@@ -100,6 +100,14 @@
 								<q-item-label>{{ $t('navigation.ports.list') }}</q-item-label>
 							</q-item-section>
 						</q-item>
+						<q-item to="/admin/mqtt" active-class="q-item-no-link-highlighting">
+							<q-item-section avatar>
+								<q-icon name="mdi-transit-connection-variant" />
+							</q-item-section>
+							<q-item-section>
+								<q-item-label>{{ $t('navigation.mqtt') }}</q-item-label>
+							</q-item-section>
+						</q-item>
 						<q-expansion-item
 							icon="mdi-power-socket-au"
 							:label="$t('navigation.peripherals')"

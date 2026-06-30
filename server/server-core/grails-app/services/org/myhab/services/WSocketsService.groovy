@@ -6,6 +6,7 @@ import grails.gorm.transactions.Transactional
 import grails.plugin.springwebsocket.WebSocket
 import groovy.json.JsonOutput
 import org.joda.time.DateTime
+import org.myhab.async.mqtt.MQTTMessage
 import org.myhab.dto.WSocketEvent
 
 @Transactional
@@ -13,6 +14,24 @@ class WSocketsService implements EventPublisher, WebSocket {
 
     int periodMs = 2000
     long lastEvent = DateTime.now().millis
+
+    /**
+     * Relay a raw inbound MQTT message to the SPA MQTT Explorer. Called directly
+     * (not via the throttled @Subscriber path) for every received message so the
+     * tree/raw-monitor see the full stream. {@code msg} carries the parsed
+     * device/port fields when the topic matched a known pattern (null otherwise).
+     * When no client is subscribed to /topic/mqtt the simple broker just drops it.
+     */
+    void broadcastRawMqtt(String topic, String payload, MQTTMessage msg) {
+        convertAndSend("/topic/mqtt", [
+                topic     : topic,
+                payload   : payload,
+                ts        : System.currentTimeMillis(),
+                deviceCode: msg?.deviceCode as String,
+                portType  : msg?.portType as String,
+                portCode  : msg?.portCode as String
+        ])
+    }
 
     @Subscriber('evt_light')
     def evtLight() {
