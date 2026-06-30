@@ -327,6 +327,20 @@ const routes = [
         ],
       },
       {
+        path: adminPrefix + '/mqtt',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "mqtt",
+          authorize: [Role.Admin]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/mqtt/MqttExplorer'),
+          },
+        ],
+      },
+      {
         path: adminPrefix + '/scenarios',
         component: () => import('layouts/CenterLayout'),
         meta: {

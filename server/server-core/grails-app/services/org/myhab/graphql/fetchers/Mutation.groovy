@@ -29,6 +29,7 @@ import org.myhab.domain.job.Job
 import org.myhab.domain.job.EventSubscription
 import org.myhab.domain.device.port.PortScenarioJoin
 import org.myhab.exceptions.UnavailableDeviceException
+import org.myhab.async.mqtt.MqttPublishGateway
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -59,6 +60,8 @@ class Mutation implements EventPublisher {
     org.myhab.services.navimow.NavimowOAuthService navimowOAuthService
     @Autowired
     org.myhab.services.VoiceCommandService voiceCommandService
+    @Autowired
+    MqttPublishGateway mqttPublishGateway
 
 
     /**
@@ -520,6 +523,32 @@ class Mutation implements EventPublisher {
     }
 
     /**
+     * Publish a raw payload to an arbitrary MQTT topic. Backs the MQTT Explorer
+     * "Publish" box; admin-only via the GraphQL/route security. Sends straight to
+     * the broker through the existing outbound gateway — no port lookup.
+     */
+    DataFetcher publishMqtt() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                String topic = environment.getArgument("topic")
+                String payload = environment.getArgument("payload")
+                if (!topic?.trim()) {
+                    return [success: false, error: "topic is required"]
+                }
+                try {
+                    mqttPublishGateway.sendToMqtt(topic, payload ?: "")
+                    log.info("MQTT Explorer publish: ${topic} = ${payload}")
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("publishMqtt failed for topic ${topic}", e)
+                    return [success: false, error: e.message ?: "Failed to publish"]
+                }
+            }
+        }
+    }
+
+    /**
      * Refresh application configuration from GIT (pull latest changes)
      */
     DataFetcher appConfigRefresh() {
@@ -633,6 +662,39 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("Failed to update user language", e)
                     return [success: false, error: e.message ?: "Failed to update language"]
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the authenticated user's preferred display timezone. Self-scoped — always
+     * updates the principal's own User row. A null/blank value clears the
+     * preference so the client falls back to the browser timezone.
+     */
+    DataFetcher meUpdateTimezone() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    String timezone = environment.getArgument("timezone") as String
+                    def principal = springSecurityService?.principal
+                    String username = principal instanceof String ? principal : (principal?.username ?: principal?.toString())
+                    if (!username) {
+                        return [success: false, error: "Not authenticated"]
+                    }
+                    org.myhab.domain.User.withTransaction {
+                        org.myhab.domain.User user = org.myhab.domain.User.findByUsername(username)
+                        if (!user) {
+                            return [success: false, error: "User not found"]
+                        }
+                        user.timezone = timezone?.trim() ? timezone.trim() : null
+                        user.save(flush: true, failOnError: true)
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to update user timezone", e)
+                    return [success: false, error: e.message ?: "Failed to update timezone"]
                 }
             }
         }

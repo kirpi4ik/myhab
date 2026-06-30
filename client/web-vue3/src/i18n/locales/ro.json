@@ -121,6 +121,15 @@
       "login_required": "Trebuie să fii autentificat pentru a schimba limba.",
       "saved": "Limba a fost actualizată",
       "save_error": "Salvarea preferinței de limbă a eșuat"
+    },
+    "timezone": {
+      "title": "Fus orar",
+      "caption": "Alege fusul orar folosit pentru afișarea datelor și orelor. Alegerea este salvată în contul tău și folosită pe toate dispozitivele. Lasă pe automat pentru a urma browserul.",
+      "label": "Fus orar de afișare",
+      "auto": "Automat (browser)",
+      "login_required": "Trebuie să fii autentificat pentru a schimba fusul orar.",
+      "saved": "Fusul orar a fost actualizat",
+      "save_error": "Salvarea preferinței de fus orar a eșuat"
     }
   },
   "voice": {
@@ -171,6 +180,7 @@
       "edit": "Editeaza",
       "create": "Port nou"
     },
+    "mqtt": "MQTT Explorer",
     "zones": "Localizari",
     "zone": {
       "details": "Detalii",

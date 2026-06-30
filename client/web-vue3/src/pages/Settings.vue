@@ -39,6 +39,40 @@
 			</q-card-section>
 		</q-card>
 
+		<q-card flat bordered class="q-mb-md">
+			<q-card-section>
+				<div class="text-h6">{{ $t('settings.timezone.title') }}</div>
+				<div class="text-caption text-grey-7 q-mb-md">
+					{{ $t('settings.timezone.caption') }}
+				</div>
+
+				<q-banner v-if="!isLoggedIn" class="bg-orange-1 text-orange-9 q-mb-md" dense>
+					<template v-slot:avatar>
+						<q-icon name="mdi-alert" />
+					</template>
+					{{ $t('settings.timezone.login_required') }}
+				</q-banner>
+
+				<q-select
+					:model-value="timezonePref"
+					:options="timezoneOptions"
+					:label="$t('settings.timezone.label')"
+					:disable="!isLoggedIn || savingTimezone"
+					:loading="savingTimezone"
+					emit-value
+					map-options
+					outlined
+					dense
+					style="max-width: 320px"
+					@update:model-value="onTimezoneChange"
+				>
+					<template v-slot:prepend>
+						<q-icon name="mdi-clock-outline" />
+					</template>
+				</q-select>
+			</q-card-section>
+		</q-card>
+
 		<q-card flat bordered>
 			<q-card-section>
 				<div class="text-h6">Dashboard widgets</div>
@@ -105,7 +139,7 @@ import { useApolloClient } from '@vue/apollo-composable';
 
 import { authzService } from '@/_services';
 import { applyUserLocale, localeOptions } from '@/_services/locale.service';
-import { ME_UPDATE_LANGUAGE } from '@/graphql/queries';
+import { ME_UPDATE_LANGUAGE, ME_UPDATE_TIMEZONE } from '@/graphql/queries';
 import { useUserPrefsStore } from 'src/store/user-prefs.store';
 import { useDashboardWidgets } from 'src/composables/useDashboardWidgets';
 
@@ -152,6 +186,48 @@ export default defineComponent({
 			}
 		};
 
+		// Timezone preference: null = automatic (follow browser).
+		const timezonePref = ref(authzService.currentUserValue?.timezone ?? null);
+		const savingTimezone = ref(false);
+		const timezoneOptions = computed(() => {
+			const zones = [
+				'Europe/Chisinau', 'Europe/Bucharest', 'Europe/Kyiv', 'Europe/London',
+				'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Moscow',
+				'UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles',
+				'Asia/Dubai', 'Asia/Tokyo',
+			];
+			return [
+				{ label: t('settings.timezone.auto'), value: null },
+				...zones.map((z) => ({ label: z, value: z })),
+			];
+		});
+
+		const onTimezoneChange = async (value) => {
+			const previous = timezonePref.value;
+			timezonePref.value = value;
+			savingTimezone.value = true;
+			try {
+				const response = await client.mutate({
+					mutation: ME_UPDATE_TIMEZONE,
+					variables: { timezone: value },
+					fetchPolicy: 'no-cache',
+				});
+				const result = response.data.meUpdateTimezone;
+				if (result?.success) {
+					authzService.updateCurrentUser({ timezone: value ?? null });
+					$q.notify({ color: 'positive', icon: 'mdi-check-circle', message: t('settings.timezone.saved'), timeout: 2000 });
+				} else {
+					timezonePref.value = previous;
+					$q.notify({ color: 'negative', icon: 'mdi-alert', message: result?.error || t('settings.timezone.save_error') });
+				}
+			} catch (err) {
+				timezonePref.value = previous;
+				$q.notify({ color: 'negative', icon: 'mdi-alert', message: t('settings.timezone.save_error') });
+			} finally {
+				savingTimezone.value = false;
+			}
+		};
+
 		const sections = computed(() => {
 			const all = widgets.value;
 			return [
@@ -191,6 +267,10 @@ export default defineComponent({
 			languageOptions,
 			savingLanguage,
 			onLanguageChange,
+			timezonePref,
+			timezoneOptions,
+			savingTimezone,
+			onTimezoneChange,
 		};
 	},
 });

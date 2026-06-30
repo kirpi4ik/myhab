@@ -114,7 +114,6 @@ class MeteoStationSyncJob implements Job {
         def daily = getConfigValue(device, 'daily')
         def hourly = getConfigValue(device, 'hourly')
         def current = getConfigValue(device, 'current')
-        def timezone = getConfigValue(device, 'timezone')
         def forecastDays = getConfigValue(device, 'forecast_days')
         
         if (!apiUrl || !latitude || !longitude) {
@@ -122,11 +121,13 @@ class MeteoStationSyncJob implements Job {
             return
         }
         
-        // Build API URL with parameters (URL-encoded)
+        // Build API URL with parameters (URL-encoded).
+        // Always request GMT so every timestamp is stored as UTC in the DB; the
+        // UI converts to the user's preferred timezone for display.
         def requestUrl = "${apiUrl}?" +
             "latitude=${urlEncode(latitude)}&" +
             "longitude=${urlEncode(longitude)}&" +
-            "timezone=${urlEncode(timezone ?: 'GMT')}&" +
+            "timezone=${urlEncode('GMT')}&" +
             "forecast_days=${urlEncode(forecastDays ?: '3')}"
         
         if (daily) {

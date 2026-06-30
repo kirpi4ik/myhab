@@ -80,6 +80,7 @@ export const ME = gql`
 			id
 			username
 			language
+			timezone
 		}
 	}
 `;
@@ -87,6 +88,15 @@ export const ME = gql`
 export const ME_UPDATE_LANGUAGE = gql`
 	mutation meUpdateLanguage($language: String) {
 		meUpdateLanguage(language: $language) {
+			success
+			error
+		}
+	}
+`;
+
+export const ME_UPDATE_TIMEZONE = gql`
+	mutation meUpdateTimezone($timezone: String) {
+		meUpdateTimezone(timezone: $timezone) {
 			success
 			error
 		}

@@ -70,6 +70,27 @@ export const useWebSocketStore = defineStore('websocket', {
 		// WebSocket error - will reconnect in 5 seconds
 		setTimeout(() => this.connect(), 5000);
 	},
+
+		/**
+		 * Subscribe to an arbitrary STOMP destination, handing each frame's parsed
+		 * JSON body straight to `callback`. Unlike the shared `/topic/events` slot
+		 * this is lossless (no single overwritten ref), so it suits high-volume
+		 * feeds like the raw MQTT stream. Returns the StompJS subscription (call
+		 * `.unsubscribe()` to stop), or null if not connected yet — callers should
+		 * (re)subscribe once `connection` becomes 'ONLINE'.
+		 */
+		subscribe(destination, callback) {
+			if (this.wsStompClient && this.connection === 'ONLINE') {
+				return this.wsStompClient.subscribe(destination, (m) => {
+					try {
+						callback(JSON.parse(m.body));
+					} catch (e) {
+						/* ignore malformed frame */
+					}
+				});
+			}
+			return null;
+		},
 	},
 });
 

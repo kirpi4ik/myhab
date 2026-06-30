@@ -420,7 +420,7 @@ class Query {
                 if (!user) {
                     return null
                 }
-                return [id: user.id, username: user.username, language: user.language]
+                return [id: user.id, username: user.username, language: user.language, timezone: user.timezone]
             }
         }
     }
