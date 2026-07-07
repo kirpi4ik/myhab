@@ -40,6 +40,7 @@ class NotificationService {
     static final int DEFAULT_COOLDOWN_MINUTES = 60
 
     HazelcastInstance hazelcastInstance
+    WebPushService webPushService
 
     /**
      * Persist a single notification for a specific user. Returns the saved
@@ -80,6 +81,14 @@ class NotificationService {
             }
             if (dedupKey != null) {
                 markFired(dedupKey, cooldownMinutes)
+            }
+            // Best-effort native push (Web Push / VAPID). Never let a push bug
+            // break the producer — sendToUser is itself fire-and-forget, but
+            // guard the call site too.
+            try {
+                webPushService?.sendToUser(user, um)
+            } catch (Exception ex) {
+                log.warn("Web push dispatch failed for user=${user.id}: ${ex.message}")
             }
             return um
         } catch (Exception ex) {

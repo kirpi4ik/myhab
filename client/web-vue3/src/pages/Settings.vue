@@ -73,6 +73,50 @@
 			</q-card-section>
 		</q-card>
 
+		<q-card flat bordered class="q-mb-md">
+			<q-card-section>
+				<div class="text-h6">Push notifications</div>
+				<div class="text-caption text-grey-7 q-mb-md">
+					Receive message alerts as native system notifications on this device, even when the
+					app is closed. This setting is per device and is remembered between sessions.
+				</div>
+
+				<q-banner v-if="!isLoggedIn" class="bg-orange-1 text-orange-9 q-mb-md" dense>
+					<template v-slot:avatar>
+						<q-icon name="mdi-alert" />
+					</template>
+					You must be logged in to enable push notifications.
+				</q-banner>
+
+				<q-banner v-else-if="!pushSupported" class="bg-blue-1 text-blue-9" dense>
+					<template v-slot:avatar>
+						<q-icon name="mdi-information" />
+					</template>
+					Push notifications require the installed app (PWA) and are not available in this browser.
+				</q-banner>
+
+				<q-item v-else tag="label" class="q-pa-none">
+					<q-item-section avatar>
+						<q-icon name="mdi-bell-ring-outline" color="primary" />
+					</q-item-section>
+					<q-item-section>
+						<q-item-label>Enable on this device</q-item-label>
+						<q-item-label caption>{{ pushHint }}</q-item-label>
+					</q-item-section>
+					<q-item-section side>
+						<q-spinner-dots v-if="pushBusy" size="24px" color="primary" />
+						<q-toggle
+							v-else
+							:model-value="pushSubscribed"
+							:disable="pushPermission === 'denied'"
+							color="primary"
+							@update:model-value="onTogglePush"
+						/>
+					</q-item-section>
+				</q-item>
+			</q-card-section>
+		</q-card>
+
 		<q-card flat bordered>
 			<q-card-section>
 				<div class="text-h6">Dashboard widgets</div>
@@ -132,7 +176,7 @@
 </template>
 
 <script>
-import { defineComponent, computed, reactive, ref } from 'vue';
+import { defineComponent, computed, reactive, ref, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useApolloClient } from '@vue/apollo-composable';
@@ -142,6 +186,7 @@ import { applyUserLocale, localeOptions } from '@/_services/locale.service';
 import { ME_UPDATE_LANGUAGE, ME_UPDATE_TIMEZONE } from '@/graphql/queries';
 import { useUserPrefsStore } from 'src/store/user-prefs.store';
 import { useDashboardWidgets } from 'src/composables/useDashboardWidgets';
+import { usePushNotifications } from 'src/composables';
 
 export default defineComponent({
 	name: 'SettingsPage',
@@ -153,6 +198,46 @@ export default defineComponent({
 		const widgets = computed(() => useDashboardWidgets());
 
 		const isLoggedIn = computed(() => authzService.currentUserValue?.id != null);
+
+		// Push notifications: per-device Web Push subscription (persistent across
+		// sessions via the browser + backend PushSubscription row).
+		const {
+			supported: pushSupported,
+			permission: pushPermission,
+			subscribed: pushSubscribed,
+			busy: pushBusy,
+			refresh: refreshPush,
+			enable: enablePush,
+			disable: disablePush,
+		} = usePushNotifications();
+
+		const pushHint = computed(() => {
+			if (pushPermission.value === 'denied') return 'Blocked in your browser settings — allow notifications for this site to enable.';
+			if (pushSubscribed.value) return 'Enabled — you will receive message alerts on this device.';
+			return 'Currently disabled on this device.';
+		});
+
+		const onTogglePush = async (value) => {
+			if (value) {
+				const ok = await enablePush();
+				if (ok) {
+					$q.notify({ color: 'positive', icon: 'mdi-check-circle', message: 'Push notifications enabled', timeout: 2000 });
+				} else {
+					$q.notify({
+						color: 'negative',
+						icon: 'mdi-alert',
+						message: pushPermission.value === 'denied'
+							? 'Notifications are blocked in your browser settings'
+							: 'Could not enable push notifications',
+					});
+				}
+			} else {
+				await disablePush();
+				$q.notify({ color: 'grey-8', icon: 'mdi-bell-off', message: 'Push notifications disabled', timeout: 2000 });
+			}
+		};
+
+		onMounted(refreshPush);
 
 		// Language preference: null = automatic (follow browser).
 		const languagePref = ref(authzService.currentUserValue?.language ?? null);
@@ -271,6 +356,12 @@ export default defineComponent({
 			timezoneOptions,
 			savingTimezone,
 			onTimezoneChange,
+			pushSupported,
+			pushPermission,
+			pushSubscribed,
+			pushBusy,
+			pushHint,
+			onTogglePush,
 		};
 	},
 });

@@ -47,6 +47,8 @@ class Query {
     org.myhab.async.mqtt.MqttRetainedFetchService mqttRetainedFetchService
     @Autowired
     org.myhab.services.LabelService labelService
+    @Autowired
+    org.myhab.services.WebPushService webPushService
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
@@ -353,6 +355,15 @@ class Query {
                 def currentUser = resolveCurrentUser()
                 if (!currentUser) return 0
                 return UserMessage.countByUserAndState(currentUser, MessageState.NEW)
+            }
+        }
+    }
+
+    def pushPublicKey() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                return webPushService.getPublicKey() ?: ''
             }
         }
     }

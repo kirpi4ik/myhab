@@ -258,7 +258,7 @@ export default defineComponent({
     const messages = ref([]);
     const loading = ref(false);
     const selectedMessage = ref(null);
-    const stateFilter = ref(null);
+    const stateFilter = ref('NEW');
     const levelFilter = ref(null);
     const searchText = ref('');
 

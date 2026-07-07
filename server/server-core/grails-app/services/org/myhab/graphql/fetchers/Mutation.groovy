@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat
 import org.myhab.init.cache.CacheMap
 import org.myhab.domain.MessageState
 import org.myhab.domain.UserMessage
+import org.myhab.domain.PushSubscription
 import org.myhab.domain.SharedWidget
 import org.myhab.domain.SharedWidgetState
 import org.myhab.domain.SharedWidgetType
@@ -841,6 +842,61 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("Failed to batch update message states", e)
                     return [success: false, error: e.message ?: "Failed to batch update message states"]
+                }
+            }
+        }
+    }
+
+    DataFetcher pushSubscribe() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    String endpoint = environment.getArgument("endpoint")
+                    String p256dh = environment.getArgument("p256dh")
+                    String auth = environment.getArgument("auth")
+                    String userAgent = environment.getArgument("userAgent")
+
+                    org.myhab.domain.User user = org.myhab.domain.User.findByUsername(currentUsername())
+                    if (!user) {
+                        return [success: false, error: "Not authenticated"]
+                    }
+
+                    PushSubscription.withTransaction {
+                        // Upsert by endpoint — a re-subscribe (same browser) must not
+                        // create duplicates and may re-assign to the current user.
+                        def sub = PushSubscription.findByEndpoint(endpoint) ?: new PushSubscription(endpoint: endpoint)
+                        sub.p256dhKey = p256dh
+                        sub.authKey = auth
+                        sub.userAgent = userAgent
+                        sub.user = user
+                        sub.save(flush: true, failOnError: true)
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to register push subscription", e)
+                    return [success: false, error: e.message ?: "Failed to register push subscription"]
+                }
+            }
+        }
+    }
+
+    DataFetcher pushUnsubscribe() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    String endpoint = environment.getArgument("endpoint")
+                    PushSubscription.withTransaction {
+                        def sub = PushSubscription.findByEndpoint(endpoint)
+                        if (sub) {
+                            sub.delete(flush: true)
+                        }
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to remove push subscription", e)
+                    return [success: false, error: e.message ?: "Failed to remove push subscription"]
                 }
             }
         }

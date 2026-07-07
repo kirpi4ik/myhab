@@ -188,6 +188,9 @@ export default configure(function (ctx) {
         cfg.skipWaiting = true;
         cfg.clientsClaim = true;
         cfg.cleanupOutdatedCaches = true;
+
+        // Inject Web Push handlers into the generated worker (see public/push-sw.js)
+        cfg.importScripts = ['push-sw.js'];
         
         // Disable verbose logging in development
         if (process.env.DEV) {

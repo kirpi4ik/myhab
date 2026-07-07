@@ -88,6 +88,8 @@ dependencies {
     //Telegram bot api
     implementation 'org.telegram:telegrambots-spring-boot-starter:6.9.7.1' // Upgraded from 6.8.0
 //    implementation 'com.vdurmont:emoji-java:5.1.1'
+    //Web Push (VAPID) for browser/PWA system notifications — pulls BouncyCastle + jose4j transitively
+    implementation 'nl.martijndwars:web-push:5.1.1'
     //ONVIF
     implementation 'be.teletask.onvif:onvif:1.0.2'
     //opsgenie atlassian
