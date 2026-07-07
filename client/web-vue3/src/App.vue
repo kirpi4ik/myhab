@@ -12,6 +12,7 @@ import {defineComponent, onMounted} from 'vue';
 import {useWebSocketStore} from '@/store/websocket.store';
 import {useAppConfigStore} from 'src/store/app-config.store';
 import {useWebSocketListener} from '@/composables';
+import {authzService} from '@/_services';
 
 
 
@@ -38,6 +39,9 @@ export default defineComponent({
 
       onMounted(() => {
         wsStore.connect();
+        // Resume proactive JWT refresh for a session restored from localStorage
+        // (login() starts it for fresh logins).
+        authzService.scheduleTokenRefresh();
       });
 
       return {};

@@ -1,7 +1,7 @@
 import {boot} from 'quasar/wrappers';
 
 import {ApolloClients} from '@vue/apollo-composable';
-import {ApolloClient, HttpLink, InMemoryCache} from '@apollo/client/core';
+import {ApolloClient, HttpLink, InMemoryCache, fromPromise} from '@apollo/client/core';
 import {setContext} from '@apollo/client/link/context';
 import {onError} from '@apollo/client/link/error';
 import {authzService} from '@/_services';
@@ -66,11 +66,17 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
     // Handle authentication errors first
     if (networkError.statusCode === 401) {
       backendUnavailableCount = 0; // Reset counter, this is auth issue not backend down
-      authzService.logout();
-      error.path = '/login';
-      error.code = 'ERROR_NOT_AUTHENTICATED';
-      location.replace(error.path);
-      return;
+      // Try a single silent token refresh before giving up. On success, replay
+      // the failed operation with the new token; only log out if refresh fails.
+      return fromPromise(
+        authzService.refreshAccessToken().catch(() => {
+          authzService.logout();
+          location.replace('/login');
+          return null;
+        })
+      )
+        .filter((result) => result != null)
+        .flatMap(() => forward(operation));
     }
     
     // Check if this is a cache error (not backend unavailability)
