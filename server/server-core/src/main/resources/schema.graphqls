@@ -22,6 +22,8 @@ type Query{
     myMessages(level: String, state: String): [UserMessageResult!]!
     """Count of NEW (unread) messages for the current authenticated user."""
     myUnreadCount: Int!
+    """VAPID public key (base64url) for browser Web Push subscription. Empty when push is not configured."""
+    pushPublicKey: String
     """List all shared widgets, optionally filtered by state."""
     sharedWidgets(state: String): [SharedWidgetResult!]!
     """UDP-broadcast scan for MegaD controllers on the local network."""
@@ -192,6 +194,10 @@ type Mutation {
     messageUpdateState(id: ID!, state: String!): MutationResponse
     """Update the state of multiple messages at once."""
     messageBatchUpdateState(ids: [ID!]!, state: String!): MutationResponse
+    """Register (upsert by endpoint) a browser Web Push subscription for the current user."""
+    pushSubscribe(endpoint: String!, p256dh: String!, auth: String!, userAgent: String): MutationResponse
+    """Remove a browser Web Push subscription by its endpoint."""
+    pushUnsubscribe(endpoint: String!): MutationResponse
     """Create a new shared widget link."""
     sharedWidgetCreate(input: SharedWidgetInput!): SharedWidgetCreateResult
     """Update the state of a shared widget (VALID, DISABLED, EXPIRED, ARCHIVED)."""

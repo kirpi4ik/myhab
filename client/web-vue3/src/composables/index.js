@@ -4,6 +4,7 @@ export { useUiState };
 export { useWebSocketListener, useWebSocketListeners } from './useWebSocketListener';
 export { useMqttStream } from './useMqttStream';
 export { useNotifications } from './useNotifications';
+export { usePushNotifications } from './usePushNotifications';
 export { useEntityCRUD } from './useEntityCRUD';
 export { useEntityList } from './useEntityList';
 export { useTableFilters } from './useTableFilters';

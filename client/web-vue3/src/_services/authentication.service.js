@@ -87,7 +87,87 @@ export const authzService = {
 	hasAnyRole,
 	ensureCurrentUserIds,
 	updateCurrentUser,
+	refreshAccessToken,
+	scheduleTokenRefresh,
 };
+
+/**
+ * Decode a JWT's `exp` claim (seconds since epoch) into a millisecond timestamp.
+ * Returns null for malformed tokens or tokens without an `exp`.
+ */
+function decodeJwtExpMs(token) {
+	try {
+		const payload = token.split('.')[1];
+		const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+		return typeof json.exp === 'number' ? json.exp * 1000 : null;
+	} catch (error) {
+		return null;
+	}
+}
+
+/**
+ * Exchange the stored refresh_token for a fresh access_token via the
+ * spring-security-rest refresh endpoint, then merge the new tokens into
+ * currentUser (localStorage + subject). Rejects when there is no refresh_token
+ * or the server refuses the exchange, so callers can fall back to logout.
+ */
+function refreshAccessToken() {
+	const current = currentUserSubject.value;
+	const refresh_token = current?.refresh_token;
+	if (!refresh_token) {
+		return Promise.reject(new Error('No refresh token available'));
+	}
+	const body = new URLSearchParams({ grant_type: 'refresh_token', refresh_token });
+	return fetch(`${Utils.host()}/oauth/access_token`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+		body: body.toString(),
+	})
+		.then((response) => (response.ok ? response.json() : Promise.reject(response)))
+		.then((data) => {
+			const merged = {
+				...current,
+				access_token: data.access_token,
+				refresh_token: data.refresh_token ?? refresh_token,
+			};
+			localStorage.setItem('currentUser', JSON.stringify(merged));
+			currentUserSubject.next(merged);
+			return merged;
+		});
+}
+
+let refreshTimer = null;
+
+/**
+ * Proactively refresh the access_token shortly before it expires and reschedule
+ * itself for the new token. This keeps long-lived pages (e.g. the wall-mounted
+ * MobileWebLayout) authenticated past the ~10h JWT TTL so WebSocket reconnects
+ * and GraphQL calls don't start failing. No-op when there is no refresh_token.
+ */
+function scheduleTokenRefresh() {
+	if (refreshTimer) {
+		clearTimeout(refreshTimer);
+		refreshTimer = null;
+	}
+	const current = currentUserSubject.value;
+	const token = current?.access_token;
+	if (!token || !current?.refresh_token) {
+		return;
+	}
+	const expMs = decodeJwtExpMs(token);
+	if (!expMs) {
+		return;
+	}
+	const lead = 2 * 60 * 1000; // refresh 2 minutes before expiry
+	const delay = Math.max(0, expMs - Date.now() - lead);
+	refreshTimer = setTimeout(() => {
+		refreshAccessToken()
+			.then(() => scheduleTokenRefresh())
+			.catch(() => {
+				// Leave recovery to the reactive 401 path in boot/graphql.js.
+			});
+	}, delay);
+}
 
 /**
  * Authenticate user with username and password
@@ -106,6 +186,8 @@ function login(username, password) {
 			// Store user details and jwt token in local storage to keep user logged in between page refreshes
 			localStorage.setItem('currentUser', JSON.stringify(user));
 			currentUserSubject.next(user);
+			// Start proactive token refresh for this session.
+			scheduleTokenRefresh();
 			// Ensure id/username are set for avatar and profile (via `me` GraphQL query)
 			return ensureCurrentUserIds().then(() => currentUserSubject.value || user);
 		})

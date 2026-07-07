@@ -9,10 +9,10 @@
   >
     <q-tooltip>Event History</q-tooltip>
   </q-btn>
-  
-  <q-dialog 
-    v-model="visible" 
-    transition-show="jump-up" 
+
+  <q-dialog
+    v-model="visible"
+    transition-show="jump-up"
     transition-hide="jump-down"
     :maximized="$q.platform.is.mobile"
     @escape-key="visible = false"
@@ -34,11 +34,11 @@
         >
           <q-tooltip>{{ includePortEvents ? 'Exclude' : 'Include' }} Port Events</q-tooltip>
         </q-btn>
-        <q-btn 
-          dense 
-          flat 
+        <q-btn
+          dense
+          flat
           round
-          icon="mdi-refresh" 
+          icon="mdi-refresh"
           @click="loadEvents"
           :loading="loading"
         >
@@ -107,8 +107,8 @@
 
           <template v-slot:body-cell-type="props">
             <q-td :props="props">
-              <q-chip 
-                size="sm" 
+              <q-chip
+                size="sm"
                 :icon="props.row.p1 === 'PORT' ? 'mdi-electric-switch' : 'mdi-devices'"
                 :color="props.row.p1 === 'PORT' ? 'blue-6' : 'green-6'"
                 text-color="white"
@@ -146,8 +146,8 @@
 
           <template v-slot:body-cell-source="props">
             <q-td :props="props">
-              <q-chip 
-                size="sm" 
+              <q-chip
+                size="sm"
                 :icon="getSourceIcon(props.row.p3)"
                 :color="getSourceColor(props.row.p3)"
                 text-color="white"
@@ -185,19 +185,19 @@
 
       <!-- Actions -->
       <q-card-actions align="right" class="event-actions">
-        <q-btn 
-          label="Export CSV" 
-          icon="mdi-download" 
-          color="primary" 
+        <q-btn
+          label="Export CSV"
+          icon="mdi-download"
+          color="primary"
           unelevated
           @click="exportToCSV"
           :disable="events.length === 0"
           class="export-btn"
         />
-        <q-btn 
-          label="Close" 
-          color="grey-7" 
-          flat 
+        <q-btn
+          label="Close"
+          color="grey-7"
+          flat
           v-close-popup
         />
       </q-card-actions>
@@ -270,7 +270,7 @@ const visible = ref(false);
 const loading = ref(false);
 const events = ref([]);
 const pageSize = ref(10);
-const includePortEvents = ref(false);
+const includePortEvents = ref(true);
 
 // Computed
 const pageSizeOptions = computed(() => PAGE_SIZE_OPTIONS);
@@ -389,9 +389,9 @@ const displayEvents = computed(() => collapseByActionId(events.value));
  */
 const getValueColor = (value) => {
   if (!value) return 'grey';
-  
+
   const valueLower = String(value).toLowerCase();
-  
+
   if (valueLower === 'on' || valueLower === 'true' || valueLower === '1') {
     return 'positive';
   }
@@ -404,7 +404,7 @@ const getValueColor = (value) => {
   if (valueLower === 'warning' || valueLower === 'warn') {
     return 'warning';
   }
-  
+
   return 'primary';
 };
 
@@ -413,9 +413,9 @@ const getValueColor = (value) => {
  */
 const getSourceColor = (source) => {
   if (!source) return 'grey';
-  
+
   const sourceLower = String(source).toLowerCase();
-  
+
   if (sourceLower.includes('user') || sourceLower.includes('manual')) {
     return 'blue-7';
   }
@@ -431,7 +431,7 @@ const getSourceColor = (source) => {
   if (sourceLower.includes('schedule') || sourceLower.includes('timer')) {
     return 'orange-7';
   }
-  
+
   return 'grey-7';
 };
 
@@ -440,9 +440,9 @@ const getSourceColor = (source) => {
  */
 const getSourceIcon = (source) => {
   if (!source) return 'mdi-help-circle';
-  
+
   const sourceLower = String(source).toLowerCase();
-  
+
   if (sourceLower.includes('user') || sourceLower.includes('manual')) {
     return 'mdi-account';
   }
@@ -458,7 +458,7 @@ const getSourceIcon = (source) => {
   if (sourceLower.includes('schedule') || sourceLower.includes('timer')) {
     return 'mdi-calendar-clock';
   }
-  
+
   return 'mdi-information';
 };
 
@@ -497,7 +497,7 @@ const loadEvents = async () => {
         events.value = [];
         return;
       }
-      
+
       // Fetch events for peripheral and all its ports
       response = await client.query({
         query: PERIPHERAL_EVENT_LOGS_MULTIPLE,
@@ -508,11 +508,11 @@ const loadEvents = async () => {
         },
         fetchPolicy: 'network-only'
       });
-      
+
       events.value = response.data.eventsByP2List
         .map(event => {
           const eventDate = new Date(event.tsCreated);
-          
+
           return {
             ...event,
             strDate: format(eventDate, DATE_FORMAT),
@@ -532,11 +532,11 @@ const loadEvents = async () => {
         },
         fetchPolicy: 'network-only'
       });
-      
+
       events.value = response.data.eventsByP2
         .map(event => {
           const eventDate = new Date(event.tsCreated);
-          
+
           return {
             ...event,
             strDate: format(eventDate, DATE_FORMAT),
@@ -570,7 +570,7 @@ const exportToCSV = () => {
   try {
     // CSV headers
     const headers = ['Date', 'Value', 'Source', 'Context'];
-    
+
     // CSV rows
     const rows = events.value.map(event => [
       event.strDate,
@@ -589,11 +589,11 @@ const exportToCSV = () => {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', `events_${targetName.value || targetId.value}_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`);
     link.style.visibility = 'hidden';
-    
+
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -641,32 +641,32 @@ const openLog = () => {
   color: #ffffff;
   padding: 12px 16px;
   min-height: 56px;
-  
+
   .header-title {
     font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.3px;
     color: #ffffff;
   }
-  
+
   .q-btn {
     color: #ffffff;
     transition: all 0.3s ease;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.15);
       transform: scale(1.05);
     }
   }
-  
+
   .toggle-active {
     background: rgba(255, 255, 255, 0.2);
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.3);
     }
   }
-  
+
   .toggle-inactive {
     opacity: 0.7;
   }
@@ -705,13 +705,13 @@ const openLog = () => {
   font-size: 18px;
   font-weight: 600;
   color: #1f2937;
-  
+
   .count-number {
     color: #16a34a;
     font-size: 20px;
     font-weight: 700;
   }
-  
+
   .count-label {
     color: #6b7280;
     font-weight: 500;
@@ -724,7 +724,7 @@ const openLog = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  
+
   .port-info {
     display: inline-flex;
     align-items: center;
@@ -756,13 +756,13 @@ const openLog = () => {
   border: none;
   box-shadow: none;
   height: 100%;
-  
+
   :deep(.q-table__middle) {
     flex: 1;
     overflow: auto;
     max-height: 500px; /* Fallback height */
   }
-  
+
   :deep(thead tr th) {
     position: sticky;
     top: 0;
@@ -776,41 +776,41 @@ const openLog = () => {
     padding: 14px 12px;
     border-bottom: 2px solid #d1d5db;
   }
-  
+
   /* Custom Scrollbar */
   :deep(.q-table__middle)::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
-  
+
   :deep(.q-table__middle)::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 10px;
   }
-  
+
   :deep(.q-table__middle)::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
     border-radius: 10px;
-    
+
     &:hover {
       background: linear-gradient(180deg, #64748b 0%, #475569 100%);
     }
   }
-  
+
   :deep(tbody) {
     tr {
       transition: all 0.2s ease;
-      
+
       &:nth-child(even) {
         background-color: #f9fafb;
       }
-      
+
       &:hover {
         background-color: #eff6ff !important;
         transform: translateX(2px);
         box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
       }
-      
+
       td {
         padding: 12px;
         border-bottom: 1px solid #e5e7eb;
@@ -819,20 +819,20 @@ const openLog = () => {
       }
     }
   }
-  
+
   /* Type Column Styling */
   :deep(.q-chip) {
     font-weight: 600;
     font-size: 11px;
     letter-spacing: 0.5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    
+
     &:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
   }
-  
+
   /* Value Badge Styling */
   :deep(.q-badge) {
     font-weight: 600;
@@ -851,13 +851,13 @@ const openLog = () => {
   justify-content: center;
   padding: 60px 20px;
   gap: 16px;
-  
+
   .no-data-text {
     font-size: 18px;
     font-weight: 600;
     color: #6b7280;
   }
-  
+
   .no-data-hint {
     font-size: 14px;
     color: #9ca3af;
@@ -871,12 +871,12 @@ const openLog = () => {
   border-top: 1px solid #e5e7eb;
   gap: 8px;
   flex-shrink: 0;
-  
+
   .export-btn {
     font-weight: 600;
     padding: 8px 20px;
     box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-    
+
     &:hover {
       box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
       transform: translateY(-1px);
@@ -897,25 +897,25 @@ const openLog = () => {
     gap: 12px;
     align-items: flex-start;
   }
-  
+
   .page-size-selector {
     width: 100%;
-    
+
     .q-select {
       width: 100%;
     }
   }
-  
+
   .event-table {
     :deep(.q-table__middle) {
       max-height: 400px;
     }
-    
+
     :deep(tbody tr td) {
       padding: 8px;
       font-size: 12px;
     }
-    
+
     :deep(thead tr th) {
       padding: 10px 8px;
       font-size: 11px;

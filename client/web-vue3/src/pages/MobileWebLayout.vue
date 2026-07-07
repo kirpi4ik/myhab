@@ -266,6 +266,20 @@ watch(stompMessage, (newVal) => {
   }
 });
 
+// Re-sync full state whenever the socket recovers. STOMP topics are not
+// replayed, so events that fired while offline would otherwise be lost and the
+// SVG would stay stale until a manual reload. Reloading peripherals on
+// OFFLINE -> ONLINE guarantees the SVG matches reality after any outage.
+watch(() => wsStore.connection, (state, prev) => {
+  if (state === 'ONLINE' && prev === 'OFFLINE') {
+    loadPeripherals()
+      .then(() => { svgRefreshKey.value++; })
+      .catch((err) => {
+        console.error('Error resyncing peripherals after reconnect:', err);
+      });
+  }
+});
+
 // Watch for route changes
 watch(() => router.currentRoute.value.path, () => {
   initialize();
