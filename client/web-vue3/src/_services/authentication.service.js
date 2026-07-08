@@ -160,6 +160,13 @@ function scheduleTokenRefresh() {
 	}
 	const lead = 2 * 60 * 1000; // refresh 2 minutes before expiry
 	const delay = Math.max(0, expMs - Date.now() - lead);
+	// setTimeout overflows above 2^31-1 ms (~24.8 days) and would fire
+	// immediately, causing a refresh loop. For far-future expiry just re-check
+	// daily instead of refreshing.
+	if (delay > 2147483647) {
+		refreshTimer = setTimeout(() => scheduleTokenRefresh(), 24 * 60 * 60 * 1000);
+		return;
+	}
 	refreshTimer = setTimeout(() => {
 		refreshAccessToken()
 			.then(() => scheduleTokenRefresh())

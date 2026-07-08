@@ -32,7 +32,9 @@ grails.plugin.springsecurity.rest.logout.endpointUrl = "/api/logout"
 //grails.plugin.springsecurity.rest.token.validation.headerName = "X-Auth-Token"
 
 grails.plugin.springsecurity.rest.token.storage.jwt.useSignedJwt = true
-grails.plugin.springsecurity.rest.token.storage.jwt.expiration = 36000
+// Access-token TTL in seconds: 18_000_000 s = 300_000 min ≈ 208 days.
+// Long-lived on purpose (home devices, wall tablets).
+grails.plugin.springsecurity.rest.token.storage.jwt.expiration = 18000000
 grails.plugin.springsecurity.rest.token.storage.jwt.secret = System.getenv("JWT_SECRET")
 grails.plugin.springsecurity.rest.token.generation.jwt.algorithm = "HS256"
 grails.plugin.springsecurity.rest.token.generation.jwt.jweAlgorithm = "RSA-OAEP"
