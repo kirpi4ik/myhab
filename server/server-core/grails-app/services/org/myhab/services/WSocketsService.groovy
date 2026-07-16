@@ -76,6 +76,18 @@ class WSocketsService implements EventPublisher, WebSocket {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_app_cfg_value_changed", jsonPayload: JsonOutput.toJson(event.data)))
     }
 
+    /**
+     * Notify open /wui viewers and editors that a dashboard screen changed
+     * (created/updated/deleted, incl. layout saves and background uploads).
+     * Called directly from DashboardScreen GORM hooks (like broadcastRawMqtt,
+     * not via the @Subscriber event bus) so every write path is covered.
+     */
+    void broadcastDashboardScreenChanged(Long screenId) {
+        convertAndSend("/topic/events", new WSocketEvent(
+                eventName: org.myhab.domain.events.TopicName.EVT_DASHBOARD_SCREEN_CHANGED.id(),
+                jsonPayload: JsonOutput.toJson([p1: 'DASHBOARD_SCREEN', p2: screenId as String])))
+    }
+
     @Subscriber('evt_heat')
     def evtHeat() {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_heat"))

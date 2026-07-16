@@ -446,6 +446,20 @@ const routes = [
         ],
       },
       {
+        path: adminPrefix + '/screens',
+        component: () => import('layouts/CenterLayout'),
+        meta: {
+          name: "screens",
+          authorize: [Role.Admin]
+        },
+        children: [
+          {
+            path: '',
+            component: () => import('pages/infra/screens/ScreenManager'),
+          }
+        ],
+      },
+      {
         path: '/messages',
         component: () => import('pages/infra/message/MessageInbox'),
         meta: {

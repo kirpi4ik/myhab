@@ -199,6 +199,14 @@
 								<q-item-label>App Configuration</q-item-label>
 							</q-item-section>
 						</q-item>
+						<q-item to="/admin/screens" active-class="q-item-no-link-highlighting">
+							<q-item-section avatar>
+								<q-icon name="mdi-monitor-dashboard" />
+							</q-item-section>
+							<q-item-section>
+								<q-item-label>Dashboard Screens</q-item-label>
+							</q-item-section>
+						</q-item>
 						<q-item to="/maintenance" active-class="q-item-no-link-highlighting">
 							<q-item-section avatar>
 								<q-icon name="settings" />

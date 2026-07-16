@@ -22,6 +22,11 @@ class UrlMappings {
         get "/api/labels/peripheral/$id"(controller: "label", action: "generatePeripheralLabel")
         get "/api/users/$id/avatar"(controller: "userAvatar", action: "show")
         put "/api/users/$id/avatar"(controller: "userAvatar", action: "update")
+        // Dashboard screen backgrounds + legacy SVG import (REST — binary content)
+        get "/api/screens/$id/background"(controller: "dashboardScreen", action: "show")
+        put "/api/screens/$id/background"(controller: "dashboardScreen", action: "update")
+        post "/api/screens/$id/background/resize"(controller: "dashboardScreen", action: "resizeBackground")
+        post "/api/screens/import-svg"(controller: "dashboardScreen", action: "importSvg")
         "/login/auth"(controller: "login", action: "auth")
 
         // Navimow OAuth2 callback — public path mirroring Home Assistant's

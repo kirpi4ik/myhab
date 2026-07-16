@@ -40,7 +40,8 @@ enum EntityType {
     LAYER(Layer.class),
     USER(User.class),
     USER_MESSAGE(UserMessage.class),
-    SHARED_WIDGET(SharedWidget.class);
+    SHARED_WIDGET(SharedWidget.class),
+    DASHBOARD_SCREEN(org.myhab.domain.ui.DashboardScreen.class);
 
     static <T extends BaseEntity> EntityType get(T type) {
         return values().find {

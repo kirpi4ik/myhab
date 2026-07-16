@@ -1,30 +1,42 @@
 <template>
   <div id="fullscreen">
-    <!-- Swiper for SVG pages -->
-    <swiper 
-      v-if="!loading"
-      :pagination="{ dynamicBullets: true }" 
-      :modules="modules" 
+    <!-- Swiper over DB-backed dashboard screens -->
+    <swiper
+      v-if="!loading && screens.length"
+      :pagination="{ dynamicBullets: true }"
+      :modules="modules"
       class="swiper"
-      @slideChange="onSlideChange"
-      @swiper="onSwiper"
     >
-      <swiper-slide v-for="svgPage in svgPages" :key="svgPage.id">
-        <inline-svg
-          :key="`${svgPage.id}-${svgRefreshKey}`"
-          :src="svgPage.svgContent"
-          :transform-source="(svg) => transformSvg(svg, svgPage.id)"
-          :fill-opacity="svgPage.fillOpacity"
-          :stroke-opacity="svgPage.strokeOpacity"
-          :color="false"
+      <swiper-slide v-for="screen in screens" :key="screen.id">
+        <DashboardScreenSvg
+          :screen="screen"
+          :widgets="screen.widgets"
+          :peripherals="peripherals"
+          :bg-url="bgUrls[screen.id] || null"
+          mode="view"
+          @widget-activate="onWidgetActivate"
         />
       </swiper-slide>
     </swiper>
 
+    <!-- Empty state -->
+    <div v-if="!loading && !screens.length" class="empty-state column items-center justify-center">
+      <q-icon name="mdi-monitor-dashboard" size="64px" color="grey-6" />
+      <div class="text-h6 text-grey-7 q-mt-md">No dashboard screens configured</div>
+      <q-btn
+        v-if="isAdmin"
+        class="q-mt-md"
+        color="primary"
+        icon="mdi-pencil-ruler"
+        label="Open screen manager"
+        to="/admin/screens"
+      />
+    </div>
+
     <!-- Unlock Confirmation Dialog -->
-    <q-dialog 
-      v-model="unlockDialog.show" 
-      transition-show="jump-up" 
+    <q-dialog
+      v-model="unlockDialog.show"
+      transition-show="jump-up"
       transition-hide="jump-down"
     >
       <q-card class="bg-white">
@@ -45,12 +57,12 @@
 
         <q-card-section class="q-pa-none" vertical align="center">
           <div class="q-pa-sm">
-            <q-btn 
-              flat 
-              class="text-h6" 
-              icon="mdi-lock-open" 
-              :label="$t('mobile.unlock.button')" 
-              no-caps 
+            <q-btn
+              flat
+              class="text-h6"
+              icon="mdi-lock-open"
+              :label="$t('mobile.unlock.button')"
+              no-caps
               @click="handleUnlock"
               :loading="unlocking"
               :disable="unlocking"
@@ -68,160 +80,122 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import InlineSvg from 'vue-inline-svg';
+import _ from 'lodash';
+import { useApolloClient } from '@vue/apollo-composable';
 import { useWebSocketStore } from '@/store/websocket.store';
-import { 
-  useNotifications, 
-  useSvgInteraction, 
-  usePeripheralState, 
-  usePeripheralControl 
+import { DASHBOARD_SCREENS } from '@/graphql/queries';
+import { screenService, authzService } from '@/_services';
+import { Role } from '@/_helpers/role';
+import {
+  useNotifications,
+  usePeripheralState,
+  usePeripheralControl,
+  useWebSocketListener,
 } from '@/composables';
+import DashboardScreenSvg from '@/components/dashboard/DashboardScreenSvg.vue';
 
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-// Router
 const router = useRouter();
-
-// Swiper modules
 const modules = [Pagination];
-
-// SVG pages configuration
-const svgPages = ref([
-  {
-    id: 'screen-1',
-    visible: true,
-    svgContent: 'svg/screen-1.svg',
-    fillOpacity: 0.3,
-    strokeOpacity: 0.5,
-  },
-  {
-    id: 'screen-2',
-    visible: false,
-    svgContent: 'svg/screen-2.svg',
-    fillOpacity: 0.3,
-    strokeOpacity: 0.5,
-  },
-]);
-
-const currentPageIndex = ref(0);
-const swiperInstance = ref(null);
-const svgRefreshKey = ref(0);
+const { client } = useApolloClient();
 
 // Composables
 const { notifyError, notifySuccess } = useNotifications();
-const { parseAssetId, findClosestNode, applyFocusEffect, transformSvg: svgTransform } = useSvgInteraction();
-const { 
-  peripherals, 
-  loading, 
-  error, 
-  loadPeripherals, 
+const {
+  peripherals,
+  loading: peripheralsLoading,
+  loadPeripherals,
   updatePeripheralFromEvent,
   getPeripheral,
-  hasPeripheral 
+  hasPeripheral,
 } = usePeripheralState();
-const { 
-  unlockDialog, 
-  handlePeripheralAction, 
-  unlockDoor,
-  toggleLight,
-  toggleHeat,
-  showUnlockDialog
-} = usePeripheralControl();
+const { unlockDialog, handlePeripheralAction, unlockDoor } = usePeripheralControl();
 
 // WebSocket store
 const wsStore = useWebSocketStore();
 
-// Unlocking state
-const unlocking = ref(false);
+// Screens
+const screens = ref([]);
+const bgUrls = ref({});
+const screensLoading = ref(true);
 
-// Computed
+const loading = computed(() => screensLoading.value || peripheralsLoading.value);
+const isAdmin = computed(() => authzService.hasAnyRole([Role.Admin]));
+const unlocking = ref(false);
 const stompMessage = computed(() => wsStore.ws.message);
 
-/**
- * Transform SVG with current peripheral state
- */
-const transformSvg = (svg, pageId) => {
-  return svgTransform(svg, peripherals.value, svgPages.value, pageId);
+const revokeBgUrls = () => {
+  Object.values(bgUrls.value).forEach((url) => URL.revokeObjectURL(url));
+  bgUrls.value = {};
 };
 
 /**
- * Handle click events on SVG elements
+ * Load enabled screens (ordered) + their background blob URLs. Screens with
+ * unparseable layout JSON are skipped with a console warning.
  */
-const handleClick = (event) => {
-  
-  const targetId = event.target.id;
+const loadScreens = async () => {
+  try {
+    const response = await client.query({
+      query: DASHBOARD_SCREENS,
+      variables: { enabledOnly: true },
+      fetchPolicy: 'network-only',
+    });
+    const loaded = [];
+    for (const screen of response.data.dashboardScreens || []) {
+      try {
+        const layout = JSON.parse(screen.layoutJson || '{"version":1,"widgets":[]}');
+        loaded.push({ ...screen, widgets: layout.widgets || [] });
+      } catch (err) {
+        console.warn(`Skipping screen ${screen.id} (${screen.name}): bad layout JSON`, err);
+      }
+    }
+    screens.value = loaded;
+    revokeBgUrls();
+    await Promise.all(
+      loaded.map(async (screen) => {
+        const url = await screenService.fetchBackgroundBlobUrl(screen.id, screen.tsUpdated);
+        if (url) bgUrls.value[screen.id] = url;
+      })
+    );
+  } catch (err) {
+    notifyError('Failed to load dashboard screens');
+    console.error('Error loading screens:', err);
+  } finally {
+    screensLoading.value = false;
+  }
+};
 
-  // Handle navigation clicks
-  if (targetId.startsWith('nav-')) {
-    handleNavigation(targetId);
+/**
+ * Widget clicked in view mode -> resolve peripheral and run the category
+ * action (toggle light/heat, unlock dialog). No id parsing involved.
+ * Link controls navigate instead (in-app path or absolute URL).
+ */
+const onWidgetActivate = (widget) => {
+  if (widget.kind === 'link') {
+    const href = widget.href?.trim();
+    if (!href) return;
+    if (/^https?:\/\//i.test(href)) {
+      window.open(href, '_blank', 'noopener');
+    } else {
+      router.push(href);
+    }
     return;
   }
-
-  // Handle asset clicks
-  if (targetId.startsWith('asset-')) {
-    handleAssetClick(event);
-  }
-};
-
-/**
- * Handle navigation button clicks
- */
-const handleNavigation = (targetId) => {
-  const parsed = parseAssetId(targetId);
-  const direction = parsed.info;
-
-  if (direction === 'home') {
-    router.push({ path: '/' }).catch(() => {});
-  } else if (direction === 'back' && currentPageIndex.value > 0) {
-    swiperInstance.value?.slidePrev();
-  } else if (direction === 'forward' && currentPageIndex.value < svgPages.value.length - 1) {
-    swiperInstance.value?.slideNext();
-  }
-};
-
-/**
- * Store swiper instance reference
- */
-const onSwiper = (swiper) => {
-  swiperInstance.value = swiper;
-};
-
-/**
- * Handle asset (peripheral) clicks
- */
-const handleAssetClick = (event) => {
-  const closest = findClosestNode(event.target);
-  if (!closest) return;
-
-  // Apply visual feedback
-  applyFocusEffect(closest);
-
-  // Parse asset info
-  const asset = parseAssetId(closest.id);
-  const peripheralId = asset.id;
-
-  if (!hasPeripheral(peripheralId)) {
-    // Peripheral not found - silently return
-    return;
-  }
-
-  // Handle peripheral action
-  const peripheral = getPeripheral(peripheralId);
-  handlePeripheralAction(peripheral).catch(err => {
+  if (!hasPeripheral(widget.peripheralId)) return;
+  const peripheral = getPeripheral(widget.peripheralId);
+  handlePeripheralAction(peripheral).catch((err) => {
     notifyError('Failed to control peripheral');
     console.error('Error handling peripheral action:', err);
   });
 };
 
-/**
- * Handle unlock button click
- */
 const handleUnlock = async () => {
   unlocking.value = true;
   try {
@@ -235,215 +209,44 @@ const handleUnlock = async () => {
   }
 };
 
-/**
- * Handle slide change
- */
-const onSlideChange = (swiper) => {
-  currentPageIndex.value = swiper.activeIndex;
-  svgPages.value.forEach((page, index) => {
-    page.visible = index === swiper.activeIndex;
-  });
-};
-
-/**
- * Initialize component
- */
 const initialize = async () => {
   try {
-    await loadPeripherals();
+    await Promise.all([loadPeripherals(), loadScreens()]);
   } catch (err) {
     notifyError('Failed to load peripherals');
     console.error('Error initializing:', err);
   }
 };
 
-// Watch for WebSocket messages
+// Live port updates: mutate the peripherals map — widget components react
+// individually (no full re-render, no refresh key).
 watch(stompMessage, (newVal) => {
   if (newVal?.eventName === 'evt_port_value_persisted') {
     updatePeripheralFromEvent(newVal.jsonPayload);
-    // Force SVG re-render by incrementing the key
-    svgRefreshKey.value++;
   }
 });
 
 // Re-sync full state whenever the socket recovers. STOMP topics are not
-// replayed, so events that fired while offline would otherwise be lost and the
-// SVG would stay stale until a manual reload. Reloading peripherals on
-// OFFLINE -> ONLINE guarantees the SVG matches reality after any outage.
+// replayed, so events that fired while offline would otherwise be lost and
+// the UI would stay stale until a manual reload. Also refetches screens,
+// covering screen-changed events missed while offline.
 watch(() => wsStore.connection, (state, prev) => {
   if (state === 'ONLINE' && prev === 'OFFLINE') {
-    loadPeripherals()
-      .then(() => { svgRefreshKey.value++; })
-      .catch((err) => {
-        console.error('Error resyncing peripherals after reconnect:', err);
-      });
+    Promise.all([loadPeripherals(), loadScreens()]).catch((err) => {
+      console.error('Error resyncing after reconnect:', err);
+    });
   }
 });
 
-// Watch for route changes
-watch(() => router.currentRoute.value.path, () => {
-  initialize();
-});
+// Screen edited/created/deleted in the admin editor -> refetch. Debounced:
+// the GORM afterUpdate hook fires pre-commit and reorders touch several rows.
+useWebSocketListener('evt_dashboard_screen_changed', _.debounce(loadScreens, 500));
 
-// Lifecycle hooks
-onMounted(() => {
-  initialize();
-  document.addEventListener('click', handleClick, false);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClick, false);
-});
+onMounted(initialize);
+onUnmounted(revokeBgUrls);
 </script>
 
-<style>
-
-.hidden {
-  display: none;
-}
-
-.back {
-  opacity: 0.8;
-  color: #000015;
-}
-
-.focus {
-  fill: green;
-  stroke: yellow;
-  stroke-width: 1;
-}
-
-.no-focus {
-  stroke: none;
-}
-
-rect.nav-button {
-  stroke: #2b6095;
-  stroke-width: 0.5;
-  fill: rgb(115, 127, 129);
-  fill-rule: nonzero;
-  fill-opacity: 0.3;
-  paint-order: stroke;
-}
-
-path.nav-button {
-  stroke: #2b6095;
-  stroke-width: 0.5;
-  fill: rgb(115, 127, 129);
-  fill-rule: nonzero;
-}
-
-.motion-off {
-  fill: #5a99de;
-  fill-opacity: 0.3;
-  stroke: #70808e;
-  stroke-width: 0.8;
-}
-
-.motion-on {
-  fill: #e8b8bc;
-  fill-opacity: 0.3;
-  stroke: #ba1334;
-  stroke-width: 0.8;
-}
-
-.bulb-on {
-  fill: #d6d40f;
-  fill-opacity: 0.7;
-}
-
-.bulb-off {
-  fill: #4a90d6;
-  fill-opacity: 0.3;
-  stroke: #2b6095;
-  stroke-width: 0.5;
-}
-
-.device-offline {
-  color: red;
-  fill: rgb(88, 77, 77);
-  stroke: rgb(226, 9, 9);
-  text-decoration: line-through;
-}
-
-circle.heat-on {
-  fill: rgb(244, 194, 168);
-  fill-opacity: 0.61;
-  stroke: rgb(116, 29, 29);
-}
-
-path.heat-on {
-  paint-order: fill;
-  stroke-width: 4.62558px;
-  fill: rgb(88, 77, 77);
-  stroke: rgb(226, 9, 9);
-  stroke-opacity: 0.34;
-}
-
-circle.heat-off {
-  fill: rgb(168, 193, 244);
-  fill-opacity: 0.61;
-  stroke: rgb(116, 29, 29);
-}
-
-path.heat-off {
-  paint-order: fill;
-  stroke-width: 4.62558px;
-  fill: rgb(88, 77, 77);
-  stroke: rgb(9, 96, 226);
-  stroke-opacity: 0.34;
-}
-
-.lock {
-  cursor: pointer;
-  fill: #4a90d6;
-  fill-opacity: 0.3;
-  stroke: #d3e5e5;
-  stroke-width: 1.2;
-}
-
-circle.asset-lock-circle {
-  stroke: #d3e5e5;
-  stroke-width: 1.2;
-  fill: rgb(98, 117, 129);
-  paint-order: stroke;
-  fill-opacity: 0.59;
-}
-
-circle#nav-home-1 {
-  stroke: #d3e5e5;
-  stroke-width: 1.2;
-  fill: rgb(98, 117, 129);
-  paint-order: stroke;
-  fill-opacity: 0.59;
-}
-
-text.txt-light {
-  fill: rgb(224, 227, 243);
-  font-family: Arial, sans-serif;
-  font-size: 113.1px;
-  fill-opacity: 0.8;
-}
-
-text.luminosity-text {
-  fill: #d3e5e5;
-  fill-opacity: 0.9;
-}
-
-.slide-fade-enter-active {
-  transition: all 0.3s ease;
-}
-
-.slide-fade-leave-active {
-  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter,
-.slide-fade-leave-to {
-  transform: translateX(10px);
-  opacity: 0;
-}
-
+<style scoped>
 .swiper {
   width: 100%;
   height: 100%;
@@ -451,18 +254,14 @@ text.luminosity-text {
 
 .swiper-slide {
   text-align: center;
-  font-size: 18px;
   background: #fff;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.swiper-slide img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.empty-state {
+  height: 100vh;
 }
-</style>
 
+</style>

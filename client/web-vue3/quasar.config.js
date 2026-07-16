@@ -84,6 +84,24 @@ export default configure(function (ctx) {
           test: /\.(graphql|gql)$/,
           use: 'graphql-tag/loader',
         });
+        // Keep the full MDI svg catalog (~2.6MB raw) OUT of the eager vendor
+        // bundle: it is only import()'d on demand (dashboard markers, icon
+        // picker). Without this, the default vendors cacheGroup (chunks:'all')
+        // hoists it into vendor.js for every page load.
+        cfg.optimization = cfg.optimization || {};
+        cfg.optimization.splitChunks = {
+          ...(cfg.optimization.splitChunks || {}),
+          cacheGroups: {
+            ...((cfg.optimization.splitChunks || {}).cacheGroups || {}),
+            mdiIcons: {
+              test: /[\\/]node_modules[\\/]@quasar[\\/]extras[\\/]mdi-v6[\\/]index\./,
+              name: 'mdi-icons',
+              chunks: 'async',
+              priority: 30,
+              enforce: true,
+            },
+          },
+        };
       },
       chainWebpack(chain) {
         chain.plugin('eslint-webpack-plugin').use(ESLintPlugin, [{extensions: ['js', 'vue']}]);

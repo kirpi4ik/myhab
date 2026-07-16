@@ -74,6 +74,7 @@ export const PERIPHERAL_CATEGORY_GET_DETAILS = gql`
       id
       name
       title
+      icon
       entityType
       peripherals {
         id
@@ -92,6 +93,7 @@ export const PERIPHERAL_CATEGORY_UPDATE = gql`
       id
       name
       title
+      icon
     }
   }
 `;
@@ -173,6 +175,7 @@ export const PERIPHERAL_LIST_WUI = gql`
         id
         name
         title
+        icon
       }
       connectedTo {
         id
