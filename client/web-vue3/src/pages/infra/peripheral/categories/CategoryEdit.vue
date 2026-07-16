@@ -36,11 +36,11 @@
             </template>
           </q-input>
           
-          <q-input 
-            v-model="category.title" 
-            label="Title" 
-            clearable 
-            clear-icon="close" 
+          <q-input
+            v-model="category.title"
+            label="Title"
+            clearable
+            clear-icon="close"
             color="orange"
             filled
             dense
@@ -50,6 +50,14 @@
               <q-icon name="mdi-format-title"/>
             </template>
           </q-input>
+
+          <IconPicker
+            v-model="category.icon"
+            label="Default dashboard icon"
+          />
+          <div class="text-caption text-grey-7 q-mt-none">
+            Used for markers of this category on dashboard screens (/wui). Individual widgets can override it in the screen editor.
+          </div>
         </q-card-section>
 
         <q-separator/>
@@ -86,6 +94,7 @@ import { useRoute } from 'vue-router';
 import { useEntityCRUD } from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
+import IconPicker from '@/components/IconPicker.vue';
 
 import { 
   PERIPHERAL_CATEGORY_GET_DETAILS,
@@ -96,7 +105,8 @@ export default defineComponent({
   name: 'PCategoryEdit',
   components: {
     EntityInfoPanel,
-    EntityFormActions
+    EntityFormActions,
+    IconPicker
   },
   setup() {
     const route = useRoute();

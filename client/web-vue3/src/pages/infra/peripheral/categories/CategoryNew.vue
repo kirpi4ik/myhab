@@ -28,12 +28,12 @@
             </template>
           </q-input>
 
-          <q-input 
-            v-model="category.title" 
-            label="Title" 
+          <q-input
+            v-model="category.title"
+            label="Title"
             hint="Display title"
-            clearable 
-            clear-icon="close" 
+            clearable
+            clear-icon="close"
             color="orange"
             filled
             dense
@@ -43,6 +43,11 @@
               <q-icon name="mdi-format-title"/>
             </template>
           </q-input>
+
+          <IconPicker
+            v-model="category.icon"
+            label="Default dashboard icon"
+          />
         </q-card-section>
 
         <q-separator/>
@@ -61,12 +66,14 @@
 import {defineComponent} from 'vue';
 import {useEntityCRUD} from '@/composables';
 import EntityFormActions from '@/components/EntityFormActions.vue';
+import IconPicker from '@/components/IconPicker.vue';
 import {PERIPHERAL_CATEGORY_CREATE} from '@/graphql/queries';
 
 export default defineComponent({
   name: 'PCategoryNew',
   components: {
-    EntityFormActions
+    EntityFormActions,
+    IconPicker
   },
   setup() {
     // Use CRUD composable for create
@@ -84,7 +91,8 @@ export default defineComponent({
       excludeFields: ['__typename'],
       initialData: {
         name: '',
-        title: ''
+        title: '',
+        icon: null
       }
     });
 

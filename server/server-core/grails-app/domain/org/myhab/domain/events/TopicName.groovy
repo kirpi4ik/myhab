@@ -26,6 +26,13 @@ enum TopicName {
      * reloading.
      */
     EVT_APP_CFG_VALUE_CHANGED,
+    /**
+     * Fired when a DashboardScreen (mobile /wui screen definition) is created,
+     * updated or deleted — layout saves, reorders, background uploads, legacy
+     * imports. Open viewers listen for this to refetch screens without a
+     * page reload.
+     */
+    EVT_DASHBOARD_SCREEN_CHANGED,
     EVT_STAT_VALUE_CHANGED,
     POWER;
 

@@ -177,6 +177,10 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
 }
 
 logger 'org.myhab', DEBUG, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
+logger 'org.myhab.jobs', ERROR, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
+logger 'org.myhab.listener.quartz', ERROR, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
+logger 'org.myhab.services', ERROR, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
+logger 'org.telegram', OFF, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
 logger 'graphql', WARN, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
 logger 'org.springframework', ERROR, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
 logger 'org.hibernate', ERROR, ['STDOUT', 'FULL_STACKTRACE'], additivity = false
