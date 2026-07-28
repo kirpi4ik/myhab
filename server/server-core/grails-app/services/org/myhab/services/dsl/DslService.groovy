@@ -1,8 +1,6 @@
 package org.myhab.services.dsl
 
 import grails.gorm.transactions.Transactional
-import org.codehaus.groovy.control.CompilerConfiguration
-import org.kohsuke.groovy.sandbox.SandboxTransformer
 import grails.util.Holders
 import groovy.util.logging.Slf4j
 import org.springframework.context.ApplicationContext
@@ -24,9 +22,9 @@ import org.springframework.context.ApplicationContext
  *       action-plugin mechanism keeps working unchanged.</li>
  * </ol>
  *
- * <p>The Groovy sandbox compiler customizer is installed; no
- * {@code GroovyInterceptor} is registered, so no method-call whitelist is
- * enforced (consistent with the prior behaviour).</p>
+ * <p>Scenario scripts are <strong>trusted input</strong>: they are authored by
+ * administrators through the UI. No sandbox is applied and no method-call
+ * whitelist is enforced.</p>
  *
  * @see org.myhab.services.dsl.ScenarioService
  * @see org.myhab.services.dsl.knowledge.KnowledgeService
@@ -78,10 +76,6 @@ class DslService {
     // switchOn/Off/Toggle attribute their state changes correctly.
     scenarioService.setExecutionActor(actor)
     try {
-      // Configure compiler with sandbox security
-      def cc = new CompilerConfiguration()
-      cc.addCompilationCustomizers(new SandboxTransformer())
-
       // Build the composite delegate: knowledges first, scenario actions last.
       // Order matters: ScenarioService must be last so its methodMissing fires
       // for unknown method names (resolves ${name}Service beans / DslCommand).
@@ -94,8 +88,7 @@ class DslService {
       binding.setVariable('knowledgeService', knowledgeService)
       binding.setVariable('composite', composite)
 
-      // Create sandboxed shell
-      def shell = new GroovyShell(this.class.classLoader, binding, cc)
+      def shell = new GroovyShell(this.class.classLoader, binding)
 
       // Evaluate scenario as a closure and set its delegate to the composite.
       // DELEGATE_FIRST means bare names (switchOn, isRaining, ...) resolve

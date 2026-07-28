@@ -248,7 +248,7 @@ graphql:
     path: /graphiql
     template-path: classpath:graphiql/index.html
     template-parameters:
-    page-title: GraphiQL
+      page-title: GraphiQL
 
 mqtt:
   topic:

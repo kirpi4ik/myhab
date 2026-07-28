@@ -69,8 +69,9 @@ dependencies {
     implementation "org.grails.plugins:hibernate5:$hibernateVersion"
     implementation "org.grails:gorm-graphql:$gormGQL"
     implementation "org.grails.plugins:gorm-graphql-plugin:$gormGQL"
-    implementation "com.graphql-java:graphql-java:17.6"
-    implementation "com.graphql-java:graphql-java-extended-scalars:19.1"
+    // Versions gorm-graphql 3.0.0 is built against — keep them in step with it.
+    implementation "com.graphql-java:graphql-java:20.7"
+    implementation "com.graphql-java:graphql-java-extended-scalars:20.2"
     // Using native Quartz scheduler (no Grails plugin)
     implementation 'org.quartz-scheduler:quartz:2.5.1'
     // C3P0 connection pooling for Quartz's own dataSource
@@ -79,7 +80,6 @@ dependencies {
     implementation 'com.hazelcast:hazelcast:5.3.2'
     implementation 'com.hazelcast:hazelcast-spring:5.1.1'
     implementation 'org.postgresql:postgresql:42.6.0'
-    implementation 'org.kohsuke:groovy-sandbox:1.19'
     implementation 'org.jsoup:jsoup:1.15.3'
     // QR code generation for printable labels (LabelService)
     implementation 'com.google.zxing:core:3.5.3'
@@ -90,10 +90,10 @@ dependencies {
 //    implementation 'com.vdurmont:emoji-java:5.1.1'
     //Web Push (VAPID) for browser/PWA system notifications — pulls BouncyCastle + jose4j transitively
     implementation 'nl.martijndwars:web-push:5.1.1'
-    //ONVIF
-    implementation 'be.teletask.onvif:onvif:1.0.2'
-    //opsgenie atlassian
-    implementation "com.opsgenie.integration:sdk:2+"
+    // ONVIF cameras arrive over MQTT via the onvif2mqtt bridge (see MQTTTopic.ONVIF),
+    // so no ONVIF client library is needed here.
+    //opsgenie atlassian — used by org.myhab.alert.AlertService
+    implementation "com.opsgenie.integration:sdk:2.13.7"
     //LogBack kibana integration(DO not upgrade , https://cve.report/CVE-2021-42550 removed groovy support)
     implementation 'ch.qos.logback:logback-core:1.2.3'
     implementation 'ch.qos.logback:logback-access:1.2.3'
@@ -152,6 +152,12 @@ bootJar {
     })
     archiveFileName = "${projectName}-${project.version}.jar"
 }
+
+// Required for Spock 2.x — without it the Test task runs the JUnit 4 engine and
+// silently discovers zero specs.
+test {
+    useJUnitPlatform()
+}
 //sourceSets {
 //    main {
 //        groovy {
@@ -172,7 +178,6 @@ codenarc {
     maxPriority3Violations = 2500
 }
 codenarcMain {
-    exclude '**/CustomScalars.groovy'
     ignoreFailures = true  // Don't fail build on violations
 }
 

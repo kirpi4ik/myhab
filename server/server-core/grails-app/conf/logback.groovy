@@ -14,7 +14,6 @@ import static groovy.json.JsonOutput.toJson
 //conversionRule 'clr', ColorConverterrter
 //conversionRule 'wex', WhitespaceThrowableProxyConverteronverter
 
-def jsonPattern = """{"log":{"ts_date":"%d{ISO8601}", "thread":"[%t]", "level" : "%level", "reqMethod":"%X{reqMethod}","reqUrl":"%X{reqUrl}","reqPayload":%X{reqPayload},"reqHeaders":%X{reqHeaders},"authUser":"%X{authUser}","remoteIp":"%X{remoteIp}", "requestId":"%X{requestId}","respStatus":"%X{respStatus}", "logger":"%logger{36}", "message": "%msg", "stacktrace":"%xThrowable" }}%n"""
 // See http://logback.qos.ch/manual/groovy.html for details on configuration
 appender('STDOUT', ConsoleAppender) {
     encoder(LoggingEventCompositeJsonEncoder) {

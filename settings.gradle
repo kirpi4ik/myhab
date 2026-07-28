@@ -5,7 +5,8 @@ pluginManagement {
         gradlePluginPortal()
     }
     plugins {
-        id 'org.grails.grails-web' version '6.1.0'
+        id 'org.grails.grails-web' version "$grailsGradlePluginVersion"
+        id 'org.grails.grails-gsp' version "$grailsGradlePluginVersion"
     }
 }
 

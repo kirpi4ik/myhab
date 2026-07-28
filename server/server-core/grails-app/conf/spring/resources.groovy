@@ -128,7 +128,8 @@ beans = {
         dateFormats = '#{grailsGraphQLConfiguration.getDateFormats()}'
         dateFormatLenient = '#{grailsGraphQLConfiguration.getDateFormatLenient()}'
         listArguments = '#{grailsGraphQLConfiguration.getListArguments()}'
-        gqlSchema = "classpath:schema.graphqls"
+        // SDL path is not injected: loadidl() reads GQLConstants.SCHEMA_FILE_NAME
+        // from the classpath directly.
     }
     mutation(Mutation)
     graphQLGenrator(GraphQLGenerator) {

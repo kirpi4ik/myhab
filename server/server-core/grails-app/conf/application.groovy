@@ -1,15 +1,10 @@
 grails.resources.pattern = '/**'
 
-grails.plugin.springsecurity.oauthProvider.clientLookup.className = 'org.myhab.domain.auth.Client'
-grails.plugin.springsecurity.oauthProvider.accessTokenLookup.className = 'org.myhab.domain.auth.AccessToken'
-grails.plugin.springsecurity.oauthProvider.refreshTokenLookup.className = 'org.myhab.domain.auth.RefreshToken'
-grails.plugin.springsecurity.oauthProvider.authorizationCodeLookup.className = 'org.myhab.domain.auth.AuthorizationCode'
-grails.plugin.springsecurity.oauthProvider.authorizationEndpointUrl = '/oauth/authorize'
-grails.plugin.springsecurity.oauthProvider.tokenEndpointUrl = '/oauth/token'
-grails.plugin.springsecurity.oauthProvider.errorEndpointUrl = '/oauth/error'
-grails.plugin.springsecurity.oauthProvider.userApprovalEndpointUrl = '/oauth/confirm_access'
-grails.plugin.springsecurity.oauthProvider.userApprovalParameter = 'user_oauth_approval'
-grails.plugin.springsecurity.oauthProvider.active = true
+// There is no OAuth2 provider plugin on the classpath. The `/oauth/**` and
+// `/securedOAuth2Resources/**` rules below, and the `-oauth2*Filter` subtractions,
+// are therefore inert — subtracting an unregistered filter is a no-op.
+// org.myhab.domain.auth.* survives only because UserService queries AccessToken /
+// RefreshToken for revocation.
 
 grails.plugin.springsecurity.userLookup.userDomainClassName = 'org.myhab.domain.User'
 grails.plugin.springsecurity.userLookup.authoritiesPropertyName = 'authorities'
