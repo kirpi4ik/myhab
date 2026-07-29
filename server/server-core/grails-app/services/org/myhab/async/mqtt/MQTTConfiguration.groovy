@@ -13,15 +13,12 @@ import org.springframework.integration.annotation.ServiceActivator
 import org.springframework.integration.channel.DirectChannel
 import org.springframework.integration.config.EnableIntegration
 import org.springframework.integration.dsl.IntegrationFlow
-import org.springframework.integration.dsl.IntegrationFlows
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler
 import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.MessageHandler
-
-import javax.transaction.Transactional
 
 @Slf4j
 @EnableIntegration
@@ -46,12 +43,11 @@ public class MQTTConfiguration {
     }
 
     @Bean
-    @Transactional
     IntegrationFlow mqttInbound(MqttPahoClientFactory mqttClientFactory
                                 , MQTTMessageHandler mQTTMessageHandler) {
         def topics = configProvider.get(String.class, "mqtt.topics").split(",")
 
-        return IntegrationFlows
+        return IntegrationFlow
                 .from(new MqttPahoMessageDrivenChannelAdapter(MqttAsyncClient.generateClientId(), mqttClientFactory, topics as String[]))
                 .handle(mQTTMessageHandler).get();
     }

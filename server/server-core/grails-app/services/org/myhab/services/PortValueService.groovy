@@ -46,7 +46,7 @@ class PortValueService implements EventPublisher {
         if (device != null && devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport")) {
             devicePort = deviceService.importPort(device, event.data.p3, event.data.p4)
         }
-        if (devicePort != null) {
+        if (devicePort?.id != null) {
             def newVal = ValueParser.parser(devicePort).apply(event.data.p5)
             
             if (devicePort.value != newVal) {
@@ -104,6 +104,10 @@ class PortValueService implements EventPublisher {
                     it
                 })
             }
+        } else if (devicePort != null) {
+            // Unsaved port (auto-import ran but the save failed): PortValue and
+            // audit rows keyed on a null port id would be unusable orphans.
+            log.warn("Port ${event.data.p4} of device ${event.data.p2} is not persisted, skipping value update")
         }
     }
 

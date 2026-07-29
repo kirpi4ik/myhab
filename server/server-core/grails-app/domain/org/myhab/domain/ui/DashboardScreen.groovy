@@ -164,7 +164,9 @@ class DashboardScreen extends BaseEntity {
                     throw new RuntimeException("Dashboard screen not found: ${env.getArgument('id')}")
                 }
                 String json = env.getArgument('layoutJson') as String
-                String error = validateLayoutJson(json)
+                // Qualified: inside a DSL closure the owner chain no longer reaches
+                // the enclosing class, so an unqualified call lands on the closure.
+                String error = DashboardScreen.validateLayoutJson(json)
                 if (error) {
                     throw new RuntimeException("Invalid layout: ${error}")
                 }

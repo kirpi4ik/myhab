@@ -11,7 +11,7 @@ import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import org.springframework.messaging.Message
 
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 

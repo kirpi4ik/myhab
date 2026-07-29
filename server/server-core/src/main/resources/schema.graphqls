@@ -1,7 +1,7 @@
 type Query{
     navigation : Navigation
     userRolesForUser(userId: String!): [UserRole]
-    cache(cacheName: String!, cacheKey: String!): CacheResult
+    cache(cacheName: String!, cacheKey: ID!): CacheResult
     cacheAll(cacheName: String): [CacheResult]
     config(key: String!): String
     appConfigList: [AppConfigEntry]
@@ -172,7 +172,7 @@ type BradCrumbLink {
 }
 type Mutation {
     pushEvent(input:EventDatInput) : EventDataResponse
-    cacheDelete(cacheName:String!, cacheKey:String!) : MutationResponse
+    cacheDelete(cacheName:String!, cacheKey:ID!) : MutationResponse
     userRolesSave(input: SaveUserRoles): MutationResponse
     jobSchedule(jobId: ID!): MutationResponse
     jobUnschedule(jobId: ID!): MutationResponse
@@ -270,7 +270,8 @@ type EventDataResponse {
 input EventDatInput {
     p0: String
     p1: String
-    p2: String
+    # Entity id: ID so numeric ids from the client still coerce to String.
+    p2: ID
     p3: String
     p4: String
     p5: String

@@ -1,6 +1,5 @@
 ---
 grails:
-  profile: vue
   codegen:
     defaultPackage: org.myhab
   gorm:
@@ -11,7 +10,10 @@ grails:
 
 server:
   port: 8181
-  max-http-header-size: 40KB
+  max-http-request-header-size: 40KB
+
+logging:
+  config: classpath:logback-spring.xml
 
 info:
   app:
@@ -33,14 +35,16 @@ spring:
         - "**/*.gsp"
         - "*.gson"
         - "**/*.gson"
-        - "logback.groovy"
+        - "logback-spring.xml"
         - "*.properties"
-  resources:
-    cache:
-      period: 3s
+  web:
+    resources:
+      cache:
+        period: 3s
 management:
   endpoints:
-    enabled-by-default: true
+    access:
+      default: unrestricted
     web:
       base-path: "/actuator"
       path-mapping.health: healthcheck
@@ -49,15 +53,13 @@ management:
 
   endpoint:
     info:
-      enabled: true
+      access: unrestricted
     prometheus:
-      enabled: true
+      access: unrestricted
     health:
-      show-details: when_authorized
+      show-details: when-authorized
     metrics:
-      enabled: true
-    httptrace:
-      enabled: true
+      access: unrestricted
 
 quartz:
   jobs:

@@ -83,7 +83,7 @@ grails.plugin.springsecurity.filterChain.chainMap = [
 // Common DataSource configuration
 dataSource {
     driverClassName = "org.postgresql.Driver"
-    dialect = "org.hibernate.dialect.PostgreSQL95Dialect"
+    dialect = "org.hibernate.dialect.PostgreSQLDialect"
     properties {
         jmxEnabled = true
         initialSize = 5

@@ -3,6 +3,7 @@ package org.myhab.services.dashboard
 import grails.gorm.transactions.Transactional
 import groovy.json.JsonOutput
 import groovy.util.logging.Slf4j
+import groovy.xml.XmlSlurper
 import org.myhab.domain.ui.DashboardScreen
 import org.myhab.domain.ui.DashboardScreenBackground
 

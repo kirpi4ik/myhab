@@ -10,14 +10,19 @@ import org.myhab.domain.job.EventData
 import org.myhab.services.TelegramService
 import org.myhab.services.UserService
 import org.springframework.stereotype.Component
-import org.telegram.telegrambots.bots.TelegramLongPollingBot
+import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient
+import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer
+import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
+import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
 import org.telegram.telegrambots.meta.api.methods.ParseMode
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
+import org.telegram.telegrambots.meta.generics.TelegramClient
 
 /**
  * Telegram Bot Handler with extensible command structure
@@ -36,10 +41,12 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException
  */
 @Slf4j
 @Component
-class TelegramBotHandler extends TelegramLongPollingBot implements EventPublisher {
+class TelegramBotHandler implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer, EventPublisher {
     ConfigProvider configProvider
     UserService userService
     TelegramService telegramService
+
+    private TelegramClient telegramClient
 
     // User session context (command history per user)
     private static final Map<String, List<Command>> userContext = [:].asSynchronized()
@@ -124,13 +131,21 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
     }
 
     @Override
-    String getBotUsername() {
-        return configProvider.get(String.class, "telegram.name")
+    String getBotToken() {
+        return configProvider.get(String.class, "telegram.token")
     }
 
     @Override
-    String getBotToken() {
-        return configProvider.get(String.class, "telegram.token")
+    LongPollingUpdateConsumer getUpdatesConsumer() {
+        return this
+    }
+
+    /** Built lazily: the token is only available once configProvider has synced. */
+    private TelegramClient getClient() {
+        if (telegramClient == null) {
+            telegramClient = new OkHttpTelegramClient(getBotToken())
+        }
+        return telegramClient
     }
 
     /**
@@ -309,7 +324,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
     }
 
     @Override
-    void onUpdateReceived(Update update) {
+    void consume(Update update) {
         initializeCommands()
 
         if (update.hasMessage() && update.getMessage().hasText()) {
@@ -330,7 +345,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                 message.enableHtml(true)
                 message.setParseMode(ParseMode.HTML)
                 message.setChatId(String.valueOf(chatId))
-                execute(message)
+                client.execute(message)
             }
         } catch (TelegramApiException e) {
             log.error("Telegram API exception in message handling", e)
@@ -349,7 +364,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
                 message.enableHtml(true)
                 message.setParseMode(ParseMode.HTML)
                 message.setChatId(String.valueOf(chatId))
-                execute(message)
+                client.execute(message)
             }
         } catch (TelegramApiException e) {
             log.error("Telegram API exception in callback query handling", e)
@@ -586,7 +601,7 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
         try {
             SendMessage errorMessage = createMessage("⛔ An error occurred. Please try again.")
             errorMessage.setChatId(String.valueOf(chatId))
-            execute(errorMessage)
+            client.execute(errorMessage)
             
             sendInfoToSupport("Error from ${user.userName}: ${e.getMessage()}")
         } catch (TelegramApiException ex) {
@@ -604,12 +619,9 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
             .findAll { it.showInMenu }
             .sort { it.label }
             .each { cmd ->
-                def button = new InlineKeyboardButton()
-                button.setText(cmd.displayName)
-                button.setCallbackData(cmd.command)
-                buttons << [button]
+                buttons << new InlineKeyboardRow(button(cmd.displayName, cmd.command))
             }
-        
+
         keyboard.setKeyboard(buttons)
         return keyboard
     }
@@ -617,69 +629,47 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
     private InlineKeyboardMarkup createSubMenu(Command parentCommand) {
         def keyboard = new InlineKeyboardMarkup()
         def buttons = []
-        
+
         parentCommand.subCommands.each { cmd ->
-            def button = new InlineKeyboardButton()
-            button.setText(cmd.displayName)
-            button.setCallbackData(cmd.command)
-            buttons << [button]
+            buttons << new InlineKeyboardRow(button(cmd.displayName, cmd.command))
         }
-        
-        // Add back button if has parent
+
+        // Add back button if has parent, otherwise a main-menu button
         if (parentCommand.parent) {
-            def backButton = new InlineKeyboardButton()
-            backButton.setText("⬅️ Back")
-            backButton.setCallbackData(parentCommand.parent.command)
-            buttons << [backButton]
+            buttons << new InlineKeyboardRow(button("⬅️ Back", parentCommand.parent.command))
         } else {
-            // Add main menu button
-            def homeButton = new InlineKeyboardButton()
-            homeButton.setText("🏠 Main Menu")
-            homeButton.setCallbackData("/start")
-            buttons << [homeButton]
+            buttons << new InlineKeyboardRow(button("🏠 Main Menu", "/start"))
         }
-        
+
         keyboard.setKeyboard(buttons)
         return keyboard
     }
 
     private InlineKeyboardMarkup createConfirmationKeyboard() {
         def keyboard = new InlineKeyboardMarkup()
-        
-        def yesButton = new InlineKeyboardButton()
-        yesButton.setText("✅ Yes")
-        yesButton.setCallbackData("/yes")
-        
-        def noButton = new InlineKeyboardButton()
-        noButton.setText("⛔ No")
-        noButton.setCallbackData("/no")
-        
-        keyboard.setKeyboard([[yesButton, noButton]])
+        keyboard.setKeyboard([new InlineKeyboardRow(button("✅ Yes", "/yes"), button("⛔ No", "/no"))])
         return keyboard
     }
 
     private InlineKeyboardMarkup createToggleKeyboard(String deviceId) {
         def keyboard = new InlineKeyboardMarkup()
-        
-        def onButton = new InlineKeyboardButton()
-        onButton.setText("☀️ Turn On")
-        onButton.setCallbackData("/${deviceId}_on")
-        
-        def offButton = new InlineKeyboardButton()
-        offButton.setText("🌙 Turn Off")
-        offButton.setCallbackData("/${deviceId}_off")
-        
-        keyboard.setKeyboard([[onButton, offButton]])
+        keyboard.setKeyboard([new InlineKeyboardRow(
+                button("☀️ Turn On", "/${deviceId}_on"),
+                button("🌙 Turn Off", "/${deviceId}_off"))])
         return keyboard
+    }
+
+    private static InlineKeyboardButton button(String text, String callbackData) {
+        def b = new InlineKeyboardButton(text)
+        b.setCallbackData(callbackData)
+        return b
     }
 
     // ==================== Helper Methods ====================
 
+    /** chatId is a placeholder; every caller sets the real one before sending. */
     private SendMessage createMessage(String text = "") {
-        def message = new SendMessage()
-        if (text) {
-            message.setText(text)
-        }
+        def message = new SendMessage("", text ?: "")
         message.enableHtml(true)
         message.setParseMode(ParseMode.HTML)
         return message
@@ -687,21 +677,19 @@ class TelegramBotHandler extends TelegramLongPollingBot implements EventPublishe
 
     private void sendNotification(MessageLevel level, String msg) {
         try {
-            SendMessage message = new SendMessage()
+            SendMessage message = new SendMessage(
+                    configProvider.get(String.class, "telegram.chanelId"), "${level.icon} ${msg}".toString())
             message.enableHtml(true)
-            message.setText("${level.icon} ${msg}")
-            message.setChatId(configProvider.get(String.class, "telegram.chanelId"))
-            execute(message)
+            client.execute(message)
         } catch (TelegramApiException e) {
             log.error("Failed to send notification", e)
         }
     }
 
     private void sendInfoToSupport(String msg) throws TelegramApiException {
-        SendMessage message = new SendMessage()
-        message.setText(msg)
-        message.setChatId(configProvider.get(String.class, "telegram.bot1x1ChannelId"))
-        execute(message)
+        SendMessage message = new SendMessage(
+                configProvider.get(String.class, "telegram.bot1x1ChannelId"), msg)
+        client.execute(message)
     }
 
     private Integer getPeripheralId(String deviceId) {
