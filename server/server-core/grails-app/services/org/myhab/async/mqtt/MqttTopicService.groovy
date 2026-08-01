@@ -72,6 +72,10 @@ class MqttTopicService {
             }
         }
         
+        // Generic in-app notification channel — no device model, no port, no write side,
+        // so it is not a DeviceTopic (those get expanded over all TopicTypes).
+        compilePattern('NOTIFY', "${MQTTTopic.MYHAB_PREFIX}/([\\w.-]+)/notify")
+
         log.info("Initialized ${TOPIC_PATTERNS.size()} topic patterns")
     }
     
@@ -121,7 +125,17 @@ class MqttTopicService {
         
         try {
             def matcher
-            
+
+            // ========== NOTIFICATION CHANNEL ==========
+            if (topicName ==~ TOPIC_PATTERNS.NOTIFY) {
+                matcher = topicName =~ TOPIC_PATTERNS.NOTIFY
+                return new MQTTMessage(
+                    deviceCode: matcher[0][1],      // <source> -> EventData.p2
+                    portStrValue: message.payload,  // raw JSON -> EventData.p5
+                    eventType: TopicName.EVT_USER_NOTIFICATION.id()
+                )
+            }
+
             // ========== STATUS PATTERNS ==========
             if (topicName ==~ TOPIC_PATTERNS.ESP_STATUS) {
                 matcher = topicName =~ TOPIC_PATTERNS.ESP_STATUS
