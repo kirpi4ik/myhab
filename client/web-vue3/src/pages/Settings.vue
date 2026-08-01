@@ -117,6 +117,55 @@
 			</q-card-section>
 		</q-card>
 
+		<q-card flat bordered class="q-mb-md">
+			<q-card-section>
+				<div class="text-h6">Muted messages</div>
+				<div class="text-caption text-grey-7 q-mb-md">
+					Messages matching these rules skip your inbox and push notifications — they are filed
+					directly as read or archived. Create one with "Mute similar" on any message in the
+					inbox. Deleting a rule affects future messages only.
+				</div>
+
+				<q-banner v-if="!isLoggedIn" class="bg-orange-1 text-orange-9 q-mb-md" dense>
+					<template v-slot:avatar>
+						<q-icon name="mdi-alert" />
+					</template>
+					You must be logged in to manage muted messages.
+				</q-banner>
+
+				<div v-else-if="rulesLoading" class="q-py-sm">
+					<q-spinner-dots size="24px" color="primary" />
+				</div>
+
+				<div v-else-if="rules.length === 0" class="text-caption text-grey-6 q-py-sm">
+					Nothing is muted. Open a message in the inbox and choose "Mute similar".
+				</div>
+
+				<q-list v-else separator>
+					<q-item v-for="rule in rules" :key="rule.id">
+						<q-item-section avatar>
+							<q-icon name="mdi-bell-off-outline" color="deep-orange" />
+						</q-item-section>
+						<q-item-section>
+							<q-item-label>{{ ruleLabel(rule) }}</q-item-label>
+							<q-item-label caption>Filed as {{ rule.targetState }}</q-item-label>
+						</q-item-section>
+						<q-item-section side>
+							<q-btn
+								flat
+								round
+								dense
+								icon="mdi-delete"
+								color="grey-7"
+								:loading="deletingRuleId === rule.id"
+								@click="deleteRule(rule)"
+							/>
+						</q-item-section>
+					</q-item>
+				</q-list>
+			</q-card-section>
+		</q-card>
+
 		<q-card flat bordered>
 			<q-card-section>
 				<div class="text-h6">Dashboard widgets</div>
@@ -183,7 +232,12 @@ import { useApolloClient } from '@vue/apollo-composable';
 
 import { authzService } from '@/_services';
 import { applyUserLocale, localeOptions } from '@/_services/locale.service';
-import { ME_UPDATE_LANGUAGE, ME_UPDATE_TIMEZONE } from '@/graphql/queries';
+import {
+	ME_UPDATE_LANGUAGE,
+	ME_UPDATE_TIMEZONE,
+	MY_NOTIFICATION_RULES,
+	NOTIFICATION_RULE_DELETE,
+} from '@/graphql/queries';
 import { useUserPrefsStore } from 'src/store/user-prefs.store';
 import { useDashboardWidgets } from 'src/composables/useDashboardWidgets';
 import { usePushNotifications } from 'src/composables';
@@ -210,6 +264,58 @@ export default defineComponent({
 			enable: enablePush,
 			disable: disablePush,
 		} = usePushNotifications();
+
+		// Muted messages: per-user notification rules, created from the inbox's
+		// "Mute similar" action. This card only lists and removes them.
+		const rules = ref([]);
+		const rulesLoading = ref(false);
+		const deletingRuleId = ref(null);
+
+		const ruleLabel = (rule) => {
+			switch (rule.matchType) {
+				case 'SENDER': return `All messages from "${rule.pattern}"`;
+				case 'KEY_PREFIX': return `Messages of kind "${rule.pattern}"`;
+				case 'SUBJECT_REGEX': return `Subject matches /${rule.pattern}/`;
+				default: return `${rule.matchType}: ${rule.pattern}`;
+			}
+		};
+
+		const loadRules = async () => {
+			if (!isLoggedIn.value) return;
+			rulesLoading.value = true;
+			try {
+				const response = await client.query({ query: MY_NOTIFICATION_RULES, fetchPolicy: 'network-only' });
+				rules.value = response.data?.myNotificationRules ?? [];
+			} catch (err) {
+				$q.notify({ color: 'negative', icon: 'mdi-alert', message: 'Failed to load muted messages' });
+			} finally {
+				rulesLoading.value = false;
+			}
+		};
+
+		const deleteRule = async (rule) => {
+			deletingRuleId.value = rule.id;
+			try {
+				const response = await client.mutate({
+					mutation: NOTIFICATION_RULE_DELETE,
+					variables: { id: rule.id },
+					fetchPolicy: 'no-cache',
+				});
+				if (response.data?.notificationRuleDelete?.success) {
+					rules.value = rules.value.filter((r) => r.id !== rule.id);
+					$q.notify({ color: 'positive', icon: 'mdi-check-circle', message: 'Rule removed', timeout: 2000 });
+				} else {
+					$q.notify({
+						color: 'negative', icon: 'mdi-alert',
+						message: response.data?.notificationRuleDelete?.error || 'Failed to remove rule',
+					});
+				}
+			} catch (err) {
+				$q.notify({ color: 'negative', icon: 'mdi-alert', message: 'Failed to remove rule' });
+			} finally {
+				deletingRuleId.value = null;
+			}
+		};
 
 		const pushHint = computed(() => {
 			if (pushPermission.value === 'denied') return 'Blocked in your browser settings — allow notifications for this site to enable.';
@@ -238,6 +344,7 @@ export default defineComponent({
 		};
 
 		onMounted(refreshPush);
+		onMounted(loadRules);
 
 		// Language preference: null = automatic (follow browser).
 		const languagePref = ref(authzService.currentUserValue?.language ?? null);
@@ -362,6 +469,11 @@ export default defineComponent({
 			pushBusy,
 			pushHint,
 			onTogglePush,
+			rules,
+			rulesLoading,
+			deletingRuleId,
+			ruleLabel,
+			deleteRule,
 		};
 	},
 });

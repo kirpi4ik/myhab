@@ -17,6 +17,7 @@ import org.myhab.domain.device.DeviceBackup
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.MessageLevel
 import org.myhab.domain.MessageState
+import org.myhab.domain.NotificationRule
 import org.myhab.domain.UserMessage
 import org.myhab.domain.SharedWidget
 import org.myhab.domain.SharedWidgetState
@@ -341,7 +342,28 @@ class Query {
                         level     : msg.level?.name(),
                         state     : msg.state?.name(),
                         tsCreated : msg.tsCreated ? ISO_DATE_FORMAT.format(msg.tsCreated) : null,
-                        tsUpdated : msg.tsUpdated ? ISO_DATE_FORMAT.format(msg.tsUpdated) : null
+                        tsUpdated : msg.tsUpdated ? ISO_DATE_FORMAT.format(msg.tsUpdated) : null,
+                        dedupKey  : msg.dedupKey
+                    ]
+                }
+            }
+        }
+    }
+
+    def myNotificationRules() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                def currentUser = resolveCurrentUser()
+                if (!currentUser) return []
+
+                return NotificationRule.findAllByUser(currentUser, [sort: 'tsCreated', order: 'desc']).collect { rule ->
+                    [
+                        id         : rule.id,
+                        matchType  : rule.matchType?.name(),
+                        pattern    : rule.pattern,
+                        targetState: rule.targetState?.name(),
+                        tsCreated  : rule.tsCreated ? ISO_DATE_FORMAT.format(rule.tsCreated) : null
                     ]
                 }
             }

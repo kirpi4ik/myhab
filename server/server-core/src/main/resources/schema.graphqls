@@ -24,6 +24,8 @@ type Query{
     myUnreadCount: Int!
     """VAPID public key (base64url) for browser Web Push subscription. Empty when push is not configured."""
     pushPublicKey: String
+    """Mute rules owned by the current authenticated user, newest first."""
+    myNotificationRules: [NotificationRuleResult!]!
     """List all shared widgets, optionally filtered by state."""
     sharedWidgets(state: String): [SharedWidgetResult!]!
     """UDP-broadcast scan for MegaD controllers on the local network."""
@@ -87,6 +89,25 @@ type UserMessageResult {
     state: String!
     tsCreated: String
     tsUpdated: String
+    """Producer-supplied stability key; the basis for KEY_PREFIX mute rules. Null when the producer supplied none."""
+    dedupKey: String
+}
+
+type NotificationRuleResult {
+    id: ID!
+    """SENDER, KEY_PREFIX or SUBJECT_REGEX."""
+    matchType: String!
+    pattern: String!
+    """READ or ARCHIVE — the state matching messages are filed as."""
+    targetState: String!
+    tsCreated: String
+}
+
+type NotificationRuleCreateResult {
+    success: Boolean
+    error: String
+    """How many existing NEW messages the new rule retroactively filed."""
+    appliedCount: Int
 }
 
 type AppConfigEntry {
@@ -198,6 +219,10 @@ type Mutation {
     pushSubscribe(endpoint: String!, p256dh: String!, auth: String!, userAgent: String): MutationResponse
     """Remove a browser Web Push subscription by its endpoint."""
     pushUnsubscribe(endpoint: String!): MutationResponse
+    """Mute future messages matching the criteria, and retroactively file matching NEW ones."""
+    notificationRuleCreate(matchType: String!, pattern: String!, targetState: String!): NotificationRuleCreateResult
+    """Delete one of the current user's mute rules."""
+    notificationRuleDelete(id: ID!): MutationResponse
     """Create a new shared widget link."""
     sharedWidgetCreate(input: SharedWidgetInput!): SharedWidgetCreateResult
     """Update the state of a shared widget (VALID, DISABLED, EXPIRED, ARCHIVED)."""

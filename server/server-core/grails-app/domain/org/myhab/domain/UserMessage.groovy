@@ -11,6 +11,11 @@ class UserMessage extends BaseEntity {
     MessageLevel level = MessageLevel.INFO
     MessageState state = MessageState.NEW
     User user
+    /**
+     * Producer-supplied stability key (e.g. `navimow.5.state.mowing`, `mqtt.gate_controller.tag.99`).
+     * Match key for NotificationRule KEY_PREFIX rules; null when the producer supplied none.
+     */
+    String dedupKey
 
     static belongsTo = [user: User]
 
@@ -23,6 +28,7 @@ class UserMessage extends BaseEntity {
         level nullable: false
         state nullable: false
         user nullable: false
+        dedupKey nullable: true, maxSize: 255
     }
 
     static mapping = {

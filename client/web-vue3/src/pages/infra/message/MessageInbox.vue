@@ -218,6 +218,15 @@
                 label="Archive"
                 @click="updateState(selectedMessage, 'ARCHIVE')"
               />
+              <q-space/>
+              <q-btn
+                flat
+                no-caps
+                color="deep-orange"
+                icon="mdi-bell-off"
+                label="Mute similar"
+                @click="openMuteDialog()"
+              />
             </div>
           </div>
           <div v-else class="flex flex-center" style="height: 100%">
@@ -228,6 +237,61 @@
           </div>
         </div>
       </div>
+
+      <!-- Mute rule builder. Options are derived from the selected message so the
+           user picks a scope rather than authoring a match expression. -->
+      <q-dialog v-model="muteDialog.show">
+        <q-card style="min-width: 380px; max-width: 560px">
+          <q-card-section>
+            <div class="text-h6">Mute similar messages</div>
+            <div class="text-caption text-grey-7">
+              Future matching messages skip the inbox and push notifications, and are filed
+              directly. Existing unread ones are filed too.
+            </div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <q-option-group
+              v-model="muteDialog.matchType"
+              :options="muteOptions"
+              color="deep-orange"
+              type="radio"
+            />
+            <q-input
+              v-if="muteDialog.matchType === 'SUBJECT_REGEX'"
+              v-model="muteDialog.regex"
+              class="q-mt-sm"
+              dense
+              outlined
+              label="Subject pattern (regular expression)"
+            />
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <div class="text-caption text-grey-7 q-mb-xs">File matching messages as</div>
+            <q-btn-toggle
+              v-model="muteDialog.targetState"
+              no-caps
+              dense
+              unelevated
+              toggle-color="deep-orange"
+              :options="[{ label: 'Read', value: 'READ' }, { label: 'Archive', value: 'ARCHIVE' }]"
+            />
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat no-caps label="Cancel" v-close-popup/>
+            <q-btn
+              no-caps
+              color="deep-orange"
+              label="Mute"
+              :loading="muteDialog.busy"
+              :disable="!muteDialogPattern"
+              @click="createMuteRule()"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
 
       <q-inner-loading :showing="loading">
         <q-spinner-dots size="40px" color="primary"/>
@@ -245,7 +309,8 @@ import { formatDistanceToNow, format, parseISO } from 'date-fns';
 import {
   MY_MESSAGES,
   MESSAGE_UPDATE_STATE,
-  MESSAGE_BATCH_UPDATE_STATE
+  MESSAGE_BATCH_UPDATE_STATE,
+  NOTIFICATION_RULE_CREATE
 } from '@/graphql/queries';
 
 export default defineComponent({
@@ -504,6 +569,85 @@ export default defineComponent({
       }
     };
 
+    // --- Mute rules -------------------------------------------------------
+    const muteDialog = ref({ show: false, matchType: 'SENDER', targetState: 'ARCHIVE', regex: '', busy: false });
+
+    /**
+     * Broaden a dedupKey by one level so the rule covers a family rather than a
+     * single event: `navimow.5.state.mowing` -> `navimow.5.state`. Single-segment
+     * keys are used as-is.
+     */
+    const keyPrefixOf = (dedupKey) => {
+      if (!dedupKey) return null;
+      const i = dedupKey.lastIndexOf('.');
+      return i > 0 ? dedupKey.slice(0, i) : dedupKey;
+    };
+
+    const muteOptions = computed(() => {
+      const msg = selectedMessage.value;
+      if (!msg) return [];
+      const opts = [{ label: `All messages from "${msg.fromSender}"`, value: 'SENDER' }];
+      const prefix = keyPrefixOf(msg.dedupKey);
+      if (prefix) {
+        opts.push({ label: `Messages like this one (${prefix})`, value: 'KEY_PREFIX' });
+      }
+      opts.push({ label: 'Subjects matching a pattern', value: 'SUBJECT_REGEX' });
+      return opts;
+    });
+
+    // The pattern actually sent, derived from the chosen scope.
+    const muteDialogPattern = computed(() => {
+      const msg = selectedMessage.value;
+      if (!msg) return null;
+      if (muteDialog.value.matchType === 'SENDER') return msg.fromSender;
+      if (muteDialog.value.matchType === 'KEY_PREFIX') return keyPrefixOf(msg.dedupKey);
+      return muteDialog.value.regex?.trim() || null;
+    });
+
+    const openMuteDialog = () => {
+      const msg = selectedMessage.value;
+      if (!msg) return;
+      muteDialog.value = {
+        show: true,
+        // Prefer the narrowest scope the message supports.
+        matchType: msg.dedupKey ? 'KEY_PREFIX' : 'SENDER',
+        targetState: 'ARCHIVE',
+        regex: msg.subject || '',
+        busy: false
+      };
+    };
+
+    const createMuteRule = async () => {
+      const pattern = muteDialogPattern.value;
+      if (!pattern) return;
+      muteDialog.value.busy = true;
+      try {
+        const response = await client.mutate({
+          mutation: NOTIFICATION_RULE_CREATE,
+          variables: { matchType: muteDialog.value.matchType, pattern, targetState: muteDialog.value.targetState },
+          fetchPolicy: 'no-cache'
+        });
+        const result = response.data?.notificationRuleCreate;
+        if (!result?.success) {
+          $q.notify({ color: 'negative', message: result?.error || 'Failed to create mute rule', position: 'top' });
+          return;
+        }
+        muteDialog.value.show = false;
+        $q.notify({
+          color: 'positive',
+          icon: 'mdi-bell-off',
+          message: `Muted — ${result.appliedCount || 0} existing message(s) filed as ${muteDialog.value.targetState}`,
+          position: 'top'
+        });
+        selectedMessage.value = null;
+        await fetchMessages();
+      } catch (e) {
+        $q.notify({ color: 'negative', message: e.message || 'Failed to create mute rule', position: 'top' });
+      } finally {
+        muteDialog.value.busy = false;
+      }
+    };
+
     watch(() => route.query.id, () => applyQuerySelection());
 
     // Filters change the set of currently-visible messages. Off-screen
@@ -547,6 +691,12 @@ export default defineComponent({
       allVisibleSelected,
       toggleSelectAll,
       bulkUpdate,
+      // Mute-rule bindings
+      muteDialog,
+      muteOptions,
+      muteDialogPattern,
+      openMuteDialog,
+      createMuteRule,
     };
   }
 });
