@@ -68,4 +68,45 @@ class DeviceServiceSpec extends Specification implements ServiceUnitTest<DeviceS
         then:
             found?.id == device.id
     }
+
+    void "a transition to OFFLINE alerts the admins once with a per-device dedup key"() {
+        given:
+            service.notificationService = Mock(NotificationService)
+            new Device(code: 'mp50', model: DeviceModel.MEGAD_2561_RTC,
+                    status: org.myhab.domain.device.DeviceStatus.ONLINE).save(flush: true, failOnError: true)
+
+        when:
+            service.deviceStatus([data: [p2: 'mp50', p5: 'OFFLINE', p6: 'http sync port values']])
+
+        then:
+            1 * service.notificationService.notifyAdmins(org.myhab.domain.MessageLevel.WARN,
+                    { it.contains('mp50') }, _, 'device-sync', 'device.mp50.offline', _)
+    }
+
+    void "a recovery to ONLINE sends an info notification"() {
+        given:
+            service.notificationService = Mock(NotificationService)
+            new Device(code: 'mp51', model: DeviceModel.MEGAD_2561_RTC,
+                    status: org.myhab.domain.device.DeviceStatus.OFFLINE).save(flush: true, failOnError: true)
+
+        when:
+            service.deviceStatus([data: [p2: 'mp51', p5: 'ONLINE', p6: 'http sync port values']])
+
+        then:
+            1 * service.notificationService.notifyAdmins(org.myhab.domain.MessageLevel.INFO,
+                    { it.contains('mp51') }, _, 'device-sync', 'device.mp51.online', _)
+    }
+
+    void "an unchanged status sends no notification"() {
+        given:
+            service.notificationService = Mock(NotificationService)
+            new Device(code: 'mp52', model: DeviceModel.MEGAD_2561_RTC,
+                    status: org.myhab.domain.device.DeviceStatus.OFFLINE).save(flush: true, failOnError: true)
+
+        when:
+            service.deviceStatus([data: [p2: 'mp52', p5: 'OFFLINE', p6: 'http sync port values']])
+
+        then:
+            0 * service.notificationService.notifyAdmins(*_)
+    }
 }

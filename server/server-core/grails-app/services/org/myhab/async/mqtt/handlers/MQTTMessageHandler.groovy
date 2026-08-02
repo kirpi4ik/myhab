@@ -27,6 +27,13 @@ class MQTTMessageHandler implements MessageHandler, EventPublisher {
             def topicName = message.headers.get("mqtt_receivedTopic") as String
             MQTTMessage msg = mqttTopicService.message(topicName, message)
             wSocketsService.broadcastRawMqtt(topicName, message.payload as String, msg)
+            if (msg != null && msg.portStrValue == null
+                    && msg.eventType == org.myhab.domain.events.TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()) {
+                // A null port value would be GString-ified to the literal "null"
+                // downstream and persisted as the port state.
+                log.warn("Skipping MQTT port-value event without a value: topic=${topicName}")
+                return
+            }
             if (msg != null) {
                 publish(msg.eventType, new EventData().with {
                     p0 = msg.eventType

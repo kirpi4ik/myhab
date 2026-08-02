@@ -266,22 +266,34 @@ class MqttTopicService {
             if (topicName ==~ TOPIC_PATTERNS.MEGA_READ) {
                 matcher = topicName =~ TOPIC_PATTERNS.MEGA_READ
                 def payload = parseJsonPayload(message.payload as String)
+                def megaValue = payload.value ?: payload.v
+                if (megaValue == null) {
+                    // A frame without value/v would otherwise persist the literal
+                    // string "null" as the port value and break ON/OFF matching.
+                    log.warn("Dropping MegaD message on ${topicName}: no value/v in payload '${message.payload}'")
+                    return null
+                }
                 return new MQTTMessage(
                     deviceType: DeviceModel.MEGAD_2561_RTC,
                     deviceCode: matcher[0][1],
                     portCode: matcher[0][2],
-                    portStrValue: payload.value ?: payload.v,
+                    portStrValue: megaValue,
                     eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
                 )
             }
-            
+
             if (topicName ==~ TOPIC_PATTERNS.COMMON_READ) {
                 matcher = topicName =~ TOPIC_PATTERNS.COMMON_READ
                 def payload = parseJsonPayload(message.payload as String)
+                def commonValue = payload.value ?: payload.v
+                if (commonValue == null) {
+                    log.warn("Dropping message on ${topicName}: no value/v in payload '${message.payload}'")
+                    return null
+                }
                 return new MQTTMessage(
                     deviceCode: matcher[0][1],
                     portCode: matcher[0][2],
-                    portStrValue: payload.value ?: payload.v,
+                    portStrValue: commonValue,
                     eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
                 )
             }
@@ -599,7 +611,10 @@ class MqttTopicService {
                 log.warn("Cannot publish: topic generation failed for port ${port.internalRef}")
             }
         } catch (Exception e) {
+            // Rethrow so callers can react (retry, HTTP fallback, FAILED audit)
+            // instead of silently believing the command was delivered.
             log.error("Error publishing to port ${port.internalRef}", e)
+            throw e
         }
     }
     

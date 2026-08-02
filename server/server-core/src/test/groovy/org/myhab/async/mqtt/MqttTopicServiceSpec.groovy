@@ -66,4 +66,37 @@ class MqttTopicServiceSpec extends Specification implements ServiceUnitTest<Mqtt
         expect:
             service.message('myhab/gate_controller/switch/d0/cmd', msg('ON')) == null
     }
+
+    void "a MegaD port topic with a JSON value payload resolves to the port-value event"() {
+        when:
+            def result = service.message('mp50/12', msg('{"value":"ON"}'))
+
+        then:
+            result.eventType == 'evt_mqtt_port_value_changed'
+            result.deviceType == DeviceModel.MEGAD_2561_RTC
+            result.deviceCode == 'mp50'
+            result.portCode == '12'
+            result.portStrValue == 'ON'
+    }
+
+    void "a MegaD status topic resolves to the device-status event"() {
+        // Historically MEGA.STATUS was a template string compiled as a regex —
+        // unmatchable, so broker-side LWT/status publishes were silently lost.
+        when:
+            def result = service.message('mp50/status', msg('OFFLINE'))
+
+        then:
+            result.eventType == 'evt_device_status'
+            result.deviceType == DeviceModel.MEGAD_2561_RTC
+            result.deviceCode == 'mp50'
+            result.portStrValue == 'OFFLINE'
+    }
+
+    void "a MegaD payload without a value is dropped instead of yielding a null value"() {
+        expect: 'non-JSON, empty-JSON and valueless-JSON frames are all rejected'
+            service.message('mp50/12', msg(payload)) == null
+
+        where:
+            payload << ['ON', '1', '{}', '{"other":"x"}']
+    }
 }

@@ -6,9 +6,12 @@ import grails.testing.gorm.DataTest
 import grails.testing.services.ServiceUnitTest
 import org.myhab.async.mqtt.MqttTopicService
 import org.myhab.domain.EntityType
+import org.myhab.domain.device.Device
+import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortAction
 import org.myhab.domain.events.AuditSource
+import org.myhab.services.MegaDriverService
 import org.myhab.services.audit.AuditService
 import spock.lang.Specification
 
@@ -96,6 +99,46 @@ class PowerServiceSpec extends Specification implements ServiceUnitTest<PowerSer
             1 * service.mqttTopicService.publish(_, _) >> { throw new RuntimeException('broker down') }
             0 * pendingMap.put(*_)
             1 * service.auditService.logStateChange(EntityType.PORT, 1L, PortAction.ON,
+                    AuditSource.SCENARIO, 'CRON', { it.status == 'FAILED' && it.actionId != null })
+    }
+
+    private DevicePort megadPort(Long id) {
+        DevicePort p = port(id)
+        p.device = new Device(code: 'mp50', model: DeviceModel.MEGAD_2561_RTC)
+        return p
+    }
+
+    void "an MQTT failure on a MegaD port falls back to HTTP and audits the fallback transport"() {
+        given:
+            stubLookup([1L: megadPort(1L)])
+            service.megaDriverService = Mock(MegaDriverService)
+
+        when:
+            service.execute([portIds: [1L], action: PortAction.OFF,
+                             source: AuditSource.SCENARIO, actor: 'CRON'])
+
+        then:
+            1 * service.mqttTopicService.publish(_, _) >> { throw new RuntimeException('broker down') }
+            1 * service.megaDriverService.writePortValues({ it.code == 'mp50' }, ['p-1': PortAction.OFF])
+            1 * pendingMap.put('1:OFF', { it.actionId != null }, 30, TimeUnit.SECONDS)
+            1 * service.auditService.logStateChange(EntityType.PORT, 1L, PortAction.OFF,
+                    AuditSource.SCENARIO, 'CRON', { it.transport == 'http-fallback' && it.status == null })
+    }
+
+    void "when MQTT and the HTTP fallback both fail a FAILED audit row is written"() {
+        given:
+            stubLookup([1L: megadPort(1L)])
+            service.megaDriverService = Mock(MegaDriverService)
+
+        when:
+            service.execute([portIds: [1L], action: PortAction.OFF,
+                             source: AuditSource.SCENARIO, actor: 'CRON'])
+
+        then:
+            1 * service.mqttTopicService.publish(_, _) >> { throw new RuntimeException('broker down') }
+            1 * service.megaDriverService.writePortValues(_, _) >> { throw new RuntimeException('device down') }
+            0 * pendingMap.put(*_)
+            1 * service.auditService.logStateChange(EntityType.PORT, 1L, PortAction.OFF,
                     AuditSource.SCENARIO, 'CRON', { it.status == 'FAILED' && it.actionId != null })
     }
 }
