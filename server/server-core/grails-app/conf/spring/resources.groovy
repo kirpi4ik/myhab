@@ -1,8 +1,6 @@
 import grails.util.Environment
 import grails.util.Holders
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
-import org.myhab.async.mqtt.handlers.MQTTMessageHandler
-import org.myhab.async.socket.WebSocketConfig
 import org.myhab.auth.ClaimProvider
 import org.myhab.config.ConfigProvider
 import org.myhab.config.CustomPostgreSQLDelegate
@@ -128,7 +126,8 @@ beans = {
         dateFormats = '#{grailsGraphQLConfiguration.getDateFormats()}'
         dateFormatLenient = '#{grailsGraphQLConfiguration.getDateFormatLenient()}'
         listArguments = '#{grailsGraphQLConfiguration.getListArguments()}'
-        gqlSchema = "classpath:schema.graphqls"
+        // SDL path is not injected: loadidl() reads GQLConstants.SCHEMA_FILE_NAME
+        // from the classpath directly.
     }
     mutation(Mutation)
     graphQLGenrator(GraphQLGenerator) {
@@ -139,11 +138,6 @@ beans = {
 
     threadMetrics(JvmThreadMetrics)
 
-    webSocketConfig(WebSocketConfig) {
-        configProvider = ref("configProvider")
-    }
-    mQTTMessageHandler(MQTTMessageHandler)
-    mQTTMessageHandler(MQTTMessageHandler)
 
     // Stateless REST client for Segway's Navimow cloud. Registered explicitly
     // because the class name doesn't end in "Service", so Grails' service-folder

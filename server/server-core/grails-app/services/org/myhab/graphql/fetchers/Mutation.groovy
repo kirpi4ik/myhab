@@ -9,6 +9,8 @@ import groovy.util.logging.Slf4j
 import java.text.SimpleDateFormat
 import org.myhab.init.cache.CacheMap
 import org.myhab.domain.MessageState
+import org.myhab.domain.NotificationRule
+import org.myhab.domain.RuleMatchType
 import org.myhab.domain.UserMessage
 import org.myhab.domain.PushSubscription
 import org.myhab.domain.SharedWidget
@@ -63,6 +65,8 @@ class Mutation implements EventPublisher {
     org.myhab.services.VoiceCommandService voiceCommandService
     @Autowired
     MqttPublishGateway mqttPublishGateway
+    @Autowired
+    org.myhab.services.NotificationRuleService notificationRuleService
 
 
     /**
@@ -897,6 +901,81 @@ class Mutation implements EventPublisher {
                 } catch (Exception e) {
                     log.error("Failed to remove push subscription", e)
                     return [success: false, error: e.message ?: "Failed to remove push subscription"]
+                }
+            }
+        }
+    }
+
+    DataFetcher notificationRuleCreate() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    org.myhab.domain.User user = org.myhab.domain.User.findByUsername(currentUsername())
+                    if (!user) {
+                        return [success: false, error: "Not authenticated", appliedCount: 0]
+                    }
+                    String patternArg = environment.getArgument("pattern")?.toString()?.trim()
+                    if (!patternArg) {
+                        return [success: false, error: "Pattern is required", appliedCount: 0]
+                    }
+                    // find() rather than valueOf() — valueOf throws on an unknown name.
+                    RuleMatchType matchType = RuleMatchType.values()
+                            .find { it.name() == environment.getArgument("matchType")?.toString()?.toUpperCase() }
+                    if (!matchType) {
+                        return [success: false, error: "Unknown matchType", appliedCount: 0]
+                    }
+                    MessageState targetState = MessageState.values()
+                            .find { it.name() == environment.getArgument("targetState")?.toString()?.toUpperCase() }
+                    if (!(targetState in [MessageState.READ, MessageState.ARCHIVE])) {
+                        return [success: false, error: "targetState must be READ or ARCHIVE", appliedCount: 0]
+                    }
+
+                    int applied = 0
+                    NotificationRule.withTransaction {
+                        // Muting the same thing twice must not stack duplicate rules,
+                        // but must still re-run the retroactive sweep.
+                        def rule = NotificationRule.findByUserAndMatchTypeAndPattern(user, matchType, patternArg)
+                                ?: new NotificationRule(user: user, matchType: matchType, pattern: patternArg)
+                        rule.targetState = targetState
+                        rule.save(flush: true, failOnError: true)
+                        applied = notificationRuleService.applyToExisting(user, rule)
+                    }
+                    return [success: true, error: null, appliedCount: applied]
+                } catch (Exception e) {
+                    log.error("Failed to create notification rule", e)
+                    return [success: false, error: e.message ?: "Failed to create notification rule", appliedCount: 0]
+                }
+            }
+        }
+    }
+
+    DataFetcher notificationRuleDelete() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                try {
+                    org.myhab.domain.User user = org.myhab.domain.User.findByUsername(currentUsername())
+                    if (!user) {
+                        return [success: false, error: "Not authenticated"]
+                    }
+                    Long ruleId = environment.getArgument("id") as Long
+                    boolean deleted = false
+                    NotificationRule.withTransaction {
+                        def rule = NotificationRule.get(ruleId)
+                        // Scope by owner — a rule id must never be usable across accounts.
+                        if (rule && rule.user?.id == user.id) {
+                            rule.delete(flush: true)
+                            deleted = true
+                        }
+                    }
+                    if (!deleted) {
+                        return [success: false, error: "Rule not found"]
+                    }
+                    return [success: true, error: null]
+                } catch (Exception e) {
+                    log.error("Failed to delete notification rule", e)
+                    return [success: false, error: e.message ?: "Failed to delete notification rule"]
                 }
             }
         }

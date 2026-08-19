@@ -11,6 +11,7 @@ export const MY_MESSAGES = gql`
 			state
 			tsCreated
 			tsUpdated
+			dedupKey
 		}
 	}
 `;
@@ -57,6 +58,37 @@ export const PUSH_SUBSCRIBE = gql`
 export const PUSH_UNSUBSCRIBE = gql`
 	mutation pushUnsubscribe($endpoint: String!) {
 		pushUnsubscribe(endpoint: $endpoint) {
+			success
+			error
+		}
+	}
+`;
+
+export const MY_NOTIFICATION_RULES = gql`
+	query {
+		myNotificationRules {
+			id
+			matchType
+			pattern
+			targetState
+			tsCreated
+		}
+	}
+`;
+
+export const NOTIFICATION_RULE_CREATE = gql`
+	mutation notificationRuleCreate($matchType: String!, $pattern: String!, $targetState: String!) {
+		notificationRuleCreate(matchType: $matchType, pattern: $pattern, targetState: $targetState) {
+			success
+			error
+			appliedCount
+		}
+	}
+`;
+
+export const NOTIFICATION_RULE_DELETE = gql`
+	mutation notificationRuleDelete($id: ID!) {
+		notificationRuleDelete(id: $id) {
 			success
 			error
 		}

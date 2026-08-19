@@ -11,7 +11,7 @@ import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import org.springframework.messaging.Message
 
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
@@ -72,6 +72,10 @@ class MqttTopicService {
             }
         }
         
+        // Generic in-app notification channel — no device model, no port, no write side,
+        // so it is not a DeviceTopic (those get expanded over all TopicTypes).
+        compilePattern('NOTIFY', "${MQTTTopic.MYHAB_PREFIX}/([\\w.-]+)/notify")
+
         log.info("Initialized ${TOPIC_PATTERNS.size()} topic patterns")
     }
     
@@ -121,7 +125,17 @@ class MqttTopicService {
         
         try {
             def matcher
-            
+
+            // ========== NOTIFICATION CHANNEL ==========
+            if (topicName ==~ TOPIC_PATTERNS.NOTIFY) {
+                matcher = topicName =~ TOPIC_PATTERNS.NOTIFY
+                return new MQTTMessage(
+                    deviceCode: matcher[0][1],      // <source> -> EventData.p2
+                    portStrValue: message.payload,  // raw JSON -> EventData.p5
+                    eventType: TopicName.EVT_USER_NOTIFICATION.id()
+                )
+            }
+
             // ========== STATUS PATTERNS ==========
             if (topicName ==~ TOPIC_PATTERNS.ESP_STATUS) {
                 matcher = topicName =~ TOPIC_PATTERNS.ESP_STATUS
@@ -252,22 +266,34 @@ class MqttTopicService {
             if (topicName ==~ TOPIC_PATTERNS.MEGA_READ) {
                 matcher = topicName =~ TOPIC_PATTERNS.MEGA_READ
                 def payload = parseJsonPayload(message.payload as String)
+                def megaValue = payload.value ?: payload.v
+                if (megaValue == null) {
+                    // A frame without value/v would otherwise persist the literal
+                    // string "null" as the port value and break ON/OFF matching.
+                    log.warn("Dropping MegaD message on ${topicName}: no value/v in payload '${message.payload}'")
+                    return null
+                }
                 return new MQTTMessage(
                     deviceType: DeviceModel.MEGAD_2561_RTC,
                     deviceCode: matcher[0][1],
                     portCode: matcher[0][2],
-                    portStrValue: payload.value ?: payload.v,
+                    portStrValue: megaValue,
                     eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
                 )
             }
-            
+
             if (topicName ==~ TOPIC_PATTERNS.COMMON_READ) {
                 matcher = topicName =~ TOPIC_PATTERNS.COMMON_READ
                 def payload = parseJsonPayload(message.payload as String)
+                def commonValue = payload.value ?: payload.v
+                if (commonValue == null) {
+                    log.warn("Dropping message on ${topicName}: no value/v in payload '${message.payload}'")
+                    return null
+                }
                 return new MQTTMessage(
                     deviceCode: matcher[0][1],
                     portCode: matcher[0][2],
-                    portStrValue: payload.value ?: payload.v,
+                    portStrValue: commonValue,
                     eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
                 )
             }
@@ -585,7 +611,10 @@ class MqttTopicService {
                 log.warn("Cannot publish: topic generation failed for port ${port.internalRef}")
             }
         } catch (Exception e) {
+            // Rethrow so callers can react (retry, HTTP fallback, FAILED audit)
+            // instead of silently believing the command was delivered.
             log.error("Error publishing to port ${port.internalRef}", e)
+            throw e
         }
     }
     

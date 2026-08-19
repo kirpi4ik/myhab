@@ -46,7 +46,7 @@ class PortValueService implements EventPublisher {
         if (device != null && devicePort == null && configProvider.get(Boolean.class, "admin.ports.autoimport")) {
             devicePort = deviceService.importPort(device, event.data.p3, event.data.p4)
         }
-        if (devicePort != null) {
+        if (devicePort?.id != null) {
             def newVal = ValueParser.parser(devicePort).apply(event.data.p5)
             
             if (devicePort.value != newVal) {
@@ -104,7 +104,20 @@ class PortValueService implements EventPublisher {
                     it
                 })
             }
+        } else if (devicePort != null) {
+            // Unsaved port (auto-import ran but the save failed): PortValue and
+            // audit rows keyed on a null port id would be unusable orphans.
+            log.warn("Port ${event.data.p4} of device ${event.data.p2} is not persisted, skipping value update")
         }
+    }
+
+    // Same double-subscription pattern as updatePort/updateAsyncPort: the HTTP
+    // ground-truth sync must arm/disarm the auto-off deadline exactly like an
+    // MQTT echo, otherwise a port switched ON outside MQTT (device reboot,
+    // local wall-switch action with a lost publish) never auto-switches off.
+    @Subscriber("evt_async_port_value_changed")
+    void updateExpirationTimeAsync(event) {
+        updateExpirationTime(event)
     }
 
     @Subscriber("evt_mqtt_port_value_changed")
@@ -184,9 +197,17 @@ class PortValueService implements EventPublisher {
         if (timeoutSec == null || timeoutSec <= 0) return
 
         def expireInMs = DateTime.now().plusSeconds(timeoutSec).toDate().time
-        hazelcastInstance.getMap(CacheMap.EXPIRE.name)
-                .put(String.valueOf(port.id), [expireOn: expireInMs, peripheralId: peripheral.id])
-        log.debug("Cache created for port ${port.id}, expires at ${new Date(expireInMs)}, peripheral ${peripheral.id} (override=${overrideSec != null})")
+        def cacheEntry = [expireOn: expireInMs, peripheralId: peripheral.id]
+        if (overrideSec != null) {
+            // An explicit switchOn(timeout:) legitimately resets the deadline.
+            hazelcastInstance.getMap(CacheMap.EXPIRE.name).put(String.valueOf(port.id), cacheEntry)
+        } else {
+            // Repeat ON echoes (e.g. the periodic force-read replies) must not
+            // extend an already-armed deadline — otherwise timeouts longer than
+            // the poll interval would never fire.
+            hazelcastInstance.getMap(CacheMap.EXPIRE.name).putIfAbsent(String.valueOf(port.id), cacheEntry)
+        }
+        log.debug("Cache armed for port ${port.id}, expires at ${new Date(expireInMs)}, peripheral ${peripheral.id} (override=${overrideSec != null})")
     }
 
     @Subscriber("evt_cfg_value_changed")

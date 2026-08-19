@@ -1,6 +1,5 @@
 package org.myhab.graphql
 
-import com.google.common.base.CaseFormat
 import grails.util.Holders
 import grails.util.Pair
 import graphql.schema.DataFetcher
@@ -38,7 +37,7 @@ class WireFactory implements WiringFactory {
 
     private static Pair<Object, Method> getFetcherMethod(FieldWiringEnvironment environment) {
         def context = Holders.grailsApplication.mainContext
-        def beanName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, environment.parentType.name)
+        def beanName = environment.parentType.name.uncapitalize()
         if (context.containsBean(beanName)) {
             def typeFetcherService = context.getBean(beanName)
             if (typeFetcherService != null) {

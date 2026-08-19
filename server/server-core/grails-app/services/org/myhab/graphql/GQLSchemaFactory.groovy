@@ -5,7 +5,6 @@ import grails.config.Config
 import grails.core.support.GrailsConfigurationAware
 import graphql.language.FieldDefinition
 import graphql.language.ObjectTypeDefinition
-import graphql.language.SDLDefinition
 import graphql.schema.*
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
@@ -33,7 +32,6 @@ import org.grails.gorm.graphql.fetcher.interceptor.QueryInterceptorInvoker
 import org.grails.gorm.graphql.interceptor.GraphQLSchemaInterceptor
 import org.grails.gorm.graphql.types.GraphQLPropertyType
 import org.springframework.core.io.ClassPathResource
-import org.springframework.core.io.Resource
 
 import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition
 import static graphql.schema.GraphQLArgument.newArgument
@@ -43,14 +41,12 @@ import static graphql.schema.GraphQLObjectType.newObject
 import static org.grails.gorm.graphql.fetcher.GraphQLDataFetcherType.*
 
 class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
-    Resource gqlSchema
     def schemaGenerator = new SchemaGenerator()
     def schemaParser = new SchemaParser();
 
     TypeDefinitionRegistry schemaDefinitionRegistry = new TypeDefinitionRegistry();
     final List<FieldDefinition> queryDefList = new ArrayList<>();
     final List<FieldDefinition> mutationDefList = new ArrayList<>();
-    final List<SDLDefinition> objectTypeExtensions = new ArrayList<>();
 
 
     GQLSchemaFactory(MappingContext... mappingContext) {
@@ -77,10 +73,6 @@ class GQLSchemaFactory extends Schema implements GrailsConfigurationAware {
         }
         schemaDefinitionRegistry.add(newObjectTypeDefinition().name(GQLConstants.TYPE_QUERY).fieldDefinitions(queryDefList).build());
         schemaDefinitionRegistry.add(newObjectTypeDefinition().name(GQLConstants.TYPE_MUTATION).fieldDefinitions(mutationDefList).build());
-        objectTypeExtensions.each {
-            schemaDefinitionRegistry.add(it)
-        }
-
 
         def wiringFactory = RuntimeWiring.newRuntimeWiring()
                 .wiringFactory(new WireFactory())

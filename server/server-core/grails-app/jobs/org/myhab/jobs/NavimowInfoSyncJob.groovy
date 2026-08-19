@@ -5,6 +5,7 @@ import grails.util.Holders
 import groovy.util.logging.Slf4j
 import org.myhab.async.mqtt.MqttTopicService
 import org.myhab.config.CfgKey
+import org.myhab.config.ConfigProvider
 import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
 import org.myhab.domain.MessageLevel
@@ -89,7 +90,7 @@ class NavimowInfoSyncJob implements Job {
     NavimowApiClient navimowApiClient
     NavimowOAuthService navimowOAuthService
     NotificationService notificationService
-    def configProvider
+    ConfigProvider configProvider
 
     @Override
     void execute(JobExecutionContext context) throws JobExecutionException {

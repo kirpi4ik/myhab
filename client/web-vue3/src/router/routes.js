@@ -534,7 +534,7 @@ const routes = [
   },
   {
     path: '/shared/:token',
-    component: () => import('pages/public/GateAccessWidget'),
+    component: () => import('pages/public/SharedWidgetPage'),
     meta: { public: true }
   },
   {

@@ -463,6 +463,7 @@
     "on": "PORNIT",
     "off": "OPRIT",
     "details": "Detalii",
+    "share": "Partajează acces",
     "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   },
   "heat_card": {
@@ -481,6 +482,7 @@
     "on": "PORNIT",
     "off": "OPRIT",
     "details": "Detalii",
+    "share": "Partajează acces",
     "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   }
 }

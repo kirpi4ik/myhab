@@ -2,7 +2,8 @@ package org.myhab.async.socket
 
 import grails.plugin.springwebsocket.DefaultWebSocketConfig
 import groovy.util.logging.Slf4j
-import org.springframework.beans.factory.annotation.Value
+import org.myhab.config.ConfigProvider
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.simp.config.ChannelRegistration
@@ -16,7 +17,8 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends DefaultWebSocketConfig {
 
-    def configProvider
+    @Autowired
+    ConfigProvider configProvider
 
     /**
      * Scheduler required for SimpleBroker STOMP heartbeats (without one,

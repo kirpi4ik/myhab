@@ -1,7 +1,7 @@
 type Query{
     navigation : Navigation
     userRolesForUser(userId: String!): [UserRole]
-    cache(cacheName: String!, cacheKey: String!): CacheResult
+    cache(cacheName: String!, cacheKey: ID!): CacheResult
     cacheAll(cacheName: String): [CacheResult]
     config(key: String!): String
     appConfigList: [AppConfigEntry]
@@ -24,8 +24,12 @@ type Query{
     myUnreadCount: Int!
     """VAPID public key (base64url) for browser Web Push subscription. Empty when push is not configured."""
     pushPublicKey: String
+    """Mute rules owned by the current authenticated user, newest first."""
+    myNotificationRules: [NotificationRuleResult!]!
     """List all shared widgets, optionally filtered by state."""
     sharedWidgets(state: String): [SharedWidgetResult!]!
+    """Usage history of one shared widget — every attempt, successful or denied, newest first."""
+    sharedWidgetAudit(sharedWidgetId: ID!, count: Int, offset: Int): [SharedWidgetAuditEntry!]!
     """UDP-broadcast scan for MegaD controllers on the local network."""
     discoveredDevices: [DiscoveredDevice!]!
     """Backups stored in the DB for a given device, newest first."""
@@ -87,6 +91,25 @@ type UserMessageResult {
     state: String!
     tsCreated: String
     tsUpdated: String
+    """Producer-supplied stability key; the basis for KEY_PREFIX mute rules. Null when the producer supplied none."""
+    dedupKey: String
+}
+
+type NotificationRuleResult {
+    id: ID!
+    """SENDER, KEY_PREFIX or SUBJECT_REGEX."""
+    matchType: String!
+    pattern: String!
+    """READ or ARCHIVE — the state matching messages are filed as."""
+    targetState: String!
+    tsCreated: String
+}
+
+type NotificationRuleCreateResult {
+    success: Boolean
+    error: String
+    """How many existing NEW messages the new rule retroactively filed."""
+    appliedCount: Int
 }
 
 type AppConfigEntry {
@@ -172,7 +195,7 @@ type BradCrumbLink {
 }
 type Mutation {
     pushEvent(input:EventDatInput) : EventDataResponse
-    cacheDelete(cacheName:String!, cacheKey:String!) : MutationResponse
+    cacheDelete(cacheName:String!, cacheKey:ID!) : MutationResponse
     userRolesSave(input: SaveUserRoles): MutationResponse
     jobSchedule(jobId: ID!): MutationResponse
     jobUnschedule(jobId: ID!): MutationResponse
@@ -198,6 +221,10 @@ type Mutation {
     pushSubscribe(endpoint: String!, p256dh: String!, auth: String!, userAgent: String): MutationResponse
     """Remove a browser Web Push subscription by its endpoint."""
     pushUnsubscribe(endpoint: String!): MutationResponse
+    """Mute future messages matching the criteria, and retroactively file matching NEW ones."""
+    notificationRuleCreate(matchType: String!, pattern: String!, targetState: String!): NotificationRuleCreateResult
+    """Delete one of the current user's mute rules."""
+    notificationRuleDelete(id: ID!): MutationResponse
     """Create a new shared widget link."""
     sharedWidgetCreate(input: SharedWidgetInput!): SharedWidgetCreateResult
     """Update the state of a shared widget (VALID, DISABLED, EXPIRED, ARCHIVED)."""
@@ -270,7 +297,8 @@ type EventDataResponse {
 input EventDatInput {
     p0: String
     p1: String
-    p2: String
+    # Entity id: ID so numeric ids from the client still coerce to String.
+    p2: ID
     p3: String
     p4: String
     p5: String
@@ -294,6 +322,16 @@ type SharedWidgetResult {
     hasPin: Boolean!
     tsCreated: String
     tsUpdated: String
+}
+
+type SharedWidgetAuditEntry {
+    id: ID!
+    action: String!
+    result: String!
+    resultDescription: String
+    remoteAddress: String
+    userAgent: String
+    tsCreated: String
 }
 
 type SharedWidgetCreateResult {

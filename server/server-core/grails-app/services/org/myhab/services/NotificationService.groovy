@@ -5,6 +5,7 @@ import grails.gorm.transactions.Transactional
 import groovy.util.logging.Slf4j
 import org.myhab.domain.MessageLevel
 import org.myhab.domain.MessageState
+import org.myhab.domain.NotificationRule
 import org.myhab.domain.Role
 import org.myhab.domain.User
 import org.myhab.domain.UserMessage
@@ -16,11 +17,15 @@ import java.util.concurrent.TimeUnit
 /**
  * Lightweight helper for creating {@link UserMessage} rows from any service.
  *
- * <p>Today the only producer of in-app notifications is the Telegram-bot
- * handler, which writes directly to UserMessage. As more integrations grow
- * (Navimow mower events, scheduled job failures, scenario errors) they all
- * need the same "fan out one message to one user / all admins" primitive
- * without re-implementing the boilerplate.</p>
+ * <p>Producers today are the Navimow sync job and the MQTT notify bridge
+ * ({@code myhab/<source>/notify}); more will follow. They all need the same
+ * "fan out one message to one user / all admins" primitive without
+ * re-implementing the boilerplate.</p>
+ *
+ * <p><b>Muting</b>: every row is written by {@link #persist}, which consults the
+ * recipient's {@link org.myhab.domain.NotificationRule}s. A match files the message
+ * directly as READ/ARCHIVE and skips the Web Push. That is producer-independent —
+ * any current or future caller is mutable without touching it.</p>
  *
  * <p><b>Dedup</b>: callers pass an optional {@code dedupKey} and {@code
  * cooldownMinutes}; if a notification with that key was fired within the
@@ -41,6 +46,7 @@ class NotificationService {
 
     HazelcastInstance hazelcastInstance
     WebPushService webPushService
+    NotificationRuleService notificationRuleService
 
     /**
      * Persist a single notification for a specific user. Returns the saved
@@ -65,13 +71,36 @@ class NotificationService {
             log.debug("Notification suppressed (cooldown) key=${dedupKey} user=${user.id} subject='${subject}'")
             return null
         }
+        UserMessage um = persist(user, level, subject, message, fromSender, dedupKey)
+        if (um != null && dedupKey != null) {
+            markFired(dedupKey, cooldownMinutes)
+        }
+        return um
+    }
+
+    /**
+     * Write exactly one row. Returns null only when nothing was written.
+     *
+     * <p>This is the single place a UserMessage is created, so it is also where per-user
+     * {@link org.myhab.domain.NotificationRule}s are applied: a matching rule files the
+     * message straight as READ/ARCHIVE and suppresses the Web Push. The row is still
+     * stored — muting hides a message, it never loses it.</p>
+     *
+     * <p>Separate from {@link #notify} so {@link #notifyAdmins} can fan out one row per admin
+     * while enforcing the cooldown exactly once for the whole call.</p>
+     */
+    private UserMessage persist(User user, MessageLevel level, String subject, String message,
+                                String fromSender, String dedupKey) {
         try {
+            NotificationRule rule = notificationRuleService?.firstMatching(user, fromSender, subject, dedupKey)
             UserMessage um = new UserMessage(
                     subject: trim(subject, 255),
                     fromSender: trim(fromSender, 255),
                     message: message ?: '',
                     level: level ?: MessageLevel.INFO,
-                    state: MessageState.NEW,
+                    state: rule ? rule.targetState : MessageState.NEW,
+                    // trim() maps null to '' — keep a keyless message as SQL NULL.
+                    dedupKey: dedupKey ? trim(dedupKey, 255) : null,
                     user: user
             )
             um.save(flush: true, failOnError: false)
@@ -79,8 +108,9 @@ class NotificationService {
                 log.error("Failed to save UserMessage for user=${user.id}: ${um.errors}")
                 return null
             }
-            if (dedupKey != null) {
-                markFired(dedupKey, cooldownMinutes)
+            if (rule != null) {
+                log.debug("Message filed as ${rule.targetState} by rule ${rule.id} (${rule.matchType}:${rule.pattern}) user=${user.id}")
+                return um
             }
             // Best-effort native push (Web Push / VAPID). Never let a push bug
             // break the producer — sendToUser is itself fire-and-forget, but
@@ -122,10 +152,11 @@ class NotificationService {
         List<User> admins = UserRole.findAllByRole(adminRole)*.user.findAll { it != null }.unique { it.id }
         int delivered = 0
         admins.each { User u ->
-            // Pass null dedupKey to the per-user notify — we've already enforced
-            // dedup at the top of this method. The marker is set once after the
-            // fan-out below so every admin in this call gets the message.
-            if (notify(u, level, subject, message, fromSender) != null) delivered++
+            // persist() rather than notify(): dedup is already enforced at the top of this
+            // method, and the marker is set once after the fan-out so every admin gets the
+            // message. Going through notify() would mark the cooldown on the first admin and
+            // silently suppress the rest — but the key still has to reach every row.
+            if (persist(u, level, subject, message, fromSender, dedupKey) != null) delivered++
         }
         if (delivered > 0 && dedupKey != null) {
             markFired(dedupKey, cooldownMinutes)

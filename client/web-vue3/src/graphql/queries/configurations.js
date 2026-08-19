@@ -82,14 +82,14 @@ export const CONFIGURATION_GET_LIST_VALUE = gql`
 	}
 `;
 export const CACHE_GET_VALUE = gql`
-	query getCache($cacheName: String!, $cacheKey: String!) {
+	query getCache($cacheName: String!, $cacheKey: ID!) {
 		cache(cacheName: $cacheName, cacheKey: $cacheKey) {
 			cachedValue
 		}
 	}
 `;
 export const CACHE_DELETE = gql`
-	mutation cacheDelete($cacheName: String!, $cacheKey: String!) {
+	mutation cacheDelete($cacheName: String!, $cacheKey: ID!) {
 		cacheDelete(cacheName: $cacheName, cacheKey: $cacheKey) {
 			success
 		}

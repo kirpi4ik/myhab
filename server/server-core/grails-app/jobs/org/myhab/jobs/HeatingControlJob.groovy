@@ -7,6 +7,7 @@ import grails.util.Holders
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
+import org.myhab.config.ConfigProvider
 import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
 import org.myhab.domain.device.DevicePeripheral
@@ -53,7 +54,7 @@ class HeatingControlJob implements Job, EventPublisher {
     */
     public static final String PERIPHERAL_HEAT_CTRL_CATEGORY = "HEAT"
     public static final String PERIPHERAL_TEMPERATURE_SENSOR_CATEGORY = 'TEMP'
-    def configProvider
+    ConfigProvider configProvider
 
     static group = "Internal"
     static description = "Heat control"

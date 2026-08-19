@@ -461,6 +461,7 @@
 		"on": "ON",
 		"off": "OFF",
 		"details": "Details",
+		"share": "Share Access",
 		"device_offline": "Device is offline - controls disabled"
 	},
 	"heat_card": {
@@ -479,6 +480,7 @@
 		"on": "ON",
 		"off": "OFF",
 		"details": "Details",
+		"share": "Share Access",
 		"device_offline": "Device is offline - controls disabled"
 	}
 }

@@ -70,7 +70,10 @@
 
 				<template v-slot:body-cell-usage="props">
 					<q-td :props="props">
-						{{ props.row.actionsUsed }} / {{ props.row.actionsAllowed }}
+						<div class="cursor-pointer text-primary" @click="showDetail(props.row)">
+							{{ props.row.actionsUsed }} / {{ props.row.actionsAllowed }}
+							<q-tooltip>Click to see usage history</q-tooltip>
+						</div>
 					</q-td>
 				</template>
 
@@ -88,6 +91,16 @@
 
 				<template v-slot:body-cell-actions="props">
 					<q-td :props="props">
+						<q-btn
+							flat
+							dense
+							round
+							icon="mdi-history"
+							color="primary"
+							@click="showDetail(props.row)"
+						>
+							<q-tooltip>Usage history</q-tooltip>
+						</q-btn>
 						<q-btn
 							v-if="props.row.state === 'VALID'"
 							flat
@@ -166,6 +179,47 @@
 						</div>
 					</div>
 				</q-card-section>
+
+				<q-separator/>
+
+				<q-expansion-item
+					v-if="detailRow"
+					v-model="auditExpanded"
+					icon="mdi-history"
+					:label="`Usage history${auditRows.length ? ' (' + auditRows.length + ')' : ''}`"
+					header-class="text-primary text-weight-medium"
+				>
+					<q-inner-loading :showing="auditLoading" style="min-height: 60px;">
+						<q-spinner-dots size="32px" color="primary"/>
+					</q-inner-loading>
+
+					<div v-if="!auditLoading && !auditRows.length" class="q-pa-md text-grey-7">
+						No usage recorded yet.
+					</div>
+
+					<q-list v-if="!auditLoading && auditRows.length" separator dense>
+						<q-item v-for="entry in auditRows" :key="entry.id">
+							<q-item-section>
+								<q-item-label>{{ formatDate(entry.tsCreated) }}</q-item-label>
+								<q-item-label caption>
+									<span v-if="entry.remoteAddress">{{ entry.remoteAddress }}</span>
+									<span v-if="entry.userAgent" class="ellipsis-2-lines">
+										{{ entry.userAgent }}
+										<q-tooltip>{{ entry.userAgent }}</q-tooltip>
+									</span>
+								</q-item-label>
+							</q-item-section>
+							<q-item-section side>
+								<div class="row items-center q-gutter-xs">
+									<q-badge outline color="primary" :label="entry.action"/>
+									<q-badge :color="auditResultColor(entry.result)" :label="auditResultLabel(entry.result)">
+										<q-tooltip v-if="entry.resultDescription">{{ entry.resultDescription }}</q-tooltip>
+									</q-badge>
+								</div>
+							</q-item-section>
+						</q-item>
+					</q-list>
+				</q-expansion-item>
 			</q-card>
 		</q-dialog>
 	</q-page>
@@ -176,7 +230,7 @@ import { computed, defineComponent, onMounted, ref } from 'vue';
 import { useApolloClient } from '@vue/apollo-composable';
 import { useQuasar, copyToClipboard } from 'quasar';
 import { format, parseISO } from 'date-fns';
-import { SHARED_WIDGETS, SHARED_WIDGET_UPDATE_STATE } from '@/graphql/queries';
+import { SHARED_WIDGETS, SHARED_WIDGET_AUDIT, SHARED_WIDGET_UPDATE_STATE } from '@/graphql/queries';
 
 export default defineComponent({
 	name: 'SharedWidgetList',
@@ -188,6 +242,9 @@ export default defineComponent({
 		const stateFilter = ref(null);
 		const detailDialog = ref(false);
 		const detailRow = ref(null);
+		const auditRows = ref([]);
+		const auditLoading = ref(false);
+		const auditExpanded = ref(true);
 
 		const stateOptions = [
 			{ label: 'All', value: null },
@@ -281,9 +338,46 @@ export default defineComponent({
 			}
 		};
 
+		const auditResultColor = (result) => {
+			switch (result) {
+				case 'SUCCESS': return 'positive';
+				case 'DENIED_PIN': return 'negative';
+				case 'DENIED_STATE': return 'warning';
+				default: return 'grey';
+			}
+		};
+
+		const auditResultLabel = (result) => {
+			switch (result) {
+				case 'SUCCESS': return 'Success';
+				case 'DENIED_PIN': return 'Invalid PIN';
+				case 'DENIED_STATE': return 'Denied';
+				default: return result;
+			}
+		};
+
+		const fetchAudit = async (sharedWidgetId) => {
+			auditLoading.value = true;
+			auditRows.value = [];
+			try {
+				const response = await client.query({
+					query: SHARED_WIDGET_AUDIT,
+					variables: { sharedWidgetId, count: 200, offset: 0 },
+					fetchPolicy: 'network-only'
+				});
+				auditRows.value = response.data.sharedWidgetAudit || [];
+			} catch (e) {
+				console.error('Failed to load shared widget audit', e);
+				$q.notify({ color: 'negative', message: 'Failed to load usage history', position: 'top' });
+			} finally {
+				auditLoading.value = false;
+			}
+		};
+
 		const showDetail = (row) => {
 			detailRow.value = row;
 			detailDialog.value = true;
+			fetchAudit(row.id);
 		};
 
 		onMounted(() => fetchData());
@@ -297,6 +391,11 @@ export default defineComponent({
 			filteredRows,
 			detailDialog,
 			detailRow,
+			auditRows,
+			auditLoading,
+			auditExpanded,
+			auditResultColor,
+			auditResultLabel,
 			updateState,
 			stateColor,
 			formatDate,

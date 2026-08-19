@@ -80,7 +80,7 @@
   </q-header>
 </template>
 <script>
-import { computed, defineComponent, ref, onMounted, onUnmounted } from 'vue';
+import { computed, defineComponent, ref, watch, onMounted, onUnmounted } from 'vue';
 
 import { useQuery, useApolloClient } from '@vue/apollo-composable';
 import { useWebSocketStore } from '@/store/websocket.store';
@@ -124,6 +124,15 @@ export default defineComponent({
         unreadCount.value = 0;
       }
     };
+
+    // Keep the badge live: the server broadcasts evt_user_notification whenever a
+    // UserMessage is raised (MQTT notify channel, jobs, …).
+    watch(
+      () => wsStore.ws.message,
+      (m) => {
+        if (m?.eventName === 'evt_user_notification') fetchUnreadCount();
+      }
+    );
 
     onMounted(async () => {
       const userId = authzService.currentUserValue?.id;

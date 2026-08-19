@@ -23,6 +23,20 @@ export const SHARED_WIDGETS = gql`
 	}
 `;
 
+export const SHARED_WIDGET_AUDIT = gql`
+	query sharedWidgetAudit($sharedWidgetId: ID!, $count: Int, $offset: Int) {
+		sharedWidgetAudit(sharedWidgetId: $sharedWidgetId, count: $count, offset: $offset) {
+			id
+			action
+			result
+			resultDescription
+			remoteAddress
+			userAgent
+			tsCreated
+		}
+	}
+`;
+
 export const SHARED_WIDGET_CREATE = gql`
 	mutation sharedWidgetCreate($input: SharedWidgetInput!) {
 		sharedWidgetCreate(input: $input) {

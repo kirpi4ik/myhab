@@ -4,6 +4,7 @@ import grails.events.EventPublisher
 import grails.events.annotation.Subscriber
 import grails.gorm.transactions.Transactional
 import org.myhab.config.CfgKey
+import org.myhab.domain.MessageLevel
 import org.myhab.domain.device.Device
 import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.DeviceStatus
@@ -17,6 +18,7 @@ class DeviceService implements EventPublisher {
     def megaDriverService
     def espService
     def configProvider
+    def notificationService
 
     def readPortValuesFromDevice(Device device) throws UnavailableDeviceException {
         try {
@@ -57,13 +59,16 @@ class DeviceService implements EventPublisher {
 
     @Transactional
     DevicePort importPort(Device deviceController, def portType, def portInternalRef) {
+        // withCriteria yields a List: take the single row, or null when absent.
+        // Returning the List itself would be coerced to the declared DevicePort
+        // return type by calling `new DevicePort()` — a transient, null-id port.
         def devicePort = DevicePort.withCriteria {
             eq('internalRef', portInternalRef)
             device {
                 eq('code', deviceController.code)
             }
             maxResults(1)
-        }
+        }[0]
 
         // Per-device autoimport is opt-in: missing Configuration row OR a non-"true"
         // value means "do not auto-create ports for this device". The previous
@@ -88,11 +93,12 @@ class DeviceService implements EventPublisher {
     }
 
     Device importDevice(String deviceModel, String deviceCode) {
+        // Single row or null — see the note in importPort on List coercion.
         Device device = Device.withCriteria {
             eq('model', DeviceModel.valueOf(deviceModel))
             eq('code', deviceCode)
             maxResults(1)
-        }
+        }[0]
         if (device == null && configProvider.get(Boolean.class, "admin.devices.autoimport")) {
             if (deviceModel == DeviceModel.MEGAD_2561_RTC) {
                 device = megaDriverService.readConfig(deviceCode)
@@ -103,6 +109,7 @@ class DeviceService implements EventPublisher {
                 device?.save(failOnError: false, flush: true)
             }
         }
+        return device
     }
 
     /**
@@ -122,6 +129,23 @@ class DeviceService implements EventPublisher {
                 device.status = newStatus
                 device.save(failOnError: false, flush: true)
                 log.info("Device status updated: deviceCode=${event.data.p2}, ${oldStatus} → ${newStatus}")
+                // An unreachable controller means its ports can drift out of
+                // sync (and auto-off cannot be confirmed) — the admins must know.
+                try {
+                    if (newStatus == DeviceStatus.OFFLINE) {
+                        notificationService.notifyAdmins(MessageLevel.WARN,
+                                "Device ${device.code} offline",
+                                "Device ${device.code} became unreachable (${event.data.p6}). Its port states can no longer be verified.",
+                                'device-sync', "device.${device.code}.offline".toString(), 60)
+                    } else if (oldStatus == DeviceStatus.OFFLINE && newStatus == DeviceStatus.ONLINE) {
+                        notificationService.notifyAdmins(MessageLevel.INFO,
+                                "Device ${device.code} back online",
+                                "Device ${device.code} is reachable again (${event.data.p6}).",
+                                'device-sync', "device.${device.code}.online".toString(), 60)
+                    }
+                } catch (Exception ne) {
+                    log.error("Failed to send device-status notification for ${device.code}: ${ne.message}")
+                }
             }
         } else {
             log.warn("Device not found for status update: deviceCode=${event.data.p2}")

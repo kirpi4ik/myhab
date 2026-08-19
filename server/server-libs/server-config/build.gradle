@@ -23,15 +23,17 @@ repositories {
 }
 
 dependencies {
-    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    implementation 'org.springframework:spring-beans:5.1.18.RELEASE'
-    implementation 'org.yaml:snakeyaml:1.30'
+    implementation "org.apache.groovy:groovy-all:${property('groovy.version')}"
+    // spring-beans is unpinned: the version must track whatever server-core's
+    // Spring Boot BOM resolves, not a hard-coded Spring 5 release.
+    implementation 'org.springframework:spring-beans:6.2.11'
+    implementation 'org.yaml:snakeyaml:2.2'
     runtimeOnly 'commons-beanutils:commons-beanutils:1.9.4'
-    implementation 'org.apache.commons:commons-configuration2:2.7'
+    // 2.12+ is the first line built against SnakeYAML 2.x; 2.7 calls the
+    // no-arg Constructor() that SnakeYAML 2 removed.
+    implementation 'org.apache.commons:commons-configuration2:2.12.0'
     implementation 'org.kohsuke:github-api:1.301'
     implementation 'com.konghq:unirest-java:3.11.09'
 
-    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r'
-
-
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.1.202505221210-r'
 }

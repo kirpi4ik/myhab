@@ -24,7 +24,9 @@ enum MQTTTopic {
                 case TopicTypes.STAT_PORT:
                     return '$map.deviceCode/address_port/state'
                 case TopicTypes.STATUS:
-                    return '$map.deviceCode/status'
+                    // Inbound match pattern (e.g. broker-side LWT publishes) —
+                    // a template string here would compile into an unmatchable regex.
+                    return '(\\w+)/status'
                 default: return null
             }
         }
@@ -49,7 +51,8 @@ enum MQTTTopic {
                 case TopicTypes.STAT_PORT:
                     return '$map.deviceCode/address_port/state'
                 case TopicTypes.STATUS:
-                    return '$map.deviceCode/status'
+                    // Inbound match pattern — see COMMON.STATUS.
+                    return '(\\w+)/status'
                 default: return null
             }
         }

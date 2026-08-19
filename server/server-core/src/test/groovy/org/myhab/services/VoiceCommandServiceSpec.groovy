@@ -1,6 +1,7 @@
 package org.myhab.services
 
 import com.hazelcast.core.HazelcastInstance
+import grails.testing.gorm.DataTest
 import grails.testing.services.ServiceUnitTest
 import org.myhab.config.CfgKey
 import org.myhab.config.ConfigProvider
@@ -15,7 +16,11 @@ import spock.lang.Specification
  * scheduler and Hazelcast are stubbed (no network, no GORM); {@code publish} is
  * intercepted so we can assert exactly what reaches UIMessageService.
  */
-class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<VoiceCommandService> {
+class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<VoiceCommandService>, DataTest {
+
+    // handleTranscript is @Transactional; DataTest exists only to supply the
+    // transaction manager. No domain class is touched here.
+    Class[] getDomainClassesToMock() { [] as Class[] }
 
     List<Map> published
     VoiceIntentProvider provider

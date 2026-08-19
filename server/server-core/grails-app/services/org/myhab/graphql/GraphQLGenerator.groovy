@@ -1,6 +1,5 @@
 package org.myhab.graphql
 
-import com.google.common.collect.ImmutableList
 import graphql.GraphQL
 import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.tracing.TracingInstrumentation
@@ -11,7 +10,7 @@ class GraphQLGenerator {
 
     GraphQL generate() {
         TracingInstrumentation tracingIntrumentation = new TracingInstrumentation(TracingInstrumentation.Options.newOptions().includeTrivialDataFetchers(true))
-        ChainedInstrumentation chainedInstrumentation = new ChainedInstrumentation(ImmutableList.of(tracingIntrumentation))
+        ChainedInstrumentation chainedInstrumentation = new ChainedInstrumentation(List.of(tracingIntrumentation))
        return GraphQL.newGraphQL(schema)
                 .instrumentation(chainedInstrumentation)
                 .build()

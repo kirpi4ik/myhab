@@ -4,6 +4,7 @@ import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
+import grails.testing.gorm.DataTest
 import grails.testing.services.ServiceUnitTest
 import org.myhab.config.CfgKey
 import org.myhab.config.ConfigProvider
@@ -13,7 +14,11 @@ import spock.lang.Specification
 import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 
-class LabelServiceSpec extends Specification implements ServiceUnitTest<LabelService> {
+class LabelServiceSpec extends Specification implements ServiceUnitTest<LabelService>, DataTest {
+
+    // LabelService is @Transactional at class level; DataTest supplies the
+    // transaction manager every instance call needs.
+    Class[] getDomainClassesToMock() { [Cable] as Class[] }
 
     private static BufferedImage readPng(byte[] bytes) {
         return ImageIO.read(new ByteArrayInputStream(bytes))

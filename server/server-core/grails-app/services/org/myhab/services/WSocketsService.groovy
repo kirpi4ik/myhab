@@ -60,6 +60,15 @@ class WSocketsService implements EventPublisher, WebSocket {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_port_value_persisted", jsonPayload: JsonOutput.toJson(event.data)))
     }
 
+    /**
+     * A new in-app notification was raised. Broadcast so open clients refetch their
+     * own unread count — without this the bell badge only refreshes on remount.
+     */
+    @Subscriber('evt_user_notification')
+    def userNotification() {
+        convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_user_notification"))
+    }
+
     @Subscriber('evt_cfg_value_changed')
     def cfgChanged(event) {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_cfg_value_changed", jsonPayload: JsonOutput.toJson(event.data)))

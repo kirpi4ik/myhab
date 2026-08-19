@@ -4,6 +4,7 @@ package org.myhab.services.dsl.action
 import org.myhab.ConfigKey
 import org.myhab.domain.Configuration
 import org.myhab.domain.EntityType
+import org.myhab.domain.device.DeviceModel
 import org.myhab.domain.device.port.DevicePort
 import org.myhab.domain.device.port.PortAction
 import org.myhab.domain.device.DevicePeripheral
@@ -55,6 +56,7 @@ class PowerService implements EventPublisher {
     def mqttTopicService
     def auditService
     def hazelcastInstance
+    def megaDriverService
 
     /**
      * Execute a power action on the specified device ports.
@@ -224,6 +226,20 @@ class PowerService implements EventPublisher {
                     writeAudit(port.id, params.action, source, actor, [peripheralId: peripheralId, actionId: actionId])
                 } catch (Exception e) {
                     log.error("Failed to publish MQTT command for port ${port.id} (${port.name}): ${e.message}", e)
+                    // MegaD exposes a native HTTP command interface — use it as
+                    // a fallback transport so a broker outage cannot silently
+                    // drop a power command for critical hardware.
+                    if (port.device?.model == DeviceModel.MEGAD_2561_RTC) {
+                        try {
+                            megaDriverService.writePortValues(port.device, [(port.internalRef): params.action])
+                            storePendingAction(port.id, params.action, actionId)
+                            writeAudit(port.id, params.action, source, actor,
+                                    [peripheralId: peripheralId, actionId: actionId, transport: 'http-fallback'])
+                            return
+                        } catch (Exception httpEx) {
+                            log.error("HTTP fallback failed for port ${port.id}: ${httpEx.message}")
+                        }
+                    }
                     // No pending entry on failure — no echo is expected.
                     writeAudit(port.id, params.action, source, actor,
                             [peripheralId: peripheralId, status: 'FAILED', error: e.message, actionId: actionId])

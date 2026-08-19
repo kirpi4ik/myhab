@@ -1,23 +1,8 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-    dependencies {
-        // Temporarily commented out to resolve cache corruption issue
-        // classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
-        classpath "com.bmuschko:gradle-docker-plugin:7.2.0"
-        classpath 'commons-io:commons-io:2.6'
-        classpath 'joda-time:joda-time:2.10.13'
-    }
-}
-
 plugins {
-    id "com.bmuschko.docker-remote-api" version "7.2.0"
+    id "com.bmuschko.docker-remote-api" version "10.0.0"
 }
 
 //tag::import[]
-import org.joda.time.DateTime;
 import com.bmuschko.gradle.docker.tasks.image.*
 
 //end::import[]
@@ -29,8 +14,8 @@ allprojects {
 
     repositories {
         mavenLocal()
-        maven { url "https://repo.grails.org/grails/core" }
-        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url = uri("https://repo.grails.org/grails/core") }
+        maven { url = uri("https://plugins.gradle.org/m2/") }
     }
 }
 //tag::extVariables[]
@@ -38,7 +23,7 @@ ext {
     isGrailsPlugin = name.startsWith('grails-plugin')
     isBuildSnapshot = projectVersion.toString().endsWith("-SNAPSHOT")
     commonBuild = new File(project.rootDir, "gradle").absolutePath
-    dockerBuildDir = mkdir("${buildDir}/docker")
+    dockerBuildDir = layout.buildDirectory.dir('docker')
     dockerBuildGroup = 'Docker'
     dockerRegistry = 'index.docker.io'
     dockerRepo = 'myhab'
@@ -86,10 +71,10 @@ subprojects { project ->
     }
 }
 
-task syncVersionToPackageJson() {
+tasks.register('syncVersionToPackageJson') {
     description = 'Sync version from gradle.properties to package.json'
     group = 'versioning'
-    
+
     doLast {
         def packageJsonFile = new File("${projectDir}/client/web-vue3/package.json")
         if (packageJsonFile.exists()) {
@@ -101,10 +86,10 @@ task syncVersionToPackageJson() {
     }
 }
 
-task syncVersionToEnvFiles() {
+tasks.register('syncVersionToEnvFiles') {
     description = 'Sync version from gradle.properties to .env and .env.prod'
     group = 'versioning'
-    
+
     doLast {
         // Update .env file
         def envFile = new File("${projectDir}/client/web-vue3/.env")
@@ -126,16 +111,17 @@ task syncVersionToEnvFiles() {
     }
 }
 
-task syncVersions(dependsOn: [syncVersionToPackageJson, syncVersionToEnvFiles]) {
+tasks.register('syncVersions') {
     description = 'Sync version from gradle.properties to all project files'
     group = 'versioning'
+    dependsOn 'syncVersionToPackageJson', 'syncVersionToEnvFiles'
 
     doLast {
         logger.quiet "✅ All versions synchronized to ${projectVersion}"
     }
 }
 
-task bumpVersion() {
+tasks.register('bumpVersion') {
     description = 'Increment the patch component of projectVersion in gradle.properties'
     group = 'versioning'
 
@@ -148,7 +134,8 @@ task bumpVersion() {
     }
 }
 
-task versionTxt(dependsOn: syncVersions) {
+tasks.register('versionTxt') {
+    dependsOn 'syncVersions'
     doLast {
         // Create docker directory if it doesn't exist
         def dockerDir = new File("${projectDir}/src/main/docker")
@@ -171,14 +158,16 @@ java -jar -Dgrails.env=\$GRAILS_ENV -Duser.timezone=UTC /app/myhab.jar \$@
         entrypointFile.setExecutable(true)
     }
 }
-task serve(dependsOn: ':web-vue3:serve') {
+tasks.register('serve') {
     group = 'application'
     description = 'Run the Quasar development server for the web client (SPA mode)'
+    dependsOn ':web-vue3:serve'
 }
 
-task servePWA(dependsOn: ':web-vue3:pwaDev') {
+tasks.register('servePWA') {
     group = 'application'
     description = 'Run the Quasar development server for the web client (PWA mode)'
+    dependsOn ':web-vue3:pwaDev'
 }
 
 //tag::buildClientPWA[]
@@ -189,48 +178,65 @@ task servePWA(dependsOn: ':web-vue3:pwaDev') {
  * - Creates manifest.json for app metadata
  * - Output: dist/pwa/ directory
  */
-task copyClientResources(dependsOn: [':web-vue3:pwaBuild']) { // <1> Changed to pwaBuild for PWA support
+// Destination for the bundled client assets, and the client's own output dirs.
+def serverPublicDir = project(':server-core').layout.buildDirectory.dir('resources/main/public')
+def serverLibsDir = project(':server-core').layout.buildDirectory.dir('libs')
+def clientBuildDir = project(':web-vue3').layout.buildDirectory
+def clientDistPwaDir = "${project(':web-vue3').projectDir}/dist/pwa"
+
+def copyClientResources = tasks.register('copyClientResources') { // <1> pwaBuild for PWA support
     group = 'build'
     description = 'Copy PWA client resources into server for production'
+    // processResources populates build/resources/main; the client assets must be
+    // staged after it so they are not wiped, and before the jar is packaged.
+    dependsOn ':web-vue3:pwaBuild', ':server-core:processResources'
+
+    doFirst { // <4>
+        // PWA build output (Service Worker, manifest.json and all assets)
+        copy {
+            from clientDistPwaDir
+            into serverPublicDir
+        }
+        logger.quiet "✅ Copied PWA client resources from dist/pwa to server public directory"
+    }
     doLast {
         copy {
-            from project(':web-vue3').buildDir.absolutePath
-            into "${project(':server-core').buildDir}/resources/main/public"
+            from clientBuildDir
+            into serverPublicDir
         }
     }
 }
+
+// Without this the jar can be packaged before the assets are staged, producing a
+// JAR with an empty BOOT-INF/classes/public.
+project(':server-core').tasks.matching { it.name in ['bootJar', 'jar'] }.configureEach {
+    mustRunAfter copyClientResources
+}
 //end::buildClientPWA[]
 
-task assembleServerAndClient(dependsOn: ['copyClientResources', 'versionTxt', ':server-core:assemble']) { // <2>
+tasks.register('assembleServerAndClient') { // <2>
     group = 'build'
     description = 'Build combined server & web-vue3 JAR/WAR'
+    dependsOn 'copyClientResources', 'versionTxt', ':server-core:assemble'
 
     doLast {
         copy {
-            from fileTree(dir: "${project(':server-core').buildDir}/libs/") // <3>
-            into "${buildDir}"
+            from serverLibsDir // <3>
+            into layout.buildDirectory
         }
 
         logger.quiet "JAR/WAR generated at $rootDir/build/. It combines the server and web-vue3 projects."
     }
 }
 
-copyClientResources.doFirst { // <4>
-    // Copy PWA build output (includes Service Worker, manifest.json, and all assets)
-    copy {
-        from "${project(':web-vue3').projectDir}/dist/pwa" // Changed from spa to pwa
-        into "${project(':server-core').buildDir}/resources/main/public"
-    }
-    logger.quiet "✅ Copied PWA client resources from dist/pwa to server public directory"
-}
-
-task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
+tasks.register('prepareDocker', Copy) { // <3>
     description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
     group = dockerBuildGroup
+    dependsOn 'assembleServerAndClient'
     into dockerBuildDir
     into(".") {
         from 'src/main/docker'
-        from "${buildDir}/${projectName}-${projectVersion}.jar"
+        from layout.buildDirectory.file("${projectName}-${projectVersion}.jar")
     }
 
     eachFile { logger.quiet("## ${it.file.absolutePath} | ${it.file.length()}") }
@@ -238,16 +244,18 @@ task prepareDocker(type: Copy, dependsOn: assembleServerAndClient) { // <3>
 //end::prepareDocker[]
 
 //tag::createDockerfile[]
-task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
+tasks.register('createDockerfile', Dockerfile) { // <4>
     description = 'Create a Dockerfile file'
     group = dockerBuildGroup
+    dependsOn 'prepareDocker'
 
-    destFile = project.file("${dockerBuildDir}/Dockerfile")
+    destFile = dockerBuildDir.map { it.file('Dockerfile') }
 
     from 'eclipse-temurin:17-jre'
 
+    // Values must be plain Strings — the Dockerfile task rejects GStrings.
     label(['project': 'myHAB'])
-    label(['version': "${projectVersion}"])
+    label(['version': "${projectVersion}".toString()])
     label(['org.opencontainers.image.authors': 'Dumitru Ciubenco "dumitru.ciubenco@gmail.com"'])
 
     exposePort 8181
@@ -259,7 +267,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
     volume '/app/config'
     workingDir '/app'
 
-    copyFile "${projectName}-${projectVersion}.jar", "${projectName}.jar"
+    copyFile "${projectName}-${projectVersion}.jar".toString(), "${projectName}.jar".toString()
     copyFile 'app-entrypoint.sh', 'app-entrypoint.sh' // <5>
     runCommand 'chmod +x app-entrypoint.sh'
 
@@ -268,29 +276,33 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 //end::createDockerfile[]
 
 //tag::buildImage[]
-task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) { // <6>
+def buildImage = tasks.register('buildImage', DockerBuildImage) { // <6>
     description = 'Create Docker image to run the Grails application'
     group = dockerBuildGroup
+    dependsOn 'createDockerfile'
 
-    inputDir = file(dockerBuildDir)
+    inputDir = dockerBuildDir
     images.add("${githubSlug}:${tagId}")
 }
-task tagImage(type: DockerTagImage, dependsOn: buildImage) {
-    description "Tag custom docker image."
+
+tasks.register('tagImage', DockerTagImage) {
+    description = "Tag custom docker image."
     group = dockerBuildGroup
-    targetImageId buildImage.getImageId()
+    dependsOn buildImage
+    targetImageId buildImage.flatMap { it.imageId }
     repository = "${githubSlug}".toString()
     tag = "${tagId}"
 }
 
-task pushImage(type: DockerPushImage, dependsOn: tagImage) {
+tasks.register('pushImage', DockerPushImage) {
     group = dockerBuildGroup
-    description "Push custom docker image."
+    description = "Push custom docker image."
+    dependsOn 'tagImage'
 
     images.add("${githubSlug}:${tagId}".toString())
 }
 //end::buildImage[]
-task removeImage(type: DockerRemoveImage) {
+tasks.register('removeImage', DockerRemoveImage) {
     description = 'Remove Docker image with Grails application.'
     group = dockerBuildGroup
     targetImageId { dockerTag }

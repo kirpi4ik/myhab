@@ -793,9 +793,10 @@ class MegaDriverService implements EventPublisher {
     private static final int OPTIONAL_PAGE_TIMEOUT_MS = 1500
 
     /**
-     * Shorthand factory for DeviceHttpService.
+     * Shorthand factory for DeviceHttpService. Protected (not private) so
+     * specs can substitute the HTTP transport via metaClass.
      */
-    private DeviceHttpService httpClient(Device device, String uri = null, Integer timeoutMs = null) {
+    protected DeviceHttpService httpClient(Device device, String uri = null, Integer timeoutMs = null) {
         return new DeviceHttpService(device: device, uri: uri, timeoutMs: timeoutMs)
     }
 

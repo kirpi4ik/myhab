@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- PID and java.version come from the JVM/Spring Boot; appVersion from application.yml. -->
+    <springProperty scope="context" name="appVersion" source="info.app.version" defaultValue="unknown"/>
+
+    <!--
+      The JSON encoder is spelled out per appender: logback only honours <include>
+      as a child of <configuration>, not inside <appender>. Keep the two blocks
+      identical.
+    -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>ts_date</fieldName>
+                    <timeZone>UTC</timeZone>
+                    <pattern>yyyy-MM-dd HH:mm:ss.SSS</pattern>
+                </timestamp>
+                <logLevel>
+                    <fieldName>level</fieldName>
+                </logLevel>
+                <loggerName>
+                    <fieldName>logger</fieldName>
+                    <shortenedLoggerNameLength>35</shortenedLoggerNameLength>
+                </loggerName>
+                <message>
+                    <fieldName>message</fieldName>
+                </message>
+                <!-- Plain <pattern> rather than <globalCustomFields>: the latter
+                     declares two setCustomFieldsNode overloads, which makes logback
+                     log an ambiguous-setter warning on every startup. -->
+                <pattern>
+                    <pattern>{"pid":"${PID}","appVersion":"${appVersion}","jvm":"${java.version}"}</pattern>
+                </pattern>
+                <threadName>
+                    <fieldName>thread</fieldName>
+                </threadName>
+                <!-- No includeMdcKeyNames: every MDC key is emitted. -->
+                <mdc/>
+                <arguments/>
+                <stackTrace>
+                    <fieldName>stacktrace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>20</maxDepthPerThrowable>
+                        <maxLength>8192</maxLength>
+                        <shortenedClassNameLength>35</shortenedClassNameLength>
+                        <exclude>sun\..*</exclude>
+                        <exclude>java\..*</exclude>
+                        <exclude>groovy\..*</exclude>
+                        <exclude>com\.sun\..*</exclude>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+        </encoder>
+    </appender>
+
+    <appender name="FULL_STACKTRACE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/var/log/myhab.log</file>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>ts_date</fieldName>
+                    <timeZone>UTC</timeZone>
+                    <pattern>yyyy-MM-dd HH:mm:ss.SSS</pattern>
+                </timestamp>
+                <logLevel>
+                    <fieldName>level</fieldName>
+                </logLevel>
+                <loggerName>
+                    <fieldName>logger</fieldName>
+                    <shortenedLoggerNameLength>35</shortenedLoggerNameLength>
+                </loggerName>
+                <message>
+                    <fieldName>message</fieldName>
+                </message>
+                <!-- Plain <pattern> rather than <globalCustomFields>: the latter
+                     declares two setCustomFieldsNode overloads, which makes logback
+                     log an ambiguous-setter warning on every startup. -->
+                <pattern>
+                    <pattern>{"pid":"${PID}","appVersion":"${appVersion}","jvm":"${java.version}"}</pattern>
+                </pattern>
+                <threadName>
+                    <fieldName>thread</fieldName>
+                </threadName>
+                <mdc/>
+                <arguments/>
+                <stackTrace>
+                    <fieldName>stacktrace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>20</maxDepthPerThrowable>
+                        <maxLength>8192</maxLength>
+                        <shortenedClassNameLength>35</shortenedClassNameLength>
+                        <exclude>sun\..*</exclude>
+                        <exclude>java\..*</exclude>
+                        <exclude>groovy\..*</exclude>
+                        <exclude>com\.sun\..*</exclude>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>/var/log/myhab-%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>10</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10 mb</maxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <springProfile name="development">
+        <logger name="StackTrace" level="ERROR" additivity="false">
+            <appender-ref ref="FULL_STACKTRACE"/>
+        </logger>
+    </springProfile>
+
+    <logger name="org.myhab" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="org.myhab.jobs" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="org.myhab.listener.quartz" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="org.myhab.services" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="org.telegram" level="OFF" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="graphql" level="WARN" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="org.springframework" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="org.hibernate" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="org.quartz" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+
+    <root level="ERROR">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </root>
+
+</configuration>
