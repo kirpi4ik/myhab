@@ -41,6 +41,7 @@ enum EntityType {
     USER(User.class),
     USER_MESSAGE(UserMessage.class),
     SHARED_WIDGET(SharedWidget.class),
+    SHARED_WIDGET_AUDIT(SharedWidgetAudit.class),
     DASHBOARD_SCREEN(org.myhab.domain.ui.DashboardScreen.class);
 
     static <T extends BaseEntity> EntityType get(T type) {

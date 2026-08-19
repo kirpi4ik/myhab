@@ -20,6 +20,7 @@ import org.myhab.domain.MessageState
 import org.myhab.domain.NotificationRule
 import org.myhab.domain.UserMessage
 import org.myhab.domain.SharedWidget
+import org.myhab.domain.SharedWidgetAudit
 import org.myhab.domain.SharedWidgetState
 import org.myhab.domain.device.DevicePeripheral
 import org.myhab.init.cache.CacheMap
@@ -428,6 +429,39 @@ class Query {
                         hasPin           : sw.pin != null && !sw.pin.isEmpty(),
                         tsCreated        : sw.tsCreated ? ISO_DATE_FORMAT.format(sw.tsCreated) : null,
                         tsUpdated        : sw.tsUpdated ? ISO_DATE_FORMAT.format(sw.tsUpdated) : null
+                    ]
+                }
+            }
+        }
+    }
+
+    def sharedWidgetAudit() {
+        return new DataFetcher() {
+            @Override
+            Object get(DataFetchingEnvironment environment) throws Exception {
+                Long widgetId = environment.getArgument("sharedWidgetId") as Long
+                Integer count = environment.getArgument("count") ?: 200
+                Integer offset = environment.getArgument("offset") ?: 0
+
+                def widget = SharedWidget.get(widgetId)
+                if (!widget) {
+                    return []
+                }
+
+                def results = SharedWidgetAudit.createCriteria().list(max: count, offset: offset) {
+                    eq('sharedWidget', widget)
+                    order('tsCreated', 'desc')
+                }
+
+                return results.collect { entry ->
+                    [
+                        id               : entry.id,
+                        action           : entry.action,
+                        result           : entry.result?.name(),
+                        resultDescription: entry.resultDescription,
+                        remoteAddress    : entry.remoteAddress,
+                        userAgent        : entry.userAgent,
+                        tsCreated        : entry.tsCreated ? ISO_DATE_FORMAT.format(entry.tsCreated) : null
                     ]
                 }
             }

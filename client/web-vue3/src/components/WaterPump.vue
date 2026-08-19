@@ -75,6 +75,18 @@
 
               <q-separator/>
 
+              <!-- Share Access -->
+              <q-item clickable v-close-popup @click="shareDialogVisible = true">
+                <q-item-section avatar>
+                  <q-icon name="mdi-share-variant" color="primary"/>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>Partajează acces</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-separator/>
+
               <!-- View Details -->
               <q-item
                 clickable
@@ -128,6 +140,13 @@
 
     <!-- Bottom Accent Bar -->
     <div class="accent-bar" :class="{ 'accent-active': isPumpOn }"></div>
+
+    <!-- Share Widget Dialog -->
+    <share-widget-dialog
+      v-model="shareDialogVisible"
+      :peripheral-id="String(asset.id || '')"
+      widget-type="WATER_PUMP"
+    />
   </q-card>
 </template>
 <script>
@@ -151,19 +170,22 @@ import EventLogger from "components/EventLogger";
 import humanizeDuration from 'humanize-duration';
 import Toggle from "@vueform/toggle";
 import TimeoutSelector from "components/TimeoutSelector.vue";
+import ShareWidgetDialog from "components/ShareWidgetDialog.vue";
 
 export default defineComponent({
   name: 'WaterPump',
   components: {
     Toggle,
     EventLogger,
-    TimeoutSelector
+    TimeoutSelector,
+    ShareWidgetDialog
   },
   setup(props, {emit}) {
     const appConfig = useAppConfigStore();
     const waterPumpId = appConfig.getNumber('specialDevices.water.peripheral.id');
     const asset = ref({});
     const expirationTime = ref(null);
+    const shareDialogVisible = ref(false);
     const {client} = useApolloClient();
     
     const {mutate: setConfigValue} = useMutation(CONFIGURATION_SET_VALUE, {
@@ -319,6 +341,7 @@ export default defineComponent({
       timeoutConfig,
       showExpiration,
       expirationTime,
+      shareDialogVisible,
       handleSetTimeout,
       handleDeleteTimeout,
       config,

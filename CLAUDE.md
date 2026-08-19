@@ -85,6 +85,7 @@ A standalone, hands-free Android companion (Kotlin + Jetpack Compose, minSdk 30 
 1. **Device ↔ Server**: MQTT via Spring Integration (`MqttTopicService` routes messages, `MqttPublishGateway` publishes)
 2. **Client ↔ Server**: GraphQL (Apollo Client) for queries/mutations; WebSocket (STOMP) for real-time updates
 3. **Scheduled sync**: Quartz jobs poll external APIs (Huawei solar, NIBE heat pump, Open-Meteo weather) and publish state via MQTT
+4. **Guest ↔ Server**: tokenized shared links (`/shared/<token>` → `/api/public/share/**`) — the only anonymous API surface. Plain REST, not GraphQL. See `doc/SHARED_LINKS.md`.
 
 ### GraphQL schema
 Defined in `server/server-core/src/main/resources/schema.graphqls`. Custom fetchers live in `services/graphql/fetchers/` (Query.groovy, Mutation.groovy). GORM domain classes are auto-registered via `GORMSchemaRegistry`.

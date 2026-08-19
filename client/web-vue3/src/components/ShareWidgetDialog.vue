@@ -40,7 +40,7 @@
 			<template v-else>
 				<q-card-section class="q-pa-lg">
 					<div class="text-caption text-grey-7 q-mb-md">
-						Create a temporary access link for this gate. The link will expire after the set date or when all allowed actions are used.
+						{{ introText }}
 					</div>
 
 					<!-- PIN -->
@@ -147,13 +147,13 @@
 					<!-- Actions Allowed -->
 					<q-input
 						v-model.number="form.actionsAllowed"
-						label="Max uses"
+						:label="usesLabel"
 						outlined
 						dense
 						type="number"
 						:rules="[val => val >= 1 || 'At least 1 use required']"
 						class="q-mb-sm"
-						hint="How many times the link can be used"
+						:hint="usesHint"
 					>
 						<template v-slot:prepend>
 							<q-icon name="mdi-counter"/>
@@ -230,6 +230,20 @@ export default defineComponent({
 			if (!createdToken.value) return '';
 			return `${globalThis.location.origin}/shared/${createdToken.value}`;
 		});
+
+		// Switch-type links count starts only — turning the device off is always free,
+		// so the guest can never be left unable to stop it.
+		const isSwitch = computed(() => props.widgetType !== 'GATE_ACCESS');
+
+		const introText = computed(() => isSwitch.value
+			? 'Create a temporary control link for this device. The link will expire after the set date or when all allowed starts are used. Stopping the device is always allowed.'
+			: 'Create a temporary access link for this gate. The link will expire after the set date or when all allowed actions are used.');
+
+		const usesLabel = computed(() => isSwitch.value ? 'Max starts' : 'Max uses');
+
+		const usesHint = computed(() => isSwitch.value
+			? 'How many times the link can start the device'
+			: 'How many times the link can be used');
 
 		const dateError = computed(() => {
 			if (form.shareStartDate && form.shareExpireDate) {
@@ -333,6 +347,9 @@ export default defineComponent({
 			createdToken,
 			shareLink,
 			copied,
+			introText,
+			usesLabel,
+			usesHint,
 			dateError,
 			startDateOptions,
 			expireDateOptions,

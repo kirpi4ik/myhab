@@ -79,11 +79,23 @@
               />
               
               <q-separator/>
-              
+
+              <!-- Share Access -->
+              <q-item clickable v-close-popup @click="shareDialogVisible = true">
+                <q-item-section avatar>
+                  <q-icon name="mdi-share-variant" color="primary"/>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ $t('light_card.share') }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-separator/>
+
               <!-- View Details -->
-              <q-item 
-                clickable 
-                v-close-popup 
+              <q-item
+                clickable
+                v-close-popup
                 @click="viewDetails"
               >
                 <q-item-section avatar>
@@ -136,6 +148,13 @@
 
     <!-- Bottom Accent Bar -->
     <div class="accent-bar" :class="{ 'accent-active': isLightOn }"></div>
+
+    <!-- Share Widget Dialog -->
+    <share-widget-dialog
+      v-model="shareDialogVisible"
+      :peripheral-id="String(asset.id || '')"
+      widget-type="LIGHT"
+    />
   </q-card>
 </template>
 <script>
@@ -160,6 +179,7 @@ import EventLogger from 'components/EventLogger.vue';
 import humanizeDuration from 'humanize-duration';
 import Toggle from '@vueform/toggle';
 import TimeoutSelector from 'components/TimeoutSelector.vue';
+import ShareWidgetDialog from 'components/ShareWidgetDialog.vue';
 
 export default defineComponent({
   name: 'PeripheralLightCard',
@@ -167,6 +187,7 @@ export default defineComponent({
     Toggle,
     EventLogger,
     TimeoutSelector,
+    ShareWidgetDialog,
   },
   props: {
     peripheral: {
@@ -182,6 +203,7 @@ export default defineComponent({
 
     // Dedicated reactive ref for expiration (fixes reactivity on initial load)
     const expirationTime = ref(null);
+    const shareDialogVisible = ref(false);
 
     /**
      * Get the port ID from connected ports
@@ -440,6 +462,7 @@ export default defineComponent({
 
     return {
       asset,
+      shareDialogVisible,
       isDeviceOffline,
       isLightOn,
       lightState,

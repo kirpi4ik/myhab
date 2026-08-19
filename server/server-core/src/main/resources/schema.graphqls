@@ -28,6 +28,8 @@ type Query{
     myNotificationRules: [NotificationRuleResult!]!
     """List all shared widgets, optionally filtered by state."""
     sharedWidgets(state: String): [SharedWidgetResult!]!
+    """Usage history of one shared widget — every attempt, successful or denied, newest first."""
+    sharedWidgetAudit(sharedWidgetId: ID!, count: Int, offset: Int): [SharedWidgetAuditEntry!]!
     """UDP-broadcast scan for MegaD controllers on the local network."""
     discoveredDevices: [DiscoveredDevice!]!
     """Backups stored in the DB for a given device, newest first."""
@@ -320,6 +322,16 @@ type SharedWidgetResult {
     hasPin: Boolean!
     tsCreated: String
     tsUpdated: String
+}
+
+type SharedWidgetAuditEntry {
+    id: ID!
+    action: String!
+    result: String!
+    resultDescription: String
+    remoteAddress: String
+    userAgent: String
+    tsCreated: String
 }
 
 type SharedWidgetCreateResult {
