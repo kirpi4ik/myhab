@@ -9,8 +9,7 @@ import org.springframework.security.web.util.matcher.IpAddressMatcher
  * Resolves the real client IP behind the reverse proxy, and decides whether it
  * belongs to the trusted LAN.
  *
- * <p>The nginx contract lives outside this repo (madhouse-ops,
- * {@code nginx/config/sites-enabled/madhouse.app}):</p>
+ * <p>The reverse-proxy contract this assumes, which a deployment must satisfy:</p>
  * <ul>
  *   <li>{@code X-Real-IP $remote_addr} — overwrites whatever the client sent,
  *       so it is trustworthy <em>when the socket peer is that proxy</em>.</li>
@@ -31,7 +30,14 @@ class ClientIpService {
 
     static transactional = false
 
-    private static final List<String> DEFAULT_TRUSTED_PROXIES = ['192.168.1.200/32']
+    /**
+     * Empty by default: a deployment must name its own proxy via
+     * {@code myhab.security.trustedProxies}. Restrictive, not permissive — with no
+     * entry, no forwarding header is believed and the socket peer is used as-is.
+     * Shipping one installation's proxy address as a product default would silently
+     * grant that address header-spoofing trust everywhere else.
+     */
+    private static final List<String> DEFAULT_TRUSTED_PROXIES = []
     /** RFC1918 + loopback. ::1/128 matters: IpAddressMatcher denies across address families. */
     private static final List<String> DEFAULT_LAN_CIDRS = [
             '192.168.0.0/16', '10.0.0.0/8', '172.16.0.0/12', '127.0.0.0/8', '::1/128'

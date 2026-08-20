@@ -153,75 +153,81 @@ class ConfigProvider implements InitializingBean {
     @Synchronized
     private boolean syncLoad() {
         boolean result
-        if (ping(repoURI)) {
-            try {
+        // The pull is best-effort: a repo that is unreachable (or a file:// repo, which
+        // has no HTTP endpoint to ping) must still serve the configuration already
+        // present in the local clone. Previously a failed ping skipped the load
+        // entirely, leaving the app with empty config.
+        try {
+            if (ping(repoURI)) {
                 git.pull().setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password)).call()
-                def repository = git.getRepository()
-                ObjectId lastCommitId = repository.resolve(Constants.HEAD);
-                RevWalk revWalk = new RevWalk(repository)
-                RevCommit commit = revWalk.parseCommit(lastCommitId);
-                if (Date.from(Instant.ofEpochSecond(commit.getCommitTime())).after(lastSyncDate)) {
-                    RevTree tree = commit.getTree();
-                    TreeWalk treeWalk = new TreeWalk(repository)
-                    treeWalk.addTree(tree)
-                    treeWalk.setRecursive(true)
-                    
-                    // Collect all configurations: overrides separately, others in a list
-                    YAMLConfiguration overridesConf = null
-                    List<org.apache.commons.configuration2.Configuration> otherConfigs = []
-                    
-                    // First pass: load all config files, but handle overrides.yaml separately
-                    while (treeWalk.next()) {
-                        ObjectId objectId = treeWalk.getObjectId(0)
-                        ObjectLoader loader = repository.open(objectId)
-                        String filePath = treeWalk.getPathString()
-
-                        if (filePath.endsWith("yaml") || filePath.endsWith("yml")) {
-                            YAMLConfiguration yamlConf = new YAMLConfiguration();
-                            yamlConf.read(new StringReader(new String(loader.bytes)))
-                            
-                            // Check if this is the overrides file
-                            if (filePath.equals(OVERRIDES_FILE) || filePath.endsWith("/" + OVERRIDES_FILE)) {
-                                overridesConf = yamlConf
-                                log.debug("Found overrides configuration: ${filePath}")
-                            } else {
-                                otherConfigs << yamlConf
-                            }
-                        } else if (filePath.endsWith("xml")) {
-                            XMLConfiguration cfg = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
-                            FileHandler fh = new FileHandler(cfg);
-                            fh.load(new StringReader(new String(loader.bytes)));
-                            otherConfigs << cfg
-                        } else if (filePath.endsWith("json")) {
-                            JSONConfiguration jsonConf = new JSONConfiguration();
-                            jsonConf.read(new StringReader(new String(loader.bytes)))
-                            otherConfigs << jsonConf
-                        }
-                    }
-                    
-                    // Clear and rebuild config with proper priority
-                    // CompositeConfiguration returns value from FIRST config that contains the key
-                    config.clear()
-                    
-                    // Add overrides FIRST so it takes precedence
-                    if (overridesConf != null) {
-                        config.addConfiguration(overridesConf)
-                        log.debug("Added overrides configuration with highest priority")
-                    }
-                    
-                    // Add all other configs after overrides
-                    otherConfigs.each { cfg ->
-                        config.addConfiguration(cfg)
-                    }
-                    
-                    lastSyncDate = new Date()
-                    result = true
-                    log.debug("Config synchronization completed with ${otherConfigs.size() + (overridesConf ? 1 : 0)} config files")
-                }
-
-            } catch (Exception ex) {
-                log.error("Failed to synchronize configuration", ex)
+            } else {
+                log.warn("Config repo ${repoURI} not reachable - loading from the local clone")
             }
+            def repository = git.getRepository()
+            ObjectId lastCommitId = repository.resolve(Constants.HEAD);
+            RevWalk revWalk = new RevWalk(repository)
+            RevCommit commit = revWalk.parseCommit(lastCommitId);
+            if (Date.from(Instant.ofEpochSecond(commit.getCommitTime())).after(lastSyncDate)) {
+                RevTree tree = commit.getTree();
+                TreeWalk treeWalk = new TreeWalk(repository)
+                treeWalk.addTree(tree)
+                treeWalk.setRecursive(true)
+                
+                // Collect all configurations: overrides separately, others in a list
+                YAMLConfiguration overridesConf = null
+                List<org.apache.commons.configuration2.Configuration> otherConfigs = []
+                
+                // First pass: load all config files, but handle overrides.yaml separately
+                while (treeWalk.next()) {
+                    ObjectId objectId = treeWalk.getObjectId(0)
+                    ObjectLoader loader = repository.open(objectId)
+                    String filePath = treeWalk.getPathString()
+
+                    if (filePath.endsWith("yaml") || filePath.endsWith("yml")) {
+                        YAMLConfiguration yamlConf = new YAMLConfiguration();
+                        yamlConf.read(new StringReader(new String(loader.bytes)))
+                        
+                        // Check if this is the overrides file
+                        if (filePath.equals(OVERRIDES_FILE) || filePath.endsWith("/" + OVERRIDES_FILE)) {
+                            overridesConf = yamlConf
+                            log.debug("Found overrides configuration: ${filePath}")
+                        } else {
+                            otherConfigs << yamlConf
+                        }
+                    } else if (filePath.endsWith("xml")) {
+                        XMLConfiguration cfg = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
+                        FileHandler fh = new FileHandler(cfg);
+                        fh.load(new StringReader(new String(loader.bytes)));
+                        otherConfigs << cfg
+                    } else if (filePath.endsWith("json")) {
+                        JSONConfiguration jsonConf = new JSONConfiguration();
+                        jsonConf.read(new StringReader(new String(loader.bytes)))
+                        otherConfigs << jsonConf
+                    }
+                }
+                
+                // Clear and rebuild config with proper priority
+                // CompositeConfiguration returns value from FIRST config that contains the key
+                config.clear()
+                
+                // Add overrides FIRST so it takes precedence
+                if (overridesConf != null) {
+                    config.addConfiguration(overridesConf)
+                    log.debug("Added overrides configuration with highest priority")
+                }
+                
+                // Add all other configs after overrides
+                otherConfigs.each { cfg ->
+                    config.addConfiguration(cfg)
+                }
+                
+                lastSyncDate = new Date()
+                result = true
+                log.debug("Config synchronization completed with ${otherConfigs.size() + (overridesConf ? 1 : 0)} config files")
+            }
+
+        } catch (Exception ex) {
+            log.error("Failed to synchronize configuration", ex)
         }
 
         return result

@@ -18,6 +18,16 @@ class SharedWidgetControllerSpec extends Specification
     /** Topics captured instead of hitting the real event bus. */
     List published = []
 
+    /**
+     * The product trusts no proxy by default, so the audited client ip would otherwise
+     * fall back to the socket peer. This case is about a configured proxy.
+     */
+    Closure doWithConfig() {
+        return { config ->
+            config.myhab = [security: [trustedProxies: ['192.168.1.200/32']]]
+        }
+    }
+
     void setupSpec() {
         mockDomains(SharedWidget, SharedWidgetAudit)
     }

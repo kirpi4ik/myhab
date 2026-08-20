@@ -106,6 +106,21 @@ jobs:
           tags: kirpi4ik/myhab:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+      # The demo stack's compose file lives in the ops repo, so the assets it needs
+      # (device simulator, seed SQL, ConfigProvider seed) ship as their own image
+      # built from this same commit. Ops then pins two tags and nothing else.
+      - name: Build demo simulator jar
+        run: ./gradlew :demo-simulator:fatJar
+      - name: Build demo assets image and push
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          file: demo/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: kirpi4ik/myhab-demo:${{steps.get_version.outputs.dockertag}}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Create GitHub tag & release
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:

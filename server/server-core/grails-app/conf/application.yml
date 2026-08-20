@@ -73,11 +73,11 @@ management:
 # would make this allowlist editable through the API it protects.
 myhab:
   security:
-    # Reverse proxies whose X-Real-IP we believe. Must be the proxy's own address
-    # (madhouse-lb). Empty means no request arriving with forwarding headers is
-    # trusted — restrictive, not permissive.
-    trustedProxies:
-      - 192.168.1.200/32
+    # Reverse proxies whose X-Real-IP we believe. Must be the proxy's own address.
+    # Empty means no request arriving with forwarding headers is trusted —
+    # restrictive, not permissive. A deployment behind a proxy MUST set this, or the
+    # audited client IP will be the proxy's rather than the visitor's.
+    trustedProxies: []
     lanCidrs:
       - 192.168.0.0/16
       - 10.0.0.0/8
@@ -87,9 +87,10 @@ myhab:
 
 quartz:
   jobs:
-    # Huawei solar inverter sync
+    # Huawei solar inverter sync (FusionSolar cloud poll)
+    # OFF by default — only useful once a Huawei inverter is configured.
     huaweiInfoSync:
-      enabled: true
+      enabled: false
       interval: 300  # seconds
 
     # Segway Navimow lawn mower cloud sync (REST poll)
@@ -97,7 +98,7 @@ quartz:
     #   cfg.key.device.oauth.access_token, cfg.key.device.navimow.api.base_url,
     #   cfg.key.device.navimow.device.id
     navimowInfoSync:
-      enabled: true
+      enabled: false
       interval: 30  # seconds
 
     # Segway Navimow OAuth2 token refresh
@@ -105,7 +106,7 @@ quartz:
     # refresh_token stored during the OAuth flow. Enable once you've completed
     # the OAuth flow at least once (refresh_token has to exist to be spent).
     navimowTokenRefresh:
-      enabled: true
+      enabled: false
       interval: 600  # seconds (10 min — well inside Segway's TTL)
 
     # Nibe heat pump data sync
@@ -267,6 +268,64 @@ environments:
       springsecurity:
         debug:
           useFilter: true
+  # Public demo deployment - see demo/README.md.
+  # Everything external is switched off: the demo runs on an isolated network with
+  # no route to the LAN, the internet, or any real device.
+  demo:
+    logging:
+      jul:
+        usebridge: true
+    myhab:
+      # The Vue build is packaged into the JAR for this deployment, so the SPA
+      # route mappings apply (UrlMappings). `demoRun` overrides this locally.
+      spa:
+        enabled: true
+      config:
+        branch: demo
+      telegram:
+        enabled: false
+      demo:
+        # Reset the sandbox after this many minutes with no mutating request.
+        idleMinutes: 20
+        # How often DemoResetJob checks, in seconds.
+        checkInterval: 300
+        # Unconditional nightly reset.
+        resetCron: "0 0 4 * * ?"
+        # Shown on the login page and the demo banner.
+        credentials:
+          user: demo
+          userPassword: demo
+          admin: demo-admin
+          adminPassword: demo-admin
+    graphql:
+      graphiql:
+        enabled: false
+    grails:
+      plugin:
+        springsecurity:
+          rest:
+            token:
+              storage:
+                jwt:
+                  # A demo "session" should be short, unlike the long-lived default
+                  # that suits permanently signed-in wall tablets.
+                  expiration: 3600
+    quartz:
+      jobs:
+        # Every job that reaches an external system or a real device.
+        nibeTokenRefresh: { enabled: false }
+        nibeInfoSync: { enabled: false }
+        huaweiInfoSync: { enabled: false }
+        meteoStationSync: { enabled: false }
+        navimowInfoSync: { enabled: false }
+        navimowTokenRefresh: { enabled: false }
+        deviceControllerStateSync: { enabled: false }
+        # The config repo is a local bare repo; nothing to pull.
+        configSync: { enabled: false }
+        # Kept on: both are internal and make the demo behave like the real thing.
+        portValueSyncTrigger: { enabled: true }
+        switchOffOnTimeout: { enabled: true }
+        demoReset: { enabled: true }
 graphql:
   enabled: true
   graphiql:

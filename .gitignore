@@ -23,3 +23,6 @@ VERSIONING.md
 # IDE and editor configuration
 .vscode/
 .claude/
+
+# Android SDK location — machine-specific, and the file says so itself.
+local.properties

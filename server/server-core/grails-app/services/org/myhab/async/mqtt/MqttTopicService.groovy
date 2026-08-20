@@ -642,6 +642,20 @@ class MqttTopicService {
         return true
     }
 
+    /**
+     * Publish to an arbitrary topic, bypassing the per-device topic templates.
+     *
+     * Only for control topics that belong to no device - currently the demo's
+     * "republish your retained state" signal to the simulator.
+     */
+    void publishRaw(String topic, String payload) {
+        if (!topic) {
+            log.warn("Cannot publish: topic is null")
+            return
+        }
+        mqttPublishGateway.sendToMqtt(topic, payload)
+    }
+
     void publishStatus(Device device, DeviceStatus status) {
         if (!device?.model) {
             log.warn("Cannot publish status: device or model is null (device code: ${device?.code})")

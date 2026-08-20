@@ -383,12 +383,16 @@
     "close": "Inchide",
     "alert": "Alerta",
     "cancel": "Anuleaza",
-    "timestamps": "Marcaje temporale"
+    "timestamps": "Marcaje temporale",
+    "details": "Detalii",
+    "share_access": "Partajează acces",
+    "loading": "Se încarcă…"
   },
   "door": {
     "small_gate": "Poarta mica",
     "open": "Deschide",
-    "confirm_open": "Atentie! Doriti sa deschideti?"
+    "confirm_open": "Atentie! Doriti sa deschideti?",
+    "access_control": "Control acces poartă"
   },
   "meteo": {
     "title": "Statie Meteo",
@@ -437,7 +441,8 @@
 		"total_yield": "Producție Totală",
 		"total_grid_export": "Export Catre Rețea Total",
 		"total_grid_import": "Import Din Rețea Total",
-		"not_available": "N/A"
+		"not_available": "N/A",
+		"view_reports": "Vezi rapoarte și istoric"
 	},
   "timeout_selector": {
     "title": "Cronometru Oprire Automată",
@@ -483,6 +488,101 @@
     "off": "OPRIT",
     "details": "Detalii",
     "share": "Partajează acces",
-    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate",
+    "system": "Sistem Udare",
+    "lawn": "Gazon",
+    "garden": "Grădină"
+  },
+  "dashboard": {
+    "widgets": {
+      "lighting": "Acces rapid iluminat",
+      "climate": "Acces rapid climatizare",
+      "switches": "Acces rapid prize",
+      "temperature": "Acces rapid temperatură",
+      "peripheral_lock": "Încuietoare poartă",
+      "sprinklers": "Stropitoare",
+      "water_pump": "Pompă apă",
+      "meteo_station": "Stație meteo",
+      "solar_plant": "Centrală solară",
+      "heat_pump": "Pompă de căldură",
+      "navimow": "Robot de tuns Navimow"
+    },
+    "cards": {
+      "lighting": "Iluminat",
+      "climate": "Climatizare",
+      "switches": "Prize",
+      "temperature": "Temperatură",
+      "interior": "Interior",
+      "exterior": "Exterior",
+      "ground_floor": "Parter",
+      "upper_floor": "Etaj"
+    },
+    "config": {
+      "zone_int": "Zonă interioară",
+      "zone_ext": "Zonă exterioară",
+      "zone_ground": "Zona parterului",
+      "zone_upper": "Zona etajului",
+      "peripheral_door_lock": "Periferic încuietoare",
+      "peripheral_water_pump": "Periferic pompă apă",
+      "device_meteo": "Dispozitiv stație meteo",
+      "device_solar_inverter": "Dispozitiv invertor solar",
+      "device_solar_meter": "Dispozitiv contor solar",
+      "device_heat_pump": "Dispozitiv pompă de căldură",
+      "device_navimow": "Dispozitiv robot de tuns"
+    },
+    "not_configured": {
+      "needs": "Neconfigurat — acest widget are nevoie de o setare pentru a afișa ceva. | Neconfigurat — acest widget are nevoie de {count} setări pentru a afișa ceva.",
+      "missing": "Lipsesc:",
+      "admin_hint": "Un administrator le poate seta în Setări → Configurare aplicație."
+    },
+    "picker": {
+      "sets_key": "Setează {key}",
+      "no_options": "Nicio intrare potrivită",
+      "saved": "S-a salvat {key}",
+      "save_failed": "Nu s-a putut salva {key}"
+    },
+    "settings": {
+      "title": "Widgeturi dashboard",
+      "caption": "Alegeți ce widgeturi apar pe dashboard. Modificările se salvează automat și vă urmează contul pe toate browserele și dispozitivele.",
+      "login_required": "Trebuie să fiți autentificat pentru a gestiona widgeturile.",
+      "section_quick_access": "Acces rapid",
+      "section_monitoring": "Monitorizare dispozitive",
+      "needs": "Necesită {items} — se configurează în",
+      "app_config_link": "Configurare aplicație"
+    }
+  },
+  "water_pump": {
+    "title": "Pompă Apă",
+    "on": "PORNIT",
+    "off": "OPRIT"
+  },
+  "temp_chart": {
+    "not_configured": "Graficul de temperatură nu este configurat",
+    "hint": "Setați {keys} în /admin/appconfig"
+  },
+  "navimow": {
+    "states": {
+      "docked": "La stație",
+      "charging": "Se încarcă",
+      "idle": "Inactiv",
+      "mowing": "Tunde",
+      "paused": "În pauză",
+      "returning": "Se întoarce",
+      "error": "Eroare",
+      "unknown": "Necunoscut"
+    },
+    "actions": {
+      "start": "Începe tunsul",
+      "pause": "Pauză",
+      "resume": "Reia",
+      "dock": "Întoarcere la stație"
+    },
+    "offline": "Robotul este offline — este posibil ca tokenul să fi expirat.",
+    "reconnect": "Reconectare",
+    "command_sent": "Comandă trimisă: {action}",
+    "command_rejected": "{action} respinsă: {reason}",
+    "command_failed": "{action} a eșuat: {reason}",
+    "unknown_error": "eroare necunoscută",
+    "last_update": "Ultima actualizare"
   }
 }

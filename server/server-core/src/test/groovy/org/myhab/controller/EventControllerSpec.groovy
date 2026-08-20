@@ -9,6 +9,13 @@ class EventControllerSpec extends Specification implements ControllerUnitTest<Ev
 
     private static final String PROXY = '192.168.1.200'
 
+    /** The product trusts no proxy by default; these cases are about a configured one. */
+    Closure doWithConfig() {
+        return { config ->
+            config.myhab = [security: [trustedProxies: [PROXY + '/32']]]
+        }
+    }
+
     /** Topics captured instead of hitting the real event bus. */
     List published = []
 

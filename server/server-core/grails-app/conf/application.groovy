@@ -115,7 +115,7 @@ environments {
     development {
         dataSource {
             dbCreate = "update"
-            url = "jdbc:postgresql://localhost:5432/madhouse?TimeZone=UTC"
+            url = "jdbc:postgresql://localhost:5432/myhab?TimeZone=UTC"
             username = "myhab"
             password = "myhab"
             logSql = false
@@ -130,6 +130,21 @@ environments {
             url = System.getenv("DB_URL")?.contains("TimeZone=") ? System.getenv("DB_URL") : "${System.getenv('DB_URL')}?TimeZone=UTC"
             username = System.getenv("DB_USERNAME")
             password = System.getenv("DB_PASSWORD")
+            logSql = false
+            formatSql = false
+        }
+    }
+    // Public demo (see demo/README.md). Env-var driven like production so the container
+    // is configured the same way, with a localhost fallback so `./gradlew demoRun` works
+    // against a local PostgreSQL with no environment set up.
+    demo {
+        dataSource {
+            dbCreate = "update"
+            url = System.getenv("DB_URL")
+                    ? (System.getenv("DB_URL").contains("TimeZone=") ? System.getenv("DB_URL") : "${System.getenv('DB_URL')}?TimeZone=UTC")
+                    : "jdbc:postgresql://localhost:5432/myhab_demo?TimeZone=UTC"
+            username = System.getenv("DB_USERNAME") ?: "myhab"
+            password = System.getenv("DB_PASSWORD") ?: "myhab"
             logSql = false
             formatSql = false
         }

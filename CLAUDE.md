@@ -4,7 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-myHAB (My Home Automation Backend) — a full-stack home automation platform. Grails 6.1/Groovy backend + Vue 3/Quasar PWA frontend + a native Android voice-assistant client. Manages IoT devices (ESP32, MEGAD), solar inverters (Huawei), heat pumps (NIBE), weather data, and automation scenarios via MQTT, GraphQL, and WebSocket.
+myHAB (My Home Automation Backend) — a full-stack home automation platform. Grails 7.2/Groovy 4 backend + Vue 3/Quasar PWA frontend + a native Android voice-assistant client. Manages IoT devices (ESP32, MEGAD), solar inverters (Huawei), heat pumps (NIBE), weather data, and automation scenarios via MQTT, GraphQL, and WebSocket.
+
+## Product vs. installation — read this before adding anything deployment-shaped
+
+This repository is the **myHAB product** and is public. A deployment of it (its domain,
+its hostnames and IP addresses, its certificates, its secrets, which vendor integrations
+it happens to own) is an **installation**, and lives in that operator's own private repo.
+
+- Ship **neutral defaults**: empty, `localhost`, or `example.com`. Never a real host,
+  address, token, or email.
+- Anything an operator must set belongs in their config — either the git-backed
+  configuration repo (`ConfigProvider`) or an external
+  `config/application.yml` layered over the image's defaults by Spring Boot.
+- Features tied to hardware nobody else has (Huawei solar, Navimow, NIBE) ship
+  **disabled**; an operator enables what they own.
+
+`git grep -inE "192\.168\.|Bearer ey"` should turn up nothing but test fixtures and
+the MegaD factory bootloader address.
 
 ## Build & Run Commands
 
@@ -37,6 +54,19 @@ yarn format                              # Prettier
 ./gradlew servePWA                       # Run PWA dev server
 ```
 
+### Public demo (`demo/`)
+A self-contained sandbox — seeded dataset, simulated devices, periodic reset — running in
+its own `demo` Grails environment. No Docker needed locally:
+```bash
+./gradlew demoSeedLocal                  # (re)build the local myhab_demo database (destructive)
+./gradlew demoSim                        # device simulator + embedded MQTT broker on :1883
+./gradlew demoRun                        # backend in the `demo` environment
+./gradlew serve                          # Quasar dev server on :10002
+```
+`demo/` holds only what the product owns: seed SQL, the config seed, the simulator, and
+the Gradle tasks above. Compose files and deployment belong to the operator's private
+repo. See `demo/README.md`.
+
 ### Android voice client (standalone — NOT part of the root build)
 ```bash
 cd client/android
@@ -45,15 +75,16 @@ cd client/android
 ./build-apk.ps1 -Install                 # also adb-install on connected devices
 ./build-apk.ps1 -Clean                   # clean rebuild (after NDK/dependency changes)
 ```
-`client/android/` has its own Gradle wrapper (Gradle 8.9 / AGP 8.5) because the Android Gradle Plugin is incompatible with the root Grails multi-module build (Gradle 7.x). **Open only `client/android` in Android Studio**, not the repo root. First native build is slow + needs internet (CMake `FetchContent` pulls tflite-micro et al.).
+`client/android/` has its own Gradle wrapper (Gradle 8.9 / AGP 8.5) and is deliberately excluded from the root `settings.gradle` — the Android Gradle Plugin and the Grails plugin do not coexist in one build, and the two have unrelated release cadences. **Open only `client/android` in Android Studio**, not the repo root. First native build is slow + needs internet (CMake `FetchContent` pulls tflite-micro et al.).
 
 ## Architecture
 
 ### Multi-module Gradle project (root build)
-- `:server-core` — Main Grails 6.1 application (controllers, domain, services, jobs)
-- `:server-config` — Configuration key constants and provider interface
-- `:server-rules` — Business rules engine (heating, lighting facts)
-- `:web-vue3` — Vue 3 + Quasar frontend
+- `:server-core` (`server/server-core`) — Main Grails application (controllers, domain, services, jobs)
+- `:server-config` (`server/server-libs/server-config`) — Configuration key constants and the git-backed `ConfigProvider`
+- `:server-rules` (`server/server-libs/server-rules`) — Business rules engine (heating, lighting facts)
+- `:web-vue3` (`client/web-vue3`) — Vue 3 + Quasar frontend
+- `:demo-simulator` (`demo/simulator`) — MQTT device simulator for the public demo
 
 > The native Android client (`client/android/`) is a **separate** Gradle build, intentionally excluded from the root `settings.gradle` (see "Native Android voice client" below).
 
@@ -69,14 +100,14 @@ cd client/android
 - **pages/** — Route-level components. `public/` contains unauthenticated pages
 - **components/** — Reusable Vue components
 - **graphql/** — GraphQL query/mutation definitions
-- **composables/** — Vue 3 composables
+- **composables/** — Vue 3 composables. `useDashboardWidgets.js` is the widget registry: each entry declares a `requiredConfig` list of app-config keys, which `useWidgetConfigStatus.js` uses so Settings will not offer a widget that cannot work and the dashboard renders `WidgetNotConfigured.vue` (with an inline picker for admins) instead of mounting it with a null id
 - **_services/** and **_helpers/** — Service layer and utilities
 
 ### Native Android voice client (`client/android/`)
 A standalone, hands-free Android companion (Kotlin + Jetpack Compose, minSdk 30 / Android 11) — a thin client over the **existing** server contract, no backend changes. Flow: wake word → on-device STT → `voiceCommand` GraphQL mutation → play the server's neural-TTS MP3 reply (falls back to Android `TextToSpeech`).
 - **Modules:** `:app` (`org.myhab.voice`) and `:microwakeword` — the wake-word NDK engine vendored from Home Assistant (Apache-2.0): real TF `audio_microfrontend` + TFLite-Micro via JNI, built for `arm64-v8a` only (real devices; no emulator).
 - **Auth:** native username/password → `POST /api/login` → JWT stored in Keystore-backed `EncryptedSharedPreferences`; re-login on `401`.
-- **Networking:** OkHttp + kotlinx.serialization (no Apollo). Default backend `https://madhouse.app`, overridable in Settings (use `http://10.0.2.2:8181` for the emulator).
+- **Networking:** OkHttp + kotlinx.serialization (no Apollo). Default backend `http://10.0.2.2:8181` (the emulator's host loopback), overridable in Settings.
 - **Wake word:** microWakeWord model + config in `app/src/main/assets/` (`wake_word.json` + `<model>.tflite`, git-ignored); runs in a foreground microphone service.
 - **Audio routing gotcha:** replies play via the legacy `STREAM_MUSIC` path (not `AudioAttributes`), which mis-routes to the earpiece on some One UI builds — see `voice/ReplyPlayer.kt`.
 - Full details + setup in `client/android/README.md`.
@@ -97,11 +128,14 @@ Events flow through named topics (e.g., `EVT_LIGHT`, `EVT_GATE`) with parameters
 
 - **Java 17** (required — Temurin recommended)
 - **Node.js 18+** with Yarn (frontend)
-- **Grails 6.1.0** / Groovy 3.0.25 / GORM 7.3.4
+- **Grails 7.2.1** / Groovy 4.0.28 / GORM (Hibernate 5), versions from the Grails BOM
+- **Gradle 8.14** (wrapper) — root build only
 - **PostgreSQL** database
 - **Vue 3** / Quasar 2.18 / Apollo Client 3.14
-- **Spring Security Core 6.0** with OAuth 2.0 token auth
-- **Hazelcast 5.3** for caching
+- **Spring Security** + Spring Security REST — signed HS256 JWT (`JWT_SECRET`). There is
+  no OAuth2 provider plugin on the classpath; the `/oauth/**` rules in
+  `application.groovy` are inert
+- **Hazelcast 5.7** for caching
 - **Android client:** Kotlin 1.9 / Jetpack Compose / minSdk 30 (Android 11) — standalone Gradle 8.9 + AGP 8.5, NDK + CMake for the native wake-word module
 
 ## Testing
@@ -119,7 +153,9 @@ GitHub Actions (`.github/workflows/gradle.yml`): triggers on push/PR to master o
 
 ## Configuration
 
-- Backend config: `server/server-core/grails-app/conf/application.yml` (job intervals, CORS, DB)
+- Backend config: `server/server-core/grails-app/conf/application.yml` (job intervals, CORS, DB) — plus per-environment blocks under `environments:` (`development`, `production`, `demo`)
+- Deployment overrides: an external `config/application.yml` next to the JAR (Spring Boot's `./config` location), owned by the installation, layered over the above. This is where a deployment puts `myhab.security.trustedProxies` and re-enables the vendor jobs it owns.
+- Global runtime configuration: a git-backed repo read by `ConfigProvider` (one branch per environment), surfaced in the UI under **Settings → App configuration**
 - Runtime config: `server/server-core/grails-app/conf/runtime.groovy`
 - Spring beans: `server/server-core/grails-app/conf/spring/resources.groovy`
 - Frontend config: `client/web-vue3/quasar.config.js` (build modes, plugins, dev proxy)

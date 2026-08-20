@@ -167,9 +167,9 @@
             </q-list>
             <div class="text-caption text-grey-7 q-mt-md">
               <strong>Example:</strong> If your dashboard URL is<br>
-              <code>http://grafana.madhouse.app/d/abc123/solar-plant</code><br>
+              <code>https://grafana.example.com/d/abc123/solar-plant</code><br>
               Then set:<br>
-              • grafana.url=http://grafana.madhouse.app<br>
+              • grafana.url=https://grafana.example.com<br>
               • grafana.dashboard.solar.id=abc123
             </div>
           </q-card-section>

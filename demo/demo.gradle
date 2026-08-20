@@ -1,0 +1,164 @@
+/**
+ * Tasks for running the public demo locally, with no Docker.
+ *
+ * Applied from the root build.gradle. Prerequisites are the same as normal
+ * development: JDK 17, a local PostgreSQL, Node/Yarn. Nothing else — the broker is
+ * embedded in the simulator and the config repo is materialised on disk.
+ *
+ *   ./gradlew demoSeedLocal   # (re)build the local myhab_demo database
+ *   ./gradlew demoSim         # simulator + embedded MQTT broker on :1883
+ *   ./gradlew demoRun         # the backend, in the `demo` environment
+ *   ./gradlew serve           # existing task: Quasar dev server on :10002
+ *
+ * See demo/README.md.
+ */
+
+ext {
+    demoDir = file("${rootDir}/demo")
+    demoDb = System.getenv('DEMO_DB') ?: 'myhab_demo'
+    demoDbUser = System.getenv('DEMO_DB_USER') ?: 'myhab'
+    demoDbPassword = System.getenv('DEMO_DB_PASSWORD') ?: 'myhab'
+    demoDbHost = System.getenv('DEMO_DB_HOST') ?: 'localhost'
+    demoDbPort = System.getenv('DEMO_DB_PORT') ?: '5432'
+    demoConfigRepoDir = file("${rootDir}/build/demo-config.git")
+}
+
+/**
+ * Materialise the bare git repo that the demo's ConfigProvider clones over file://.
+ *
+ * The demo deliberately gets a config repo of its own: it publishes an admin account,
+ * and the appConfig query returns every key to any admin caller, so it must never be
+ * pointed at a real deployment's configuration. See demo/README.md.
+ */
+tasks.register('demoConfigRepo') {
+    group = 'demo'
+    description = 'Build build/demo-config.git from demo/config'
+
+    doLast {
+        def work = file("${rootDir}/build/demo-config-work")
+        try {
+            delete demoConfigRepoDir, work
+        } catch (Exception e) {
+            // A running `demoRun` keeps the bare repo's pack files open (JGit holds the
+            // clone for the lifetime of the app), so Windows refuses the delete. Say so,
+            // rather than leaving the developer to decode an IOException about packfiles.
+            throw new GradleException(
+                    "Could not rebuild ${demoConfigRepoDir.name}: a running demo is holding it open. " +
+                    "Stop `./gradlew demoRun` and try again.", e)
+        }
+        work.mkdirs()
+
+        copy {
+            from file("${demoDir}/config")
+            into work
+        }
+
+        // The container resolves `demo-mqtt` by service name; locally the broker is
+        // the simulator's embedded one. overrides.yaml wins in ConfigProvider, so the
+        // committed config.yaml stays accurate for the deployed stack.
+        new File(work, 'overrides.yaml').text = """\
+# Written by the demoConfigRepo Gradle task for local runs. Not in version control:
+# the deployed stack resolves demo-mqtt by container name instead.
+mqtt:
+  hostname: localhost
+"""
+
+        def git = { List<String> args, File dir ->
+            exec {
+                workingDir dir
+                commandLine(['git'] + args)
+            }
+        }
+
+        git(['init', '--quiet', '--initial-branch=demo'], work)
+        git(['-c', 'user.email=demo@example.invalid', '-c', 'user.name=myHAB demo',
+             'add', '.'], work)
+        git(['-c', 'user.email=demo@example.invalid', '-c', 'user.name=myHAB demo',
+             'commit', '--quiet', '-m', 'Demo configuration seed'], work)
+        git(['clone', '--quiet', '--bare', '--branch', 'demo',
+             work.absolutePath, demoConfigRepoDir.absolutePath], work)
+
+        logger.quiet "Demo config repo ready at ${demoConfigRepoDir}"
+    }
+}
+
+/**
+ * Drop and rebuild the local demo database.
+ *
+ * Deliberately destructive and idempotent: the demo database is disposable by design,
+ * so re-running this is the normal way to get back to a known state while developing.
+ */
+tasks.register('demoSeedLocal') {
+    group = 'demo'
+    description = 'Drop and rebuild the local demo database from demo/seed'
+
+    doLast {
+        def psql = { List<String> args ->
+            exec {
+                environment 'PGPASSWORD', demoDbPassword
+                commandLine(['psql', '-v', 'ON_ERROR_STOP=1',
+                             '-h', demoDbHost, '-p', demoDbPort, '-U', demoDbUser] + args)
+            }
+        }
+
+        logger.quiet "Rebuilding ${demoDb} on ${demoDbHost}:${demoDbPort}"
+        // A running `demoRun` holds connections and would block the DROP. This
+        // database exists to be thrown away, so evict them rather than making the
+        // developer stop the app first.
+        psql(['-d', 'postgres', '-c',
+              "SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
+              "WHERE datname = '${demoDb}' AND pid <> pg_backend_pid()"])
+        psql(['-d', 'postgres', '-c', "DROP DATABASE IF EXISTS ${demoDb}"])
+        psql(['-d', 'postgres', '-c', "CREATE DATABASE ${demoDb}"])
+
+        // Tracked in demo/seed so a clean checkout can build the database; doc/ is
+        // gitignored and is not available to the container build either.
+        [ 'schema.sql', 'demo-entities.sql', 'demo-seed-schema.sql' ].each { name ->
+            def f = new File("${demoDir}/seed", name)
+            if (f.exists()) {
+                logger.quiet "Applying ${name}"
+                psql(['-d', demoDb, '-q', '-f', f.absolutePath])
+            }
+        }
+
+        logger.quiet "Demo database ready. Log in as demo/demo or demo-admin/demo-admin."
+    }
+}
+
+tasks.register('demoSim', JavaExec) {
+    group = 'demo'
+    description = 'Run the device simulator with an embedded MQTT broker'
+    dependsOn ':demo-simulator:classes'
+
+    classpath = project(':demo-simulator').sourceSets.main.runtimeClasspath
+    mainClass = 'org.myhab.demo.DeviceSimulator'
+    args '--embedded-broker',
+         '--broker', 'tcp://localhost:1883',
+         '--devices', "${demoDir}/seed/devices.json"
+}
+
+tasks.register('demoRun') {
+    group = 'demo'
+    description = 'Run the backend in the `demo` environment (bootRun)'
+    dependsOn 'demoConfigRepo', ':server-core:bootRun'
+}
+
+// bootRun is configured lazily so `demoRun` can set the environment without a
+// separate task type. Only applies when demoRun is the requested task, so a plain
+// `./gradlew bootRun` is untouched.
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(':demoRun')) {
+        project(':server-core').tasks.named('bootRun').configure {
+            systemProperty 'grails.env', 'demo'
+            // Locally the SPA is served by the Quasar dev server on :10002, not from
+            // the classpath, so the SPA route mappings must stay off.
+            systemProperty 'myhab.spa.enabled', 'false'
+            environment 'DB_URL', "jdbc:postgresql://${demoDbHost}:${demoDbPort}/${demoDb}?TimeZone=UTC"
+            environment 'DB_USERNAME', demoDbUser
+            environment 'DB_PASSWORD', demoDbPassword
+            environment 'CFG_REPO_URI', "file:///${demoConfigRepoDir.absolutePath.replace('\\', '/')}"
+            environment 'JWT_SECRET', System.getenv('JWT_SECRET') ?:
+                    'demo-only-jwt-secret-not-used-for-anything-real-0000000000000000'
+        }
+    }
+}

@@ -31,22 +31,27 @@ import org.myhab.jobs.PortValueSyncTriggerJob
 import org.myhab.jobs.SwitchOFFOnTimeoutJob
 import org.myhab.jobs.RandomColorsJob
 import org.myhab.jobs.RainbowRGB
+import org.myhab.jobs.DemoResetJob
 import org.myhab.listener.quartz.JobHistoryListener
 import org.quartz.SimpleTrigger
 
 // Read configuration for static jobs
 def config = Holders.grailsApplication?.config
 
-// Get database connection details for Quartz (environment-aware)
+// Database connection details for Quartz. Driven by DB_URL rather than by the
+// environment name: any deployment that supplies it (production, demo) uses it,
+// and only a developer's machine falls back to the local database. Keying this
+// on `environment == 'production'` meant every other environment silently
+// pointed Quartz at localhost.
 def environment = grails.util.Environment.current.name
 def dbUrl, dbUsername, dbPassword
-if (environment == 'production') {
-    dbUrl = System.getenv("DB_URL")?.contains("TimeZone=") ? System.getenv("DB_URL") : "${System.getenv('DB_URL')}?TimeZone=UTC"
+if (System.getenv("DB_URL")) {
+    dbUrl = System.getenv("DB_URL").contains("TimeZone=") ? System.getenv("DB_URL") : "${System.getenv('DB_URL')}?TimeZone=UTC"
     dbUsername = System.getenv("DB_USERNAME")
     dbPassword = System.getenv("DB_PASSWORD")
 } else {
-    // Development/Test environment
-    dbUrl = 'jdbc:postgresql://localhost:5432/madhouse?TimeZone=UTC'
+    // Local development
+    dbUrl = 'jdbc:postgresql://localhost:5432/myhab?TimeZone=UTC'
     dbUsername = 'myhab'
     dbPassword = 'myhab'
 }
@@ -75,7 +80,7 @@ def deviceControllerStateSyncEnabled = config?.getProperty('quartz.jobs.deviceCo
 def heatingControlEnabled = config?.getProperty('quartz.jobs.heatingControl.enabled', Boolean, false)
 def eventLogReaderEnabled = config?.getProperty('quartz.jobs.eventLogReader.enabled', Boolean, false)
 def meteoStationSyncEnabled = config?.getProperty('quartz.jobs.meteoStationSync.enabled', Boolean, true)
-def huaweiInfoSyncEnabled = config?.getProperty('quartz.jobs.huaweiInfoSync.enabled', Boolean, true)
+def huaweiInfoSyncEnabled = config?.getProperty('quartz.jobs.huaweiInfoSync.enabled', Boolean, false)
 // Opt-in: keep OFF until per-device Navimow Configuration rows are populated
 def navimowInfoSyncEnabled = config?.getProperty('quartz.jobs.navimowInfoSync.enabled', Boolean, false)
 // Opt-in: refreshing OAuth tokens only makes sense once OAuth has completed
@@ -85,6 +90,13 @@ def portValueSyncTriggerEnabled = config?.getProperty('quartz.jobs.portValueSync
 def switchOffOnTimeoutEnabled = config?.getProperty('quartz.jobs.switchOffOnTimeout.enabled', Boolean, true)
 def randomColorsEnabled = config?.getProperty('quartz.jobs.randomColors.enabled', Boolean, false)
 def rainbowRGBEnabled = config?.getProperty('quartz.jobs.rainbowRGB.enabled', Boolean, false)
+// Only the demo environment turns this on; see DemoResetJob.
+def demoResetEnabled = config?.getProperty('quartz.jobs.demoReset.enabled', Boolean, false)
+def demoResetInterval = config?.getProperty('myhab.demo.checkInterval', Integer, 300)
+
+// Telegram long-polling starts as soon as a token exists and has no enable flag of
+// its own; the demo has no token and no outbound network, so it must be suppressible.
+def telegramEnabled = config?.getProperty('myhab.telegram.enabled', Boolean, true)
 
 // Build list of enabled triggers
 def enabledTriggers = []
@@ -102,13 +114,22 @@ if (portValueSyncTriggerEnabled) enabledTriggers << 'portValueSyncTriggerTrigger
 if (switchOffOnTimeoutEnabled) enabledTriggers << 'switchOffOnTimeoutTrigger'
 if (randomColorsEnabled) enabledTriggers << 'randomColorsTrigger'
 if (rainbowRGBEnabled) enabledTriggers << 'rainbowRGBTrigger'
+if (demoResetEnabled) enabledTriggers << 'demoResetTrigger'
 
 beans = {
     configProvider(ConfigProvider) {
-        repoURI = System.getenv("CFG_REPO_URI")
-        username = System.getenv("CFG_USERNAME")
-        password = System.getenv("CFG_PASSWORD")
-        branch = (Environment.current == Environment.PRODUCTION ? "prod" : (Environment.DEVELOPMENT ? "dev" : "beta"))
+        // The demo falls back to the bare repo materialised by the `demoConfigRepo`
+        // Gradle task, so `./gradlew demoRun` needs no environment set up.
+        repoURI = System.getenv("CFG_REPO_URI") ?:
+                (environment == 'demo' ? "file:///${new File('build/demo-config.git').absolutePath.replace('\\', '/')}" : null)
+        // JGit's UsernamePasswordCredentialsProvider NPEs on a null password; a
+        // file:// repo has no credentials to supply.
+        username = System.getenv("CFG_USERNAME") ?: ""
+        password = System.getenv("CFG_PASSWORD") ?: ""
+        // Branch is config-driven so a deployment can name its own (the demo uses
+        // "demo"); the default reproduces the previous prod/dev split.
+        branch = config?.getProperty('myhab.config.branch', String,
+                Environment.current == Environment.PRODUCTION ? "prod" : "dev")
     }
 
     passwordEncoder(BCryptPasswordEncoder)
@@ -146,10 +167,12 @@ beans = {
     // tick blows up with an NPE on getStatuses().
     navimowApiClient(NavimowApiClient)
 
-    telegramBotHandler(TelegramBotHandler) {
-        configProvider = ref("configProvider")
-        userService = ref("userService")
-        telegramService = ref("telegramService")
+    if (telegramEnabled) {
+        telegramBotHandler(TelegramBotHandler) {
+            configProvider = ref("configProvider")
+            userService = ref("userService")
+            telegramService = ref("telegramService")
+        }
     }
     
     // ===========================
@@ -158,6 +181,26 @@ beans = {
     // These are application-level jobs (former Grails auto-registered jobs)
     // They are Spring-managed beans with automatic dependency injection
     
+    // DemoResetJob - restores the public demo's sandbox (idle + nightly)
+    // Configurable via: quartz.jobs.demoReset.enabled and myhab.demo.checkInterval
+    if (demoResetEnabled) {
+        demoResetJobDetail(JobDetailFactoryBean) {
+            jobClass = DemoResetJob
+            durability = true
+            requestsRecovery = false
+            group = 'STATIC_JOBS'
+            description = 'Public demo sandbox reset - Spring Managed'
+        }
+
+        demoResetTrigger(SimpleTriggerFactoryBean) {
+            jobDetail = ref('demoResetJobDetail')
+            startDelay = 60000L // let the app settle before the first check
+            repeatInterval = demoResetInterval * 1000L
+            repeatCount = SimpleTrigger.REPEAT_INDEFINITELY
+            group = 'STATIC_JOBS'
+        }
+    }
+
     // NibeTokenRefreshJob - OAuth2 token refresh
     // Configurable via: quartz.jobs.nibeTokenRefresh.enabled and interval
     nibeTokenRefreshJobDetail(JobDetailFactoryBean) {

@@ -97,7 +97,9 @@ class WebPushService {
         if (pushService != null) return pushService
         String pub = configProvider.get(String, 'push.vapid.publicKey')
         String priv = configProvider.get(String, 'push.vapid.privateKey')
-        String subject = configProvider.get(String, 'push.vapid.subject') ?: 'mailto:admin@madhouse.app'
+        // No product default: RFC 8292 wants a contact the push service can reach for
+        // this deployment, and inventing one points complaints at someone else.
+        String subject = configProvider.get(String, 'push.vapid.subject') ?: 'mailto:admin@localhost'
         if (!pub || !priv) {
             if (!warnedMissingKeys) {
                 log.warn('Web push inactive: push.vapid.publicKey/privateKey not configured')

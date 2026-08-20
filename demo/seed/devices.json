@@ -1,0 +1,59 @@
+{
+  "_comment": [
+    "Drives demo/simulator. Must stay in lockstep with demo-entities.sql:",
+    "device.code    == device_controllers.code",
+    "port.type      == device_ports.type, lowercased (the MQTT topic segment)",
+    "port.code      == device_ports.internal_ref",
+    "port.initial   == device_ports.value",
+    "esp_shed is offline on purpose - the simulator never answers for it, so the",
+    "demo can show a disabled control without blocking anything useful."
+  ],
+  "prefix": "myhab",
+  "sensorIntervalSeconds": 30,
+  "devices": [
+    {
+      "code": "esp_indoor",
+      "status": "online",
+      "ports": [
+        {"type": "switch", "code": "lr_ceiling", "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "lr_lamp",    "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "lr_tv",      "kind": "switch", "initial": "ON"},
+        {"type": "switch", "code": "lr_heat",    "kind": "switch", "initial": "OFF"},
+        {"type": "sensor", "code": "lr_temp",    "kind": "sensor", "initial": "21.4",
+         "min": 19.5, "max": 23.5, "step": 0.2, "decimals": 1},
+        {"type": "switch", "code": "kt_light",   "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "kt_coffee",  "kind": "switch", "initial": "OFF"},
+        {"type": "sensor", "code": "kt_temp",    "kind": "sensor", "initial": "22.1",
+         "min": 20.0, "max": 25.0, "step": 0.25, "decimals": 1}
+      ]
+    },
+    {
+      "code": "esp_outdoor",
+      "status": "online",
+      "ports": [
+        {"type": "switch", "code": "tr_light",     "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "tr_garden",    "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "tr_sprinkler", "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "tr_pump",      "kind": "switch", "initial": "OFF"},
+        {"type": "sensor", "code": "tr_temp",      "kind": "sensor", "initial": "14.8",
+         "min": 6.0, "max": 24.0, "step": 0.4, "decimals": 1}
+      ]
+    },
+    {
+      "code": "esp_garage",
+      "status": "online",
+      "ports": [
+        {"type": "switch", "code": "gr_light", "kind": "switch", "initial": "OFF"},
+        {"type": "sensor", "code": "gr_temp",  "kind": "sensor", "initial": "16.2",
+         "min": 11.0, "max": 21.0, "step": 0.3, "decimals": 1}
+      ]
+    },
+    {
+      "code": "esp_shed",
+      "status": "offline",
+      "ports": [
+        {"type": "switch", "code": "sh_light", "kind": "switch", "initial": "OFF"}
+      ]
+    }
+  ]
+}

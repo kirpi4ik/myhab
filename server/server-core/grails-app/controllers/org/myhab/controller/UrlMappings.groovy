@@ -1,6 +1,7 @@
 package org.myhab.controller
 
 import grails.util.Environment
+import grails.util.Holders
 
 class UrlMappings {
     static excludes = ["/images/**", "/css/**", "/js/**", "/img/**", "/font/**", "/fonts/**", "/*.html"]
@@ -14,6 +15,11 @@ class UrlMappings {
         get "/api/public/share/$token"(controller: "sharedWidget", action: "show")
         post "/api/public/share/$token/verify-pin"(controller: "sharedWidget", action: "verifyPin")
         post "/api/public/share/$token/action"(controller: "sharedWidget", action: "executeAction")
+
+        // Public demo. Anonymous because the banner and the login page both render
+        // before anyone signs in; DemoController 404s these off a demo deployment.
+        get "/api/public/demo"(controller: "demo", action: "status")
+        post "/api/public/demo/reset"(controller: "demo", action: "reset")
         
         // Label generation API (kept as REST — GraphQL doesn't serve binary PNG)
         get "/api/labels/cable/$id"(controller: "label", action: "generateCableLabel")
@@ -33,7 +39,12 @@ class UrlMappings {
         // client_id=homeassistant) has the best chance of accepting us.
         get "/auth/external/callback"(controller: "navimowOAuth", action: "callback")
 
-        if (Environment.current == Environment.PRODUCTION) {
+        // These map the SPA's client-side routes onto the bundled index.html, so they
+        // only apply where the Vue build is packaged into the JAR. Config-driven rather
+        // than environment-driven so the demo deployment gets them too; the default
+        // reproduces the previous production-only behaviour.
+        if (Holders.grailsApplication?.config?.getProperty('myhab.spa.enabled', Boolean,
+                Environment.current == Environment.PRODUCTION)) {
             "/"(uri: "/index.html")
             "/error"(uri: "/index.html")
             "/wui"(uri: "/index.html")

@@ -9,6 +9,18 @@ class ClientIpServiceSpec extends Specification implements ServiceUnitTest<Clien
 
     private static final String PROXY = '192.168.1.200'
 
+    /**
+     * The product ships no trusted proxy — a deployment names its own. These cases are
+     * about the behaviour once one is configured, so configure it. doWithConfig runs
+     * before the context is built, which is what makes it visible to the
+     * Holders.grailsApplication.config lookup the service performs.
+     */
+    Closure doWithConfig() {
+        return { config ->
+            config.myhab = [security: [trustedProxies: [PROXY + '/32']]]
+        }
+    }
+
     private MockHttpServletRequest req(String peer, Map headers = [:]) {
         MockHttpServletRequest request = new MockHttpServletRequest()
         request.remoteAddr = peer

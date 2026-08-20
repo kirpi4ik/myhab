@@ -6,7 +6,7 @@
     <!-- Status Indicator Badge -->
     <div class="status-indicator" :class="{ 'indicator-on': isPumpOn, 'indicator-off': !isPumpOn }">
       <q-icon :name="isPumpOn ? 'mdi-pump' : 'mdi-pump-off'" size="16px" class="q-mr-xs"/>
-      <span class="text-caption text-weight-medium">{{ isPumpOn ? 'PORNIT' : 'OPRIT' }}</span>
+      <span class="text-caption text-weight-medium">{{ isPumpOn ? $t('water_pump.on') : $t('water_pump.off') }}</span>
     </div>
 
     <q-item class="card-content">
@@ -29,7 +29,7 @@
       <!-- Pump Info -->
       <q-item-section>
         <q-item-label class="text-weight-medium text-h5 pump-name">
-          Pompă Apă
+          {{ $t('water_pump.title') }}
         </q-item-label>
 
         <!-- Timer Info -->
@@ -81,7 +81,7 @@
                   <q-icon name="mdi-share-variant" color="primary"/>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>Partajează acces</q-item-label>
+                  <q-item-label>{{ $t('common.share_access') }}</q-item-label>
                 </q-item-section>
               </q-item>
 
@@ -97,7 +97,7 @@
                   <q-icon name="mdi-information" color="info"/>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>Detalii</q-item-label>
+                  <q-item-label>{{ $t('common.details') }}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -117,7 +117,7 @@
         <div v-if="asset && asset.data && asset.data.state !== undefined" class="toggle-wrapper">
           <div class="toggle-label-wrapper toggle-label-off-wrapper" :class="{ 'active': !isPumpOn }">
             <q-icon name="mdi-water-off" size="16px"/>
-            <span class="label-text">OPRIT</span>
+            <span class="label-text">{{ $t('water_pump.off') }}</span>
           </div>
           
           <toggle
@@ -129,7 +129,7 @@
           
           <div class="toggle-label-wrapper toggle-label-on-wrapper" :class="{ 'active': isPumpOn }">
             <q-icon name="mdi-water" size="16px"/>
-            <span class="label-text">PORNIT</span>
+            <span class="label-text">{{ $t('water_pump.on') }}</span>
           </div>
         </div>
         <div v-else class="loading-state">

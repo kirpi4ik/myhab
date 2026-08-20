@@ -30,7 +30,7 @@
 					</q-item-label>
 					<q-item-label class="text-weight-light text-blue-grey-2 lock-description">
 						<q-icon name="mdi-information-outline" size="14px" class="q-mr-xs"/>
-						Control acces poartă
+						{{ $t('door.access_control') }}
 					</q-item-label>
 				</q-item-section>
 
@@ -49,7 +49,7 @@
 								<q-icon name="mdi-share-variant" color="primary"/>
 							</q-item-section>
 							<q-item-section>
-								<q-item-label>Share Access</q-item-label>
+								<q-item-label>{{ $t('common.share_access') }}</q-item-label>
 							</q-item-section>
 						</q-item>
 
@@ -72,7 +72,7 @@
 								<q-icon name="mdi-information" color="info"/>
 							</q-item-section>
 							<q-item-section>
-								<q-item-label>Details</q-item-label>
+								<q-item-label>{{ $t('common.details') }}</q-item-label>
 							</q-item-section>
 						</q-item>
 					</q-list>

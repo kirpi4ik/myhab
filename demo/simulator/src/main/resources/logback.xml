@@ -1,0 +1,20 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss} %-5level %logger{20} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+      Moquette logs every PUBLISH/PUBACK at DEBUG, which buries the simulator's own
+      output. The broker is incidental here; only its lifecycle is interesting.
+    -->
+    <logger name="io.moquette" level="WARN"/>
+    <logger name="io.netty" level="WARN"/>
+    <logger name="org.eclipse.paho" level="WARN"/>
+    <logger name="org.myhab.demo" level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
