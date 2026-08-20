@@ -141,7 +141,10 @@ export function useDashboardWidgets() {
 			kind: 'component',
 			component: 'sprinklers-dash-component',
 			defaultVisible: true,
-			requiredConfig: [],
+			requiredConfig: [
+				{ key: 'specialZones.lan.id', label: t('dashboard.config.zone_lawn'), kind: 'zone' },
+				{ key: 'specialZones.garden.id', label: t('dashboard.config.zone_garden'), kind: 'zone' },
+			],
 			props: () => ({ peripheral: { state: true } }),
 		},
 		{

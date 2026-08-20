@@ -19,6 +19,11 @@
 
 \set ON_ERROR_STOP on
 
+-- The application connects with TimeZone=UTC, so every timestamp it writes is
+-- UTC. psql inherits the server's zone instead, which would store these rows in
+-- local wall time, and DemoService rebases restored rows by (now() - built_at)
+-- from a UTC session - a mismatch would shift every restored timestamp. Match it.
+SET timezone = 'UTC';
 DROP SCHEMA IF EXISTS seed CASCADE;
 CREATE SCHEMA seed;
 

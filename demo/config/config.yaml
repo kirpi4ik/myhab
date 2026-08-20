@@ -60,7 +60,12 @@ specialZones:
   parter:
     id: 1001      # Living Room
   etaj:
-    id: 1002      # Kitchen
+    id: 1007      # Upper Floor
+  # The sprinkler dashboard card links to these two.
+  lan:
+    id: 1005      # Lawn
+  garden:
+    id: 1006      # Garden
 
 ui:
   meteo:

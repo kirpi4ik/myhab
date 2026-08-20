@@ -113,7 +113,7 @@ tasks.register('demoSeedLocal') {
 
         // Tracked in demo/seed so a clean checkout can build the database; doc/ is
         // gitignored and is not available to the container build either.
-        [ 'schema.sql', 'demo-entities.sql', 'demo-seed-schema.sql' ].each { name ->
+        [ 'schema.sql', 'demo-entities.sql', 'demo-screens.sql', 'demo-seed-schema.sql' ].each { name ->
             def f = new File("${demoDir}/seed", name)
             if (f.exists()) {
                 logger.quiet "Applying ${name}"

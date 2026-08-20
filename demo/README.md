@@ -1,8 +1,8 @@
 # myHAB public demo
 
-A public sandbox of myHAB — a fictional four-zone home with sixteen peripherals and
-simulated devices — so someone can try the product without an account, hardware, or an
-install.
+A public sandbox of myHAB — a fictional home of seven zones and twenty-one peripherals,
+with simulated devices — so someone can try the product without an account, hardware, or
+an install.
 
 Everything here is disposable by design.
 
@@ -82,7 +82,8 @@ Override the database with `DEMO_DB`, `DEMO_DB_USER`, `DEMO_DB_PASSWORD`,
 ```
 demo/
   config/            config.yaml seeding the git-backed ConfigProvider — no secrets
-  seed/              schema.sql, demo-entities.sql, demo-seed-schema.sql, devices.json
+  seed/              schema.sql, demo-entities.sql, demo-screens.sql,
+                     demo-seed-schema.sql, devices.json
   simulator/         the :demo-simulator Gradle module
   demo.gradle        the tasks above (applied from the root build.gradle)
   Dockerfile         builds the myhab-demo image (simulator + seed + config)
@@ -151,6 +152,8 @@ the app should have no route off its own network.
 ## Changing the demo
 
 **The dataset.** Edit `demo/seed/demo-entities.sql`, then `./gradlew demoSeedLocal`.
+It holds the whole fictional installation: zones, controllers, ports, peripherals,
+cabling, scenarios, the scheduled irrigation job, and both accounts' inbox messages.
 
 Two constraints that will bite otherwise:
 
@@ -165,6 +168,13 @@ Two constraints that will bite otherwise:
 
 Keep `demo/seed/devices.json` in step — the simulator drives everything from it, and a
 port that exists in one and not the other simply will not work.
+
+**The /wui screens.** `demo/seed/demo-screens.sql` carries the two floor plans and the
+widgets placed on them. The background images are embedded as base64 rather than read
+from files, because this SQL is executed by the postgres container, which receives only
+the `.sql` files — a path would resolve inside the database container. Easiest way to
+change a layout is to drag the widgets in **Admin → Screens** and dump the resulting
+`layout_json` back into that file.
 
 **The schema.** `demo/seed/schema.sql` is a tracked DDL snapshot, because the demo has to
 be able to build its database from a clean checkout and inside the image. It carries what

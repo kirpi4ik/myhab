@@ -522,6 +522,8 @@
       "zone_ext": "Zonă exterioară",
       "zone_ground": "Zona parterului",
       "zone_upper": "Zona etajului",
+      "zone_lawn": "Zona gazonului",
+      "zone_garden": "Zona grădinii",
       "peripheral_door_lock": "Periferic încuietoare",
       "peripheral_water_pump": "Periferic pompă apă",
       "device_meteo": "Dispozitiv stație meteo",

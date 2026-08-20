@@ -196,21 +196,23 @@
 									v-for="widget in section.widgets"
 									:key="widget.id"
 									tag="label"
-									:disable="!isLoggedIn || saving[widget.id] || !!missingConfig(widget).length"
+									:disable="!isLoggedIn || saving[widget.id]"
 									v-ripple
 								>
 									<q-item-section avatar>
 										<q-checkbox
 											:model-value="isVisible(widget.id)"
 											@update:model-value="(v) => onToggle(widget.id, v)"
-											:disable="!isLoggedIn || saving[widget.id] || !!missingConfig(widget).length"
+											:disable="!isLoggedIn || saving[widget.id]"
 										/>
 									</q-item-section>
 									<q-item-section>
 										<q-item-label>{{ widget.label }}</q-item-label>
 										<!--
-											Say what is missing rather than letting someone enable a
-											widget that can only render an error.
+											Name the missing setting, but leave the checkbox usable:
+											enabling the widget is how you reach the dashboard card
+											that offers to set it. Disabling it here instead would
+											lock an already-hidden widget out of its own picker.
 										-->
 										<q-item-label v-if="missingConfig(widget).length" caption class="text-orange-9">
 											{{ $t('dashboard.settings.needs', { items: missingConfig(widget).map(c => c.label).join(', ') }) }}
@@ -261,8 +263,8 @@ export default defineComponent({
 		const { client } = useApolloClient();
 		const prefs = useUserPrefsStore();
 		const widgets = computed(() => useDashboardWidgets());
-		// Shared with DashboardActions, so this screen never offers a widget the
-		// dashboard would have to replace with a "not configured" placeholder.
+		// Shared with DashboardActions, so the setting named here is the same one
+		// the dashboard's "not configured" placeholder offers to fill in.
 		const { missingConfig } = useWidgetConfigStatus();
 
 		const isLoggedIn = computed(() => authzService.currentUserValue?.id != null);
@@ -448,6 +450,11 @@ export default defineComponent({
 		const saving = reactive({});
 
 		const onToggle = async (widgetId, visible) => {
+			// One press on the checkbox arrives twice: QCheckbox handles it, and the
+			// q-item is a <label>, which forwards the same click to the hidden native
+			// input QCheckbox renders. Both writes carry the same value, so the second
+			// loses on the row's version and reports a failure for a save that worked.
+			if (saving[widgetId]) return;
 			saving[widgetId] = true;
 			try {
 				await prefs.setWidgetVisible(widgetId, visible);

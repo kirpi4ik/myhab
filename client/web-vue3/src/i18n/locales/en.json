@@ -522,6 +522,8 @@
 			"zone_ext": "Exterior zone",
 			"zone_ground": "Ground-floor zone",
 			"zone_upper": "Upper-floor zone",
+			"zone_lawn": "Lawn zone",
+			"zone_garden": "Garden zone",
 			"peripheral_door_lock": "Door lock peripheral",
 			"peripheral_water_pump": "Water pump peripheral",
 			"device_meteo": "Weather station device",

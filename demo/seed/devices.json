@@ -24,7 +24,12 @@
         {"type": "switch", "code": "kt_light",   "kind": "switch", "initial": "OFF"},
         {"type": "switch", "code": "kt_coffee",  "kind": "switch", "initial": "OFF"},
         {"type": "sensor", "code": "kt_temp",    "kind": "sensor", "initial": "22.1",
-         "min": 20.0, "max": 25.0, "step": 0.25, "decimals": 1}
+         "min": 20.0, "max": 25.0, "step": 0.25, "decimals": 1},
+        {"type": "switch", "code": "uf_office",  "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "uf_bed",     "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "uf_bath",    "kind": "switch", "initial": "OFF"},
+        {"type": "sensor", "code": "uf_temp",    "kind": "sensor", "initial": "20.8",
+         "min": 18.5, "max": 23.0, "step": 0.2, "decimals": 1}
       ]
     },
     {
@@ -34,6 +39,7 @@
         {"type": "switch", "code": "tr_light",     "kind": "switch", "initial": "OFF"},
         {"type": "switch", "code": "tr_garden",    "kind": "switch", "initial": "OFF"},
         {"type": "switch", "code": "tr_sprinkler", "kind": "switch", "initial": "OFF"},
+        {"type": "switch", "code": "tr_sprinkler_gd", "kind": "switch", "initial": "OFF"},
         {"type": "switch", "code": "tr_pump",      "kind": "switch", "initial": "OFF"},
         {"type": "sensor", "code": "tr_temp",      "kind": "sensor", "initial": "14.8",
          "min": 6.0, "max": 24.0, "step": 0.4, "decimals": 1}

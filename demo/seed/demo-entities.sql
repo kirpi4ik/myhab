@@ -26,6 +26,11 @@
 
 \set ON_ERROR_STOP on
 
+-- The application connects with TimeZone=UTC, so every timestamp it writes is
+-- UTC. psql inherits the server's zone instead, which would store these rows in
+-- local wall time - three hours in the future on a UTC+3 host, which the UI then
+-- renders as messages that arrive later today. Match the application.
+SET timezone = 'UTC';
 -- --------------------------------------------------------------------------
 -- Roles and users
 --
@@ -206,11 +211,221 @@ INSERT INTO configurations (id, version, entity_id, entity_type, key, value, nam
 -- --------------------------------------------------------------------------
 INSERT INTO configurations (id, version, entity_id, entity_type, key, value, name, description) VALUES
   (6101, 0, 1, 'USER', 'ui.dashboard.widgets.hidden',
-   'peripheral_lock,sprinklers,water_pump,meteo_station,solar_plant,heat_pump,navimow',
+   'peripheral_lock,water_pump,meteo_station,solar_plant,heat_pump,navimow',
    'ui.dashboard.widgets.hidden', 'Widgets with no backing device in the demo'),
   (6102, 0, 2, 'USER', 'ui.dashboard.widgets.hidden',
-   'peripheral_lock,sprinklers,water_pump,meteo_station,solar_plant,heat_pump,navimow',
+   'peripheral_lock,water_pump,meteo_station,solar_plant,heat_pump,navimow',
    'ui.dashboard.widgets.hidden', 'Widgets with no backing device in the demo');
+
+-- --------------------------------------------------------------------------
+-- Irrigation and upper-floor zones
+--
+-- Lawn and Garden exist because the sprinkler dashboard card routes to
+-- specialZones.lan.id / specialZones.garden.id; without them the card links to
+-- /zones/null and the zone page answers "Zone not found". Upper Floor gives
+-- specialZones.etaj a zone of its own instead of aliasing the kitchen.
+-- --------------------------------------------------------------------------
+INSERT INTO zones (id, version, name, description, parent_id, ts_created, ts_updated, en_type) VALUES
+  (1005, 0, 'Lawn',        'Front lawn irrigation',   1000, now(), now(), 'ZONE'),
+  (1006, 0, 'Garden',      'Vegetable garden beds',   1000, now(), now(), 'ZONE'),
+  (1007, 0, 'Upper Floor', 'Bedrooms, office, bath',  1000, now(), now(), 'ZONE');
+
+INSERT INTO device_ports (id, version, device_id, internal_ref, name, type, state, value,
+                          ts_created, ts_updated, en_type)
+VALUES
+  -- Garden irrigation line (esp_outdoor); the lawn already has tr_sprinkler.
+  (4017, 0, 3002, 'tr_sprinkler_gd', 'Garden sprinkler', 'SWITCH', 'ACTIVE', 'OFF',  now(), now(), 'PORT'),
+  -- Upper floor (esp_indoor)
+  (4018, 0, 3001, 'uf_office',       'Office light',     'SWITCH', 'ACTIVE', 'OFF',  now(), now(), 'PORT'),
+  (4019, 0, 3001, 'uf_bed',          'Bedroom light',    'SWITCH', 'ACTIVE', 'OFF',  now(), now(), 'PORT'),
+  (4020, 0, 3001, 'uf_bath',         'Bathroom light',   'SWITCH', 'ACTIVE', 'OFF',  now(), now(), 'PORT'),
+  (4021, 0, 3001, 'uf_temp',         'Upper floor temp', 'SENSOR', 'ACTIVE', '20.8', now(), now(), 'PORT');
+
+INSERT INTO device_peripherals (id, version, name, description, category_id, max_amp,
+                                ts_created, ts_updated, en_type)
+VALUES
+  (5017, 0, 'Garden Sprinkler', 'Vegetable garden valve',  2004, 1.0,  now(), now(), 'PERIPHERAL'),
+  (5018, 0, 'Office Light',     'Upper floor office',      2001, 0.4,  now(), now(), 'PERIPHERAL'),
+  (5019, 0, 'Bedroom Light',    'Master bedroom',          2001, 0.4,  now(), now(), 'PERIPHERAL'),
+  (5020, 0, 'Bathroom Light',   'Upper floor bathroom',    2001, 0.3,  now(), now(), 'PERIPHERAL'),
+  (5021, 0, 'Upper Floor Temp', 'Upper floor temperature', 2005, 0.01, now(), now(), 'PERIPHERAL');
+
+INSERT INTO device_ports_peripherals_join (port_id, peripheral_id) VALUES
+  (4017, 5017), (4018, 5018), (4019, 5019), (4020, 5020), (4021, 5021);
+
+INSERT INTO zones_devices_join (zone_id, device_id) VALUES
+  (1005, 3002), (1006, 3002), (1007, 3001);
+
+-- The garden valve stays visible on the Terrace as well: a peripheral belongs to
+-- as many zones as it serves, and the terrace page is where a visitor meets it.
+INSERT INTO zones_peripherals_join (zone_id, peripheral_id) VALUES
+  (1003, 5017),
+  (1005, 5011),
+  (1006, 5017),
+  (1007, 5018), (1007, 5019), (1007, 5020), (1007, 5021);
+
+INSERT INTO zones_categories (zone_id, categories_string) VALUES
+  (1005, 'SPRINKLER'),
+  (1006, 'SPRINKLER'),
+  (1007, 'LIGHT'), (1007, 'TEMP');
+
+-- Same auto-off as the lawn valve, so the garden line also shuts itself again.
+INSERT INTO configurations (id, version, entity_id, entity_type, key, value, name, description) VALUES
+  (6003, 0, 5017, 'PERIPHERAL', 'key.on.timeout', '120', 'key.on.timeout', 'Auto-off after 2 minutes');
+
+-- --------------------------------------------------------------------------
+-- Rack, patch panel and cabling
+--
+-- Enough structure for the Cables pages to show something other than empty
+-- columns: every cable has a category and a patch-panel port, and carries the
+-- ports, peripherals and zones it serves.
+-- --------------------------------------------------------------------------
+INSERT INTO racks (id, version, name, description, zone_id, ts_created, ts_updated, en_type) VALUES
+  (6201, 0, 'Main rack', '10U wall rack in the garage', 1004, now(), now(), 'RACK');
+
+-- `code` is a legacy NOT NULL column with no matching property on PatchPanel.
+INSERT INTO rack_patch_panels (id, version, rack_id, code, name, description, size,
+                               ts_created, ts_updated, en_type) VALUES
+  (6211, 0, 6201, 'PP1', 'Patch panel 1', 'Ground floor distribution', 24, now(), now(), 'PATCH_PANEL');
+
+INSERT INTO cable_categories (id, version, name, ts_created, ts_updated, en_type) VALUES
+  (6221, 0, 'Power', now(), now(), 'CABLE_CATEGORY'),
+  (6222, 0, 'Data',  now(), now(), 'CABLE_CATEGORY');
+
+INSERT INTO cables (id, version, code, code_new, code_old, description, nr_wires, max_amp,
+                    category_id, rack_id, patch_panel_id, patch_panel_port,
+                    rack_row_nr, order_in_row, ts_created, ts_updated, en_type)
+VALUES
+  (6231, 0, 'C-01', NULL, NULL, 'Living room ceiling light drop',   3, 10.0, 6221, 6201, 6211, '01', 1, 1, now(), now(), 'CABLE'),
+  (6232, 0, 'C-02', NULL, NULL, 'Kitchen light and coffee spur',    3, 16.0, 6221, 6201, 6211, '02', 1, 2, now(), now(), 'CABLE'),
+  (6233, 0, 'C-03', NULL, NULL, 'Terrace run to the outdoor valve', 8,  1.0, 6222, 6201, 6211, '03', 2, 1, now(), now(), 'CABLE');
+
+INSERT INTO device_ports_cables_join (cable_id, port_id) VALUES
+  (6231, 4001),
+  (6232, 4006), (6232, 4007),
+  (6233, 4011);
+
+INSERT INTO cables_peripherals_join (cable_id, peripheral_id) VALUES
+  (6231, 5001),
+  (6232, 5006), (6232, 5007),
+  (6233, 5011);
+
+INSERT INTO zones_cables_join (cable_id, zone_id) VALUES
+  (6231, 1001),
+  (6232, 1002),
+  (6233, 1003), (6233, 1005);
+
+-- --------------------------------------------------------------------------
+-- Scenarios
+--
+-- Bodies are the scenario DSL (see DslService): bare method names resolve through
+-- knowledgeService (predicates) first, then scenarioService (actions). Both are
+-- written against peripheral ids, so they survive a port being rewired.
+--
+-- isRaining() returns false when there is neither a rain sensor nor meteo data,
+-- which is the demo's situation - the guard is there to be read, not to block.
+-- --------------------------------------------------------------------------
+INSERT INTO scenarios (id, version, name, body, ts_created, ts_updated, en_type) VALUES
+  (7001, 0, 'Evening lights', $scn$
+// Living room ceiling and terrace wall light follow dusk.
+if (isEvening()) {
+  switchOn([peripheralIds: [5001, 5009]])
+} else {
+  switchOff([peripheralIds: [5001, 5009]])
+}
+$scn$, now(), now(), 'SCENARIO'),
+  (7002, 0, 'Irrigation cycle', $scn$
+// Lawn first, then the garden beds. `timeout` is a one-shot auto-off in seconds,
+// so a lost OFF command cannot leave a valve open.
+if (!isRaining()) {
+  switchOn([peripheralIds: [5011], timeout: 120])
+  pause(2000)
+  switchOn([peripheralIds: [5017], timeout: 120])
+}
+$scn$, now(), now(), 'SCENARIO');
+
+-- --------------------------------------------------------------------------
+-- Scheduled job
+--
+-- ACTIVE means the scheduler picks it up, so these two triggers really do fire in
+-- the demo. `peripheral_id` is what puts the job on the sprinkler schedule page.
+-- Quartz cron expressions carry a leading seconds field.
+-- --------------------------------------------------------------------------
+INSERT INTO jobs (id, version, name, description, scenario_id, state, peripheral_id,
+                  ts_created, ts_updated, en_type) VALUES
+  (7101, 0, 'Irrigation schedule', 'Runs the irrigation cycle morning and evening',
+   7002, 'ACTIVE', 5011, now(), now(), 'JOB');
+
+INSERT INTO job_triggers_cron (id, version, job_id, expression, description,
+                               cron_triggers_idx, ts_created, ts_updated, en_type) VALUES
+  (7111, 0, 7101, '0 30 6 * * ?', 'Morning cycle at 06:30', 0, now(), now(), NULL),
+  (7112, 0, 7101, '0 0 20 * * ?', 'Evening cycle at 20:00', 1, now(), now(), NULL);
+
+INSERT INTO jobs_tags (id, version, name) VALUES
+  (7121, 0, 'irrigation');
+
+INSERT INTO jobs_tags_join (job_id, tag_id) VALUES
+  (7101, 7121);
+
+-- --------------------------------------------------------------------------
+-- Inbox messages
+--
+-- Both accounts get the same set, so whichever one a visitor logs in as has an
+-- inbox holding unread, read and archived mail. Timestamps are relative because
+-- DemoService shifts every restored timestamp by (now - seed built_at): they stay
+-- minutes-to-days old however long the seed has been sitting in the image.
+-- --------------------------------------------------------------------------
+INSERT INTO user_messages (id, version, user_id, subject, from_sender, message, level, state,
+                           dedup_key, ts_created, ts_updated)
+VALUES
+  -- demo / NEW
+  (7201, 0, 1, 'Welcome to the myHAB demo', 'myHAB',
+   'This is a public sandbox. Switch anything on or off - the dataset resets itself periodically.',
+   'INFO', 'NEW', NULL, now() - interval '12 minutes', now() - interval '12 minutes'),
+  (7202, 0, 1, 'Shed controller is offline', 'Device monitor',
+   'esp_shed has not reported for over an hour. Its light control stays disabled until it reconnects.',
+   'WARN', 'NEW', 'device.esp_shed.offline', now() - interval '48 minutes', now() - interval '48 minutes'),
+  (7203, 0, 1, 'Irrigation cycle finished', 'Scheduler',
+   'The lawn sprinkler ran for 2 minutes and switched off on its auto-off timeout.',
+   'INFO', 'NEW', 'job.7101.finished', now() - interval '3 hours', now() - interval '3 hours'),
+  -- demo / READ
+  (7204, 0, 1, 'Kitchen temperature back to normal', 'Rules engine',
+   'Kitchen temperature returned to 22.1 C after peaking at 25.0 C.',
+   'INFO', 'READ', NULL, now() - interval '1 day', now() - interval '22 hours'),
+  (7205, 0, 1, 'Outdoor temperature below 5 C', 'Rules engine',
+   'Outdoor temperature dropped to 4.2 C. Irrigation is skipped while there is a frost risk.',
+   'WARN', 'READ', 'meteo.outdoor.frost', now() - interval '2 days', now() - interval '2 days'),
+  -- demo / ARCHIVE
+  (7206, 0, 1, 'Water pump did not confirm', 'Device monitor',
+   'The water pump was switched on but sent no state echo within 10 seconds. It was switched off again.',
+   'ERROR', 'ARCHIVE', 'peripheral.5012.no_confirm', now() - interval '6 days', now() - interval '5 days'),
+  (7207, 0, 1, 'Nightly maintenance completed', 'Maintenance',
+   'Statistics were aggregated and old port values pruned.',
+   'INFO', 'ARCHIVE', NULL, now() - interval '8 days', now() - interval '8 days'),
+  -- demo-admin / NEW
+  (7211, 0, 2, 'Welcome to the myHAB demo', 'myHAB',
+   'You are signed in as an administrator: devices, zones, scenarios and jobs are all editable.',
+   'INFO', 'NEW', NULL, now() - interval '12 minutes', now() - interval '12 minutes'),
+  (7212, 0, 2, 'Shed controller is offline', 'Device monitor',
+   'esp_shed has not reported for over an hour. Its light control stays disabled until it reconnects.',
+   'WARN', 'NEW', 'device.esp_shed.offline', now() - interval '48 minutes', now() - interval '48 minutes'),
+  (7213, 0, 2, 'Irrigation cycle finished', 'Scheduler',
+   'The lawn sprinkler ran for 2 minutes and switched off on its auto-off timeout.',
+   'INFO', 'NEW', 'job.7101.finished', now() - interval '3 hours', now() - interval '3 hours'),
+  -- demo-admin / READ
+  (7214, 0, 2, 'Kitchen temperature back to normal', 'Rules engine',
+   'Kitchen temperature returned to 22.1 C after peaking at 25.0 C.',
+   'INFO', 'READ', NULL, now() - interval '1 day', now() - interval '22 hours'),
+  (7215, 0, 2, 'Outdoor temperature below 5 C', 'Rules engine',
+   'Outdoor temperature dropped to 4.2 C. Irrigation is skipped while there is a frost risk.',
+   'WARN', 'READ', 'meteo.outdoor.frost', now() - interval '2 days', now() - interval '2 days'),
+  -- demo-admin / ARCHIVE
+  (7216, 0, 2, 'Water pump did not confirm', 'Device monitor',
+   'The water pump was switched on but sent no state echo within 10 seconds. It was switched off again.',
+   'ERROR', 'ARCHIVE', 'peripheral.5012.no_confirm', now() - interval '6 days', now() - interval '5 days'),
+  (7217, 0, 2, 'Nightly maintenance completed', 'Maintenance',
+   'Statistics were aggregated and old port values pruned.',
+   'INFO', 'ARCHIVE', NULL, now() - interval '8 days', now() - interval '8 days');
 
 -- --------------------------------------------------------------------------
 -- Keep generated ids clear of the fixed band above.
