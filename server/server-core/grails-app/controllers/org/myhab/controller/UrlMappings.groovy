@@ -10,7 +10,6 @@ class UrlMappings {
         
         get "/api/public/event"(controller: "event", action: "pubGetEvent")
         get "/pub-event"(controller: "event", action: "pubGetEvent")
-        get "/e"(controller: "event", action: "shortUrlEvent")
 
         get "/api/public/share/$token"(controller: "sharedWidget", action: "show")
         post "/api/public/share/$token/verify-pin"(controller: "sharedWidget", action: "verifyPin")

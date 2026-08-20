@@ -11,6 +11,9 @@ grails:
 server:
   port: 8181
   max-http-request-header-size: 40KB
+  # forward-headers-strategy must stay unset. Enabling it rewrites
+  # request.remoteAddr from X-Forwarded-For, which is caller-supplied — see
+  # ClientIpService, which distinguishes the proxy from the caller itself.
 
 logging:
   config: classpath:logback-spring.xml
@@ -44,7 +47,9 @@ spring:
 management:
   endpoints:
     access:
-      default: unrestricted
+      # Deny by default: adding an endpoint to exposure.include below should not
+      # silently make it anonymous. Grant per endpoint under `endpoint:`.
+      default: none
     web:
       base-path: "/actuator"
       path-mapping.health: healthcheck
@@ -57,9 +62,28 @@ management:
     prometheus:
       access: unrestricted
     health:
+      access: unrestricted
       show-details: when-authorized
     metrics:
       access: unrestricted
+
+# Anonymous device endpoints (EventController) are restricted to the LAN.
+# Kept here rather than in the git-backed ConfigProvider: the appConfigUpdate
+# GraphQL mutation can rewrite arbitrary ConfigProvider keys at runtime, which
+# would make this allowlist editable through the API it protects.
+myhab:
+  security:
+    # Reverse proxies whose X-Real-IP we believe. Must be the proxy's own address
+    # (madhouse-lb). Empty means no request arriving with forwarding headers is
+    # trusted — restrictive, not permissive.
+    trustedProxies:
+      - 192.168.1.200/32
+    lanCidrs:
+      - 192.168.0.0/16
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+      - 127.0.0.0/8
+      - ::1/128
 
 quartz:
   jobs:

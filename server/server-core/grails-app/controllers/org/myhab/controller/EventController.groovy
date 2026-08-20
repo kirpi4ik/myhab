@@ -1,49 +1,54 @@
 package org.myhab.controller
 
-import org.myhab.domain.EntityType
-import org.myhab.domain.events.TopicName
-import org.myhab.domain.device.Device
-import org.myhab.domain.device.port.DevicePort
-import org.myhab.domain.job.EventData
+import grails.converters.JSON
 import grails.events.EventPublisher
+import grails.plugin.springsecurity.annotation.Secured
+import org.myhab.domain.events.TopicName
+import org.myhab.domain.job.EventData
+import org.myhab.services.ClientIpService
 
+@Secured(['permitAll'])
 class EventController implements EventPublisher {
     static responseFormats = ['json', 'xml']
+    static allowedMethods = [pubGetEvent: 'GET']
 
+    ClientIpService clientIpService
+
+    /**
+     * Device push endpoint. Anonymous, so it is restricted to callers that
+     * demonstrably sit on the LAN — everything published here reaches the
+     * automation bus, and no subscriber does its own authorization.
+     */
     def pubGetEvent() {
-        EventData input = new EventData(params)
+        if (!clientIpService.isTrustedLan(request)) {
+            log.warn("Rejected event publish from ${clientIpService.resolve(request) ?: request.remoteAddr}")
+            response.status = 403
+            render([success: false, error: 'Forbidden'] as JSON)
+            return
+        }
 
-        if (input.p0 && request.remoteAddr.startsWith("192.")) {
+        EventData input = eventFromParams()
+
+        if (input.p0) {
             publish(input.p0, input)
             publish(TopicName.EVT_LOG.id(), input)
         } else if (params.mdid && params.pt) {
             publish(TopicName.EVT_DEVICE_PUSH.id(), params)
         } else {
             log.info("Event triggered with:  $params")
-            respond params
+            response.status = 204
         }
     }
 
-    def shortUrlEvent() {
-        def input = params.p0.split(":")
-        def mega = Device.findByCode(input[0])
-
-        def devicePort = DevicePort.withCriteria {
-            eq('internalRef', input[1])
-            device {
-                eq('id', mega.id)
-            }
-            maxResults(1)
-        }
-        EventData eObj = new EventData().with {
-            p0 = TopicName.byOrder(input[2] as Integer).id()
-            p1 = EntityType.PORT.name()
-            p2 = "${devicePort.id}"
-            p3 = "sensor-${input[0]}-${input[1]}"
-            p4 = "ON"
-            it
-        }
-        publish(eObj.p0, eObj)
-        publish(TopicName.EVT_LOG.id(), eObj)
+    /**
+     * Binds only the event fields. Wholesale binding would also accept
+     * BaseEntity's tsCreated, letting a caller backdate the event_log row.
+     */
+    private EventData eventFromParams() {
+        return new EventData(
+                p0: params.p0, p1: params.p1, p2: params.p2, p3: params.p3,
+                p4: params.p4, p5: params.p5, p6: params.p6,
+                actionId: params.actionId, category: params.category
+        )
     }
 }

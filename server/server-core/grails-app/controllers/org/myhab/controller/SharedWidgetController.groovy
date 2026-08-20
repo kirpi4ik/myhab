@@ -13,6 +13,7 @@ import org.myhab.domain.SharedWidgetAudit
 import org.myhab.domain.SharedWidgetAuditResult
 import org.myhab.domain.SharedWidgetState
 import org.myhab.domain.device.DevicePeripheral
+import org.myhab.services.ClientIpService
 
 @Slf4j
 @Secured(['permitAll'])
@@ -23,6 +24,8 @@ class SharedWidgetController implements EventPublisher {
 
     /** Actions a switch-type share link accepts. */
     private static final List<String> SWITCH_ACTIONS = ['on', 'off']
+
+    ClientIpService clientIpService
 
     /**
      * GET /api/public/share/:token
@@ -255,19 +258,13 @@ class SharedWidgetController implements EventPublisher {
                         action: action,
                         result: result,
                         resultDescription: reason,
-                        remoteAddress: clientIp()?.take(64),
+                        remoteAddress: clientIpService.resolve(request)?.take(64),
                         userAgent: request.getHeader('User-Agent')?.take(512)
                 ).save(flush: true, failOnError: true)
             }
         } catch (Exception e) {
             log.error("Failed to write shared-widget audit row for ${widget?.id}: ${e.message}", e)
         }
-    }
-
-    /** nginx fronts :8181 in production, so the socket peer is the proxy. */
-    private String clientIp() {
-        String forwarded = request.getHeader('X-Forwarded-For')
-        return forwarded ? forwarded.split(',')[0].trim() : request.remoteAddr
     }
 
     /**
