@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice assistant — myHAB documentation</title>
+<meta name="description" content="How the myHAB voice assistant works: the agentic tool-use loop, catalogue grounding, Anthropic and OpenAI providers, neural text-to-speech, configuration, and the hands-free Android client.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html" class="active">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / Voice assistant</div>
+		<div class="docs-header">
+			<h1>Voice assistant</h1>
+			<p>Natural-language control, grounded in your actual installation — so it cannot invent a device it does not have.</p>
+		</div>
+
+		<p class="lead">
+			Say <em>“turn off everything on the terrace”</em>, <em>“aprinde lumina din birou”</em>,
+			<em>“run movie mode”</em> or <em>“is the garage door open?”</em>. An LLM agent maps the phrase to
+			concrete actions against your real catalogue, executes them through the same engine the web UI uses,
+			and speaks the answer back.
+		</p>
+
+		<div class="callout warn">
+			<strong>Off by default.</strong>
+			<p>The feature is disabled until you set <code>feature.voice.enabled = true</code> and supply an LLM
+				API key. It is your key and your account — myHAB does not proxy anything through a service of its
+				own.</p>
+		</div>
+
+		<h2 id="flow">How it works</h2>
+
+		<div class="codeblock"><pre><code>Browser / PWA / Android                  Backend
+─────────────────────────                ───────────────────────────────────
+Web Speech API (STT)                     voiceCommand GraphQL mutation
+   transcript ───────────────────────▶     1. build a catalogue from the live DB
+                                           2. agentic tool-use loop with the LLM
+   plays reply  ◀──────────────────────    3. execute the tool calls it returns
+   (neural MP3, else browser voice)        4. optionally synthesise the reply
+   keeps sessionId for multi-turn</code></pre></div>
+
+		<p>
+			Speech-to-text happens <strong>in the browser</strong>; the backend receives text, never audio. That
+			keeps the server contract simple and means any client — the web app, the Android app, a script — can
+			use the same mutation. You can also just type the command.
+		</p>
+
+		<h3 id="loop">The agentic loop</h3>
+
+		<p>
+			This is not one-shot classification. Each request runs a bounded tool-use loop (at most six
+			iterations):
+		</p>
+
+		<ol>
+			<li>Build the catalogue of controllable entities.</li>
+			<li>Load prior messages for this session, or start fresh.</li>
+			<li>Append the transcript and call the configured LLM provider.</li>
+			<li>The model returns either <strong>tool calls</strong> — execute them, feed the results back, loop —
+				or a <strong>final reply</strong>.</li>
+			<li>Persist the conversation, synthesise speech if enabled, return.</li>
+		</ol>
+
+		<p>
+			Clarification is emergent rather than engineered: when a request is ambiguous the model simply ends
+			its turn with a question instead of guessing. The client speaks it, keeps the session id, and the next
+			utterance continues the conversation. There is no dedicated “ask” tool.
+		</p>
+
+		<h3 id="catalog">Grounding: the catalogue</h3>
+
+		<p>
+			On every request the backend builds a fresh catalogue from the database and passes it to the model as
+			JSON. The model may only choose ids that appear in it, and the server re-validates every id before
+			acting.
+		</p>
+
+		<div class="codeblock"><pre><code>{
+  "peripherals": [ { "id", "name", "category", "zones": [...], "aliases": [...] } ],
+  "zones":       [ { "id", "name", "peripherals": [names], "aliases": [...] } ],
+  "scenarios":   [ { "jobId", "name", "description" } ],
+  "mowers":      [ { "deviceId", "name" } ]
+}</code></pre></div>
+
+		<ul>
+			<li>Only peripherals with at least one connected port are listed.</li>
+			<li>Zones carry their peripheral names recursively, so the model can target a whole area.</li>
+			<li><strong>Voice aliases</strong> — alternate names you set on a peripheral or zone — are included,
+				which is how Romanian nicknames get matched reliably.</li>
+		</ul>
+
+		<div class="callout info">
+			<strong>No RAG, no vector store, no MCP.</strong>
+			<p>At house scale the entire catalogue is a few kilobytes and fits in one prompt. Prompt caching keeps
+				repeated commands cheap. Retrieval infrastructure would add failure modes and cost without solving
+				a capacity problem that exists.</p>
+		</div>
+
+		<h3 id="tools">Tools</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Tool</th><th>Arguments</th><th>Executes via</th></tr></thead>
+				<tbody>
+					<tr><td><code>control_entity</code></td><td><code>entityType</code> ∈ PERIPHERAL / ZONE / PORT, <code>id</code>, <code>action</code> ∈ ON / OFF / TOGGLE</td><td>Publishes <code>evt_switch</code> — the same path the web UI uses, audit logging included. A zone switches every peripheral in it, recursively.</td></tr>
+					<tr><td><code>run_scenario</code></td><td><code>jobId</code></td><td>Triggers the job. Only active jobs with a scenario are in the catalogue.</td></tr>
+					<tr><td><code>query_state</code></td><td><code>entityType</code>, <code>id</code></td><td>Reads port state and value. Read-only — answers questions, changes nothing.</td></tr>
+					<tr><td><code>mower_command</code></td><td><code>deviceId</code>, <code>action</code> ∈ START / STOP / PAUSE / RESUME / DOCK</td><td>The Segway cloud REST API.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>
+			If a tool throws — the mower cloud rejects a command, say — the loop feeds the error back to the model
+			so it can explain what happened, rather than aborting the turn.
+		</p>
+
+		<h3 id="providers">Providers</h3>
+
+		<p>
+			The orchestration lives in myHAB; a provider is a pure translator between the neutral conversation
+			shape and one vendor's API. Two ship today:
+		</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Provider</th><th>Default model</th><th>Key</th></tr></thead>
+				<tbody>
+					<tr><td><code>anthropic</code></td><td><code>claude-haiku-4-5</code></td><td><code>feature.voice.llm.apikey</code>, else <code>ANTHROPIC_API_KEY</code></td></tr>
+					<tr><td><code>openai</code></td><td><code>gpt-4o-mini</code></td><td><code>feature.voice.llm.apikey</code>, else <code>OPENAI_API_KEY</code></td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>
+			The system prompt, tool schemas and catalogue format are shared, so both vendors behave identically.
+			Adding a third means implementing one interface and registering it.
+		</p>
+
+		<div class="callout">
+			<strong>An Anthropic Console key is not the same as a Claude subscription.</strong>
+			<p>API access is a separate, usage-billed product. Create the key at
+				<code>console.anthropic.com</code> (or <code>platform.openai.com</code> for OpenAI).</p>
+		</div>
+
+		<h3 id="sessions">Conversation state</h3>
+
+		<p>
+			Multi-turn state is held server-side in Hazelcast, keyed by a client session id: a five-minute TTL,
+			capped at forty messages, trimmed only at a clean user-message boundary so tool-call pairs stay
+			intact. A failed turn is not persisted, so a broken sequence can never poison the next one.
+		</p>
+
+		<h3 id="tts">Text-to-speech</h3>
+
+		<p>
+			Replies can be rendered by Google Cloud Text-to-Speech instead of the browser's built-in voice. Google
+			TTS does <strong>not</strong> accept API keys — it needs a service account, whose JSON key myHAB
+			exchanges for a short-lived OAuth token, cached for about an hour.
+		</p>
+
+		<p>If TTS fails for any reason the result simply omits audio and the browser voice is used. It is never a
+			hard failure.</p>
+
+		<h2 id="setup">Setting it up</h2>
+
+		<ol>
+			<li>Create an API key at your chosen LLM provider.</li>
+			<li>In <strong>Settings → App configuration</strong> (or the configuration repository) set:
+				<div class="codeblock" style="margin-top:.8rem"><pre><code>feature:
+  voice:
+    enabled: true
+    llm:
+      provider: anthropic        # or openai
+      apikey: "&lt;your key&gt;"
+      # model: claude-haiku-4-5  # optional override</code></pre></div>
+			</li>
+			<li>Optional — neural speech. Create a Google Cloud service account, enable the
+				<em>Cloud Text-to-Speech API</em> and billing, download the JSON key, then:
+				<div class="codeblock" style="margin-top:.8rem"><pre><code>feature:
+  voice:
+    tts:
+      enabled: true
+      provider: google
+      # either minified inline JSON, or a path on the server
+      apikey: "/opt/myhab/gcp-tts.json"
+      voice:
+        ro: ro-RO-Wavenet-A
+        en: en-US-Neural2-C</code></pre></div>
+			</li>
+			<li>Add <strong>voice aliases</strong> to peripherals and zones whose spoken names differ from their
+				display names. This is the single highest-value tuning step.</li>
+		</ol>
+
+		<div class="callout info">
+			<strong>Browser requirements.</strong>
+			<p>Speech recognition uses the Web Speech API, which needs a secure context (HTTPS) and is best
+				supported by Chrome on Android. Typed commands work everywhere, in any language.</p>
+		</div>
+
+		<h2 id="using">Using it</h2>
+
+		<figure class="shot tall" style="max-width:330px;cursor:zoom-in">
+			<img src="../assets/img/screens/voice-control.png" alt="Voice control page" loading="lazy">
+			<figcaption><b>Voice control</b>Tap the microphone, or type into the command box.</figcaption>
+		</figure>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Capability</th><th>English</th><th>Romanian</th></tr></thead>
+				<tbody>
+					<tr><td>Single peripheral</td><td>“turn on the office light”</td><td>“aprinde lumina din birou”</td></tr>
+					<tr><td>Whole zone</td><td>“turn off everything on the terrace”</td><td>“stinge tot pe terasă”</td></tr>
+					<tr><td>Scenario</td><td>“run movie mode”</td><td>“pornește modul film”</td></tr>
+					<tr><td>State question</td><td>“is the garage door open?”</td><td>“e deschisă ușa de la garaj?”</td></tr>
+					<tr><td>Mower</td><td>“start mowing”</td><td>“pornește tunsul”</td></tr>
+					<tr><td>Mower to dock</td><td>“send the mower to the dock”</td><td>“trimite mașina la bază”</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2 id="android">The Android client</h2>
+
+		<p>
+			<code>client/android/</code> is a native Kotlin + Jetpack Compose companion that adds the one thing
+			the browser cannot do: hands-free activation.
+		</p>
+
+		<div class="codeblock"><pre><code>(wake word | tap-to-talk) → on-device speech-to-text → voiceCommand mutation
+   → play the server's MP3 reply (fallback: Android TextToSpeech)
+   → if the assistant asked something, listen again in the same conversation</code></pre></div>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+				<tbody>
+					<tr><td>Wake word</td><td>microWakeWord (vendored from Home Assistant, Apache-2.0) — real TensorFlow <code>audio_microfrontend</code> plus TFLite-Micro through JNI. Fully offline, no account or access key.</td></tr>
+					<tr><td>Listening</td><td>A foreground microphone service, so it survives screen-off. Paused during a turn so the microphone is never contended, then resumed.</td></tr>
+					<tr><td>Speech-to-text</td><td>Android <code>SpeechRecognizer</code>, on-device, language from Settings (<code>en-US</code> / <code>ro-RO</code>).</td></tr>
+					<tr><td>Auth</td><td>Username and password to <code>POST /api/login</code>; the JWT is stored in Keystore-backed encrypted preferences and re-requested on <code>401</code>.</td></tr>
+					<tr><td>Networking</td><td>OkHttp + kotlinx.serialization. No Apollo — one mutation does not justify a code generator.</td></tr>
+					<tr><td>Requirements</td><td>minSdk 30 (Android 11), arm64 devices only. NDK + CMake for the native module.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="codeblock"><pre><code>cd client/android
+./gradlew :app:assembleDebug     # build
+./gradlew :app:installDebug      # install on a connected device
+
+# Windows helper: versioned APK into dist/
+.\build-apk.ps1 -Install</code></pre></div>
+
+		<div class="callout warn">
+			<strong>Open only <code>client/android</code> in Android Studio, not the repository root.</strong>
+			<p>It is a separate Gradle build, deliberately excluded from the root <code>settings.gradle</code> —
+				the Android Gradle Plugin and the Grails plugin do not coexist in one build, and the two have
+				unrelated release cadences.</p>
+		</div>
+
+		<p>
+			It is a thin client over the existing server contract: no backend changes, no parallel execution path.
+			Everything the app can do, the web client can do too.
+		</p>
+
+		<h2 id="security">Security and cost</h2>
+
+		<ul>
+			<li>The <code>voiceCommand</code> mutation requires authentication; the executing user is recorded on
+				the event for audit.</li>
+			<li>The model can only act on ids present in the catalogue, and the server re-validates each one — a
+				hallucinated device id is rejected, not executed.</li>
+			<li>API credentials come from the configuration repository or environment variables. Because a git
+				history keeps old values, rotation means issuing a new key and revoking the old one.</li>
+			<li>The catalogue and system prompt are prompt-cached, so the marginal cost per command is small and
+				roughly constant.</li>
+		</ul>
+
+		<h2 id="limits">Current limitations</h2>
+
+		<ul>
+			<li>Only ON / OFF / TOGGLE. Dimming, colour and set-value commands are not exposed to voice.</li>
+			<li>Scenarios can be <em>run</em> by voice, not authored.</li>
+			<li>Peripherals and zones support aliases; mower devices do not yet.</li>
+			<li>Speech recognition is single-language per session — no automatic language detection.</li>
+			<li>Browser coverage is whatever the Web Speech API offers, which is uneven outside Chrome.</li>
+		</ul>
+
+		<div class="pager">
+			<a href="automation.html"><span>Previous</span>Automation &amp; jobs</a>
+			<a class="next" href="sharing.html"><span>Next</span>Sharing &amp; QR labels</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

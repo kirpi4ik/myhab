@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sharing &amp; QR labels — myHAB documentation</title>
+<meta name="description" content="Tokenised guest links for a single peripheral: widget types, action counting, PINs, states, the audit trail and the public REST API. Plus printable QR labels and in-app scanning.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html" class="active">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / Sharing &amp; QR labels</div>
+		<div class="docs-header">
+			<h1>Sharing &amp; QR labels</h1>
+			<p>Give someone control of exactly one thing, for exactly as long as you mean to — and label your hardware so you can find it again.</p>
+		</div>
+
+		<h2 id="links">Shared links</h2>
+
+		<p class="lead">
+			A shared link is a tokenised public URL that operates a single peripheral, a limited number of times,
+			within a validity window, optionally behind a PIN. The recipient needs no account, no app and no
+			access to anything else in the house.
+		</p>
+
+		<p>The typical case: a visitor arriving tomorrow who needs the gate to open three times.</p>
+
+		<h3 id="create">Creating one</h3>
+
+		<p><strong>Share Access</strong> sits in the dropdown of every peripheral card that supports it.</p>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/share-create.png" alt="Share access dialog" loading="lazy">
+			<figcaption><b>Share Access</b>Optional PIN, a description of who it is for, a start and expiry date, and a maximum number of uses.</figcaption>
+		</figure>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+				<tbody>
+					<tr><td><strong>PIN</strong></td><td>Optional. Leave empty for a link that works on its own.</td></tr>
+					<tr><td><strong>Description</strong></td><td>Why and for whom — it shows in the admin list, which is what you will be reading in three weeks.</td></tr>
+					<tr><td><strong>Starts on</strong></td><td>Before this the link reports <em>not yet active</em>.</td></tr>
+					<tr><td><strong>Expires on</strong></td><td>After this it flips to expired automatically.</td></tr>
+					<tr><td><strong>Max uses</strong></td><td>Total allowed actions. For switches this reads <em>max starts</em>.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>The result is a URL of the form <code>https://your-host/shared/&lt;32-hex-token&gt;</code>.</p>
+
+		<h3 id="types">Widget types</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Type</th><th>Peripheral</th><th>Actions</th></tr></thead>
+				<tbody>
+					<tr><td><code>GATE_ACCESS</code></td><td>Gate or door lock</td><td><code>open</code> — a single pulse</td></tr>
+					<tr><td><code>LIGHT</code></td><td>Any light</td><td><code>on</code>, <code>off</code></td></tr>
+					<tr><td><code>WATER_PUMP</code></td><td>Water pump</td><td><code>on</code>, <code>off</code></td></tr>
+					<tr><td><code>SPRINKLER</code></td><td>Any sprinkler</td><td><code>on</code>, <code>off</code></td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h3 id="counting">How uses are counted</h3>
+
+		<p>
+			A gate link spends one allowance per <code>open</code>. A switch link spends one per <strong>start</strong>
+			— <code>off</code> is always free, and stays available even after the allowance is spent or the end
+			date has passed.
+		</p>
+
+		<div class="callout">
+			<strong>This asymmetry is deliberate.</strong>
+			<p>Someone who has used their last start must still be able to stop the water. Only an explicit
+				<em>Disable</em> or <em>Archive</em> removes the stop control.</p>
+		</div>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Allowance</th><th>Action</th><th>Result</th><th>Used</th></tr></thead>
+				<tbody>
+					<tr><td>2</td><td><code>on</code></td><td>started</td><td>1</td></tr>
+					<tr><td>2</td><td><code>off</code></td><td>stopped</td><td>1 <span class="muted">(unchanged)</span></td></tr>
+					<tr><td>2</td><td><code>on</code></td><td>started; link flips to <code>EXPIRED</code></td><td>2</td></tr>
+					<tr><td>2</td><td><code>on</code></td><td><strong>403</strong> — allowance spent</td><td>2</td></tr>
+					<tr><td>2</td><td><code>off</code></td><td>stopped — still permitted</td><td>2</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h3 id="guest">What the guest sees</h3>
+
+		<div class="shots cols-4">
+			<figure class="shot tall">
+				<img src="../assets/img/screens/share-gate-pin.png" alt="PIN entry for a gate link" loading="lazy">
+				<figcaption><b>PIN gate</b>Shown only when the link has one.</figcaption>
+			</figure>
+			<figure class="shot tall">
+				<img src="../assets/img/screens/share-gate.png" alt="Gate unlock page" loading="lazy">
+				<figcaption><b>Gate control</b>Tap to unlock, uses remaining, expiry.</figcaption>
+			</figure>
+			<figure class="shot tall">
+				<img src="../assets/img/screens/share-light-pin.png" alt="PIN entry for a switch link" loading="lazy">
+				<figcaption><b>PIN switch</b>Same flow, switch styling.</figcaption>
+			</figure>
+			<figure class="shot tall">
+				<img src="../assets/img/screens/share-switch.png" alt="Switch control page" loading="lazy">
+				<figcaption><b>Switch control</b>Start / stop, remaining starts, auto-off hint.</figcaption>
+			</figure>
+		</div>
+
+		<p>
+			The public page shows live state, how many starts remain, when the link expires and — for switches —
+			the auto-off timeout inherited from the peripheral (<em>“stops automatically after 5 hours”</em>). It
+			has no authenticated WebSocket, so it re-reads state after each action and offers a manual refresh.
+		</p>
+
+		<h3 id="states">States</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>State</th><th>Meaning</th></tr></thead>
+				<tbody>
+					<tr><td><code>VALID</code></td><td>Usable.</td></tr>
+					<tr><td><code>NOT_YET_ACTIVE</code></td><td>Start date is in the future. Computed, never stored.</td></tr>
+					<tr><td><code>EXPIRED</code></td><td>End date passed or allowance exhausted. The transition is automatic and records its reason.</td></tr>
+					<tr><td><code>DISABLED</code></td><td>Switched off by an admin. Reversible.</td></tr>
+					<tr><td><code>ARCHIVED</code></td><td>Retired. Kept for its audit history.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h3 id="audit">Audit trail</h3>
+
+		<p>
+			<strong>Every</strong> attempt is recorded — successful or denied — in a dedicated table, one row per
+			attempt: the action, the result (<code>SUCCESS</code>, <code>DENIED_PIN</code>,
+			<code>DENIED_STATE</code>), the reason for a denial, the client address and the user agent.
+		</p>
+
+		<ul>
+			<li>Rows are written in their own transaction so they commit independently; a failed audit write is
+				logged and never breaks the action.</li>
+			<li>Denied attempts are recorded precisely because nothing downstream runs for them — they would
+				otherwise leave no trace.</li>
+			<li>An unknown token writes no row: there is no link to attach it to.</li>
+			<li>The audit table is deliberately excluded from the auto-generated CRUD API, so rows cannot be
+				forged or deleted over GraphQL.</li>
+		</ul>
+
+		<p>
+			In the admin list, clicking a link's usage or history opens a collapsible <strong>usage history</strong>:
+			timestamp, action, result badge, IP and user agent.
+		</p>
+
+		<div class="callout info">
+			<strong>Behind a reverse proxy, set <code>trustedProxies</code>.</strong>
+			<p>The audit records the first hop of <code>X-Forwarded-For</code>, falling back to the socket peer.
+				Without a trusted-proxy list you will see your proxy's address on every row instead of the
+				visitor's. See <a href="configuration.html#security-cfg">Configuration → Security settings</a>.</p>
+		</div>
+
+		<h3 id="share-api">Public API</h3>
+
+		<p>These three endpoints are the <em>only</em> anonymous surface in the whole application.</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+				<tbody>
+					<tr><td><code>GET</code></td><td><code>/api/public/share/:token</code></td><td>Link metadata. Never returns the PIN.</td></tr>
+					<tr><td><code>POST</code></td><td><code>/api/public/share/:token/verify-pin</code></td><td>Check a PIN without acting.</td></tr>
+					<tr><td><code>POST</code></td><td><code>/api/public/share/:token/action</code></td><td>Perform the action.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="codeblock"><pre><code>GET /api/public/share/&lt;token&gt;
+
+{
+  "widgetType": "WATER_PUMP",
+  "requiresPin": false,
+  "state": "VALID",
+  "peripheralName": "Water pump",
+  "actionsAllowed": 2,
+  "actionsUsed": 0,
+  "shareExpireDate": 1755500000000,
+  "currentState": false,
+  "autoOffTimeout": "900",
+  "offAllowed": true
+}</code></pre></div>
+
+		<div class="codeblock"><pre><code>POST /api/public/share/&lt;token&gt;/action
+{ "action": "on", "pin": "1234" }
+
+{ "success": true, "action": "on", "actionsRemaining": 1, "offAllowed": true }</code></pre></div>
+
+		<p>
+			Failure modes: <code>400</code> for a missing token or an action other than <code>on</code>/<code>off</code>;
+			<code>404</code> for an unknown token; <code>403</code> for a wrong PIN or an unusable state.
+		</p>
+
+		<div class="callout warn">
+			<strong>A success means the command was published, not confirmed.</strong>
+			<p>The action is dispatched onto the event bus fire-and-forget. The public page re-reads metadata a
+				moment later to show the device's real state.</p>
+		</div>
+
+		<h3 id="share-security">Security properties, stated plainly</h3>
+
+		<ul>
+			<li><strong>PINs are a speed bump, not a credential.</strong> They are stored and compared in
+				plaintext, with a non-constant-time comparison. Do not treat one as protecting anything valuable.</li>
+			<li><strong>There is no rate limiting</strong> on PIN verification or actions. The audit trail makes
+				brute force visible after the fact; preventing it is your reverse proxy's job.</li>
+			<li>The token is the secret. Anyone holding the URL can use it within its window — send it over a
+				channel you trust.</li>
+			<li>Any admin-authenticated caller can list every link, including raw tokens. There is no per-owner
+				scoping.</li>
+			<li>Concurrent requests can race the use counter; a link with two remaining uses could, under
+				deliberate parallel load, be used three times.</li>
+		</ul>
+
+		<hr>
+
+		<h2 id="qr">QR labels</h2>
+
+		<p>
+			The second half of “finding your own hardware again”: printable labels for cables, devices and
+			peripherals, with an optional QR code, and an in-app scanner that jumps straight to the right screen.
+		</p>
+
+		<h3 id="qr-print">Printing</h3>
+
+		<ul>
+			<li>Brother-style labels for <strong>cables, devices and peripherals</strong>.</li>
+			<li>A dedicated QR settings page controls whether labels carry a code, what it encodes, and its size
+				and position.</li>
+			<li>What it encodes is a template with variables — the default is a stable, base-URL-free token.</li>
+		</ul>
+
+		<div class="callout">
+			<strong>The QR does not contain your hostname.</strong>
+			<p>It encodes <code>myhab://TYPE/ID</code>, so a label printed today keeps working if you move the
+				deployment to a different domain tomorrow. Resolution happens inside the app, which already knows
+				where it is.</p>
+		</div>
+
+		<h3 id="qr-scan">Scanning</h3>
+
+		<p>
+			<strong>Scan QR</strong> in the sidebar opens the device camera and navigates directly to the cable,
+			device or peripheral on the label. It is pure web — the PWA using the camera API — so there is nothing
+			to install.
+		</p>
+
+		<p>
+			The practical value is in the attic: point a phone at a cable tag and get the port it lands on, the
+			peripheral it feeds, and its event history, without knowing anything about how it was named.
+		</p>
+
+		<div class="pager">
+			<a href="voice.html"><span>Previous</span>Voice assistant</a>
+			<a class="next" href="architecture.html"><span>Next</span>Architecture</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

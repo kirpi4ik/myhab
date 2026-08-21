@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuration — myHAB documentation</title>
+<meta name="description" content="myHAB configuration reference: environment variables, the git-backed ConfigProvider, Spring Boot overrides, Quartz job intervals, per-entity configuration and feature flags.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html" class="active">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / Configuration</div>
+		<div class="docs-header">
+			<h1>Configuration</h1>
+			<p>Four layers, each with a clear job: environment variables, the git-backed store, Spring Boot overrides, and per-entity settings.</p>
+		</div>
+
+		<h2 id="layers">The four layers</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Layer</th><th>Lives in</th><th>Holds</th><th>Changes take effect</th></tr></thead>
+				<tbody>
+					<tr>
+						<td><strong>Environment variables</strong></td>
+						<td>The container / process environment</td>
+						<td>Bootstrap secrets: database URL and credentials, the JWT signing key, where the configuration repository is.</td>
+						<td>On restart</td>
+					</tr>
+					<tr>
+						<td><strong>Configuration repository</strong></td>
+						<td>A git repo read by <code>ConfigProvider</code></td>
+						<td>Everything runtime: MQTT, CORS, feature flags, integration credentials, dashboard bindings.</td>
+						<td>Within one <code>configSync</code> interval, or immediately when edited in the UI</td>
+					</tr>
+					<tr>
+						<td><strong>Spring Boot overrides</strong></td>
+						<td><code>./config/application.yml</code> next to the JAR</td>
+						<td>Deployment facts the API must not be able to rewrite — trusted proxies, LAN ranges, job toggles.</td>
+						<td>On restart</td>
+					</tr>
+					<tr>
+						<td><strong>Per-entity configuration</strong></td>
+						<td>The <code>Configuration</code> table, edited in the UI</td>
+						<td>Settings attached to a single device, port, peripheral or zone — auto-off timeouts, voice aliases, device tokens.</td>
+						<td>Immediately</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="callout info">
+			<strong>Why is the security allowlist not in the git store?</strong>
+			<p>The <code>appConfigUpdate</code> GraphQL mutation can rewrite arbitrary configuration keys at
+				runtime. Putting <code>myhab.security.trustedProxies</code> and <code>lanCidrs</code> there would
+				make the allowlist editable through the API it exists to protect. They stay in
+				<code>application.yml</code>.</p>
+		</div>
+
+		<h2 id="env">Environment variables</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Variable</th><th>Required</th><th>Purpose</th></tr></thead>
+				<tbody>
+					<tr><td><code>GRAILS_ENV</code></td><td>yes</td><td><code>production</code>, <code>development</code> or <code>demo</code>. Selects the environment block in <code>application.yml</code>.</td></tr>
+					<tr><td><code>DB_URL</code></td><td>yes</td><td>JDBC URL, e.g. <code>jdbc:postgresql://db:5432/myhab</code>. <code>?TimeZone=UTC</code> is appended automatically if absent.</td></tr>
+					<tr><td><code>DB_USERNAME</code></td><td>yes</td><td>Database user (defaults to <code>myhab</code> outside production).</td></tr>
+					<tr><td><code>DB_PASSWORD</code></td><td>yes</td><td>Database password.</td></tr>
+					<tr><td><code>JWT_SECRET</code></td><td>yes</td><td>HS256 signing key for access tokens. Use a long random string; changing it invalidates every issued token.</td></tr>
+					<tr><td><code>CFG_REPO_URI</code></td><td>yes</td><td>Configuration repository — an <code>https://</code> remote or a <code>file://</code> bare repo.</td></tr>
+					<tr><td><code>CFG_USERNAME</code></td><td>no</td><td>Git username. Leave empty for <code>file://</code>.</td></tr>
+					<tr><td><code>CFG_PASSWORD</code></td><td>no</td><td>Git password or access token.</td></tr>
+					<tr><td><code>TZ</code></td><td>recommended</td><td>Set to <code>UTC</code>. See <a href="install.html#compose">Installation</a>.</td></tr>
+					<tr><td><code>ANTHROPIC_API_KEY</code> / <code>OPENAI_API_KEY</code></td><td>no</td><td>Fallback for the voice assistant's LLM key when it is not in the configuration store.</td></tr>
+					<tr><td><code>GOOGLE_TTS_API_KEY</code></td><td>no</td><td>Fallback for the neural TTS service-account JSON.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>The branch <code>ConfigProvider</code> reads defaults to <code>prod</code> in the production
+			environment and <code>dev</code> elsewhere; override it with the <code>myhab.config.branch</code>
+			property.</p>
+
+		<h2 id="repo">The configuration repository</h2>
+
+		<p>
+			One YAML document, versioned in git, cloned by the application at start and re-read by the
+			<code>configSync</code> job. It is also editable in the UI under
+			<strong>Settings → App configuration</strong>, which commits back to the repository.
+		</p>
+
+		<h3 id="mqtt-cfg">MQTT</h3>
+
+		<div class="codeblock"><pre><code>mqtt:
+  hostname: mosquitto
+  port: 1883
+  username: myhab
+  password: change-me
+  topics: myhab/#        # subscription filter</code></pre></div>
+
+		<p>The outbound topic prefix (<code>myhab</code>) is set separately in <code>application.yml</code> under
+			<code>mqtt.topic.prefix</code>.</p>
+
+		<h3 id="cors-cfg">CORS</h3>
+
+		<p>Only needed when the client is served from a different origin than the API — for example during
+			development, or if you host the PWA separately.</p>
+
+		<div class="codeblock"><pre><code>cors:
+  allowedOrigin:
+    - https://home.example.com
+    - http://localhost:10002</code></pre></div>
+
+		<h3 id="ui-cfg">UI bindings</h3>
+
+		<p>
+			These tell the dashboard which entities to wire its fixed tiles to. Only keys under
+			<code>specialDevices.</code>, <code>specialZones.</code>, <code>ui.</code>, <code>grafana.</code> and
+			<code>surveillance.</code> are exposed to the browser — the rest of the store never leaves the server
+			for non-admin users.
+		</p>
+
+		<div class="codeblock"><pre><code>specialZones:
+  int:    { id: 1001 }   # "Interior" quick tile
+  ext:    { id: 1003 }   # "Exterior" quick tile
+  parter: { id: 1001 }   # ground floor
+  etaj:   { id: 1007 }   # upper floor
+  lan:    { id: 1005 }   # lawn irrigation
+  garden: { id: 1006 }   # garden irrigation
+
+specialDevices:
+  doorLockMain:
+    peripheral:
+      id: 1234           # the gate the dashboard card operates
+
+ui:
+  meteo:
+    locationName: My Town</code></pre></div>
+
+		<p>Two optional integrations are wired the same way — an embedded Grafana dashboard for long-range
+			charts, and a link to whatever surveillance UI you run:</p>
+
+		<div class="codeblock"><pre><code>grafana:
+  url: https://grafana.example.com
+  dashboard:
+    solar:       { id: abc123 }
+    temperature: { id: def456, panelId: 4 }
+
+surveillance:
+  url: https://cameras.example.com</code></pre></div>
+
+		<p>Given <code>https://grafana.example.com/d/abc123/solar-plant</code>, set
+			<code>grafana.url</code> to the origin and <code>grafana.dashboard.solar.id</code> to
+			<code>abc123</code>. Without them the Solar Reports page explains what is missing instead of
+			rendering a broken frame.</p>
+
+		<div class="callout">
+			<strong>Widgets know what they need.</strong>
+			<p>Each dashboard widget declares the configuration keys it cannot work without. Settings will not
+				offer a widget whose keys are missing, and the dashboard renders a
+				<em>“not configured”</em> placeholder — with an inline picker for admins — instead of mounting a
+				broken card.</p>
+		</div>
+
+		<h3 id="heat-cfg">Heating</h3>
+
+		<div class="codeblock"><pre><code>heat:
+  thermostat:
+    enabled: true
+  temp:
+    allDay: 21           # default setpoint in °C</code></pre></div>
+
+		<h3 id="admin-cfg">Auto-import</h3>
+
+		<div class="codeblock"><pre><code>admin:
+  devices:
+    autoimport: false    # create Device rows from unknown MQTT announcements
+  ports:
+    autoimport: false    # create DevicePort rows from unknown port topics</code></pre></div>
+
+		<p>Useful when bringing a new controller online; turn it back off afterwards so a misbehaving device
+			cannot spawn hundreds of rows.</p>
+
+		<h3 id="notify-cfg">Notifications</h3>
+
+		<div class="codeblock"><pre><code>telegram:
+  token: "&lt;bot token&gt;"
+  chanelId: "&lt;channel id&gt;"
+  bot1x1ChannelId: "&lt;direct chat id&gt;"
+
+push:
+  vapid:
+    publicKey: "&lt;vapid public key&gt;"
+    privateKey: "&lt;vapid private key&gt;"
+    subject: "mailto:you@example.com"
+
+opsgenie:
+  url: https://api.opsgenie.com
+  apiKey: "&lt;key&gt;"
+  team: "&lt;team&gt;"
+  recipientId: "&lt;id&gt;"
+  alias: myhab
+  email: alerts@example.com</code></pre></div>
+
+		<p>All three degrade cleanly when absent: the Telegram bot stays off (it also has its own
+			<code>myhab.telegram.enabled</code> switch), web push logs one warning and stays inactive, and
+			OpsGenie keys are only read when an alert is actually raised.</p>
+
+		<h3 id="feature-cfg">Feature flags</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Key</th><th>Default</th><th>Purpose</th></tr></thead>
+				<tbody>
+					<tr><td><code>feature.voice.enabled</code></td><td><code>false</code></td><td>Master switch for the voice assistant.</td></tr>
+					<tr><td><code>feature.voice.llm.provider</code></td><td><code>anthropic</code></td><td><code>anthropic</code> or <code>openai</code>.</td></tr>
+					<tr><td><code>feature.voice.llm.model</code></td><td>provider default</td><td>Model id override.</td></tr>
+					<tr><td><code>feature.voice.llm.apikey</code></td><td>—</td><td>LLM key; falls back to the provider's environment variable.</td></tr>
+					<tr><td><code>feature.voice.tts.enabled</code></td><td><code>false</code></td><td>Server-side neural speech for replies.</td></tr>
+					<tr><td><code>feature.voice.tts.provider</code></td><td><code>google</code></td><td>Currently Google Cloud TTS only.</td></tr>
+					<tr><td><code>feature.voice.tts.apikey</code></td><td>—</td><td>A <em>service-account JSON</em> (inline or a file path) — not an API key.</td></tr>
+					<tr><td><code>feature.voice.tts.voice.ro</code> / <code>.en</code></td><td>Google default</td><td>Specific voice names, e.g. <code>ro-RO-Wavenet-A</code>.</td></tr>
+					<tr><td><code>feature.qr.enabled</code></td><td><code>false</code></td><td>Embed QR codes on printed labels.</td></tr>
+					<tr><td><code>feature.qr.content.template</code></td><td><code>myhab://TYPE/ID</code></td><td>What the QR encodes. Deliberately base-URL-free.</td></tr>
+					<tr><td><code>feature.qr.position</code> / <code>feature.qr.size</code></td><td>—</td><td>Placement and size on the label.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2 id="jobs">Quartz job intervals</h2>
+
+		<p>
+			Every scheduled job can be enabled, disabled and re-timed from
+			<code>quartz.jobs.*</code> without touching code. These live in <code>application.yml</code> and are
+			typically overridden per deployment in <code>./config/application.yml</code>.
+		</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Job</th><th>Default</th><th>Interval</th><th>Does</th></tr></thead>
+				<tbody>
+					<tr><td><code>deviceControllerStateSync</code></td><td><span class="badge core">on</span></td><td>60 s</td><td>HTTP reachability + state reconciliation for controllers that support it.</td></tr>
+					<tr><td><code>portValueSyncTrigger</code></td><td><span class="badge core">on</span></td><td>60 s</td><td>Asks devices to re-publish their port values over MQTT.</td></tr>
+					<tr><td><code>configSync</code></td><td><span class="badge core">on</span></td><td>60 s</td><td>Pulls the configuration repository.</td></tr>
+					<tr><td><code>switchOffOnTimeout</code></td><td><span class="badge core">on</span></td><td>30 s</td><td>Turns off anything past its auto-off timeout.</td></tr>
+					<tr><td><code>meteoStationSync</code></td><td><span class="badge core">on</span></td><td>1800 s</td><td>Open-Meteo current conditions and forecast.</td></tr>
+					<tr><td><code>nibeInfoSync</code></td><td><span class="badge core">on</span></td><td>300 s</td><td>Heat pump telemetry. Inert without credentials.</td></tr>
+					<tr><td><code>nibeTokenRefresh</code></td><td><span class="badge core">on</span></td><td>120 s</td><td>Refreshes the myUplink OAuth token before expiry.</td></tr>
+					<tr><td><code>heatingControl</code></td><td><span class="badge opt">off</span></td><td>120 s</td><td>Thermostat automation from room temperature and degree-minutes.</td></tr>
+					<tr><td><code>huaweiInfoSync</code></td><td><span class="badge opt">off</span></td><td>300 s</td><td>FusionSolar inverter and meter poll.</td></tr>
+					<tr><td><code>navimowInfoSync</code></td><td><span class="badge opt">off</span></td><td>30 s</td><td>Mower state; auto-creates ports and raises notifications.</td></tr>
+					<tr><td><code>navimowTokenRefresh</code></td><td><span class="badge opt">off</span></td><td>600 s</td><td>Spends the stored refresh token. Enable after the OAuth flow has run once.</td></tr>
+					<tr><td><code>eventLogReader</code></td><td><span class="badge opt">off</span></td><td>60 s</td><td>Drains the event log queue.</td></tr>
+					<tr><td><code>electricityMetricStatistics1H / 24H / 1Month</code></td><td><span class="badge opt">off</span></td><td>1 h / 24 h / 30 d</td><td>Energy statistics rollups.</td></tr>
+					<tr><td><code>randomColors</code>, <code>rainbowRGB</code></td><td><span class="badge opt">off</span></td><td>5 s / 80 s</td><td>RGB effects — testing and parties.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="codeblock"><pre><code># ./config/application.yml — enable the integrations you actually own
+quartz:
+  jobs:
+    huaweiInfoSync:   { enabled: true,  interval: 300 }
+    heatingControl:   { enabled: true,  interval: 120 }
+    eventLogReader:   { enabled: true,  interval: 60 }
+    nibeInfoSync:     { enabled: false }</code></pre></div>
+
+		<h2 id="security-cfg">Security settings</h2>
+
+		<div class="codeblock"><pre><code>myhab:
+  security:
+    # Reverse proxies whose X-Real-IP we believe. Must be the proxy's own address.
+    # Empty means no request arriving with forwarding headers is trusted.
+    trustedProxies: []
+    # Networks the anonymous device endpoints may be called from.
+    lanCidrs:
+      - 192.168.0.0/16
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+      - 127.0.0.0/8
+      - ::1/128</code></pre></div>
+
+		<div class="callout warn">
+			<strong><code>forward-headers-strategy</code> must stay unset.</strong>
+			<p>Enabling it rewrites <code>request.remoteAddr</code> from <code>X-Forwarded-For</code>, which is
+				caller-supplied. myHAB deliberately distinguishes the proxy from the caller itself via
+				<code>ClientIpService</code>.</p>
+		</div>
+
+		<h2 id="entity-cfg">Per-entity configuration</h2>
+
+		<p>Many entities carry their own key/value sidecar, edited from that entity's screen rather than
+			globally.</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Key</th><th>Attached to</th><th>Purpose</th></tr></thead>
+				<tbody>
+					<tr><td><code>key.on.timeout</code></td><td>Peripheral</td><td>Auto-off after N seconds. Also shown to guests on a shared link.</td></tr>
+					<tr><td><code>feature.voice.alias</code></td><td>Peripheral, Zone</td><td>Comma-separated alternate names fed to the voice agent.</td></tr>
+					<tr><td><code>cfg.key.device.http.sync.supported</code></td><td>Device</td><td>Include this controller in the HTTP state sweep.</td></tr>
+					<tr><td><code>cfg.key.device.mqtt.sync.supported</code></td><td>Device</td><td>Include it in the MQTT value-read trigger.</td></tr>
+					<tr><td><code>cfg.key.device.admin.port.autoimport</code></td><td>Device</td><td>Per-device port auto-import override.</td></tr>
+					<tr><td><code>cfg.key.device.oauth.access_user</code> / <code>.access_passwd</code></td><td>Device</td><td>Credentials for a cloud-backed device.</td></tr>
+					<tr><td><code>cfg.key.device.oauth.access_token</code> / <code>.refresh_token</code></td><td>Device</td><td>Tokens written by the OAuth flow and refreshed by a job.</td></tr>
+					<tr><td><code>cfg.key.device.navimow.api.base_url</code></td><td>Device</td><td>Regional Segway API endpoint.</td></tr>
+					<tr><td><code>cfg.key.device.navimow.device.id</code></td><td>Device</td><td>The mower id returned by the Segway account listing.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2 id="settings-ui">Settings in the app</h2>
+
+		<p>Some things are per-user rather than per-installation, and live in the profile:</p>
+
+		<ul>
+			<li><strong>Language</strong> — English or Romanian, or <em>Automatic</em> to follow the browser.
+				The same choice drives voice recognition and spoken replies.</li>
+			<li><strong>Timezone</strong> — an IANA id used to render every stored UTC timestamp.</li>
+			<li><strong>Dashboard widgets</strong> — which cards appear, in what order.</li>
+			<li><strong>Favourites</strong> — jobs and scenarios pinned for one-tap execution.</li>
+			<li><strong>Avatar</strong> — a small PNG/JPEG stored on the account.</li>
+		</ul>
+
+		<div class="pager">
+			<a href="install.html"><span>Previous</span>Installation</a>
+			<a class="next" href="features.html"><span>Next</span>Feature reference</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

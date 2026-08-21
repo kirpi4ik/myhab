@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The public demo — myHAB documentation</title>
+<meta name="description" content="demo.myhab.org is a fully interactive myHAB installation with simulated devices: what is in it, how the reset works, what is switched off, and how to run the same sandbox locally.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html" class="active">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / The public demo</div>
+		<div class="docs-header">
+			<h1>The public demo</h1>
+			<p>A complete myHAB installation you can break, at <a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a>.</p>
+		</div>
+
+		<div class="cta" style="text-align:left;padding:32px 34px;margin-bottom:2.5rem">
+			<h3 style="margin-bottom:.4em">Sign in</h3>
+			<div class="creds" style="justify-content:flex-start;margin-top:.4rem">
+				<span class="cred">user &nbsp;<b>demo / demo</b></span>
+				<span class="cred">admin &nbsp;<b>demo-admin / demo-admin</b></span>
+			</div>
+			<p class="small muted" style="margin:1.1rem 0 0">
+				These credentials are published on the login page. They protect nothing — treat the demo as a
+				public whiteboard.
+			</p>
+		</div>
+
+		<h2 id="whats-in-it">What is in it</h2>
+
+		<p>
+			A fictional house: <strong>seven zones</strong> and <strong>twenty-one peripherals</strong>, wired to
+			simulated ESP32 controllers, with enough history seeded that the charts look like a real installation.
+		</p>
+
+		<ul>
+			<li>Lighting, sockets, heating and irrigation across ground and upper floors, a terrace, a lawn and a
+				garden.</li>
+			<li>Two <strong>floor-plan screens</strong> with widgets placed on them.</li>
+			<li>A <strong>scheduled irrigation job</strong> in the sprinkler scheduler.</li>
+			<li>Scenarios you can read and run.</li>
+			<li>Seeded <strong>inbox messages</strong> for both accounts.</li>
+			<li>Cabling, racks and patch panels documented, so the QR-label screens have something to print.</li>
+		</ul>
+
+		<div class="callout info">
+			<strong>One device is offline on purpose.</strong>
+			<p><code>esp_shed</code> — the Shed Light — never answers. It is there so you can see what an
+				unreachable controller looks like, without it blocking anything you would actually want to try.</p>
+		</div>
+
+		<h2 id="simulated">The devices are simulated, not faked</h2>
+
+		<p>
+			A companion process answers MQTT commands as if it were the ESP32 controllers. This is not decoration.
+			myHAB publishes a command and then <em>waits for the device to echo its new state back</em>, and that
+			echo is what updates the database and the UI. With nothing answering the broker, every control in the
+			demo would appear dead.
+		</p>
+
+		<p>So what you are exercising is the real pipeline — real MQTT, real event bus, real persistence, real
+			WebSocket fan-out. Only the hardware at the far end is imaginary.</p>
+
+		<h2 id="shared">It is shared, and it resets</h2>
+
+		<p>
+			Every visitor works on the same dataset. There is no per-session isolation: the application has a
+			single datasource, and the MQTT and WebSocket threads carry no tenant context. Real isolation would
+			mean a database per session with a routing datasource, or a container per visitor — neither worth it
+			here.
+		</p>
+
+		<p>Instead the sandbox resets, which gets most of the way there for a fraction of the cost:</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Trigger</th><th>When</th></tr></thead>
+				<tbody>
+					<tr><td><strong>Idle</strong></td><td>Someone changed something, and nobody has changed anything for about twenty minutes.</td></tr>
+					<tr><td><strong>Manual</strong></td><td>The <em>Reset demo</em> button in the banner.</td></tr>
+					<tr><td><strong>Nightly</strong></td><td>Once a day, unconditionally.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>
+			In practice the next visitor almost always finds a clean house. The banner says plainly that the data
+			is shared, so nobody is misled.
+		</p>
+
+		<div class="callout">
+			<strong>Timestamps are rebased, not replayed.</strong>
+			<p>A reset restores the seed and then shifts every timestamp forward by the age of the seed, so charts
+				always end “now”. The dataset never has to be rebuilt to stay plausible.</p>
+		</div>
+
+		<h2 id="isolation">What is switched off</h2>
+
+		<p>The demo must not be able to reach anything real — no production database, no LAN controllers, no
+			third-party clouds.</p>
+
+		<ul>
+			<li>Every job that reaches an external system is disabled: Huawei, NIBE, Navimow, weather, the HTTP
+				device sync and the configuration sync.</li>
+			<li>Telegram is off.</li>
+			<li>The cache runs single-node with multicast disabled.</li>
+			<li>The configuration repository is local to the deployment and contains only demo-safe values.</li>
+		</ul>
+
+		<div class="callout warn">
+			<strong>The demo publishes an admin account, so its configuration is public by definition.</strong>
+			<p>The admin configuration query returns every key to any admin-authenticated caller. The demo's
+				configuration therefore deliberately omits notification tokens, alerting keys and push credentials —
+				each of which degrades cleanly when absent. Nothing secret may ever be added to it.</p>
+		</div>
+
+		<h2 id="try">Things worth trying</h2>
+
+		<div class="grid grid-2">
+			<div class="card">
+				<h3>As <code>demo</code></h3>
+				<ul class="small muted" style="margin-bottom:0">
+					<li>Switch lights on the dashboard and watch the state come back from the “device”</li>
+					<li>Open a floor plan and tap a bulb on the plan itself</li>
+					<li>Open the gate card and see the confirmation dialog</li>
+					<li>Read the inbox, mute a repeated warning</li>
+					<li>Switch the interface to Romanian in Settings</li>
+				</ul>
+			</div>
+			<div class="card">
+				<h3>As <code>demo-admin</code></h3>
+				<ul class="small muted" style="margin-bottom:0">
+					<li>Browse Devices → Ports → Peripherals and follow a light back to its controller port</li>
+					<li>Open the MQTT explorer and watch the raw monitor while you switch something</li>
+					<li>Read a scenario, then run it</li>
+					<li>Edit a floor plan and move a widget</li>
+					<li>Create a shared link and open it in a private window</li>
+					<li>Change an irrigation schedule</li>
+				</ul>
+			</div>
+		</div>
+
+		<h2 id="local">Running the same sandbox locally</h2>
+
+		<p>
+			The demo is not a separate product — it is a Grails environment in the same repository. You can run it
+			on your machine with no Docker and no hardware:
+		</p>
+
+		<div class="codeblock"><pre><code>./gradlew demoSeedLocal   # (re)build the myhab_demo database — destructive, idempotent
+./gradlew demoSim         # simulator + embedded MQTT broker on :1883
+./gradlew demoRun         # the backend, in the `demo` environment
+./gradlew serve           # Quasar dev server on :10002</code></pre></div>
+
+		<p>Then open <code>http://localhost:10002</code> and sign in with <code>demo</code> / <code>demo</code>.</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Task</th><th>Does</th></tr></thead>
+				<tbody>
+					<tr><td><code>demoSeedLocal</code></td><td>Drops and rebuilds the demo database from the seed SQL.</td></tr>
+					<tr><td><code>demoConfigRepo</code></td><td>Materialises a bare configuration repo from the demo's config seed.</td></tr>
+					<tr><td><code>demoSim</code></td><td>Runs the simulator with an embedded broker, so no Mosquitto install is needed.</td></tr>
+					<tr><td><code>demoRun</code></td><td>Starts the backend in the <code>demo</code> environment.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="callout warn">
+			<strong>Start <code>demoSim</code> before <code>demoRun</code>.</strong>
+			<p>The application connects to the broker at boot, and the simulator is hosting it. Also note that
+				<code>demoSeedLocal</code> drops the database and disconnects anything attached — including a
+				running <code>demoRun</code>. That is deliberate; restart the app afterwards.</p>
+		</div>
+
+		<p>Override the database with <code>DEMO_DB</code>, <code>DEMO_DB_USER</code>,
+			<code>DEMO_DB_PASSWORD</code>, <code>DEMO_DB_HOST</code> and <code>DEMO_DB_PORT</code>.</p>
+
+		<h2 id="safety">Two safety properties worth knowing</h2>
+
+		<ul>
+			<li>The reset refuses to run unless the environment is <code>demo</code> <strong>and</strong> a seed
+				schema exists. A normal deployment has neither, so the reset is inert there even if someone
+				misconfigures the environment.</li>
+			<li>The list of tables to restore is derived from the seed schema at runtime rather than hard-coded, so
+				adding a domain class cannot silently leave a table un-restored.</li>
+		</ul>
+
+		<div class="pager">
+			<a href="api.html"><span>Previous</span>API reference</a>
+			<a class="next" href="faq.html"><span>Next</span>FAQ</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

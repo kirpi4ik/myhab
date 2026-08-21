@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automation &amp; jobs — myHAB documentation</title>
+<meta name="description" content="Scenarios, the myHAB automation DSL, cron and event triggers, the event system, heating control, auto-off timeouts and the sprinkler scheduler.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html" class="active">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / Automation &amp; jobs</div>
+		<div class="docs-header">
+			<h1>Automation &amp; jobs</h1>
+			<p>Scenarios are short Groovy scripts. Jobs decide when they run. Events decide what wakes them up.</p>
+		</div>
+
+		<h2 id="model">The model</h2>
+
+		<div class="codeblock"><pre><code>Scenario   a script — what to do
+   ▲
+   │  bound to
+Job        when to do it: cron trigger(s), event trigger(s), or manual
+   ▲
+   │  fired by
+CronTrigger        a schedule
+EventTrigger       an event topic pattern
+a human            the Run button, a favourite, a voice command</code></pre></div>
+
+		<p>A job carries its own status (<code>ACTIVE</code> / inactive), tags, and an execution history. Only
+			active jobs with a scenario are offered to the voice assistant.</p>
+
+		<h2 id="dsl">The scenario DSL</h2>
+
+		<p>
+			A scenario is a Groovy closure evaluated with a composite delegate. Method calls resolve, in order,
+			against a read-only <strong>knowledge</strong> layer (predicates about the world), then an
+			<strong>action</strong> layer (things that change it), and finally against any Spring bean named
+			<code>&lt;name&gt;Service</code> that implements the command interface.
+		</p>
+
+		<div class="codeblock"><pre><code>if (isEvening() &amp;&amp; isNight()) {
+    switchOn([portIds: [123, 456]])
+}
+
+if (isRaining()) {
+    switchOff([peripheralIds: [42]])
+}
+
+if (currentExternTemperature() &lt; 5) {
+    switchOn([peripheralIds: [77]])   // frost protection on the outside tap
+}</code></pre></div>
+
+		<h3 id="predicates">Predicates</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Call</th><th>Returns</th><th>Source</th></tr></thead>
+				<tbody>
+					<tr><td><code>isRaining()</code></td><td>boolean</td><td>A rain-sensor peripheral if you have one, otherwise the meteo precipitation reading against a threshold.</td></tr>
+					<tr><td><code>rainAmount(minutes)</code></td><td>mm, one decimal</td><td>Accumulated precipitation over the lookback window.</td></tr>
+					<tr><td><code>isDay()</code> / <code>isNight()</code></td><td>boolean</td><td>The sunrise/sunset window reported by the weather integration.</td></tr>
+					<tr><td><code>isEvening()</code></td><td>boolean</td><td>Legacy time-of-day predicate.</td></tr>
+					<tr><td><code>currentExternTemperature()</code></td><td>°C, integer, or <code>null</code></td><td>The average of the <code>TEMP</code> peripherals in the exterior zone; falls back to the meteo temperature.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h3 id="actions">Actions</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Call</th><th>Does</th></tr></thead>
+				<tbody>
+					<tr><td><code>switchOn([portIds: […], peripheralIds: […]])</code></td><td>Turns ports on. Either key may be used, or both together; peripherals resolve to their connected ports.</td></tr>
+					<tr><td><code>switchOff([...])</code></td><td>The same, off.</td></tr>
+					<tr><td><code>switchToggle([...])</code></td><td>Inverts current state.</td></tr>
+					<tr><td><code>pause(milliseconds)</code></td><td>Sleeps inside the script — useful for pulse sequences.</td></tr>
+					<tr><td><code>mowerCommand([deviceId: …, action: 'DOCK'])</code></td><td>Commands the robotic mower: <code>START</code>, <code>STOP</code>, <code>PAUSE</code>, <code>RESUME</code>, <code>DOCK</code>.</td></tr>
+					<tr><td><code>wakeup([...])</code></td><td>Wake-on-LAN style trigger for devices that support it.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>Every state change made by a scenario is attributed in the audit log with source
+			<code>SCENARIO</code> and the actor that triggered it — <code>CRON</code>, <code>EVENT</code>, or the
+			real username when someone pressed Run.</p>
+
+		<div class="callout warn">
+			<strong>Scenario scripts are trusted input.</strong>
+			<p>They are authored by administrators through the UI and executed without a sandbox or a
+				method allowlist. Treat write access to scenarios as equivalent to shell access on the server, and
+				grant <code>ROLE_ADMIN</code> accordingly.</p>
+		</div>
+
+		<h3 id="extend">Adding your own action</h3>
+
+		<p>
+			The final fallback in the delegate chain resolves <code>fooBar(...)</code> to a Spring bean named
+			<code>fooBarService</code> implementing <code>DslCommand</code>. Dropping a new service into the
+			application is therefore enough to make it callable from every scenario — no DSL grammar to extend, no
+			parser to touch.
+		</p>
+
+		<h2 id="triggers">Triggers</h2>
+
+		<h3 id="cron">Cron triggers</h3>
+
+		<p>Standard Quartz cron expressions, evaluated in the server's timezone (UTC by convention). A job may
+			carry several, which is how “weekdays at 06:30 and weekends at 09:00” is expressed.</p>
+
+		<h3 id="event-triggers">Event triggers</h3>
+
+		<p>
+			A job can subscribe to an event topic instead of — or as well as — a schedule. When a matching event
+			is published, the job's scenario runs. This is how device activity drives automation: a motion event
+			from a camera, a gate opening, a button press on a controller.
+		</p>
+
+		<h2 id="events">The event system</h2>
+
+		<p>
+			Events are the seam everything hangs off. They are published to named topics and carry a fixed
+			positional payload, which keeps the bus schema-free while remaining greppable.
+		</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Field</th><th>Holds</th></tr></thead>
+				<tbody>
+					<tr><td><code>p0</code></td><td>Event topic name — <code>EVT_LIGHT</code>, <code>EVT_GATE</code>, <code>evt_switch</code>, <code>evt_sprinkler</code>, …</td></tr>
+					<tr><td><code>p1</code></td><td>Entity type: <code>PERIPHERAL</code>, <code>PORT</code>, <code>ZONE</code>, <code>DEVICE</code>.</td></tr>
+					<tr><td><code>p2</code></td><td>Entity id.</td></tr>
+					<tr><td><code>p3</code></td><td>Source description.</td></tr>
+					<tr><td><code>p4</code></td><td>The action or value.</td></tr>
+					<tr><td><code>p5</code></td><td>Additional metadata, JSON.</td></tr>
+					<tr><td><code>p6</code></td><td>Who did it — a username, or <code>shared:&lt;token&gt;</code> for a guest link.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="callout info">
+			<strong>One execution path for everything.</strong>
+			<p>The UI, scenarios, Telegram, the voice assistant and shared links all publish the same
+				<code>evt_switch</code>-family events. They are handled by one service, which resolves
+				<code>PERIPHERAL</code> / <code>PORT</code> / <code>ZONE</code> to concrete ports, applies the
+				action and writes the audit row. Adding a new control surface means publishing an event, not
+				reimplementing the control logic.</p>
+		</div>
+
+		<h2 id="scheduled">Built-in scheduled jobs</h2>
+
+		<p>Alongside your own jobs, myHAB runs a fixed set of housekeeping and integration jobs on Quartz.
+			Intervals and toggles are configuration, not code — see
+			<a href="configuration.html#jobs">Configuration → Quartz job intervals</a>.</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Job</th><th>What it does</th></tr></thead>
+				<tbody>
+					<tr><td>Device controller state sync</td><td>Polls controllers that support HTTP for their real state and reconciles the database against it. This is what raises “device offline” messages.</td></tr>
+					<tr><td>Port value sync trigger</td><td>Asks devices to re-publish their port values, so a client that missed an MQTT message converges anyway.</td></tr>
+					<tr><td>Switch off on timeout</td><td>Turns off any peripheral past its <code>key.on.timeout</code>. The safety net behind “I left the pump running”.</td></tr>
+					<tr><td>Heating control</td><td>Drives thermostats from room temperature, setpoints and degree-minutes.</td></tr>
+					<tr><td>Config sync</td><td>Pulls the configuration repository so a commit takes effect without a restart.</td></tr>
+					<tr><td>Event log reader</td><td>Drains the event log queue into persistent storage.</td></tr>
+					<tr><td>Statistics rollups</td><td>Aggregates port values into hourly, daily and monthly series.</td></tr>
+					<tr><td>Integration syncs</td><td>Huawei, NIBE, Navimow and Open-Meteo polling, plus the OAuth token refreshes each of them needs.</td></tr>
+					<tr><td>RGB effects</td><td>Random colours and a rainbow sweep. Off by default.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2 id="heating">Heating automation</h2>
+
+		<p>
+			The heating job is the most opinionated piece of automation in the product, because heating is the one
+			thing where naive on/off control costs real money.
+		</p>
+
+		<ul>
+			<li>Setpoints are per zone, with a global fallback (<code>heat.temp.allDay</code>).</li>
+			<li><strong>Degree-minutes</strong> from the heat pump are used to decide whether the system is
+				keeping up, rather than reacting to instantaneous temperature alone.</li>
+			<li>Heat modes — economy, comfort, vacation — shift the setpoints without editing every zone.</li>
+			<li>Weather forecast data is available to scenarios, so predictive strategies are possible.</li>
+			<li>The whole job can be disabled if you would rather let the heat pump's own controller run the
+				show.</li>
+		</ul>
+
+		<h2 id="irrigation">Irrigation</h2>
+
+		<p>
+			The <a href="features.html#sprinkler">sprinkler scheduler</a> is a front end over ordinary jobs: each
+			row is a job with a cron trigger and a scenario that switches a sprinkler peripheral on for a
+			duration. That means irrigation schedules appear in job execution history like everything else, and a
+			scenario can override them — skipping a cycle after rain, for example:
+		</p>
+
+		<div class="codeblock"><pre><code>// don't water if more than 3 mm fell in the last 12 hours
+if (rainAmount(720) &lt; 3.0) {
+    switchOn([peripheralIds: [501]])
+    pause(90 * 60 * 1000)
+    switchOff([peripheralIds: [501]])
+}</code></pre></div>
+
+		<div class="callout">
+			<strong>Prefer the auto-off timeout to a long <code>pause()</code>.</strong>
+			<p>A scenario that sleeps for ninety minutes holds a thread and does not survive a restart. Setting
+				<code>key.on.timeout</code> on the peripheral lets the switch-off job handle it, and it still works
+				if the application is restarted mid-cycle.</p>
+		</div>
+
+		<h2 id="history">Execution history</h2>
+
+		<p>
+			Every scheduled run is recorded with its start time, status and any error. Combined with the
+			per-peripheral event log — which records who changed what, from which surface, and from which address
+			— you can reconstruct exactly why a light is on.
+		</p>
+
+		<div class="pager">
+			<a href="features.html"><span>Previous</span>Feature reference</a>
+			<a class="next" href="voice.html"><span>Next</span>Voice assistant</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

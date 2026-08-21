@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API reference — myHAB documentation</title>
+<meta name="description" content="myHAB API surfaces: JWT authentication, the GraphQL schema with its auto-generated CRUD and custom fetchers, REST endpoints, the public share API, WebSocket state updates and MQTT topics.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html" class="active">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / API reference</div>
+		<div class="docs-header">
+			<h1>API reference</h1>
+			<p>GraphQL for almost everything, REST for the few things that are not, WebSocket for live state, MQTT for devices.</p>
+		</div>
+
+		<h2 id="auth">Authentication</h2>
+
+		<p>
+			Sign in with username and password; you get a signed HS256 JWT to send as a bearer token on every
+			subsequent request. Tokens last roughly ten hours and there is no refresh token — re-authenticate on a
+			<code>401</code>.
+		</p>
+
+		<div class="codeblock"><pre><code>curl -s -X POST https://your-host/api/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"..."}'
+
+# → { "username": "admin", "roles": ["ROLE_ADMIN"], "access_token": "eyJ..." }</code></pre></div>
+
+		<div class="codeblock"><pre><code>curl -s https://your-host/graphql \
+  -H 'Authorization: Bearer eyJ...' \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"{ me { id username } }"}'</code></pre></div>
+
+		<h2 id="graphql">GraphQL</h2>
+
+		<p>
+			<code>POST /graphql</code>, authenticated. In development a GraphiQL explorer is served at
+			<code>/graphiql</code>, which is the fastest way to discover the schema — it is generated partly from
+			your own domain model.
+		</p>
+
+		<h3 id="autocrud">Auto-generated CRUD</h3>
+
+		<p>
+			Domain classes that declare a GraphQL mapping get queries, paginated list queries and create / update
+			/ delete mutations generated for them. That covers devices, ports, peripherals, cables, zones, layers,
+			racks, patch panels, jobs, scenarios, users, roles, categories and configuration entries.
+		</p>
+
+		<div class="codeblock"><pre><code>query {
+  devicePeripheralList(max: 20, sort: "name") {
+    id
+    name
+    category { name }
+    zones { id name }
+    connectedTo { id internalRef state value }
+  }
+}</code></pre></div>
+
+		<div class="callout info">
+			<strong>Absence of a mapping is a deliberate boundary.</strong>
+			<p>Entities without one are skipped by the schema factory, so no auto-CRUD exists for them. The
+				shared-link audit table works this way: rows can be read through a purpose-built query but never
+				created, altered or deleted through the API.</p>
+		</div>
+
+		<h3 id="queries">Custom queries</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Query</th><th>Returns</th></tr></thead>
+				<tbody>
+					<tr><td><code>me</code></td><td>The current user's id and username.</td></tr>
+					<tr><td><code>navigation</code></td><td>Menu and breadcrumb structure for the SPA.</td></tr>
+					<tr><td><code>appConfigList</code></td><td>Every configuration key. <span class="badge beta">admin</span> — includes secrets.</td></tr>
+					<tr><td><code>uiConfigList</code></td><td>The UI-safe subset only. What regular users get at boot.</td></tr>
+					<tr><td><code>config(key)</code></td><td>A single configuration value.</td></tr>
+					<tr><td><code>qrConfig</code></td><td>QR label settings and the variables available in the template.</td></tr>
+					<tr><td><code>myMessages(level, state)</code></td><td>The signed-in user's inbox.</td></tr>
+					<tr><td><code>myUnreadCount</code></td><td>Unread message count for the badge.</td></tr>
+					<tr><td><code>myNotificationRules</code></td><td>The user's own mute rules. Owner-scoped.</td></tr>
+					<tr><td><code>pushPublicKey</code></td><td>VAPID public key, empty when push is unconfigured.</td></tr>
+					<tr><td><code>sprinklerScheduleJobs</code></td><td>Jobs bound to sprinkler peripherals, for the scheduler grid.</td></tr>
+					<tr><td><code>jobExecutionHistoryByJobId(jobId, limit)</code></td><td>Recent runs of a job.</td></tr>
+					<tr><td><code>sharedWidgets(state)</code></td><td>All guest links. <span class="badge beta">admin</span></td></tr>
+					<tr><td><code>sharedWidgetAudit(sharedWidgetId, count, offset)</code></td><td>Attempt history, newest first. Defaults to 200.</td></tr>
+					<tr><td><code>discoveredDevices</code></td><td>UDP-broadcast scan for MegaD controllers on the LAN.</td></tr>
+					<tr><td><code>deviceBackupList(deviceId)</code></td><td>Stored controller configuration backups.</td></tr>
+					<tr><td><code>deviceFetchIpFromMqtt(deviceCode)</code></td><td>A device's current IP straight from the broker, without needing a port row to exist.</td></tr>
+					<tr><td><code>userRolesForUser(userId)</code></td><td>Role assignments.</td></tr>
+					<tr><td><code>cache</code> / <code>cacheAll</code></td><td>Hazelcast cache inspection.</td></tr>
+					<tr><td><code>deviceModelList</code></td><td>Supported device models.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h3 id="mutations">Custom mutations</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Mutation</th><th>Does</th></tr></thead>
+				<tbody>
+					<tr><td><code>pushEvent(input)</code></td><td>Publishes an event onto the bus — the generic way to switch a peripheral, port or zone.</td></tr>
+					<tr><td><code>voiceCommand(transcript, locale, sessionId)</code></td><td>Runs a natural-language command through the agent.</td></tr>
+					<tr><td><code>mowerCommand(deviceId, action)</code></td><td>START / STOP / PAUSE / RESUME / DOCK.</td></tr>
+					<tr><td><code>jobTrigger(jobId)</code></td><td>Runs a job now.</td></tr>
+					<tr><td><code>jobSchedule</code> / <code>jobUnschedule</code></td><td>Adds or removes a job from the scheduler.</td></tr>
+					<tr><td><code>scenarioDelete(id)</code></td><td>Deletes a scenario.</td></tr>
+					<tr><td><code>appConfigUpdate(key, value, commitMessage)</code></td><td>Writes a configuration key and commits it to the repository.</td></tr>
+					<tr><td><code>qrConfigUpdate(...)</code></td><td>Updates QR label settings.</td></tr>
+					<tr><td><code>publishMqtt(topic, payload)</code></td><td>Publishes an arbitrary MQTT message — what the explorer's publish form calls.</td></tr>
+					<tr><td><code>messageUpdateState</code> / <code>messageBatchUpdateState</code></td><td>Marks messages read or archived.</td></tr>
+					<tr><td><code>notificationRuleCreate</code> / <code>notificationRuleDelete</code></td><td>Mute rules.</td></tr>
+					<tr><td><code>pushSubscribe</code> / <code>pushUnsubscribe</code></td><td>Web Push registration.</td></tr>
+					<tr><td><code>sharedWidgetCreate(input)</code></td><td>Creates a guest link, returning its token.</td></tr>
+					<tr><td><code>sharedWidgetUpdateState(id, state, ...)</code></td><td>Disable, archive or re-enable a link.</td></tr>
+					<tr><td><code>deviceInitFromController(ip, password)</code></td><td>Imports a controller's port layout from the device itself.</td></tr>
+					<tr><td><code>deviceBackupConfig(deviceId)</code></td><td>Stores the controller's configuration in the database.</td></tr>
+					<tr><td><code>deviceRestoreToController</code> / <code>deviceSyncFromBackup</code></td><td>Push a backup back to hardware, or reconcile the database from one.</td></tr>
+					<tr><td><code>navimowOAuthStart</code> / <code>navimowOAuthComplete</code></td><td>The mower cloud sign-in flow.</td></tr>
+					<tr><td><code>meUpdateLanguage</code> / <code>meUpdateTimezone</code></td><td>Per-user preferences.</td></tr>
+					<tr><td><code>userRolesSave(input)</code></td><td>Assigns roles.</td></tr>
+					<tr><td><code>cacheDelete(cacheName, cacheKey)</code></td><td>Evicts a cache entry.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h3 id="switch-example">Switching something</h3>
+
+		<p>Control does not go through an auto-CRUD update on the port row — it goes through the event bus, so
+			zone expansion, device confirmation and audit logging all apply.</p>
+
+		<div class="codeblock"><pre><code>mutation {
+  pushEvent(input: {
+    p0: "evt_switch"
+    p1: "PERIPHERAL"
+    p2: "1042"
+    p3: "api"
+    p4: "ON"
+  }) { success }
+}</code></pre></div>
+
+		<p>Use <code>p1: "ZONE"</code> to switch everything in an area, recursively, or <code>p1: "PORT"</code> to
+			address a single I/O line.</p>
+
+		<h3 id="voice-example">Voice</h3>
+
+		<div class="codeblock"><pre><code>mutation {
+  voiceCommand(transcript: "turn off everything on the terrace",
+               locale: "en", sessionId: "abc123") {
+    reply
+    awaitingReply
+    sessionId
+    audioContent     # base64 MP3, when neural TTS is enabled
+  }
+}</code></pre></div>
+
+		<p>Keep the returned <code>sessionId</code> and pass it back to continue a conversation.
+			<code>awaitingReply</code> is true only when nothing was actioned and the reply is a question — the
+			client uses it to reopen the microphone.</p>
+
+		<h2 id="rest">REST endpoints</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Method</th><th>Path</th><th>Auth</th><th>Purpose</th></tr></thead>
+				<tbody>
+					<tr><td><code>POST</code></td><td><code>/api/login</code></td><td>none</td><td>Obtain a JWT.</td></tr>
+					<tr><td><code>GET</code></td><td><code>/api/me</code></td><td>user</td><td>Current user.</td></tr>
+					<tr><td><code>GET</code></td><td><code>/api/public/share/:token</code></td><td><strong>anonymous</strong></td><td>Guest link metadata.</td></tr>
+					<tr><td><code>POST</code></td><td><code>/api/public/share/:token/verify-pin</code></td><td><strong>anonymous</strong></td><td>Check a PIN.</td></tr>
+					<tr><td><code>POST</code></td><td><code>/api/public/share/:token/action</code></td><td><strong>anonymous</strong></td><td>Operate the shared peripheral.</td></tr>
+					<tr><td><code>GET</code></td><td><code>/api/public/event</code>, <code>/pub-event</code>, <code>/e</code></td><td>LAN only</td><td>Device-initiated event endpoints.</td></tr>
+					<tr><td><code>GET</code></td><td><code>/api/labels/cable/:id</code></td><td>user</td><td>Printable cable label.</td></tr>
+					<tr><td><code>GET</code></td><td><code>/api/labels/device/:id</code>, <code>/api/labels/peripheral/:id</code></td><td>user</td><td>Device and peripheral labels.</td></tr>
+					<tr><td><code>GET</code>/<code>PUT</code></td><td><code>/api/users/:id/avatar</code></td><td>user</td><td>Avatar image (small PNG/JPEG).</td></tr>
+					<tr><td><code>GET</code>/<code>PUT</code></td><td><code>/api/screens/:id/background</code></td><td>admin</td><td>Floor-plan background image.</td></tr>
+					<tr><td><code>POST</code></td><td><code>/api/screens/:id/background/resize</code></td><td>admin</td><td>Resize a background in place.</td></tr>
+					<tr><td><code>POST</code></td><td><code>/api/screens/import-svg</code></td><td>admin</td><td>Import a legacy SVG floor plan.</td></tr>
+					<tr><td><code>GET</code></td><td><code>/auth/external/callback</code></td><td>public path</td><td>Navimow OAuth callback.</td></tr>
+					<tr><td><code>GET</code></td><td><code>/actuator/healthcheck</code>, <code>/actuator/info</code>, <code>/actuator/prometheus</code></td><td>open</td><td>Health, build info, metrics.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="callout danger">
+			<strong>Two surfaces need protecting at the edge.</strong>
+			<p>The device event endpoints assume a LAN and are gated by CIDR, not by a credential — refuse them
+				from outside at your proxy. The public share endpoints have <em>no</em> rate limiting; so does
+				<code>/api/login</code>. Add both at the proxy.</p>
+		</div>
+
+		<h2 id="ws">WebSocket</h2>
+
+		<p>
+			Live state arrives over <strong>STOMP on WebSocket</strong> — not GraphQL subscriptions. Clients
+			authenticate, subscribe, and receive port-value and device-status changes as they happen, which is why
+			two phones and a wall tablet stay in agreement without polling.
+		</p>
+
+		<p>The public shared-link pages are the exception: no authenticated socket, so they re-read state after
+			each action.</p>
+
+		<h2 id="mqtt">MQTT</h2>
+
+		<p>
+			The device-facing API. myHAB subscribes to <code>myhab/#</code> (plus the ONVIF bridge prefix) and
+			routes inbound messages by matching them against per-model patterns. Full topic contracts are in
+			<a href="integrations.html#topics">Integrations → MQTT topic contracts</a>.
+		</p>
+
+		<div class="codeblock"><pre><code># command a relay
+mosquitto_pub -t 'myhab/esp_terrace/relay/3/cmd' -m 'ON'
+
+# watch everything
+mosquitto_sub -t 'myhab/#' -v</code></pre></div>
+
+		<p>
+			A useful side door: any source can raise an in-app message by publishing to
+			<code>myhab/&lt;source&gt;/notify</code>. That is how a script on another machine can put something in
+			the inbox without touching the HTTP API.
+		</p>
+
+		<h2 id="errors">Errors and conventions</h2>
+
+		<ul>
+			<li>GraphQL mutations return a response object with a success flag and messages rather than throwing
+				for expected failures.</li>
+			<li>REST errors use conventional status codes: <code>400</code> malformed, <code>401</code>
+				unauthenticated, <code>403</code> not permitted or an unusable state, <code>404</code> unknown.</li>
+			<li>Timestamps are milliseconds since epoch, UTC.</li>
+			<li>Ids are strings in GraphQL (<code>ID</code>) even though they are numeric in the database.</li>
+			<li>Publishing an event is fire-and-forget: a success means the command was accepted and published,
+				not that the device confirmed it.</li>
+		</ul>
+
+		<div class="pager">
+			<a href="integrations.html"><span>Previous</span>Integrations</a>
+			<a class="next" href="demo.html"><span>Next</span>The public demo</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feature reference — myHAB documentation</title>
+<meta name="description" content="Every screen in myHAB and what it does: dashboard, floor-plan screens, device and port management, MQTT explorer, message inbox, scheduler, QR labels, reports and settings.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html" class="active">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / Feature reference</div>
+		<div class="docs-header">
+			<h1>Feature reference</h1>
+			<p>Every screen in the application, what it is for, and the things that are easy to miss.</p>
+		</div>
+
+		<h2 id="dashboard">Dashboard</h2>
+
+		<p>
+			The landing screen. Cards are grouped by function — lighting, climate, sockets, temperature — and
+			each card offers a pair of shortcuts into the zones you nominated in configuration
+			(<code>specialZones.*</code>). Below them sit the full-width instrument widgets.
+		</p>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/dashboard.png" alt="myHAB dashboard" loading="lazy">
+			<figcaption><b>Dashboard</b>Function cards, a gate control, irrigation, the water pump with its remaining auto-off time, and the instrument widgets.</figcaption>
+		</figure>
+
+		<h3 id="widgets">Available widgets</h3>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Widget</th><th>Shows</th><th>Needs</th></tr></thead>
+				<tbody>
+					<tr><td>Lighting / Climate / Sockets / Temperature</td><td>Zone shortcuts by category.</td><td>The relevant <code>specialZones</code> ids.</td></tr>
+					<tr><td>Gate / door lock</td><td>An open button with a confirmation dialog.</td><td><code>specialDevices.doorLockMain.peripheral.id</code></td></tr>
+					<tr><td>Irrigation</td><td>Lawn and garden zone shortcuts plus a link to the scheduler.</td><td>Sprinkler zone ids.</td></tr>
+					<tr><td>Water pump</td><td>Slide-to-run control, the remaining auto-off time, and its event history.</td><td>A pump peripheral.</td></tr>
+					<tr><td>Weather station</td><td>Current conditions, 3-day forecast, sunrise/sunset, sunshine and daylight hours.</td><td>The meteo integration.</td></tr>
+					<tr><td>Solar power plant</td><td>Animated PV → house → grid flow, plus production, import, export and consumption tiles.</td><td>Huawei integration.</td></tr>
+					<tr><td>Heat pump</td><td>Outdoor, room, hot-water and supply temperatures; heating circuit ΔT; compressor state.</td><td>NIBE integration.</td></tr>
+					<tr><td>Robotic mower</td><td>State badge, colour-graded battery bar and start / pause / resume / dock buttons.</td><td>Navimow integration.</td></tr>
+					<tr><td>Temperature chart</td><td>An embedded Grafana panel for long-range history.</td><td><code>grafana.*</code> keys.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="callout">
+			<strong>Widgets that cannot work are not offered.</strong>
+			<p>Each widget declares the configuration it requires. Settings hides the ones whose keys are
+				missing, and if one is already on the dashboard it renders a “not configured” placeholder — with an
+				inline picker for admins — rather than mounting with a null id and failing silently.</p>
+		</div>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/dashboard-energy.png" alt="Weather, solar and heat pump widgets" loading="lazy">
+			<figcaption><b>Instrument widgets</b>Weather with forecast, the solar flow diagram, and the heat pump's full sensor set.</figcaption>
+		</figure>
+
+		<h2 id="zones">Zone view</h2>
+
+		<p>
+			Drilling into a zone gives you every peripheral in it, rendered as the right kind of control for its
+			category:
+		</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Category</th><th>Control</th></tr></thead>
+				<tbody>
+					<tr><td><code>LIGHT</code></td><td>Toggle, with colour controls for RGB fixtures.</td></tr>
+					<tr><td><code>SWITCH</code></td><td>Plain on/off with state and last-changed time.</td></tr>
+					<tr><td><code>HEAT</code></td><td>Setpoint and current temperature.</td></tr>
+					<tr><td><code>SPRINKLER</code></td><td>Run control with duration, linked to the scheduler.</td></tr>
+					<tr><td><code>TEMP</code></td><td>Read-only sensor value.</td></tr>
+					<tr><td>Gates and locks</td><td>Pulse control behind a confirmation dialog.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>Every card carries a dropdown with its event history, its configuration, a <strong>Share access</strong>
+			action where applicable, and a link into the admin screens for the underlying peripheral.</p>
+
+		<h2 id="screens">Floor-plan screens</h2>
+
+		<p>
+			Dashboard screens turn a picture of your house into a control surface. Upload a rendering, a floor
+			plan or a photograph as the background, then drop widgets onto it wherever the real thing is.
+		</p>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/floorplan-ground.jpg" alt="Ground floor live plan" loading="lazy">
+			<figcaption><b>Ground floor</b>Lights, heating valves, a lock and a live temperature readout, positioned where they physically are.</figcaption>
+		</figure>
+
+		<h3 id="screen-editor">The editor</h3>
+
+		<p>Admin → Screens gives you a drag-and-drop canvas with four tools:</p>
+
+		<ul>
+			<li><strong>Select</strong> — move and resize an existing widget.</li>
+			<li><strong>Add marker</strong> — bind a widget to a peripheral or port; pick its Material Design icon
+				and size.</li>
+			<li><strong>Add area</strong> — an outlined region that highlights when its peripheral is on (the
+				yellow room outline in the screenshot).</li>
+			<li><strong>Add link</strong> — navigation to another screen or to any application route, e.g. a
+				home button back to the dashboard.</li>
+		</ul>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/screen-editor.jpg" alt="Screen editor" loading="lazy">
+			<figcaption><b>Screen editor</b>Placing a navigation link on the ground-floor layout.</figcaption>
+		</figure>
+
+		<p>Backgrounds up to 5&nbsp;MB are accepted; legacy SVG floor plans (up to 8&nbsp;MB) can be imported and
+			converted. Screens render full-screen at <code>/wui</code> with no chrome, which is what you want on a
+			wall tablet.</p>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/floorplan-upper.jpg" alt="Upper floor live plan" loading="lazy">
+			<figcaption><b>Upper floor</b>Motion sensors, humidity and per-room temperature rendered in place.</figcaption>
+		</figure>
+
+		<h2 id="infra">Infrastructure management</h2>
+
+		<p>The admin side of the application, where the installation is described.</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Screen</th><th>What you do there</th></tr></thead>
+				<tbody>
+					<tr><td><strong>Devices</strong></td><td>Create controllers, set their model and code, assign zones, hold credentials, back up device configuration, view online/offline status.</td></tr>
+					<tr><td><strong>Ports</strong></td><td>The full I/O inventory across every controller — filter by device, type or state; see the last value inline.</td></tr>
+					<tr><td><strong>Peripherals</strong></td><td>The human-facing things. Category, zones, connected ports, voice aliases, auto-off timeout.</td></tr>
+					<tr><td><strong>Cables</strong></td><td>Physical runs between ports, patch panels and peripherals. Printable as labels.</td></tr>
+					<tr><td><strong>Locations</strong></td><td>Zones and layers, nested to match the building.</td></tr>
+					<tr><td><strong>Users</strong></td><td>Accounts, roles, Telegram username linkage, per-user language and timezone.</td></tr>
+					<tr><td><strong>Scenarios</strong></td><td>The DSL scripts themselves, with an editor and a run button.</td></tr>
+					<tr><td><strong>Scheduled jobs</strong></td><td>Cron and event triggers bound to scenarios, plus execution history.</td></tr>
+					<tr><td><strong>Screens</strong></td><td>Floor plans and the widgets on them.</td></tr>
+					<tr><td><strong>Shared widgets</strong></td><td>Every guest link, its usage and its audit trail.</td></tr>
+					<tr><td><strong>App configuration</strong></td><td>The git-backed configuration store, edited in place.</td></tr>
+					<tr><td><strong>QR settings</strong></td><td>Whether labels carry a QR code, what it encodes, its size and position.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/port-list.png" alt="Port list" loading="lazy">
+			<figcaption><b>Port list</b>Ports auto-created by the Huawei, NIBE and Navimow integrations sit alongside physical relay lines.</figcaption>
+		</figure>
+
+		<h2 id="mqtt">MQTT explorer</h2>
+
+		<p>
+			A broker inspector built into the application, so diagnosing a device does not mean SSHing somewhere
+			with <code>mosquitto_sub</code>.
+		</p>
+
+		<ul>
+			<li>A live tree of every retained topic, grouped by prefix, with payloads shown inline and a count per
+				branch.</li>
+			<li>A rolling <strong>raw monitor</strong> of the last 500 messages, pausable, with a clear button.</li>
+			<li>A <strong>publish</strong> form for sending an arbitrary topic and payload by hand — the fastest
+				way to prove whether a problem is the device or myHAB.</li>
+			<li>Connection status, and controls to copy or purge retained topics.</li>
+		</ul>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/mqtt-explorer.png" alt="MQTT explorer" loading="lazy">
+			<figcaption><b>MQTT explorer</b>476 retained topics, a raw monitor and a manual publish form.</figcaption>
+		</figure>
+
+		<h2 id="messages">Messages and notifications</h2>
+
+		<p>
+			myHAB keeps an inbox rather than firing transient toasts. Device-offline warnings, integration errors,
+			token-expiry notices and mower events all land there with a severity level and a source.
+		</p>
+
+		<ul>
+			<li>Filter by <strong>New / Read / Archive</strong>, by level, or full-text search.</li>
+			<li><strong>Mute similar</strong> creates a per-user notification rule: matching messages skip the
+				inbox and the push notification and are filed straight as read or archived.</li>
+			<li>Rules are evaluated in the single place a message is ever created, so they apply to every producer
+				— including ones added later.</li>
+			<li>Rules are strictly per-user and are not exposed through the generic CRUD API, so nobody can read
+				or delete anyone else's.</li>
+			<li>With VAPID keys configured, unmuted messages also arrive as Web Push notifications on subscribed
+				devices.</li>
+		</ul>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/messages.png" alt="Message inbox" loading="lazy">
+			<figcaption><b>Message inbox</b>A device-offline warning, with mark-as-new, archive and mute-similar actions.</figcaption>
+		</figure>
+
+		<h2 id="sprinkler">Sprinkler scheduler</h2>
+
+		<p>
+			Irrigation deserves its own screen, because a cron expression per zone is a miserable way to manage a
+			garden. The scheduler is a grid: sprinklers down the side, hours across the top.
+		</p>
+
+		<ul>
+			<li>Per-sprinkler day-of-week mask, start hour and run duration.</li>
+			<li>A <strong>default days</strong> row with <em>apply to all</em> for the common case.</li>
+			<li>Individual schedules can be disabled without losing their settings.</li>
+			<li>Each row links to the underlying job, so you can see its execution history.</li>
+			<li>Saving writes real Quartz cron triggers — there is no second scheduling mechanism.</li>
+		</ul>
+
+		<figure class="shot" style="cursor:zoom-in">
+			<img src="../assets/img/screens/sprinkler-scheduler.png" alt="Sprinkler scheduler" loading="lazy">
+			<figcaption><b>Sprinkler scheduler</b>Day mask, start hour and duration per zone, with two schedules disabled for the season.</figcaption>
+		</figure>
+
+		<h2 id="qr">QR labels and scanning</h2>
+
+		<p>
+			Print Brother-style labels for cables, devices and peripherals, optionally carrying a QR code.
+			Scanning one in the app navigates straight to that entity.
+		</p>
+
+		<ul>
+			<li>The QR encodes a stable, base-URL-free token — <code>myhab://TYPE/ID</code> — so a printed label
+				keeps working even if your deployment's hostname changes.</li>
+			<li>What it encodes is a template with variables, configurable alongside size and position.</li>
+			<li>The scanner is pure web, using the device camera through the PWA. No native app needed.</li>
+		</ul>
+
+		<h2 id="reports">Reports and history</h2>
+
+		<ul>
+			<li><strong>Solar reports</strong> embeds a Grafana dashboard for long-range production analysis. If
+				the keys are not set, the page tells you exactly which ones are missing rather than showing an
+				empty frame.</li>
+			<li><strong>Event log</strong> is reachable per peripheral: who changed what, when, from which source
+				(UI, scenario, cron, Telegram, voice, shared link) and from which address.</li>
+			<li><strong>Job execution history</strong> records every scheduled run with its status.</li>
+			<li><strong>Time-series statistics</strong> aggregate port values hourly, daily and monthly for energy
+				analysis.</li>
+		</ul>
+
+		<h2 id="pwa">Mobile, PWA and offline</h2>
+
+		<ul>
+			<li>Installable from Chrome, Edge and Safari — it behaves like a native app with no app store
+				involved.</li>
+			<li>Workbox caches the shell, so the app opens instantly and shows last-known state before the socket
+				reconnects.</li>
+			<li>Layouts are responsive down to phone width; the floor-plan screens are designed for tablets.</li>
+			<li>Updates are picked up automatically when a new version is deployed.</li>
+		</ul>
+
+		<h2 id="i18n">Language and personalisation</h2>
+
+		<p>
+			The interface ships in <strong>English and Romanian</strong>. The choice is stored on your account, so
+			it follows you to every device you sign in from; left on <em>Automatic</em> it follows the browser and
+			falls back to English. The same setting drives speech recognition and the voice assistant's spoken
+			replies.
+		</p>
+
+		<p>Timezone is a per-user preference too. Everything is stored in UTC and rendered in yours.</p>
+
+		<div class="pager">
+			<a href="configuration.html"><span>Previous</span>Configuration</a>
+			<a class="next" href="automation.html"><span>Next</span>Automation &amp; jobs</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://myhab.org/</loc><priority>1.0</priority></url>
+  <url><loc>https://myhab.org/docs/</loc><priority>0.9</priority></url>
+  <url><loc>https://myhab.org/docs/install.html</loc><priority>0.9</priority></url>
+  <url><loc>https://myhab.org/docs/configuration.html</loc><priority>0.8</priority></url>
+  <url><loc>https://myhab.org/docs/features.html</loc><priority>0.8</priority></url>
+  <url><loc>https://myhab.org/docs/automation.html</loc><priority>0.8</priority></url>
+  <url><loc>https://myhab.org/docs/voice.html</loc><priority>0.8</priority></url>
+  <url><loc>https://myhab.org/docs/sharing.html</loc><priority>0.7</priority></url>
+  <url><loc>https://myhab.org/docs/architecture.html</loc><priority>0.8</priority></url>
+  <url><loc>https://myhab.org/docs/integrations.html</loc><priority>0.8</priority></url>
+  <url><loc>https://myhab.org/docs/api.html</loc><priority>0.7</priority></url>
+  <url><loc>https://myhab.org/docs/demo.html</loc><priority>0.7</priority></url>
+  <url><loc>https://myhab.org/docs/faq.html</loc><priority>0.6</priority></url>
+</urlset>

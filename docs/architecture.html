@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture — myHAB documentation</title>
+<meta name="description" content="myHAB architecture: system layers, Gradle modules, the technology stack, MQTT and WebSocket data flow, the domain model, persistence and time series, security and caching.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html" class="active">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / Architecture</div>
+		<div class="docs-header">
+			<h1>Architecture</h1>
+			<p>One JVM process, one database, one broker. Everything else is a detail of that.</p>
+		</div>
+
+		<h2 id="layers">System layers</h2>
+
+		<div class="codeblock"><pre><code>┌──────────────────────────── Clients ────────────────────────────┐
+│  Web app / PWA      Floor-plan screens    Android voice client  │
+│  (Vue 3 + Quasar)   (/wui, kiosk)         (Kotlin, wake word)   │
+│  Telegram bot       Shared guest links    Any GraphQL caller    │
+└───────────────────────────┬─────────────────────────────────────┘
+             GraphQL · REST · WebSocket (STOMP)
+┌───────────────────────────▼─────────────────────────────────────┐
+│                      myHAB backend (Grails 7)                    │
+│                                                                  │
+│   GraphQL API   ·   Services   ·   Quartz jobs   ·   Event bus   │
+│   Spring Security (JWT)   ·   Spring Integration (MQTT)          │
+│   Hazelcast (cache, voice sessions)                              │
+└───────────────────────────┬─────────────────────────────────────┘
+        JDBC          MQTT           HTTPS
+┌───────────▼──────┬─────────▼────────┬────────▼──────────────────┐
+│   PostgreSQL     │   MQTT broker    │   Vendor clouds           │
+│   entities +     │   ESP32, MegaD,  │   FusionSolar, myUplink,  │
+│   time series    │   ONVIF bridge   │   Segway, Open-Meteo      │
+└──────────────────┴──────────────────┴───────────────────────────┘</code></pre></div>
+
+		<div class="callout info">
+			<strong>Deliberately not microservices.</strong>
+			<p>A house is not a distributed system problem. One process that starts in a few seconds, one database
+				to back up, and a broker you were going to run anyway. The operational surface is small enough that
+				one person can hold it in their head at 2 a.m.</p>
+		</div>
+
+		<h2 id="modules">Gradle modules</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Module</th><th>Path</th><th>Responsibility</th></tr></thead>
+				<tbody>
+					<tr><td><code>:server-core</code></td><td><code>server/server-core</code></td><td>The application: controllers, GORM domain classes, services, Quartz jobs, the GraphQL schema and fetchers.</td></tr>
+					<tr><td><code>:server-config</code></td><td><code>server/server-libs/server-config</code></td><td><code>ConfigProvider</code> — the git-backed configuration store — and the configuration-key constants.</td></tr>
+					<tr><td><code>:server-rules</code></td><td><code>server/server-libs/server-rules</code></td><td>Heating and lighting rule facts used by the automation engine.</td></tr>
+					<tr><td><code>:web-vue3</code></td><td><code>client/web-vue3</code></td><td>The Vue 3 + Quasar PWA.</td></tr>
+					<tr><td><code>:demo-simulator</code></td><td><code>demo/simulator</code></td><td>MQTT device simulator that makes the public demo behave like real hardware.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>
+			<code>client/android/</code> is a <strong>separate</strong> Gradle build, excluded from the root
+			<code>settings.gradle</code> on purpose: the Android Gradle Plugin and the Grails plugin do not
+			coexist in one build, and the two have unrelated release cadences.
+		</p>
+
+		<h2 id="stack">Technology stack</h2>
+
+		<div class="grid grid-2" style="gap:20px">
+			<div class="card">
+				<h3>Backend</h3>
+				<dl class="kv small">
+					<dt>Runtime</dt><dd>Java 17 (Temurin)</dd>
+					<dt>Framework</dt><dd>Grails 7.2 / Groovy 4.0</dd>
+					<dt>ORM</dt><dd>GORM over Hibernate 5</dd>
+					<dt>API</dt><dd>GraphQL, auto-registered from domain classes</dd>
+					<dt>Security</dt><dd>Spring Security + REST, HS256 JWT</dd>
+					<dt>Scheduling</dt><dd>Quartz, JDBC job store</dd>
+					<dt>Messaging</dt><dd>Spring Integration MQTT</dd>
+					<dt>Cache</dt><dd>Hazelcast 5.7</dd>
+					<dt>QR / labels</dt><dd>ZXing</dd>
+				</dl>
+			</div>
+			<div class="card">
+				<h3>Frontend</h3>
+				<dl class="kv small">
+					<dt>Framework</dt><dd>Vue 3</dd>
+					<dt>UI</dt><dd>Quasar 2.18</dd>
+					<dt>State</dt><dd>Pinia</dd>
+					<dt>API client</dt><dd>Apollo Client 3.14</dd>
+					<dt>Realtime</dt><dd>STOMP over WebSocket</dd>
+					<dt>PWA</dt><dd>Workbox service worker</dd>
+					<dt>Voice input</dt><dd>Web Speech API</dd>
+					<dt>i18n</dt><dd>English, Romanian</dd>
+					<dt>Build</dt><dd>Quasar CLI (Webpack)</dd>
+				</dl>
+			</div>
+		</div>
+
+		<h2 id="dataflow">Data flow</h2>
+
+		<h3 id="sensor">Sensor readings</h3>
+
+		<div class="codeblock"><pre><code>Device → MQTT broker → MqttTopicService → PortValueService → PostgreSQL
+                              │
+                              └──→ WebSocket (STOMP) → every open client</code></pre></div>
+
+		<p>
+			Inbound topics are matched against per-model regular expressions, which is how one subscription
+			(<code>myhab/#</code>) serves ESP boards, meters, inverters, the heat pump, the weather station and
+			the mower without any of them knowing about the others. Patterns are checked in a fixed order and the
+			path segments (<code>/state</code>, <code>/value</code>, <code>/mower/</code>, <code>/emeters/</code>)
+			are chosen so they cannot overlap.
+		</p>
+
+		<h3 id="command">Commands</h3>
+
+		<div class="codeblock"><pre><code>UI action / scenario / voice / Telegram / shared link
+        │  all publish the same event
+        ▼
+UIMessageService  →  resolves PERIPHERAL | ZONE | PORT to concrete ports
+        ▼
+PowerService      →  MQTT publish  →  broker  →  device
+        ▼                                          │
+   event_log row                                   │ device applies + echoes
+        ▼                                          ▼
+   audit trail                              back through the sensor path</code></pre></div>
+
+		<div class="callout">
+			<strong>One execution path, many front ends.</strong>
+			<p>Adding a control surface means publishing an event, not reimplementing control logic. That is why
+				the voice assistant, the Telegram bot and guest links all get audit logging, zone expansion and
+				state reconciliation for free.</p>
+		</div>
+
+		<h3 id="virtual">Virtual devices and the broker loopback</h3>
+
+		<p>
+			Cloud integrations do not bypass the pipeline. A job polls the vendor's REST API and then
+			<em>publishes to the broker</em>; the broker echoes the message back through the same
+			<code>myhab/#</code> subscription, and it is persisted exactly like a reading from a physical sensor.
+		</p>
+
+		<p>
+			The weather station, the solar inverter, the smart meter and the mower are all virtual devices treated
+			this way. The benefit is uniformity: one persistence path, one audit path, one WebSocket fan-out, and
+			the MQTT explorer shows cloud data next to hardware data.
+		</p>
+
+		<h2 id="domain">Domain model</h2>
+
+		<div class="codeblock"><pre><code>Zone ──┬── nested Zones
+       ├── DevicePeripheral ──┬── DevicePort ── Device ── Rack
+       │                      └── Cable ── PatchPanel
+       └── Layer
+
+Job ──┬── CronTrigger
+      ├── EventTrigger ── EventDefinition ── EventSubscription
+      └── Scenario (Groovy DSL)
+
+User ── UserRole ── Role
+Configuration    (key/value sidecar on almost any entity)
+DashboardScreen ── DashboardScreenBackground
+SharedWidget ── SharedWidgetAudit</code></pre></div>
+
+		<p>Seventy-odd GORM domain classes in total, grouped as:</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Package</th><th>Holds</th></tr></thead>
+				<tbody>
+					<tr><td><code>infra</code></td><td><code>Zone</code>, <code>Layer</code></td></tr>
+					<tr><td><code>device</code></td><td><code>Device</code>, <code>DevicePort</code>, <code>DevicePeripheral</code>, <code>Cable</code>, <code>Rack</code>, <code>PatchPanel</code>, categories, join tables, <code>Scenario</code>, <code>DeviceModel</code>, <code>DeviceStatus</code></td></tr>
+					<tr><td><code>job</code></td><td><code>Job</code>, <code>CronTrigger</code>, <code>EventTrigger</code>, <code>EventDefinition</code>, <code>EventSubscription</code>, <code>EventData</code>, <code>JobExecutionHistory</code>, <code>JobTag</code></td></tr>
+					<tr><td><code>events</code></td><td><code>MQTTTopic</code>, <code>TopicName</code>, <code>AuditSource</code></td></tr>
+					<tr><td><code>ui</code></td><td><code>DashboardScreen</code>, <code>DashboardScreenBackground</code></td></tr>
+					<tr><td><code>heating</code></td><td><code>HeatMode</code></td></tr>
+					<tr><td>root</td><td><code>User</code>, <code>Role</code>, <code>UserRole</code>, <code>Configuration</code>, <code>UserMessage</code>, <code>NotificationRule</code>, <code>PushSubscription</code>, <code>SharedWidget</code>, <code>SharedWidgetAudit</code>, <code>TimeSeriesStatistic</code></td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2 id="graphql">The GraphQL layer</h2>
+
+		<p>
+			Most of the API is not hand-written. GORM domain classes carrying a <code>static graphql</code> block
+			are auto-registered by a schema factory, which generates queries, list queries with pagination, and
+			CRUD mutations for each.
+		</p>
+
+		<p>Hand-written fetchers cover what auto-CRUD cannot express safely:</p>
+
+		<ul>
+			<li>Navigation and breadcrumbs.</li>
+			<li>Switch, colour and gate operations, which must go through the event path.</li>
+			<li><code>voiceCommand</code>.</li>
+			<li>Shared-link administration and its audit read.</li>
+			<li>The configuration store, split into an admin view and a narrower UI-safe view.</li>
+			<li>Owner-scoped reads such as notification rules.</li>
+		</ul>
+
+		<div class="callout info">
+			<strong>Omitting the mapping is a security decision.</strong>
+			<p>Entities without a GraphQL mapping are skipped by the schema factory, so no auto-CRUD is generated
+				for them. That is why the shared-link audit table has none: rows cannot be forged or deleted
+				through the API, only read through a purpose-built query.</p>
+		</div>
+
+		<h2 id="realtime">Realtime</h2>
+
+		<p>
+			Live state arrives over <strong>STOMP on WebSocket</strong>, not GraphQL subscriptions. A device state
+			change fans out to every connected client immediately, so two phones and a wall tablet agree without
+			polling.
+		</p>
+
+		<p>
+			The public shared-link pages are the exception: they have no authenticated socket, so they re-read
+			state after each action and offer a manual refresh.
+		</p>
+
+		<h2 id="persistence">Persistence and time series</h2>
+
+		<ul>
+			<li>Schema is managed by GORM with <code>dbCreate = update</code> — it adds, never removes.</li>
+			<li><code>port_values</code> and <code>event_log</code> are <strong>partitioned</strong>, with a
+				composite index on <code>(port_id, ts_created DESC)</code> and a BRIN index on
+				<code>ts_created</code> for range pruning.</li>
+			<li>An <code>archive</code> schema holds retired partitions.</li>
+			<li>Quartz keeps its own <code>qrtz_*</code> tables, so schedules survive restarts.</li>
+			<li>Rollup jobs aggregate raw values into hourly, daily and monthly statistics.</li>
+			<li>Every timestamp is stored in UTC and rendered per user.</li>
+		</ul>
+
+		<div class="callout warn">
+			<strong>Time series is what grows.</strong>
+			<p>Port values accumulate fast when you poll many sensors. Budget disk accordingly, keep the indexes
+				in place, and archive old partitions rather than deleting rows one by one.</p>
+		</div>
+
+		<h2 id="security">Security model</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Concern</th><th>How it works</th></tr></thead>
+				<tbody>
+					<tr><td>Authentication</td><td>Username and password to <code>POST /api/login</code>, returning a signed HS256 JWT (<code>JWT_SECRET</code>). Tokens are roughly ten hours; there is no refresh token.</td></tr>
+					<tr><td>Password storage</td><td>BCrypt.</td></tr>
+					<tr><td>Authorisation</td><td>Role-based: <code>ROLE_USER</code>, <code>ROLE_ADMIN</code>, <code>ROLE_SUPER_ADMIN</code>, enforced on both API and UI routes.</td></tr>
+					<tr><td>Anonymous surface</td><td>Only the three shared-link endpoints under <code>/api/public/share/**</code>.</td></tr>
+					<tr><td>Device endpoints</td><td>Restricted to configured LAN CIDRs, with a separate trusted-proxy list so a forged forwarding header cannot widen them.</td></tr>
+					<tr><td>Client IP</td><td>Resolved by a dedicated service; Spring's <code>forward-headers-strategy</code> is intentionally left unset.</td></tr>
+					<tr><td>Secrets</td><td>Environment variables for bootstrap, the git-backed store for the rest. Rotation means issuing new credentials, not overwriting values.</td></tr>
+					<tr><td>Audit</td><td>Every state change writes an <code>event_log</code> row with its source and actor; shared links additionally get their own audit table covering denied attempts.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="callout danger">
+			<strong>Written for a LAN behind a router.</strong>
+			<p>Internet exposure is supported but is your responsibility: TLS at a proxy you control, LAN-only
+				device endpoints refused at the edge, and rate limiting on <code>/api/login</code> and the public
+				share endpoints — neither of which myHAB does for you.</p>
+		</div>
+
+		<h2 id="caching">Caching and sessions</h2>
+
+		<p>
+			Hazelcast provides distributed caching and holds voice-assistant conversation state (five-minute TTL,
+			capped history). Hibernate's second-level cache is <strong>off</strong>: it makes external database
+			changes — a restore, a manual fix, the demo's reset — immediately visible to the running application,
+			and at house scale the query volume never justified it.
+		</p>
+
+		<h2 id="observability">Observability</h2>
+
+		<ul>
+			<li>Prometheus metrics, application info and a health endpoint under <code>/actuator</code>, exposed
+				explicitly rather than by default.</li>
+			<li>Structured logging via Logback, configurable per package.</li>
+			<li>The in-app message inbox surfaces operational events — device offline, integration failures, token
+				expiry — to humans rather than only to logs.</li>
+			<li>Job execution history records every scheduled run.</li>
+			<li>Grafana can be pointed at the same PostgreSQL for long-range analysis, and embedded back into the
+				UI.</li>
+		</ul>
+
+		<h2 id="testing">Testing</h2>
+
+		<p>
+			Backend tests use <strong>Spock</strong>: unit specs under <code>src/test/groovy</code> and
+			integration specs under <code>src/integration-test/groovy</code>. Static analysis is CodeNarc. The
+			frontend is linted with ESLint and formatted with Prettier.
+		</p>
+
+		<div class="codeblock"><pre><code>./gradlew test
+./gradlew server-core:test --tests "org.myhab.services.StatisticsServiceSpec"</code></pre></div>
+
+		<h2 id="cicd">Build and release</h2>
+
+		<p>
+			GitHub Actions builds on pushes to <code>master</code> and <code>beta</code>: assemble the combined
+			JAR, build a Docker image on <code>eclipse-temurin:17-jre</code>, and push it to Docker Hub as
+			<code>kirpi4ik/myhab:&lt;version&gt;-&lt;sha&gt;</code>. The demo image
+			(<code>kirpi4ik/myhab-demo</code>) is published from the same commit.
+		</p>
+
+		<div class="pager">
+			<a href="sharing.html"><span>Previous</span>Sharing &amp; QR labels</a>
+			<a class="next" href="integrations.html"><span>Next</span>Integrations</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

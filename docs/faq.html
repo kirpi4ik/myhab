@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ — myHAB documentation</title>
+<meta name="description" content="Frequently asked questions about myHAB: how it compares to other home automation platforms, hardware support, cloud dependence, security, licensing and troubleshooting.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html" class="active">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / FAQ</div>
+		<div class="docs-header">
+			<h1>Frequently asked questions</h1>
+			<p>The questions that come up before, during and after an install.</p>
+		</div>
+
+		<h2 id="general">General</h2>
+
+		<h3 id="what-is-it">What is myHAB, in one sentence?</h3>
+		<p>
+			A self-hosted home automation backend that models your whole electrical installation — zones,
+			controllers, ports, cables and peripherals — and drives it over MQTT, with a Vue 3 PWA on top.
+		</p>
+
+		<h3 id="vs-others">How does it compare to the big open-source platforms?</h3>
+		<p>
+			It is narrower and more opinionated. There is no add-on store, no radio stack, no integration for
+			every consumer gadget. What it has instead is a model of the physical installation, first-class energy
+			and heating telemetry, floor-plan control surfaces, and an automation language that is just Groovy.
+		</p>
+		<p>
+			If your house is full of plug-in smart devices, a platform with hundreds of integrations will serve
+			you better. If your house is wired and you already run a broker, myHAB is likely to fit the way you
+			think about it.
+		</p>
+
+		<h3 id="production">Is it production-ready?</h3>
+		<p>
+			It runs a real house continuously and has done for years. That is a different claim from “broadly
+			deployed”: you are an early adopter, the documentation is this website, and support is GitHub issues.
+			Read the <a href="#security">security answers</a> before exposing it to the internet.
+		</p>
+
+		<h3 id="license">What is the licence?</h3>
+		<p>
+			The source is public at
+			<a href="https://github.com/kirpi4ik/myhab" rel="noopener">github.com/kirpi4ik/myhab</a>. Check the
+			repository for the current licence text before building anything commercial on it.
+		</p>
+
+		<h3 id="cloud">Does it depend on a cloud service?</h3>
+		<p>
+			Not for control. Devices talk MQTT to your own broker, and switching a light never leaves the LAN.
+			Some <em>optional</em> integrations are inherently cloud-backed — Huawei FusionSolar, NIBE myUplink,
+			Segway Navimow, Open-Meteo, the voice assistant's LLM — because that is the only interface those
+			vendors offer. Every one of them is off by default and degrades to “that widget shows nothing”.
+		</p>
+
+		<h2 id="hardware">Hardware</h2>
+
+		<h3 id="which-devices">Which devices are supported?</h3>
+		<p>
+			ESP32 boards and MegaD-2561 controllers for physical I/O; TMEZON intercoms; ONVIF cameras through an
+			MQTT bridge; NIBE heat pumps, Huawei inverters and DTSU meters, Open-Meteo and Segway Navimow as
+			cloud-backed virtual devices. See <a href="integrations.html">Integrations</a> for the full list and
+			topic contracts.
+		</p>
+
+		<h3 id="my-device">My device is not on the list. Can I use it?</h3>
+		<p>
+			If it can publish and subscribe on MQTT, yes — teach it the topic contract and it looks like an ESP32
+			board to myHAB. If it speaks something else, the usual answer is a small bridge process that
+			translates onto MQTT, exactly as the ONVIF integration does.
+		</p>
+
+		<h3 id="zigbee">What about Zigbee, Z-Wave, Matter or Thread?</h3>
+		<p>
+			There is no built-in radio stack. In practice you would run a separate Zigbee-to-MQTT style bridge and
+			present its devices to myHAB as MQTT devices. That works, but it is not something the product does for
+			you today.
+		</p>
+
+		<h3 id="hardware-req">What hardware does the server need?</h3>
+		<p>
+			A small x86 machine or a Raspberry Pi 4/5 class board with about 2&nbsp;GB of RAM for the JVM. The
+			database is the part that grows — time-series port values accumulate quickly if you poll a lot of
+			sensors, so give it real storage rather than an SD card.
+		</p>
+
+		<h2 id="setup">Setup</h2>
+
+		<h3 id="why-git">Why does configuration live in a git repository?</h3>
+		<p>
+			So a change to MQTT credentials or a feature flag is a commit rather than a redeploy, and so you can
+			see what changed and when. The application clones the repository at start and re-reads it on a
+			schedule, and the in-app configuration editor commits back to it.
+		</p>
+
+		<h3 id="git-secret">Is putting secrets in git really a good idea?</h3>
+		<p>
+			It is a deliberate, stated trade-off, not an oversight. Use a <strong>private</strong> repository, and
+			remember that git history keeps old values — rotation means issuing a new credential and revoking the
+			old one, never just overwriting the value. Bootstrap secrets (database, JWT key) stay in environment
+			variables and never enter the repository.
+		</p>
+
+		<h3 id="no-admin">There is no default admin account. Why?</h3>
+		<p>
+			Because there is then no well-known password to forget to change. Insert the first account with SQL —
+			see <a href="install.html#first-user">Installation, step 3</a> — and create the rest from the UI.
+		</p>
+
+		<h3 id="nothing-switches">Everything looks fine but nothing actually switches.</h3>
+		<p>Almost always one of three things:</p>
+		<ol>
+			<li>Nothing is answering on MQTT. myHAB waits for the device to echo its new state; without an echo
+				the control does not move. Watch the raw monitor in the MQTT explorer while you press the button.</li>
+			<li>The device code contains a hyphen. Commands publish fine, but inbound state topics are matched
+				with <code>\w</code>-based patterns which exclude <code>-</code>, so every echo is silently dropped.</li>
+			<li>The peripheral is not connected to a port, so there is nothing to command.</li>
+		</ol>
+
+		<h3 id="charts-shifted">My charts are shifted by a few hours.</h3>
+		<p>Run the container in UTC. myHAB stores every timestamp in UTC and converts for display using each
+			user's timezone preference.</p>
+
+		<h3 id="audit-proxy">The audit log shows my reverse proxy's IP for everything.</h3>
+		<p>Set <code>myhab.security.trustedProxies</code> to the proxy's own address. It is empty by default,
+			which means no forwarding header is trusted at all — restrictive rather than permissive.</p>
+
+		<h2 id="security">Security</h2>
+
+		<h3 id="expose">Can I expose it to the internet?</h3>
+		<p>
+			Yes, but it was written for a LAN behind a router and it does not harden itself. Terminate TLS at a
+			proxy you control, refuse the LAN-only device endpoints from outside, and rate-limit
+			<code>/api/login</code> and the public share endpoints — myHAB does none of those for you.
+		</p>
+
+		<h3 id="pin-strength">How strong is the PIN on a shared link?</h3>
+		<p>
+			It is a speed bump, not a credential. PINs are stored and compared in plaintext with a
+			non-constant-time comparison, and there is no rate limiting on verification. The audit trail makes
+			brute force visible after the fact; preventing it is your proxy's job. The token in the URL is the
+			real secret — send it over a channel you trust.
+		</p>
+
+		<h3 id="scenario-trust">Are scenario scripts sandboxed?</h3>
+		<p>
+			No. They are authored by administrators through the UI and executed as ordinary Groovy, without a
+			sandbox or a method allowlist. Treat write access to scenarios as equivalent to shell access on the
+			server, and hand out <code>ROLE_ADMIN</code> accordingly.
+		</p>
+
+		<h3 id="voice-privacy">Does the voice assistant send my house to a third party?</h3>
+		<p>
+			When enabled, yes — the transcript and a catalogue of your peripheral, zone and scenario
+			<em>names</em> go to whichever LLM provider you configured, using your own API key and account. No
+			audio leaves the browser (speech-to-text runs locally), and no device data is sent beyond the names
+			and states the command needs. If that is not acceptable, leave the feature off; it is off by default.
+		</p>
+
+		<h3 id="backup">What should I back up?</h3>
+		<p>
+			The PostgreSQL database and the configuration repository. Between them they are the whole
+			installation. Schema changes are additive (<code>dbCreate = update</code> never drops anything), so a
+			rollback means restoring a dump.
+		</p>
+
+		<h2 id="usage">Using it</h2>
+
+		<h3 id="multi-house">Can one instance manage two houses?</h3>
+		<p>
+			Not really. Zones nest, so you can model a second building as a top-level zone, but there is no tenant
+			isolation — every user with the right role sees everything. Run two instances instead.
+		</p>
+
+		<h3 id="offline">What happens when the internet goes down?</h3>
+		<p>
+			Local control keeps working: devices, broker and server are all on your LAN. Cloud-backed widgets
+			(solar, heat pump, weather, mower) stop updating and say so; the jobs behind them retry. Remote access
+			and Telegram obviously stop until connectivity returns.
+		</p>
+
+		<h3 id="offline-app">Does the app work offline?</h3>
+		<p>
+			The PWA caches its shell, so it opens instantly and shows last-known state, then reconnects. It cannot
+			control anything while it has no route to the server.
+		</p>
+
+		<h3 id="languages">Which languages does the interface support?</h3>
+		<p>
+			English and Romanian, chosen per user and stored on the account. The same setting drives speech
+			recognition and spoken replies. Adding a language means shipping a locale file; the backend needs no
+			change.
+		</p>
+
+		<h3 id="ios">Is there an iOS app?</h3>
+		<p>
+			No native one. The PWA installs on iOS from Safari and covers everything except hands-free wake-word
+			listening, which only the Android client does.
+		</p>
+
+		<h3 id="grafana-q">Why Grafana for charts instead of building them in?</h3>
+		<p>
+			The data is in PostgreSQL and Grafana is very good at querying PostgreSQL. Rather than reimplement it
+			badly, myHAB embeds a dashboard where long-range analysis is wanted and keeps its own widgets focused
+			on live state.
+		</p>
+
+		<h3 id="contribute">How do I report a bug or ask for a feature?</h3>
+		<p>
+			<a href="https://github.com/kirpi4ik/myhab/issues" rel="noopener">GitHub issues</a>. A description of
+			your device model, the relevant MQTT topics and what the raw monitor showed will get you an answer
+			considerably faster than a screenshot of the UI.
+		</p>
+
+		<div class="pager">
+			<a href="demo.html"><span>Previous</span>The public demo</a>
+			<a class="next" href="./"><span>Back to</span>Documentation overview</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview — myHAB documentation</title>
+<meta name="description" content="What myHAB is, who it is for, and the core concepts — zones, devices, ports, peripherals, cables, scenarios and events.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./" class="active">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / Docs / Overview</div>
+		<div class="docs-header">
+			<h1>myHAB documentation</h1>
+			<p>My Home Automation Backend — a self-hosted platform for controlling, monitoring and automating a real house.</p>
+		</div>
+
+		<p class="lead">
+			myHAB is a full-stack home automation system: a JVM backend that talks to your devices over MQTT,
+			a PostgreSQL database that remembers everything they ever reported, and a Vue&nbsp;3 PWA that lets
+			you drive the lot from a phone, a wall tablet or a desktop.
+		</p>
+
+		<div class="callout">
+			<strong>New here?</strong>
+			<p>The fastest way to understand the product is to
+				<a href="http://demo.myhab.org/" rel="noopener">open the live demo</a> and click around —
+				a fictional seven-zone house with simulated controllers, no signup.
+				Then come back for <a href="install.html">Installation</a>.</p>
+		</div>
+
+		<h2 id="what">What myHAB is</h2>
+
+		<p>
+			Most home automation software models <em>devices</em>: a light, a switch, a thermostat. myHAB models
+			the <em>installation</em>. A light is a <strong>peripheral</strong>, wired by a <strong>cable</strong>
+			to a numbered <strong>port</strong> on a physical <strong>controller</strong>, mounted in a
+			<strong>rack</strong>, serving one or more <strong>zones</strong>. That extra structure is what
+			makes it possible to print a QR label for a cable, scan it in the attic six months later, and land
+			on the screen that tells you what it feeds.
+		</p>
+
+		<p>It was written for, and is still run in, a real house — a mixed installation of ESP32 boards,
+			MegaD Ethernet I/O controllers, a solar inverter, a ground-source heat pump, irrigation, gates and
+			cameras. Everything in it exists because something in that house needed it.</p>
+
+		<h3 id="who">Who it is for</h3>
+
+		<div class="grid grid-2">
+			<div class="card">
+				<h3>A good fit if…</h3>
+				<ul class="small muted" style="margin-bottom:0">
+					<li>Your house is wired, not just full of plug-in smart bulbs</li>
+					<li>You want commands to work when the internet is down</li>
+					<li>You care about energy data and want it kept, not sampled and thrown away</li>
+					<li>You are comfortable running Docker, PostgreSQL and an MQTT broker</li>
+					<li>You would rather write six lines of Groovy than click through a rule builder</li>
+				</ul>
+			</div>
+			<div class="card">
+				<h3>Probably not if…</h3>
+				<ul class="small muted" style="margin-bottom:0">
+					<li>You want a one-click appliance with an app store of integrations</li>
+					<li>Your devices are all Zigbee/Z-Wave and cloud-paired — there is no built-in radio stack</li>
+					<li>You need multi-tenant isolation; myHAB assumes one household</li>
+					<li>You are not willing to expose anything to a reverse proxy you maintain yourself</li>
+				</ul>
+			</div>
+		</div>
+
+		<h2 id="concepts">Core concepts</h2>
+
+		<p>Everything in the UI maps onto one of these. They are worth reading once.</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Concept</th><th>What it is</th></tr></thead>
+				<tbody>
+					<tr><td><strong>Zone</strong></td><td>A physical place — a room, a floor, the terrace, the whole house. Zones nest, so “turn off the ground floor” reaches everything inside it.</td></tr>
+					<tr><td><strong>Layer</strong></td><td>A logical grouping that cuts across zones — electrical, network, heating. Used for filtering and for cable documentation.</td></tr>
+					<tr><td><strong>Device</strong></td><td>A physical controller: an ESP32, a MegaD-2561, or a <em>virtual</em> device standing in for a cloud service (the weather station, the inverter, the mower).</td></tr>
+					<tr><td><strong>DevicePort</strong></td><td>One numbered I/O line on a device. Ports carry a type (relay, sensor, …), a state and a last value, and are the unit that time-series data is stored against.</td></tr>
+					<tr><td><strong>DevicePeripheral</strong></td><td>The thing a human cares about — “Terrace light”, “Water pump”, “Small gate”. A peripheral is connected to one or more ports, and belongs to zones.</td></tr>
+					<tr><td><strong>Cable</strong></td><td>A documented physical run between a port and a peripheral, optionally via a patch panel. Printable as a labelled QR tag.</td></tr>
+					<tr><td><strong>Rack / PatchPanel</strong></td><td>Where the controllers live and where the cables terminate. Pure documentation, but it is the documentation you want at 11pm.</td></tr>
+					<tr><td><strong>Scenario</strong></td><td>A short Groovy script executed by the DSL engine. Can switch things, pause, query the weather, command the mower.</td></tr>
+					<tr><td><strong>Job</strong></td><td>A schedulable unit — a cron trigger, an event trigger, or both — that runs a scenario. Jobs can be marked as favourites and triggered by hand.</td></tr>
+					<tr><td><strong>EventDefinition / EventSubscription</strong></td><td>Named event topics (<code>EVT_LIGHT</code>, <code>EVT_GATE</code>, …) and who listens to them. This is the seam scenarios and integrations hook into.</td></tr>
+					<tr><td><strong>Configuration</strong></td><td>A key/value sidecar attachable to almost any entity — auto-off timeouts, voice aliases, device credentials, API endpoints.</td></tr>
+					<tr><td><strong>DashboardScreen</strong></td><td>A floor plan (or any background image) with live widgets positioned on it. Rendered at <code>/wui</code>.</td></tr>
+					<tr><td><strong>SharedWidget</strong></td><td>A tokenised public link that operates exactly one peripheral, a limited number of times.</td></tr>
+					<tr><td><strong>User / Role</strong></td><td>Accounts with <code>ROLE_USER</code>, <code>ROLE_ADMIN</code>, <code>ROLE_SUPER_ADMIN</code>. Roles gate both the UI and the API.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2 id="flow">How a command actually travels</h2>
+
+		<p>Understanding this one path explains most of the system's behaviour, including why a control can look
+			"stuck".</p>
+
+		<div class="codeblock"><pre><code>You tap a light in the UI
+   ↓  GraphQL mutation  (or an event published by a scenario / voice / Telegram / shared link)
+UIMessageService.handleSwitchEvent
+   ↓  resolves PERIPHERAL → its connected PORTs (recursively for a ZONE)
+PowerService
+   ↓  publishes the command on MQTT
+Broker  →  the device
+   ↓  the device applies it and echoes its new state back
+MqttTopicService
+   ↓  writes the port value + an event_log row
+WebSocket (STOMP)  →  every open client updates</code></pre></div>
+
+		<div class="callout info">
+			<strong>The echo is the source of truth.</strong>
+			<p>myHAB does not optimistically flip a control and hope. The UI updates when the device confirms.
+				That is why an unreachable controller shows a control that does not move — and why the demo needs
+				a simulator answering the broker for anything to appear to work at all.</p>
+		</div>
+
+		<h2 id="surfaces">Ways to control it</h2>
+
+		<div class="grid grid-3">
+			<div class="card"><h3>Web &amp; PWA</h3><p>Vue 3 + Quasar, installable from the browser, works on phone, tablet and desktop. The primary interface.</p></div>
+			<div class="card"><h3>Floor-plan screens</h3><p>Full-screen live plans at <code>/wui</code> — ideal for a wall-mounted tablet.</p></div>
+			<div class="card"><h3>Voice</h3><p>An LLM agent grounded in your real catalogue. In the browser, or hands-free from the Android client.</p></div>
+			<div class="card"><h3>Telegram</h3><p>A role-aware bot for status, switching, gates and notifications when you are away from the app.</p></div>
+			<div class="card"><h3>Shared links</h3><p>Single-peripheral, time-boxed, use-limited public URLs for guests and trades.</p></div>
+			<div class="card"><h3>GraphQL API</h3><p>Everything the UI can do, scriptable. Plus REST for the public share pages and MQTT for devices.</p></div>
+		</div>
+
+		<h2 id="shipping">What ships enabled, and what does not</h2>
+
+		<p>
+			myHAB is a product, not one household's configuration. Anything tied to hardware you may not own is
+			<strong>off by default</strong> and enabled per installation. Defaults in the repository are neutral:
+			empty, <code>localhost</code>, or <code>example.com</code>.
+		</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Subsystem</th><th>Default</th><th>Notes</th></tr></thead>
+				<tbody>
+					<tr><td>MQTT device control (ESP32, MegaD)</td><td><span class="badge core">on</span></td><td>The core of the system.</td></tr>
+					<tr><td>Device state sync, port value sync, config sync, auto-off</td><td><span class="badge core">on</span></td><td>Housekeeping jobs.</td></tr>
+					<tr><td>Weather sync (Open-Meteo)</td><td><span class="badge core">on</span></td><td>No API key needed; set your location.</td></tr>
+					<tr><td>NIBE heat pump sync + token refresh</td><td><span class="badge core">on</span></td><td>Enabled in defaults but inert without credentials.</td></tr>
+					<tr><td>Statistics rollups, event log reader, heating control</td><td><span class="badge opt">off</span></td><td>Turn on per installation.</td></tr>
+					<tr><td>Huawei solar sync</td><td><span class="badge opt">off</span></td><td>Needs FusionSolar credentials.</td></tr>
+					<tr><td>Navimow mower sync + token refresh</td><td><span class="badge opt">off</span></td><td>Needs the Segway cloud OAuth flow.</td></tr>
+					<tr><td>Voice assistant</td><td><span class="badge opt">off</span></td><td><code>feature.voice.enabled</code>; needs an LLM API key.</td></tr>
+					<tr><td>Neural text-to-speech</td><td><span class="badge opt">off</span></td><td>Needs a Google Cloud service account.</td></tr>
+					<tr><td>Telegram bot</td><td><span class="badge opt">off</span></td><td><code>myhab.telegram.enabled</code>.</td></tr>
+					<tr><td>Web push notifications</td><td><span class="badge opt">off</span></td><td>Needs VAPID keys.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2 id="next">Where to go next</h2>
+
+		<div class="grid grid-3">
+			<a class="card" href="install.html"><h3>Installation →</h3><p>Docker Compose, from source, prerequisites and first boot.</p></a>
+			<a class="card" href="configuration.html"><h3>Configuration →</h3><p>Environment variables, the git-backed config store, job intervals.</p></a>
+			<a class="card" href="features.html"><h3>Feature reference →</h3><p>Every screen and what it does, with screenshots.</p></a>
+			<a class="card" href="architecture.html"><h3>Architecture →</h3><p>Modules, data flow, domain model, the event system.</p></a>
+			<a class="card" href="integrations.html"><h3>Integrations →</h3><p>MQTT topic contracts and per-vendor setup.</p></a>
+			<a class="card" href="api.html"><h3>API reference →</h3><p>GraphQL, REST, WebSocket and MQTT surfaces.</p></a>
+		</div>
+
+		<div class="pager">
+			<a class="next" style="margin-left:auto" href="install.html"><span>Next</span>Installation</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

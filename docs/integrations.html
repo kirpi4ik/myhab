@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Integrations — myHAB documentation</title>
+<meta name="description" content="Device models and integrations supported by myHAB: ESP32, MegaD, ONVIF cameras, NIBE heat pumps, Huawei solar inverters, DTSU meters, Open-Meteo weather, Segway Navimow and Telegram — with their MQTT topic contracts.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="../"><img src="../assets/img/logo.svg" alt="" width="26" height="26"><span>my<b>HAB</b></span></a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="../#features">Features</a>
+			<a href="../#screens">Screenshots</a>
+			<a href="../#integrations">Integrations</a>
+			<a href="./" class="active">Docs</a>
+			<a href="install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<div class="docs-shell">
+	<aside class="docs-side">
+		<h4>Getting started</h4>
+		<ul>
+			<li><a href="./">Overview</a></li>
+			<li><a href="install.html">Installation</a></li>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="demo.html">The public demo</a></li>
+		</ul>
+		<h4>Using myHAB</h4>
+		<ul>
+			<li><a href="features.html">Feature reference</a></li>
+			<li><a href="automation.html">Automation &amp; jobs</a></li>
+			<li><a href="voice.html">Voice assistant</a></li>
+			<li><a href="sharing.html">Sharing &amp; QR labels</a></li>
+		</ul>
+		<h4>Reference</h4>
+		<ul>
+			<li><a href="architecture.html">Architecture</a></li>
+			<li><a href="integrations.html" class="active">Integrations</a></li>
+			<li><a href="api.html">API reference</a></li>
+			<li><a href="faq.html">FAQ</a></li>
+		</ul>
+	</aside>
+
+	<main class="docs-main">
+		<div class="breadcrumb"><a href="../">Home</a> / <a href="./">Docs</a> / Integrations</div>
+		<div class="docs-header">
+			<h1>Integrations</h1>
+			<p>What myHAB talks to, how, and what you have to set up for each.</p>
+		</div>
+
+		<h2 id="models">Supported device models</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Model</th><th>Kind</th><th>Transport</th><th>Default</th></tr></thead>
+				<tbody>
+					<tr><td><code>ESP32</code></td><td>Relay / sensor board</td><td>MQTT</td><td><span class="badge core">on</span></td></tr>
+					<tr><td><code>MEGAD_2561_RTC</code></td><td>Ethernet I/O controller</td><td>MQTT + HTTP</td><td><span class="badge core">on</span></td></tr>
+					<tr><td><code>TMEZON_INTERCOM</code></td><td>Door entry system</td><td>MQTT</td><td><span class="badge core">on</span></td></tr>
+					<tr><td><code>CAM_ONVIF</code></td><td>IP camera</td><td>MQTT via an ONVIF bridge</td><td><span class="badge opt">optional</span></td></tr>
+					<tr><td><code>NIBE_F1145_8_EM</code></td><td>Ground-source heat pump</td><td>Cloud REST → MQTT</td><td><span class="badge core">on</span></td></tr>
+					<tr><td><code>HUAWEI_SUN2000_12KTL_M2</code></td><td>Solar inverter</td><td>Cloud REST → MQTT</td><td><span class="badge opt">off</span></td></tr>
+					<tr><td><code>HUAWEI_DONGLE</code></td><td>Inverter comms dongle</td><td>Cloud REST → MQTT</td><td><span class="badge opt">off</span></td></tr>
+					<tr><td><code>ELECTRIC_METER_DTS</code></td><td>DTSU-series smart meter</td><td>Cloud REST → MQTT</td><td><span class="badge opt">off</span></td></tr>
+					<tr><td><code>OPEN_METEO_API</code></td><td>Weather station (virtual)</td><td>REST → MQTT</td><td><span class="badge core">on</span></td></tr>
+					<tr><td><code>NAVIMOW_SEGWAY</code></td><td>Robotic lawn mower</td><td>Cloud REST → MQTT</td><td><span class="badge opt">off</span></td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="callout info">
+			<strong>Cloud integrations are still MQTT devices.</strong>
+			<p>A polling job publishes what it fetched to the broker; the broker echoes it back through the same
+				<code>myhab/#</code> subscription, and it is persisted exactly like a physical sensor reading. One
+				pipeline, one audit path, and cloud data appears in the MQTT explorer next to hardware data.</p>
+		</div>
+
+		<h2 id="topics">MQTT topic contracts</h2>
+
+		<p>
+			Every model declares the topics it listens on and publishes to. The prefix
+			(<code>myhab</code> by default) comes from <code>mqtt.topic.prefix</code>.
+		</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Model</th><th>Inbound (device → myHAB)</th><th>Outbound (myHAB → device)</th></tr></thead>
+				<tbody>
+					<tr>
+						<td>ESP32</td>
+						<td><code>myhab/&lt;device&gt;/&lt;type&gt;/&lt;port&gt;/state</code><br><code>myhab/&lt;device&gt;/status</code></td>
+						<td><code>myhab/&lt;device&gt;/&lt;type&gt;/&lt;port&gt;/cmd</code></td>
+					</tr>
+					<tr>
+						<td>MegaD</td>
+						<td><code>&lt;device&gt;/&lt;port&gt;</code><br><code>&lt;device&gt;/status</code></td>
+						<td><code>&lt;device&gt;/cmd</code></td>
+					</tr>
+					<tr>
+						<td>NIBE</td>
+						<td><code>myhab/&lt;device&gt;/&lt;type&gt;/&lt;param&gt;/value</code></td>
+						<td>same topic (published by the sync job)</td>
+					</tr>
+					<tr>
+						<td>Inverter</td>
+						<td><code>myhab/&lt;device&gt;/inverter/&lt;group&gt;/&lt;param&gt;/value</code></td>
+						<td>same topic</td>
+					</tr>
+					<tr>
+						<td>Electric meter</td>
+						<td><code>myhab/&lt;device&gt;/emeters/&lt;group&gt;/&lt;param&gt;/value</code></td>
+						<td>same topic</td>
+					</tr>
+					<tr>
+						<td>Weather station</td>
+						<td><code>myhab/&lt;device&gt;/sensor/&lt;param&gt;/value</code></td>
+						<td>same topic</td>
+					</tr>
+					<tr>
+						<td>Navimow</td>
+						<td><code>myhab/&lt;device&gt;/mower/&lt;param&gt;/value</code><br><code>myhab/&lt;device&gt;/mower-status</code></td>
+						<td>same topics</td>
+					</tr>
+					<tr>
+						<td>ONVIF</td>
+						<td><code>onvif2mqtt/&lt;camera&gt;/motion</code></td>
+						<td>—</td>
+					</tr>
+					<tr>
+						<td>Any source</td>
+						<td><code>myhab/&lt;source&gt;/notify</code> — raises an in-app message</td>
+						<td>—</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="callout danger">
+			<strong>Device codes must not contain hyphens.</strong>
+			<p>Outbound topics are built from a template, but inbound state topics are matched with
+				<code>\w</code>-based patterns, and <code>\w</code> excludes <code>-</code>. A hyphenated code
+				publishes commands happily and then silently drops every echo — the control looks dead, with
+				nothing in the logs.</p>
+		</div>
+
+		<p>
+			The path segments differ per model on purpose — <code>/state</code>, <code>/value</code>,
+			<code>/mower/</code>, <code>/emeters/</code>, <code>/inverter/</code> — so the patterns cannot overlap
+			when they are matched in order against a single wildcard subscription.
+		</p>
+
+		<hr>
+
+		<h2 id="esp32">ESP32</h2>
+
+		<p>The workhorse. Any ESP32 firmware that follows the topic contract above works — commands arrive on
+			<code>.../cmd</code>, and the board is expected to echo its resulting state on <code>.../state</code>.</p>
+
+		<div class="codeblock"><pre><code># myHAB publishes
+myhab/esp_terrace/relay/3/cmd        →  ON
+
+# the board applies it and echoes
+myhab/esp_terrace/relay/3/state      →  {"port":3,"value":"ON"}</code></pre></div>
+
+		<ul>
+			<li>Availability is reported on <code>myhab/&lt;device&gt;/status</code>; a broker last-will message
+				marks a board offline when it drops.</li>
+			<li>Sensor ports publish numeric values on the same <code>/state</code> shape.</li>
+			<li>With <code>admin.ports.autoimport</code> enabled, unknown ports create themselves on first
+				message.</li>
+		</ul>
+
+		<h2 id="megad">MegaD-2561</h2>
+
+		<p>
+			Multi-port Ethernet I/O controllers. They speak a flatter topic shape
+			(<code>&lt;device&gt;/&lt;port&gt;</code>) and, unlike the ESP boards, also expose an HTTP interface.
+		</p>
+
+		<p>
+			myHAB uses both: MQTT for the fast path, and a periodic HTTP <code>?cmd=all</code> sweep as ground
+			truth. The reconciliation job compares what the controller actually reports against what the database
+			believes, which is what catches a relay that changed state without an echo — and what raises the
+			“device offline” message when the controller stops answering.
+		</p>
+
+		<h2 id="onvif">ONVIF cameras</h2>
+
+		<p>
+			Motion and presence events are bridged onto MQTT by an external ONVIF-to-MQTT gateway, publishing on
+			<code>onvif2mqtt/&lt;camera&gt;/motion</code>. myHAB treats those as ordinary port values, so they can
+			trigger scenarios: turn on the drive lights when the gate camera sees movement after dark.
+		</p>
+
+		<p>A surveillance UI can be linked from the header via the <code>surveillance.url</code> configuration
+			key — myHAB does not proxy video itself.</p>
+
+		<h2 id="nibe">NIBE heat pumps</h2>
+
+		<p>Tested against the F1145-8 EM; the API is shared across the family.</p>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+				<tbody>
+					<tr><td>Transport</td><td>The myUplink cloud REST API, polled by <code>nibeInfoSync</code> (300 s by default).</td></tr>
+					<tr><td>Auth</td><td>OAuth. <code>nibeTokenRefresh</code> spends the refresh token before the access token expires.</td></tr>
+					<tr><td>Data</td><td>All temperature sensors — outdoor, room, supply, return, hot water, brine in/out — plus compressor hours and starts, degree-minutes, alarms, and firmware version.</td></tr>
+					<tr><td>Ports</td><td>Auto-created from the parameter list, labelled with the vendor's parameter ids.</td></tr>
+					<tr><td>Enabled</td><td>By default, but inert until credentials exist.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>The dashboard widget renders the sensor set plus the heating circuit's supply/return ΔT and the
+			compressor state. Degree-minutes feed the heating automation job.</p>
+
+		<h2 id="huawei">Huawei solar</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+				<tbody>
+					<tr><td>Devices</td><td>SUN2000 inverter, its communication dongle, and a DTSU666-H smart meter.</td></tr>
+					<tr><td>Transport</td><td>The FusionSolar cloud API, polled by <code>huaweiInfoSync</code> (300 s).</td></tr>
+					<tr><td>Inverter data</td><td>Instantaneous active power, daily and lifetime yield, efficiency, internal temperature, per-string voltages.</td></tr>
+					<tr><td>Meter data</td><td>Per-phase active power (A/B/C), voltages and currents, total import and export, power factor.</td></tr>
+					<tr><td>Enabled</td><td><span class="badge opt">off</span> — turn on <code>quartz.jobs.huaweiInfoSync</code> once configured.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>
+			The dashboard widget derives the flow diagram from these: PV production, house consumption, grid
+			import and grid export, with directional arrows. Longer-range analysis is a Grafana dashboard embedded
+			on the Solar Reports page.
+		</p>
+
+		<div class="callout warn">
+			<strong>FusionSolar rate-limits aggressively.</strong>
+			<p>Do not shorten the poll interval below the documented default without checking; the API responds to
+				over-polling by locking the account out for a while.</p>
+		</div>
+
+		<h2 id="meteo">Weather (Open-Meteo)</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+				<tbody>
+					<tr><td>Transport</td><td>The Open-Meteo public API — <strong>no API key required</strong>. Polled by <code>meteoStationSync</code> (1800 s).</td></tr>
+					<tr><td>Current</td><td>Temperature, precipitation, wind speed, humidity, soil temperature, visibility.</td></tr>
+					<tr><td>Daily</td><td>Min/max and apparent temperature, sunrise, sunset, daylight and sunshine duration, rain total, maximum wind.</td></tr>
+					<tr><td>Hourly</td><td>Temperature, precipitation probability, wind.</td></tr>
+					<tr><td>Setup</td><td>Create a device of model <code>OPEN_METEO_API</code>, set its coordinates, and name the location with <code>ui.meteo.locationName</code>.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>
+			Weather is not just a widget: the sunrise/sunset window backs <code>isDay()</code> and
+			<code>isNight()</code>, and precipitation backs <code>isRaining()</code> and
+			<code>rainAmount(minutes)</code> in the scenario DSL. It is also the fallback source for
+			<code>currentExternTemperature()</code> when no outdoor sensor is available.
+		</p>
+
+		<h2 id="navimow">Segway Navimow</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+				<tbody>
+					<tr><td>Transport</td><td>Segway's cloud REST API, polled by <code>navimowInfoSync</code> (30 s).</td></tr>
+					<tr><td>Auth</td><td>A one-button OAuth flow under <strong>Devices → your mower → Connect Navimow account</strong>. A popup signs in and stores the token automatically.</td></tr>
+					<tr><td>Token life</td><td>Roughly one to two days. <code>navimowTokenRefresh</code> keeps it alive; expiry raises a message naming the exact device that needs re-authorising.</td></tr>
+					<tr><td>Region</td><td>Non-EU installs override the API base URL and OAuth client through per-device configuration keys.</td></tr>
+					<tr><td>State</td><td>Docked, Mowing, Paused, Returning, Charging, Idle, Error — plus battery level and the cloud's own label.</td></tr>
+					<tr><td>Commands</td><td>Start, Pause, Resume, Return to dock, enabled per current state.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p>Notifications cover errors and stuck mowers, state transitions, completed runs, low battery or
+			autonomous return, and token expiry. Commands are also callable from scenarios:</p>
+
+		<div class="codeblock"><pre><code>mowerCommand([deviceId: 42, action: 'DOCK'])</code></pre></div>
+
+		<p>…and by voice — <em>“start mowing”</em>, <em>“trimite mașina la bază”</em>.</p>
+
+		<h2 id="telegram">Telegram</h2>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+				<tbody>
+					<tr><td>Setup</td><td>Create a bot with BotFather, put its token and channel ids in configuration, and set <code>myhab.telegram.enabled</code>.</td></tr>
+					<tr><td>Linking</td><td>A myHAB user must have their Telegram username recorded on their account; unknown senders get nothing.</td></tr>
+					<tr><td>Commands</td><td>Hierarchical menus for device status, switching, gate opening (with confirmation) and running scenarios.</td></tr>
+					<tr><td>Authorisation</td><td>The same roles as the web UI. Sensitive actions require admin.</td></tr>
+					<tr><td>Notifications</td><td>Alerts and events can be pushed to a channel or a direct chat.</td></tr>
+					<tr><td>Audit</td><td>Actions go through the normal event path, so they appear in the event log attributed to the Telegram user.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<h2 id="notifications">Web push and alerting</h2>
+
+		<ul>
+			<li><strong>Web Push</strong> — with VAPID keys configured, in-app messages also arrive as browser
+				notifications on subscribed devices. Muted messages are suppressed at the source, so a mute rule
+				silences the push too.</li>
+			<li><strong>OpsGenie</strong> — optional alert escalation. Its keys are only read when an alert is
+				actually raised, so leaving them out costs nothing.</li>
+		</ul>
+
+		<h2 id="grafana">Grafana</h2>
+
+		<p>
+			myHAB stores time series in PostgreSQL, so Grafana can query the same database directly. Two places
+			embed a dashboard back into the UI: the Solar Reports page and the temperature chart card. Configure
+			<code>grafana.url</code> plus the dashboard (and panel) ids — see
+			<a href="configuration.html#ui-cfg">Configuration</a>.
+		</p>
+
+		<h2 id="adding">Adding a new integration</h2>
+
+		<p>The shape is consistent, and the existing cloud integrations are the template:</p>
+
+		<ol>
+			<li>Add a value to the device-model enum.</li>
+			<li>Declare its topic contract — inbound match patterns and outbound templates — making sure the path
+				segments cannot collide with an existing model's.</li>
+			<li>For a cloud service, write a Quartz job that polls it and <em>publishes to the broker</em> rather
+				than writing to the database directly. Persistence, WebSocket fan-out and the audit trail then come
+				for free.</li>
+			<li>Add the job's toggle and interval under <code>quartz.jobs.*</code>, defaulting to
+				<strong>off</strong>.</li>
+			<li>Put any credentials in per-device configuration keys, not in code.</li>
+			<li>If it needs a dashboard widget, register it with the configuration keys it requires so the UI can
+				hide it when unconfigured.</li>
+		</ol>
+
+		<div class="pager">
+			<a href="architecture.html"><span>Previous</span>Architecture</a>
+			<a class="next" href="api.html"><span>Next</span>API reference</a>
+		</div>
+	</main>
+
+	<aside class="docs-toc"><h4>On this page</h4></aside>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-bottom" style="border-top:0;padding-top:0">
+			<span>© myHAB Project · v2.8.10 · <a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></span>
+			<span><a href="http://demo.myhab.org/" rel="noopener">demo.myhab.org</a></span>
+		</div>
+	</div>
+</footer>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

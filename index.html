@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>myHAB — the home automation backend you actually own</title>
+<meta name="description" content="myHAB is a self-hosted home automation platform: MQTT device control, solar and heat-pump monitoring, floor-plan dashboards, scenario automation, an LLM voice assistant and tokenised guest links. Grails + Vue 3, Docker-ready, open source.">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="myHAB — the home automation backend you actually own">
+<meta property="og:description" content="Self-hosted home automation: MQTT devices, solar &amp; heat-pump monitoring, floor-plan dashboards, scenario automation, voice control. Try the live demo.">
+<meta property="og:url" content="https://myhab.org/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+	<div class="container">
+		<a class="brand" href="/">
+			<img src="assets/img/logo.svg" alt="" width="26" height="26">
+			<span>my<b>HAB</b></span>
+		</a>
+		<button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+		</button>
+		<nav class="main-nav">
+			<a href="#features">Features</a>
+			<a href="#screens">Screenshots</a>
+			<a href="#integrations">Integrations</a>
+			<a href="docs/">Docs</a>
+			<a href="docs/install.html">Install</a>
+		</nav>
+		<div class="header-actions">
+			<a class="icon-link" href="https://github.com/kirpi4ik/myhab" title="GitHub" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0C18.6 4.7 19.6 5 19.6 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+			</a>
+			<a class="btn btn-primary btn-sm" href="http://demo.myhab.org/" rel="noopener">Live demo</a>
+		</div>
+	</div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+	<div class="container">
+		<div class="hero-inner">
+			<span class="pill"><span class="dot"></span> <strong>v2.8.10</strong> · self-hosted · open source</span>
+			<h1>The home automation backend<br><span class="grad">you actually own</span>.</h1>
+			<p class="lead">
+				myHAB runs on your own hardware and talks directly to your devices over MQTT — no vendor
+				cloud in the control path. Wire up ESP32 and MegaD controllers, solar inverters, heat pumps
+				and weather data, then drive it all from a floor-plan dashboard, a scenario script,
+				a Telegram message or your voice.
+			</p>
+			<div class="btn-row">
+				<a class="btn btn-primary btn-lg" href="http://demo.myhab.org/" rel="noopener">
+					Try the live demo
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+				</a>
+				<a class="btn btn-ghost btn-lg" href="docs/install.html">Install it yourself</a>
+			</div>
+
+			<div class="hero-meta">
+				<div><strong>74</strong>domain entities</div>
+				<div><strong>16</strong>scheduled jobs</div>
+				<div><strong>2</strong>languages (EN / RO)</div>
+				<div><strong>0</strong>cloud accounts required</div>
+			</div>
+		</div>
+
+		<div class="hero-shot">
+			<figure class="frame" style="margin:0">
+				<div class="frame-bar"><i></i><i></i><i></i><span>myHAB · Dashboard</span></div>
+				<img src="assets/img/screens/dashboard.png" alt="The myHAB dashboard showing lighting, climate, socket, gate, irrigation, weather, solar and heat-pump cards" width="1899" height="1007">
+			</figure>
+		</div>
+	</div>
+</section>
+
+<!-- ================= WHY ================= -->
+<section class="section">
+	<div class="container">
+		<div class="section-head center">
+			<span class="eyebrow">Why myHAB</span>
+			<h2>Infrastructure-grade home automation</h2>
+			<p>
+				Most home automation software models <em>devices</em>. myHAB models the whole installation —
+				zones, racks, patch panels, cables, controller ports and the peripherals wired to them —
+				so what you see on screen matches what is actually in the wall.
+			</p>
+		</div>
+
+		<div class="grid grid-3">
+			<div class="card">
+				<div class="card-icon">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+				</div>
+				<h3>Local first</h3>
+				<p>Devices talk MQTT to your own broker. Commands never leave the LAN, and the system keeps
+					working when your internet does not.</p>
+			</div>
+			<div class="card">
+				<div class="card-icon i">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+				</div>
+				<h3>Models the wiring</h3>
+				<p>Cables, patch panels, racks and controller ports are first-class entities. Print a QR label,
+					scan it later, and land on the exact port you're chasing.</p>
+			</div>
+			<div class="card">
+				<div class="card-icon a">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12l1-9Z"/></svg>
+				</div>
+				<h3>Energy aware</h3>
+				<p>Solar production, per-phase grid metering and heat-pump statistics are stored as time series
+					and aggregated hourly, daily and monthly.</p>
+			</div>
+			<div class="card">
+				<div class="card-icon s">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.4"/></svg>
+				</div>
+				<h3>Automations that read like sentences</h3>
+				<p>Scenarios are short Groovy scripts — <code>if (isRaining()) switchOff(...)</code> — triggered
+					by cron, by device events, or by hand.</p>
+			</div>
+			<div class="card">
+				<div class="card-icon r">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+				</div>
+				<h3>Guests without accounts</h3>
+				<p>Hand out a tokenised link that opens the gate three times in the next two days, optionally
+					PIN-protected, with a full audit trail of every attempt.</p>
+			</div>
+			<div class="card">
+				<div class="card-icon">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+				</div>
+				<h3>Voice that knows your house</h3>
+				<p>An LLM agent is grounded in your live catalogue of peripherals, zones and scenarios — it
+					cannot invent a device, and every action is re-validated server-side.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ================= FEATURE ROWS ================= -->
+<section class="section section-alt" id="features">
+	<div class="container">
+		<div class="section-head">
+			<span class="eyebrow">Product tour</span>
+			<h2>What you get out of the box</h2>
+		</div>
+
+		<div class="feature">
+			<div class="feature-text">
+				<h3>Floor-plan control screens</h3>
+				<p>
+					Drop a rendering or photo of each floor in as a background, then place live widgets on it —
+					lights, heating valves, locks, sensors, temperature readouts and navigation links between
+					levels. Tap a bulb on the plan and the real one switches.
+				</p>
+				<ul>
+					<li>Drag-and-drop editor with per-widget icon, size and target</li>
+					<li>Values render in place — <code>26.87°C</code>, <code>95.9%</code>, on/off state colouring</li>
+					<li>Full-screen kiosk mode for a wall tablet</li>
+					<li>Legacy SVG floor plans can be imported</li>
+				</ul>
+				<div class="tagset"><span class="tag">/wui</span><span class="tag">kiosk</span><span class="tag">drag &amp; drop</span></div>
+			</div>
+			<div class="feature-media">
+				<figure class="frame" style="margin:0">
+					<div class="frame-bar"><i></i><i></i><i></i><span>Ground floor · live plan</span></div>
+					<img src="assets/img/screens/floorplan-ground.jpg" alt="Ground-floor plan with live light, heating and lock widgets overlaid" loading="lazy">
+				</figure>
+			</div>
+		</div>
+
+		<div class="feature rev">
+			<div class="feature-text">
+				<h3>Energy and climate, measured</h3>
+				<p>
+					Solar production, house consumption, grid import and export flow through one animated diagram.
+					The heat pump reports every sensor it has — outdoor, room, supply, return, hot water, brine —
+					plus compressor hours, starts and the energy split between heating and hot water.
+				</p>
+				<ul>
+					<li>Huawei FusionSolar inverter and DTSU smart-meter polling</li>
+					<li>NIBE heat pump over the myUplink API, with automatic token refresh</li>
+					<li>Open-Meteo weather with 3-day forecast, sunrise/sunset and sunshine hours</li>
+					<li>Everything stored as time series, aggregated hourly / daily / monthly</li>
+				</ul>
+				<div class="tagset"><span class="tag">Huawei</span><span class="tag">NIBE F1145</span><span class="tag">Open-Meteo</span><span class="tag">Grafana-ready</span></div>
+			</div>
+			<div class="feature-media">
+				<figure class="frame" style="margin:0">
+					<div class="frame-bar"><i></i><i></i><i></i><span>Weather · Solar · Heat pump</span></div>
+					<img src="assets/img/screens/dashboard-energy.png" alt="Weather station, solar power plant flow diagram and heat pump widgets" loading="lazy">
+				</figure>
+			</div>
+		</div>
+
+		<div class="feature">
+			<div class="feature-text">
+				<h3>Share access without sharing your house</h3>
+				<p>
+					Create a link for one peripheral — a gate, a light, a pump, a sprinkler — with a validity
+					window, a maximum number of uses and an optional PIN. The recipient gets a single-purpose
+					page. No account, no app, no access to anything else.
+				</p>
+				<ul>
+					<li>Gate links spend one use per open; switch links spend one per <em>start</em> — stopping is always free</li>
+					<li>Every attempt, allowed or denied, is recorded with IP and user agent</li>
+					<li>Links can be disabled or archived instantly from the admin list</li>
+					<li>Auto-off timeout is shown to the guest: <em>“stops automatically after 5 hours”</em></li>
+				</ul>
+				<div class="tagset"><span class="tag">/shared/&lt;token&gt;</span><span class="tag">PIN</span><span class="tag">audit trail</span></div>
+			</div>
+			<div class="feature-media">
+				<div class="shots cols-3">
+					<figure class="shot tall"><img src="assets/img/screens/share-gate.png" alt="Guest gate page: tap to unlock, 5 uses remaining" loading="lazy"></figure>
+					<figure class="shot tall"><img src="assets/img/screens/share-switch.png" alt="Guest switch page with start and stop controls" loading="lazy"></figure>
+					<figure class="shot tall"><img src="assets/img/screens/share-gate-pin.png" alt="PIN entry screen for a shared gate link" loading="lazy"></figure>
+				</div>
+			</div>
+		</div>
+
+		<div class="feature rev">
+			<div class="feature-text">
+				<h3>Speak to your house</h3>
+				<p>
+					Say <em>“turn off everything on the terrace”</em> or <em>“aprinde lumina din birou”</em>.
+					Speech is transcribed in the browser, an LLM agent maps it to concrete actions against your
+					real catalogue, and the reply is spoken back — optionally in a natural neural voice.
+				</p>
+				<ul>
+					<li>Switch one peripheral or an entire zone; run scenarios by name; ask state questions</li>
+					<li>Asks a clarifying question instead of guessing, and keeps the conversation going</li>
+					<li>Anthropic Claude or OpenAI, chosen by configuration — your key, your account</li>
+					<li>A native Android client adds hands-free wake-word activation</li>
+				</ul>
+				<div class="tagset"><span class="tag">Web Speech API</span><span class="tag">Claude / GPT</span><span class="tag">Google neural TTS</span><span class="tag">Android</span></div>
+				<a class="card-link" href="docs/voice.html">How the voice assistant works
+					<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+			</div>
+			<div class="feature-media" style="display:flex;justify-content:center">
+				<figure class="frame" style="margin:0;max-width:330px">
+					<div class="frame-bar"><i></i><i></i><i></i><span>Voice Control</span></div>
+					<img src="assets/img/screens/voice-control.png" alt="The voice control page with a microphone button and a command box" loading="lazy">
+				</figure>
+			</div>
+		</div>
+
+		<div class="feature">
+			<div class="feature-text">
+				<h3>See the wire, not just the widget</h3>
+				<p>
+					A built-in MQTT explorer shows every retained topic as a live tree plus a raw message monitor,
+					and lets you publish a payload by hand. The port list is the other half of the same story:
+					every I/O line on every controller, its type, state and last value.
+				</p>
+				<ul>
+					<li>Live topic tree with per-topic payloads and a rolling raw monitor</li>
+					<li>Publish arbitrary topic/payload pairs for debugging</li>
+					<li>Ports auto-created by integrations are labelled and searchable</li>
+					<li>Per-peripheral event log showing who changed what, and from where</li>
+				</ul>
+				<div class="tagset"><span class="tag">MQTT</span><span class="tag">retained tree</span><span class="tag">event log</span></div>
+			</div>
+			<div class="feature-media">
+				<figure class="frame" style="margin:0">
+					<div class="frame-bar"><i></i><i></i><i></i><span>MQTT Explorer · 476 topics</span></div>
+					<img src="assets/img/screens/mqtt-explorer.png" alt="MQTT explorer showing a topic tree, publish form and raw monitor" loading="lazy">
+				</figure>
+			</div>
+		</div>
+
+		<div class="feature rev">
+			<div class="feature-text">
+				<h3>Schedules that fit the season</h3>
+				<p>
+					The sprinkler scheduler is a week-by-hour grid: pick the days, drag the start hour, set a
+					duration per zone. Everything else — heating curves, device polling, statistics rollups,
+					auto-off timeouts — runs on Quartz jobs whose intervals you control from configuration.
+				</p>
+				<ul>
+					<li>Per-sprinkler day mask, start time and run length, with an “apply to all” default</li>
+					<li>Individual schedules can be disabled without deleting them</li>
+					<li>Heating control job drives thermostats from room temperature and degree-minutes</li>
+					<li>Auto-off timeout stops anything left running</li>
+				</ul>
+				<div class="tagset"><span class="tag">Quartz</span><span class="tag">cron</span><span class="tag">degree-minutes</span></div>
+			</div>
+			<div class="feature-media">
+				<figure class="frame" style="margin:0">
+					<div class="frame-bar"><i></i><i></i><i></i><span>Sprinkler Scheduler</span></div>
+					<img src="assets/img/screens/sprinkler-scheduler.png" alt="Sprinkler scheduler grid with days of week and hour columns" loading="lazy">
+				</figure>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ================= SCREENSHOTS ================= -->
+<section class="section" id="screens">
+	<div class="container">
+		<div class="section-head center">
+			<span class="eyebrow">Screenshots</span>
+			<h2>The whole application</h2>
+			<p>Click any image to enlarge.</p>
+		</div>
+
+		<div class="shots">
+			<figure class="shot">
+				<img src="assets/img/screens/dashboard.png" alt="Dashboard" loading="lazy">
+				<figcaption><b>Dashboard</b>Zone-grouped cards for lighting, climate, sockets, temperature, gate and irrigation.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/dashboard-energy.png" alt="Energy widgets" loading="lazy">
+				<figcaption><b>Energy &amp; climate widgets</b>Weather, solar flow diagram and full heat-pump telemetry.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/floorplan-ground.jpg" alt="Ground floor plan" loading="lazy">
+				<figcaption><b>Ground floor plan</b>Live widgets placed on a rendering of the actual house.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/floorplan-upper.jpg" alt="Upper floor plan" loading="lazy">
+				<figcaption><b>Upper floor plan</b>Motion, humidity and per-room temperature shown in place.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/screen-editor.jpg" alt="Screen editor" loading="lazy">
+				<figcaption><b>Screen editor</b>Place, resize and link widgets; import legacy SVG plans.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/mqtt-explorer.png" alt="MQTT explorer" loading="lazy">
+				<figcaption><b>MQTT explorer</b>Retained topic tree, raw monitor and a manual publish form.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/port-list.png" alt="Port list" loading="lazy">
+				<figcaption><b>Port list</b>Every controller I/O line with type, state and last value.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/messages.png" alt="Message inbox" loading="lazy">
+				<figcaption><b>Message inbox</b>Device-offline warnings and alerts, with mute-similar and archive.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/sprinkler-scheduler.png" alt="Sprinkler scheduler" loading="lazy">
+				<figcaption><b>Sprinkler scheduler</b>Week-by-hour irrigation grid, per zone.</figcaption>
+			</figure>
+			<figure class="shot">
+				<img src="assets/img/screens/share-create.png" alt="Share access dialog" loading="lazy">
+				<figcaption><b>Share access</b>Validity window, maximum uses and an optional PIN.</figcaption>
+			</figure>
+			<figure class="shot tall">
+				<img src="assets/img/screens/share-switch.png" alt="Guest switch page" loading="lazy">
+				<figcaption><b>Guest control page</b>What the recipient of a shared link sees.</figcaption>
+			</figure>
+			<figure class="shot tall">
+				<img src="assets/img/screens/voice-control.png" alt="Voice control" loading="lazy">
+				<figcaption><b>Voice control</b>Speak or type; the agent replies out loud.</figcaption>
+			</figure>
+		</div>
+	</div>
+</section>
+
+<!-- ================= INTEGRATIONS ================= -->
+<section class="section section-alt" id="integrations">
+	<div class="container">
+		<div class="section-head center">
+			<span class="eyebrow">Integrations</span>
+			<h2>Hardware and services it speaks to</h2>
+			<p>
+				Everything tied to hardware you might not own ships <strong>disabled</strong>. Enable what is
+				actually in your house and ignore the rest.
+			</p>
+		</div>
+
+		<div class="grid grid-4">
+			<div class="card">
+				<h3>ESP32</h3>
+				<p class="small">Relay and sensor boards over MQTT. Command out, state echo back — the echo is what
+					updates the UI, so nothing lies about its state.</p>
+				<div class="tagset"><span class="tag">MQTT</span><span class="badge core">core</span></div>
+			</div>
+			<div class="card">
+				<h3>MegaD-2561</h3>
+				<p class="small">Multi-port Ethernet I/O controllers, with an HTTP <code>?cmd=all</code> reconciliation
+					sweep alongside the MQTT stream.</p>
+				<div class="tagset"><span class="tag">MQTT + HTTP</span><span class="badge core">core</span></div>
+			</div>
+			<div class="card">
+				<h3>Huawei FusionSolar</h3>
+				<p class="small">SUN2000 inverter and DTSU666-H smart meter: instantaneous power, per-phase grid
+					data, daily and lifetime yield.</p>
+				<div class="tagset"><span class="badge opt">optional</span></div>
+			</div>
+			<div class="card">
+				<h3>NIBE heat pumps</h3>
+				<p class="small">F1145 and family via myUplink: all temperature sensors, compressor statistics,
+					alarms, degree-minutes.</p>
+				<div class="tagset"><span class="badge opt">optional</span></div>
+			</div>
+			<div class="card">
+				<h3>Open-Meteo</h3>
+				<p class="small">Free weather with no API key — current conditions, 3-day forecast, hourly detail,
+					sunrise and sunshine duration.</p>
+				<div class="tagset"><span class="badge opt">optional</span></div>
+			</div>
+			<div class="card">
+				<h3>Segway Navimow</h3>
+				<p class="small">Robotic mower: battery, state, start / pause / resume / dock, plus notifications for
+					errors and completed runs.</p>
+				<div class="tagset"><span class="badge opt">optional</span></div>
+			</div>
+			<div class="card">
+				<h3>ONVIF cameras</h3>
+				<p class="small">Motion and presence events bridged onto MQTT, usable as scenario triggers.</p>
+				<div class="tagset"><span class="badge opt">optional</span></div>
+			</div>
+			<div class="card">
+				<h3>Telegram</h3>
+				<p class="small">A bot with role-based menus for status, switching, gate opening and push
+					notifications.</p>
+				<div class="tagset"><span class="badge opt">optional</span></div>
+			</div>
+		</div>
+
+		<div class="center" style="margin-top:2.4rem">
+			<a class="btn btn-ghost" href="docs/integrations.html">Full integration reference</a>
+		</div>
+	</div>
+</section>
+
+<!-- ================= STACK ================= -->
+<section class="section">
+	<div class="container">
+		<div class="grid grid-2" style="gap:54px;align-items:center">
+			<div>
+				<span class="eyebrow">Under the hood</span>
+				<h2>A boring, durable stack</h2>
+				<p class="muted">
+					A Grails 7 / Groovy 4 backend on the JVM, PostgreSQL for persistence and time series,
+					Spring Integration for MQTT, Quartz for scheduling and Hazelcast for caching. The client is a
+					Vue 3 + Quasar PWA talking GraphQL, with STOMP over WebSocket for live state.
+				</p>
+				<p class="muted">
+					It ships as a single Docker image plus a database and a broker. No microservices, no message
+					bus to operate, nothing that needs a Kubernetes cluster to survive the night.
+				</p>
+				<div class="btn-row" style="margin-top:1.6rem">
+					<a class="btn btn-ghost" href="docs/architecture.html">Read the architecture</a>
+					<a class="btn btn-ghost" href="docs/api.html">API reference</a>
+				</div>
+			</div>
+			<div class="grid grid-2" style="gap:14px">
+				<div class="card" style="padding:18px">
+					<h4 style="margin-bottom:.3em">Backend</h4>
+					<p class="small">Java 17 · Grails 7.2 · Groovy 4 · GORM/Hibernate · GraphQL · Quartz · Spring Integration · Spring Security (JWT) · Hazelcast</p>
+				</div>
+				<div class="card" style="padding:18px">
+					<h4 style="margin-bottom:.3em">Frontend</h4>
+					<p class="small">Vue 3 · Quasar 2 · Pinia · Apollo Client 3 · STOMP WebSocket · Workbox PWA · i18n (EN/RO)</p>
+				</div>
+				<div class="card" style="padding:18px">
+					<h4 style="margin-bottom:.3em">Data</h4>
+					<p class="small">PostgreSQL with partitioned <code>port_values</code> and <code>event_log</code>, an archive schema and rollup statistics</p>
+				</div>
+				<div class="card" style="padding:18px">
+					<h4 style="margin-bottom:.3em">Transport</h4>
+					<p class="small">MQTT (Mosquitto) for devices · GraphQL for queries and mutations · WebSocket for live state · REST for the public share pages</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ================= DEMO CTA ================= -->
+<section class="section-tight" style="padding-bottom:90px">
+	<div class="container">
+		<div class="cta">
+			<span class="eyebrow">No install required</span>
+			<h2>A whole fictional house, running right now</h2>
+			<p>
+				The public demo is a seven-zone home with twenty-one peripherals and simulated ESP32 controllers
+				answering on a real MQTT broker. Switch the lights, run a scenario, open the floor plans, break
+				something — it resets when it goes idle.
+			</p>
+			<div class="creds">
+				<span class="cred">user &nbsp;<b>demo / demo</b></span>
+				<span class="cred">admin &nbsp;<b>demo-admin / demo-admin</b></span>
+			</div>
+			<div class="btn-row">
+				<a class="btn btn-primary btn-lg" href="http://demo.myhab.org/" rel="noopener">Open demo.myhab.org</a>
+				<a class="btn btn-ghost btn-lg" href="docs/demo.html">What's in the demo?</a>
+			</div>
+			<p class="small muted" style="margin-top:1.4rem;margin-bottom:0">
+				Data is shared between visitors and resets when idle. Please don't put anything real in it.
+			</p>
+		</div>
+	</div>
+</section>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-grid">
+			<div class="footer-about">
+				<a class="brand" href="/">
+					<img src="assets/img/logo.svg" alt="" width="26" height="26">
+					<span>my<b>HAB</b></span>
+				</a>
+				<p>My Home Automation Backend — a self-hosted platform for controlling, monitoring and
+					automating a real house.</p>
+			</div>
+			<div>
+				<h4>Product</h4>
+				<ul>
+					<li><a href="#features">Features</a></li>
+					<li><a href="#screens">Screenshots</a></li>
+					<li><a href="#integrations">Integrations</a></li>
+					<li><a href="http://demo.myhab.org/" rel="noopener">Live demo</a></li>
+				</ul>
+			</div>
+			<div>
+				<h4>Documentation</h4>
+				<ul>
+					<li><a href="docs/">Overview</a></li>
+					<li><a href="docs/install.html">Installation</a></li>
+					<li><a href="docs/configuration.html">Configuration</a></li>
+					<li><a href="docs/architecture.html">Architecture</a></li>
+					<li><a href="docs/api.html">API reference</a></li>
+				</ul>
+			</div>
+			<div>
+				<h4>Project</h4>
+				<ul>
+					<li><a href="https://github.com/kirpi4ik/myhab" rel="noopener">GitHub</a></li>
+					<li><a href="https://github.com/kirpi4ik/myhab/issues" rel="noopener">Issues</a></li>
+					<li><a href="https://hub.docker.com/r/kirpi4ik/myhab" rel="noopener">Docker Hub</a></li>
+					<li><a href="docs/faq.html">FAQ</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="footer-bottom">
+			<span>© myHAB Project · v2.8.10</span>
+			<span>Built for houses, not for datacentres.</span>
+		</div>
+	</div>
+</footer>
+
+<script src="assets/js/site.js"></script>
+</body>
+</html>
