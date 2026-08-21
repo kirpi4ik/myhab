@@ -2,7 +2,7 @@
 
 A comprehensive home automation platform for monitoring and controlling your smart home ecosystem. myHAB provides a unified interface for managing heating systems, solar energy production, weather data, lighting, security, and more.
 
-**Website:** [https://myhab.org/](https://myhab.org/) · **Live demo:** [http://demo.myhab.org/](http://demo.myhab.org/)
+**Website:** [https://myhab.org/](https://myhab.org/) · **Live demo:** [http://demo.myhab.org/](http://demo.myhab.org/) · **Licence:** [LGPLv3](https://www.gnu.org/licenses/lgpl-3.0.html)
 
 ---
 
@@ -581,6 +581,14 @@ Detailed documentation is available in the `doc/` folder covering:
 ---
 
 ## License
+
+myHAB is developed under the **GNU Lesser General Public License v3 (LGPLv3)**.
+
+You may run, modify and deploy it freely, including commercially. Distributing a modified
+myHAB means releasing those modifications under the LGPLv3 as well; software that merely
+links against it may keep its own licence.
+
+Full text: [https://www.gnu.org/licenses/lgpl-3.0.html](https://www.gnu.org/licenses/lgpl-3.0.html)
 
 Copyright (c) myHAB Project
 
