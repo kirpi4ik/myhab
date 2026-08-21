@@ -2,7 +2,24 @@
 
 A comprehensive home automation platform for monitoring and controlling your smart home ecosystem. myHAB provides a unified interface for managing heating systems, solar energy production, weather data, lighting, security, and more.
 
-**Website:** [http://myhab.org/](http://myhab.org/)
+**Website:** [https://myhab.org/](https://myhab.org/) · **Live demo:** [http://demo.myhab.org/](http://demo.myhab.org/)
+
+---
+
+## Try it without installing anything
+
+A complete, fully interactive myHAB installation runs at **[demo.myhab.org](http://demo.myhab.org/)** —
+a fictional seven-zone house with twenty-one peripherals and simulated ESP32 controllers answering on a
+real MQTT broker. Switch the lights, open the floor plans, run a scenario, read a scenario, break
+something.
+
+| Account | Credentials |
+|---------|-------------|
+| User    | `demo` / `demo` |
+| Admin   | `demo-admin` / `demo-admin` |
+
+Data is shared between visitors and resets when the sandbox goes idle. See [`demo/README.md`](demo/README.md)
+to run the same sandbox locally (`./gradlew demoSeedLocal demoSim demoRun`).
 
 ---
 
@@ -300,7 +317,7 @@ myHAB follows a modern three-tier architecture with clear separation of concerns
 ┌───────────────────────────▼─────────────────────────────────────┐
 │                      Backend Server                              │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │                 Grails 6.1 Application                    │   │
+│  │                 Grails 7.2 Application                    │   │
 │  │  ┌────────────┐ ┌────────────┐ ┌────────────────────┐    │   │
 │  │  │  GraphQL   │ │  Services  │ │  Scheduled Jobs    │    │   │
 │  │  │    API     │ │   Layer    │ │  (Quartz)          │    │   │
@@ -339,10 +356,10 @@ myHAB follows a modern three-tier architecture with clear separation of concerns
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | Runtime | Java 17 | JVM runtime |
-| Framework | Grails 6.1 (Groovy 3) | Web application framework |
+| Framework | Grails 7.2 (Groovy 4) | Web application framework |
 | API | GraphQL | Flexible data queries |
 | ORM | GORM | Database abstraction |
-| Security | Spring Security 6 (OAuth2 + JWT) | Authentication and authorization |
+| Security | Spring Security + Spring Security REST (signed HS256 JWT) | Authentication and authorization |
 | Scheduling | Quartz | Timed job execution |
 | Messaging | Spring Integration | MQTT message handling |
 | Voice AI | Anthropic / OpenAI APIs | Natural-language command understanding |
@@ -487,9 +504,9 @@ Jobs can be enabled/disabled and intervals adjusted via configuration without co
 ### Security
 
 **Authentication**
-- OAuth 2.0 / JWT token-based authentication
-- Session management with refresh tokens
-- Password encryption using secure hashing
+- Signed HS256 JWT issued by `POST /api/login`
+- Stateless tokens (no refresh token; re-authenticate on `401`)
+- Passwords hashed with BCrypt
 
 **Authorization**
 - Role-based access control (RBAC)
@@ -569,4 +586,4 @@ Copyright (c) myHAB Project
 
 ---
 
-*For more information, visit [http://myhab.org/](http://myhab.org/)*
+*For more information, visit [myhab.org](https://myhab.org/) — or try the [live demo](http://demo.myhab.org/).*
