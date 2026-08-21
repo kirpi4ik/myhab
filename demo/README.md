@@ -183,6 +183,13 @@ be able to build its database from a clean checkout and inside the image. It car
 `pg_dump --schema-only` against an up-to-date database when the domain model changes;
 `dbCreate=update` covers simple additions in the meantime.
 
+Regenerating it couples the file to a PostgreSQL major version: a dump restores only
+into its own version or newer, and from 18 on `pg_dump` emits `\restrict` /
+`\unrestrict`, which older `psql` rejects on sight — the init script dies on its first
+line, and because the data directory is no longer empty, every restart afterwards skips
+initialisation and serves an empty database. Whatever postgres a deployment runs for the
+demo must be at least as new as the machine the dump came from.
+
 **Reset behaviour.** `DemoService` truncates every table mirrored in the `seed` schema
 and copies the rows back, then rebases every timestamp by `now() - seed_meta.built_at`
 so the charts always end "now" and the seed never has to be rebuilt to stay plausible.

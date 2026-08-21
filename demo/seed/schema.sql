@@ -12,6 +12,12 @@
 -- `pg_dump --schema-only` against an up-to-date database when the domain model
 -- changes; dbCreate=update covers simple additions in the meantime.
 --
+-- A dump restores only into its own major version or newer, so whichever postgres
+-- runs the demo has to be at least the version this was dumped from, which the
+-- "Dumped from database version" line below records. From 18 on, pg_dump also
+-- emits \restrict / \unrestrict, which older psql rejects outright: it fails on
+-- the first line and leaves the database empty.
+--
 
 --
 -- PostgreSQL database dump

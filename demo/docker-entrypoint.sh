@@ -19,10 +19,15 @@ case "$1" in
     mkdir -p "${DB_INIT_DIR}"
     # postgres runs /docker-entrypoint-initdb.d/* in filename order, and only on an
     # empty data directory — so this is a first-boot operation, not every start.
-    cp /demo/seed/schema.sql        "${DB_INIT_DIR}/01-schema.sql"
-    cp /demo/seed/demo-entities.sql "${DB_INIT_DIR}/02-entities.sql"
-    cp /demo/seed/demo-screens.sql  "${DB_INIT_DIR}/02b-screens.sql"
-    cp /demo/seed/demo-seed-schema.sql "${DB_INIT_DIR}/03-seed-schema.sql"
+    #
+    # "Filename order" is the shell's glob order, which follows the container's
+    # locale, not byte order: under en_US.utf8 punctuation is ignored while
+    # collating, so a "02b-screens" would sort ahead of "02-entities". Distinct
+    # leading numbers keep the order the same under either collation.
+    cp /demo/seed/schema.sql           "${DB_INIT_DIR}/01-schema.sql"
+    cp /demo/seed/demo-entities.sql    "${DB_INIT_DIR}/02-entities.sql"
+    cp /demo/seed/demo-screens.sql     "${DB_INIT_DIR}/03-screens.sql"
+    cp /demo/seed/demo-seed-schema.sql "${DB_INIT_DIR}/04-seed-schema.sql"
 
     echo "[demo-init] building the config repository at ${CONFIG_REPO_DIR}"
     # ConfigProvider clones over file://, so a bare repo on a shared volume is enough:
