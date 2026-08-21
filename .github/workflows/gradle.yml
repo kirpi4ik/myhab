@@ -97,6 +97,9 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Build docker and push latest
+        # `latest` is the tag production tracks (Watchtower auto-deploys it within
+        # minutes), so only a master release moves it — never a PR or beta build.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v7.3.0
         with:
           context: build/docker
