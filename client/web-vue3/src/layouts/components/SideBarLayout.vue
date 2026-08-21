@@ -19,7 +19,7 @@
 				</div>
 			</q-scroll-area>
 		</template>
-		<q-scroll-area style="height: calc(100% - 150px); margin-top: 50px; border-right: 1px solid #ddd">
+		<q-scroll-area style="height: calc(100% - 50px); margin-top: 50px; border-right: 1px solid #ddd">
 			<q-list>
 				<q-item to="/" active-class="q-item-no-link-highlighting">
 					<q-item-section avatar>
