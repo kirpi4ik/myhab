@@ -1,6 +1,30 @@
-/* myHAB site — nav, lightbox, copy buttons, docs TOC */
+/* myHAB site — theme switch, nav, lightbox, copy buttons, docs TOC */
 (function () {
 	'use strict';
+
+	/* ---- theme switch ----
+	   Light is the default; the <head> script has already applied a stored
+	   choice, so this only wires the button. */
+	var root = document.documentElement;
+	var themeBtn = document.querySelector('.theme-toggle');
+
+	function labelTheme() {
+		if (!themeBtn) return;
+		var dark = root.getAttribute('data-theme') === 'dark';
+		var text = dark ? 'Switch to light theme' : 'Switch to dark theme';
+		themeBtn.setAttribute('title', text);
+		themeBtn.setAttribute('aria-label', text);
+	}
+
+	labelTheme();
+	if (themeBtn) {
+		themeBtn.addEventListener('click', function () {
+			var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+			root.setAttribute('data-theme', next);
+			try { localStorage.setItem('myhab-theme', next); } catch (e) { /* private mode */ }
+			labelTheme();
+		});
+	}
 
 	/* ---- mobile nav ---- */
 	var toggle = document.querySelector('.nav-toggle');
