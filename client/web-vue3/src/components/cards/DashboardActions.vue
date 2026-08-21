@@ -10,12 +10,12 @@
     <div v-if="!appConfigLoaded" class="dashboard-layout-skeleton">
       <div class="row q-col-gutter-md q-mb-md">
         <div v-for="i in 6" :key="`qa-skel-${i}`" class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-          <q-skeleton type="QCard" height="120px"/>
+          <q-skeleton type="rect" height="120px"/>
         </div>
       </div>
       <div class="row q-col-gutter-md">
         <div v-for="i in 4" :key="`mon-skel-${i}`" class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-          <q-skeleton type="QCard" height="180px"/>
+          <q-skeleton type="rect" height="180px"/>
         </div>
       </div>
     </div>
@@ -29,8 +29,19 @@
             :key="widget.id"
             class="col-lg-4 col-md-4 col-sm-12 col-xs-12"
           >
+            <!--
+              A widget whose declared requiredConfig is unmet never mounts: it would
+              query with a null id and produce a raw GraphQL error toast. The
+              placeholder says which setting is missing instead.
+            -->
+            <widget-not-configured
+              v-if="missingConfig(widget).length"
+              :widget="widget"
+              :missing="missingConfig(widget)"
+            />
+
             <!-- Standard action card -->
-            <q-card v-if="widget.kind === 'actionCard'" class="dashboard-card small-card" :class="widget.actionCard.cardClass">
+            <q-card v-else-if="widget.kind === 'actionCard'" class="dashboard-card small-card" :class="widget.actionCard.cardClass">
               <div class="card-header-wrapper">
                 <q-card-section class="card-header">
                   <div class="header-content">
@@ -91,7 +102,13 @@
           :key="widget.id"
           class="col-lg-4 col-md-6 col-sm-12 col-xs-12"
         >
+          <widget-not-configured
+            v-if="missingConfig(widget).length"
+            :widget="widget"
+            :missing="missingConfig(widget)"
+          />
           <component
+            v-else
             :is="widget.component"
             v-bind="widget.props ? widget.props() : {}"
           />
@@ -119,6 +136,8 @@ import NavimowWidget from "components/NavimowWidget.vue";
 import PeripheralLock from 'components/PeripheralLock.vue';
 import SprinklersDashComponent from "components/SprinklersDashComponent";
 import WaterPump from "components/WaterPump";
+import WidgetNotConfigured from "components/cards/WidgetNotConfigured.vue";
+import {useWidgetConfigStatus} from 'src/composables/useWidgetConfigStatus';
 
 export default defineComponent({
   name: 'DashboardActions',
@@ -129,7 +148,8 @@ export default defineComponent({
     NibeHeatPumpWidget,
     NavimowWidget,
     PeripheralLock,
-    SprinklersDashComponent
+    SprinklersDashComponent,
+    WidgetNotConfigured
   },
   setup() {
     const userPrefs = useUserPrefsStore();
@@ -141,6 +161,10 @@ export default defineComponent({
     // (no async work, no DB calls), and keeps prop factories from going stale
     // if appConfig values are ever updated at runtime.
     const widgets = computed(() => useDashboardWidgets());
+
+    // Shared with Settings.vue, so a widget you are allowed to enable there is one
+    // the dashboard can actually render here.
+    const { missingConfig } = useWidgetConfigStatus();
 
     /**
      * Check if current user has any of the specified roles
@@ -181,6 +205,7 @@ export default defineComponent({
     };
 
     return {
+      missingConfig,
       appConfigLoaded,
       hasAccess,
       visibleQuickAccess,

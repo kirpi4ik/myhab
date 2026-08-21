@@ -3,7 +3,7 @@
     <!-- Status Indicator Badge -->
     <div class="status-indicator">
       <q-icon name="mdi-sprinkler-variant" size="16px" class="q-mr-xs"/>
-      <span class="text-caption text-weight-medium">Sistem Udare</span>
+      <span class="text-caption text-weight-medium">{{ $t('sprinkler_card.system') }}</span>
     </div>
 
     <div class="card-header-wrapper">
@@ -14,7 +14,7 @@
             <div class="icon-glow"></div>
           </div>
           <div class="header-info">
-            <div class="header-title">Sistem Udare</div>
+            <div class="header-title">{{ $t('sprinkler_card.system') }}</div>
             <!-- Timer Info -->
             <div v-if="timeoutConfig || showExpiration" class="timer-info">
               <q-chip
@@ -73,7 +73,7 @@
                     <q-icon name="mdi-information" color="info"/>
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label>Detalii</q-item-label>
+                    <q-item-label>{{ $t('common.details') }}</q-item-label>
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -85,7 +85,7 @@
 
     <div class="card-actions-wrapper">
       <q-card-actions class="card-actions">
-        <!-- Gazon (Lawn) Action -->
+        <!-- Lawn action -->
         <q-btn 
           flat
           class="action-btn" 
@@ -94,7 +94,7 @@
         >
           <div class="action-btn-content">
             <q-icon name="mdi-grass" size="20px" class="q-mr-xs"/>
-            <span class="action-label">Gazon</span>
+            <span class="action-label">{{ $t('sprinkler_card.lawn') }}</span>
           </div>
         </q-btn>
         
@@ -102,7 +102,7 @@
           <q-separator vertical class="action-separator"/>
         </div>
         
-        <!-- Gradina (Garden) Action -->
+        <!-- Garden action -->
         <q-btn 
           flat
           class="action-btn" 
@@ -111,7 +111,7 @@
         >
           <div class="action-btn-content">
             <q-icon name="mdi-flower" size="20px" class="q-mr-xs"/>
-            <span class="action-label">Grădină</span>
+            <span class="action-label">{{ $t('sprinkler_card.garden') }}</span>
           </div>
         </q-btn>
       </q-card-actions>

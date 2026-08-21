@@ -3,3 +3,4 @@ export * from './user.service';
 export * from './label.service';
 export * from './avatar.service';
 export * from './screen.service';
+export * from './demo.service';

@@ -158,6 +158,10 @@ java -jar -Dgrails.env=\$GRAILS_ENV -Duser.timezone=UTC /app/myhab.jar \$@
         entrypointFile.setExecutable(true)
     }
 }
+// Public demo tasks (demoRun / demoSim / demoSeedLocal). Kept in demo/ so the
+// demo's assets stay together and the root build file stays about the product.
+apply from: "${rootDir}/demo/demo.gradle"
+
 tasks.register('serve') {
     group = 'application'
     description = 'Run the Quasar development server for the web client (SPA mode)'

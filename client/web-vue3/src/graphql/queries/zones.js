@@ -151,6 +151,9 @@ export const ZONE_GET_BY_ID_WITH_CATEGORY = gql`
           name
           internalRef
           value
+          device {
+            status
+          }
         }
         configurations {
           key

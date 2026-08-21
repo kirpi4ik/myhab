@@ -168,17 +168,16 @@
 
 		<q-card flat bordered>
 			<q-card-section>
-				<div class="text-h6">Dashboard widgets</div>
+				<div class="text-h6">{{ $t('dashboard.settings.title') }}</div>
 				<div class="text-caption text-grey-7 q-mb-md">
-					Choose which widgets are shown on your dashboard. Changes are saved automatically
-					and follow your account across browsers and devices.
+					{{ $t('dashboard.settings.caption') }}
 				</div>
 
 				<q-banner v-if="!isLoggedIn" class="bg-orange-1 text-orange-9 q-mb-md" dense>
 					<template v-slot:avatar>
 						<q-icon name="mdi-alert" />
 					</template>
-					You must be logged in to manage widget visibility.
+					{{ $t('dashboard.settings.login_required') }}
 				</q-banner>
 
 				<q-list separator>
@@ -209,10 +208,23 @@
 									</q-item-section>
 									<q-item-section>
 										<q-item-label>{{ widget.label }}</q-item-label>
-										<q-item-label caption>{{ widget.id }}</q-item-label>
+										<!--
+											Name the missing setting, but leave the checkbox usable:
+											enabling the widget is how you reach the dashboard card
+											that offers to set it. Disabling it here instead would
+											lock an already-hidden widget out of its own picker.
+										-->
+										<q-item-label v-if="missingConfig(widget).length" caption class="text-orange-9">
+											{{ $t('dashboard.settings.needs', { items: missingConfig(widget).map(c => c.label).join(', ') }) }}
+											<router-link to="/admin/appconfig">{{ $t('dashboard.settings.app_config_link') }}</router-link>
+										</q-item-label>
+										<q-item-label v-else caption>{{ widget.id }}</q-item-label>
 									</q-item-section>
 									<q-item-section side v-if="saving[widget.id]">
 										<q-spinner-dots size="20px" color="primary"/>
+									</q-item-section>
+									<q-item-section side v-else-if="missingConfig(widget).length">
+										<q-icon name="mdi-tune-variant" color="orange-7" size="20px"/>
 									</q-item-section>
 								</q-item>
 							</q-list>
@@ -240,6 +252,7 @@ import {
 } from '@/graphql/queries';
 import { useUserPrefsStore } from 'src/store/user-prefs.store';
 import { useDashboardWidgets } from 'src/composables/useDashboardWidgets';
+import { useWidgetConfigStatus } from 'src/composables/useWidgetConfigStatus';
 import { usePushNotifications } from 'src/composables';
 
 export default defineComponent({
@@ -250,6 +263,9 @@ export default defineComponent({
 		const { client } = useApolloClient();
 		const prefs = useUserPrefsStore();
 		const widgets = computed(() => useDashboardWidgets());
+		// Shared with DashboardActions, so the setting named here is the same one
+		// the dashboard's "not configured" placeholder offers to fill in.
+		const { missingConfig } = useWidgetConfigStatus();
 
 		const isLoggedIn = computed(() => authzService.currentUserValue?.id != null);
 
@@ -423,8 +439,8 @@ export default defineComponent({
 		const sections = computed(() => {
 			const all = widgets.value;
 			return [
-				{ id: 'quickAccess', title: 'Quick Access', widgets: all.filter(w => w.section === 'quickAccess') },
-				{ id: 'monitoring', title: 'Device Monitoring', widgets: all.filter(w => w.section === 'monitoring') },
+				{ id: 'quickAccess', title: t('dashboard.settings.section_quick_access'), widgets: all.filter(w => w.section === 'quickAccess') },
+				{ id: 'monitoring', title: t('dashboard.settings.section_monitoring'), widgets: all.filter(w => w.section === 'monitoring') },
 			];
 		});
 
@@ -434,6 +450,11 @@ export default defineComponent({
 		const saving = reactive({});
 
 		const onToggle = async (widgetId, visible) => {
+			// One press on the checkbox arrives twice: QCheckbox handles it, and the
+			// q-item is a <label>, which forwards the same click to the hidden native
+			// input QCheckbox renders. Both writes carry the same value, so the second
+			// loses on the row's version and reports a failure for a save that worked.
+			if (saving[widgetId]) return;
 			saving[widgetId] = true;
 			try {
 				await prefs.setWidgetVisible(widgetId, visible);
@@ -452,6 +473,7 @@ export default defineComponent({
 		return {
 			isLoggedIn,
 			sections,
+			missingConfig,
 			isVisible,
 			saving,
 			onToggle,

@@ -63,9 +63,9 @@
         <template v-slot:avatar>
           <q-icon name="mdi-key-alert" color="white"/>
         </template>
-        Mower is offline — token may have expired.
+        {{ $t('navimow.offline') }}
         <template v-slot:action>
-          <q-btn flat dense color="white" label="Reconnect" no-caps @click.stop="openDeviceEdit"/>
+          <q-btn flat dense color="white" :label="$t('navimow.reconnect')" no-caps @click.stop="openDeviceEdit"/>
         </template>
       </q-banner>
     </q-card-section>
@@ -92,15 +92,16 @@
     <!-- Footer -->
     <q-card-section class="navimow-footer text-center text-caption text-green-2">
       <q-spinner-dots v-if="loading && !device" size="sm" color="white"/>
-      <span v-else>Last update: {{ lastUpdateLabel }}</span>
+      <span v-else>{{ $t('navimow.last_update') }}: {{ lastUpdateLabel }}</span>
     </q-card-section>
   </q-card>
 </template>
 
 <script>
-import { defineComponent, onMounted, ref, computed } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 import { useApolloClient } from '@vue/apollo-composable';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useWebSocketListener } from '@/composables';
 import { DEVICE_GET_BY_ID_WITH_PORT_VALUES, MOWER_COMMAND } from '@/graphql/queries';
@@ -113,14 +114,14 @@ import _ from 'lodash';
  *  - decide which control buttons are enabled
  */
 const STATE_META = {
-  docked:    { label: 'Docked',    icon: 'mdi-home-import-outline', color: 'positive'    },
-  charging:  { label: 'Charging',  icon: 'mdi-battery-charging',     color: 'positive'    },
-  idle:      { label: 'Idle',      icon: 'mdi-pause-circle-outline', color: 'grey-6'      },
-  mowing:    { label: 'Mowing',    icon: 'mdi-robot-mower',          color: 'blue-7'      },
-  paused:    { label: 'Paused',    icon: 'mdi-pause',                color: 'warning'     },
-  returning: { label: 'Returning', icon: 'mdi-arrow-u-left-top',     color: 'warning'     },
-  error:     { label: 'Error',     icon: 'mdi-alert-circle',         color: 'negative'    },
-  unknown:   { label: 'Unknown',   icon: 'mdi-help-circle-outline',  color: 'grey-6'      },
+  docked:    { labelKey: 'navimow.states.docked',    icon: 'mdi-home-import-outline', color: 'positive' },
+  charging:  { labelKey: 'navimow.states.charging',  icon: 'mdi-battery-charging',    color: 'positive' },
+  idle:      { labelKey: 'navimow.states.idle',      icon: 'mdi-pause-circle-outline', color: 'grey-6'  },
+  mowing:    { labelKey: 'navimow.states.mowing',    icon: 'mdi-robot-mower',         color: 'blue-7'   },
+  paused:    { labelKey: 'navimow.states.paused',    icon: 'mdi-pause',               color: 'warning'  },
+  returning: { labelKey: 'navimow.states.returning', icon: 'mdi-arrow-u-left-top',    color: 'warning'  },
+  error:     { labelKey: 'navimow.states.error',     icon: 'mdi-alert-circle',        color: 'negative' },
+  unknown:   { labelKey: 'navimow.states.unknown',   icon: 'mdi-help-circle-outline', color: 'grey-6'   },
 };
 
 /**
@@ -140,18 +141,22 @@ const ENABLED_ACTIONS = {
 };
 
 const CONTROL_DEFS = [
-  { action: 'START',  label: 'Start mowing',     icon: 'mdi-play',                color: 'positive' },
-  { action: 'PAUSE',  label: 'Pause',            icon: 'mdi-pause',               color: 'warning'  },
-  { action: 'RESUME', label: 'Resume',           icon: 'mdi-skip-forward',        color: 'positive' },
-  { action: 'DOCK',   label: 'Return to dock',   icon: 'mdi-home-import-outline', color: 'info'     },
+  { action: 'START',  labelKey: 'navimow.actions.start',  icon: 'mdi-play',                color: 'positive' },
+  { action: 'PAUSE',  labelKey: 'navimow.actions.pause',  icon: 'mdi-pause',               color: 'warning'  },
+  { action: 'RESUME', labelKey: 'navimow.actions.resume', icon: 'mdi-skip-forward',        color: 'positive' },
+  { action: 'DOCK',   labelKey: 'navimow.actions.dock',   icon: 'mdi-home-import-outline', color: 'info'     },
 ];
 
 export default defineComponent({
   name: 'NavimowWidget',
   props: {
-    deviceId: { type: Number, required: true },
+    // Not `required`: the registry passes null when the key is unset, and Vue only
+    // substitutes defaults for undefined — a required declaration just logs a
+    // prop-type warning on every render.
+    deviceId: { type: Number, required: false, default: null },
   },
   setup(props) {
+    const { t } = useI18n();
     const $q = useQuasar();
     const router = useRouter();
     const { client } = useApolloClient();
@@ -164,6 +169,11 @@ export default defineComponent({
     const lastUpdate = ref(null);
 
     const loadDetails = () => {
+      // See MeteoStationCard: `device(id: $id)` takes a non-null Long, so querying
+      // with no configured device produces a raw GraphQL error toast.
+      if (!props.deviceId) {
+        return;
+      }
       loading.value = true;
       client.query({
         query: DEVICE_GET_BY_ID_WITH_PORT_VALUES,
@@ -193,7 +203,10 @@ export default defineComponent({
       const v = getPortValue('navimow.state');
       return v ? String(v).toLowerCase().trim() : 'unknown';
     });
-    const stateChip = computed(() => STATE_META[stateRaw.value] || STATE_META.unknown);
+    const stateChip = computed(() => {
+      const meta = STATE_META[stateRaw.value] || STATE_META.unknown;
+      return { ...meta, label: t(meta.labelKey) };
+    });
 
     const batteryValue = computed(() => {
       const v = getPortValue('navimow.battery');
@@ -220,8 +233,14 @@ export default defineComponent({
     });
 
     const controls = computed(() => {
+      // With no configured device there is nothing to command, and ENABLED_ACTIONS
+      // .unknown would otherwise light every button up — clicking one fires
+      // mowerCommand(deviceId: null).
+      if (!props.deviceId) {
+        return CONTROL_DEFS.map(c => ({ ...c, label: t(c.labelKey), enabled: false }));
+      }
       const allowed = ENABLED_ACTIONS[stateRaw.value] || ENABLED_ACTIONS.unknown;
-      return CONTROL_DEFS.map(c => ({ ...c, enabled: allowed.has(c.action) }));
+      return CONTROL_DEFS.map(c => ({ ...c, label: t(c.labelKey), enabled: allowed.has(c.action) }));
     });
 
     // -- Device-status chip (separate from mower state — this is the myHAB-side
@@ -265,7 +284,7 @@ export default defineComponent({
         if (r?.success) {
           $q.notify({
             type: 'positive',
-            message: `Command sent: ${action}`,
+            message: t('navimow.command_sent', { action }),
             icon: 'mdi-check-circle',
             timeout: 2000,
           });
@@ -274,7 +293,7 @@ export default defineComponent({
         } else {
           $q.notify({
             type: 'negative',
-            message: `${action} rejected: ${r?.error || 'unknown error'}`,
+            message: t('navimow.command_rejected', { action, reason: r?.error || t('navimow.unknown_error') }),
             icon: 'mdi-alert-circle',
             timeout: 6000,
           });
@@ -282,7 +301,7 @@ export default defineComponent({
       } catch (err) {
         $q.notify({
           type: 'negative',
-          message: `${action} failed: ${err.message}`,
+          message: t('navimow.command_failed', { action, reason: err.message }),
           icon: 'mdi-alert-circle',
           timeout: 6000,
         });
@@ -302,6 +321,15 @@ export default defineComponent({
     });
 
     onMounted(loadDetails);
+
+    // Load once the id resolves. The dashboard normally blocks this card until it is
+    // configured, but an admin can set the key from the placeholder's picker and the
+    // config store is reactive — without this the card would stay blank until reload.
+    watch(() => props.deviceId, (id) => {
+      if (id) {
+        loadDetails();
+      }
+    });
 
     return {
       device,

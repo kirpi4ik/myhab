@@ -68,10 +68,13 @@ public class HazelcastConfiguration {
         
         log.info("Configuring Hazelcast for environment: ${environment}, cluster: ${clusterName}")
         
-        // Enable multicast for cluster formation within the SAME environment
+        // Enable multicast for cluster formation within the SAME environment.
+        // The demo runs single-node on an isolated network with nothing to discover,
+        // so it skips multicast rather than broadcasting into the host's networks.
+        boolean multicast = environment != 'demo'
         config.getNetworkConfig().setPort(5701).setPortAutoIncrement(true)
         config.getNetworkConfig().getJoin().getMulticastConfig()
-            .setEnabled(true)
+            .setEnabled(multicast)
             .setMulticastGroup("224.2.2.3")  // Default multicast group
             .setMulticastPort(54327)
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(false)

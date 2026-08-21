@@ -9,6 +9,7 @@ import org.myhab.domain.SharedWidgetAudit
 import org.myhab.domain.SharedWidgetAuditResult
 import org.myhab.domain.SharedWidgetState
 import org.myhab.domain.SharedWidgetType
+import org.myhab.services.ClientIpService
 import spock.lang.Specification
 
 class SharedWidgetControllerSpec extends Specification
@@ -17,12 +18,23 @@ class SharedWidgetControllerSpec extends Specification
     /** Topics captured instead of hitting the real event bus. */
     List published = []
 
+    /**
+     * The product trusts no proxy by default, so the audited client ip would otherwise
+     * fall back to the socket peer. This case is about a configured proxy.
+     */
+    Closure doWithConfig() {
+        return { config ->
+            config.myhab = [security: [trustedProxies: ['192.168.1.200/32']]]
+        }
+    }
+
     void setupSpec() {
         mockDomains(SharedWidget, SharedWidgetAudit)
     }
 
     def setup() {
         published = []
+        controller.clientIpService = new ClientIpService()
         controller.metaClass.publish = { String topic, Object data ->
             published << [topic: topic, data: data]
             return null
@@ -165,14 +177,15 @@ class SharedWidgetControllerSpec extends Specification
             SharedWidgetAudit.first().action == 'verify-pin'
     }
 
-    void "a successful gate open audits one SUCCESS row carrying the forwarded client ip"() {
+    void "a successful gate open audits one SUCCESS row carrying the proxy-supplied client ip"() {
         given:
             SharedWidget sw = widget(widgetType: SharedWidgetType.GATE_ACCESS)
 
         when:
             controller.params.token = sw.token
             request.method = 'POST'
-            request.addHeader('X-Forwarded-For', '203.0.113.7, 10.0.0.1')
+            request.remoteAddr = '192.168.1.200'
+            request.addHeader('X-Real-IP', '203.0.113.7')
             request.json = [:]
             controller.executeAction()
 
@@ -187,6 +200,23 @@ class SharedWidgetControllerSpec extends Specification
                 action == 'open'
                 remoteAddress == '203.0.113.7'
             }
+    }
+
+    void "a caller-supplied X-Forwarded-For cannot forge the audited ip"() {
+        given:
+            SharedWidget sw = widget(widgetType: SharedWidgetType.GATE_ACCESS)
+
+        when: 'the headers do not come from a configured proxy'
+            controller.params.token = sw.token
+            request.method = 'POST'
+            request.remoteAddr = '192.168.1.44'
+            request.addHeader('X-Forwarded-For', '203.0.113.7, 10.0.0.1')
+            request.json = [:]
+            controller.executeAction()
+
+        then: 'the spoofed value is discarded rather than recorded'
+            jsonResponse().success
+            SharedWidgetAudit.first().remoteAddress == null
     }
 
     void "an unsupported action value is rejected and consumes nothing"() {

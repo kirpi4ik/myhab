@@ -29,7 +29,7 @@
 					</q-chip>
 					<!-- Reports Button -->
 					<q-btn round flat color="primary" icon="mdi-chart-box-outline" size="sm" @click="openReports">
-						<q-tooltip>View Reports & History</q-tooltip>
+						<q-tooltip>{{ $t('solar.view_reports') }}</q-tooltip>
 					</q-btn>
 				</div>
 			</div>
@@ -796,6 +796,10 @@ export default defineComponent({
 
 				// Collect port IDs for WebSocket filtering (both devices)
 				portIds.value = allPorts.map(port => port.id);
+			}).catch(error => {
+				// Promise.all with no rejection handler is an unhandled rejection on any
+				// query failure; the card keeps its '--' placeholders either way.
+				console.error('Failed to load solar plant data:', error);
 			});
 		};
 

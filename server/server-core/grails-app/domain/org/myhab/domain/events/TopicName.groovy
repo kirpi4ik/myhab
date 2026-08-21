@@ -39,18 +39,11 @@ enum TopicName {
      * Generic in-app notification raised by any device via `myhab/<source>/notify`.
      * p2 = source, p5 = raw JSON envelope. Deliberately off the port-value path:
      * PortValueService skips unchanged values, so repeated identical events would be lost.
-     *
-     * New entries go at the end — byOrder(Integer) is values()[order] and is called
-     * with ordinals supplied by external device URLs.
      */
     EVT_USER_NOTIFICATION;
 
     String id() {
         return name().toLowerCase();
-    }
-
-    static TopicName byOrder(Integer order) {
-        values()[order]
     }
 
 }

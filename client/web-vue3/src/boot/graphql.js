@@ -49,14 +49,25 @@ const onErrorLink = onError(({graphQLErrors, networkError, operation, forward}) 
     // GraphQL errors mean the backend IS responding, so reset counter
     backendUnavailableCount = 0;
     
-    graphQLErrors.map(({message, locations, path}) =>
+    graphQLErrors.forEach(({message, locations, path}) => {
+      // The full error is developer output — keep it, but in the console. A visitor
+      // seeing "Variable 'id' has coerced Null value for NonNull type 'Long!'" in a
+      // red toast learns nothing and cannot act on it.
+      console.error(`[GraphQL error] ${message}`, {locations, path, operation: operation?.operationName});
+
+      // An operation can opt out when it expects to fail and handles it itself:
+      //   client.query({ ..., context: { suppressErrorToast: true } })
+      if (operation?.getContext?.()?.suppressErrorToast) {
+        return;
+      }
+
       Notify.create({
         color: 'negative',
-        message: `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}`,
-        icon:'announcement',
-        timeout: 10000,
-      }),
-    );
+        message: `Something went wrong${operation?.operationName ? ` loading ${operation.operationName}` : ''}. Please try again.`,
+        icon: 'announcement',
+        timeout: 5000,
+      });
+    });
   }
   
   // When a network error occurs

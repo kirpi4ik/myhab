@@ -107,5 +107,18 @@ class WSocketsService implements EventPublisher, WebSocket {
         convertAndSend("/topic/events", new WSocketEvent(eventName: "evt_device_status"))
     }
 
+    /**
+     * The demo sandbox was restored to its seed. Open tabs are holding ids that no
+     * longer exist, so they must refetch rather than wait for the next navigation.
+     * Called directly by DemoService - there is no event bus topic for this.
+     */
+    void broadcastDemoReset() {
+        // Carries a payload because the client's useWebSocketListener composable
+        // JSON.parse()s jsonPayload unconditionally.
+        convertAndSend("/topic/events", new WSocketEvent(
+                eventName: "evt_demo_reset",
+                jsonPayload: JsonOutput.toJson([ts: System.currentTimeMillis()])))
+    }
+
 
 }

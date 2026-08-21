@@ -9,7 +9,6 @@ import org.myhab.domain.events.TopicName
 import org.myhab.domain.job.EventData
 import org.myhab.services.TelegramService
 import org.myhab.services.UserService
-import org.springframework.stereotype.Component
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
@@ -40,7 +39,11 @@ import org.telegram.telegrambots.meta.generics.TelegramClient
  * https://www.russellcottrell.com/greek/utilities/SurrogatePairCalculator.htm
  */
 @Slf4j
-@Component
+// Registered solely by the `telegramBotHandler` bean in resources.groovy, which is
+// guarded by `myhab.telegram.enabled`. Deliberately not a @Component: long polling
+// begins as soon as a SpringLongPollingBot bean exists, so a deployment without a bot
+// (the public demo) must be able to suppress it, and a component-scanned duplicate
+// would defeat that guard.
 class TelegramBotHandler implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer, EventPublisher {
     ConfigProvider configProvider
     UserService userService

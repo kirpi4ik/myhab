@@ -167,7 +167,7 @@ interface VoiceIntentProvider {
 
 All outbound HTTP for the LLM/TTS uses a **dedicated Unirest instance** (`VoiceHttp`)
 with a generous 60s read timeout, isolated from the global 2s timeout that
-`ConfigProvider` sets for fast Gitea config pings.
+`ConfigProvider` sets for fast config-repo pings.
 
 ### 1.6 Conversation state
 
@@ -215,7 +215,7 @@ The spoken reply can be rendered by a neural voice instead of the browser's robo
 ## 2. Configuration
 
 All configuration lives in the **git-backed `ConfigProvider`** (your trusted internal
-Gitea), with environment-variable fallbacks for secrets. The feature is **disabled by
+a self-hosted git server), with environment-variable fallbacks for secrets. The feature is **disabled by
 default**.
 
 ### 2.1 Config keys
@@ -391,8 +391,8 @@ scenarios/mowers; it stays well within one prompt at home scale.
 
 ## 6. Security
 
-- LLM/TTS credentials are read from the **git-backed config** (trusted internal Gitea)
-  or **environment variables**. Treating the Gitea repo as a secret store is a
+- LLM/TTS credentials are read from the **git-backed config** (a trusted internal git repo)
+  or **environment variables**. Treating the config repo as a secret store is a
   deliberate, accepted decision for this deployment.
 - Because secrets can live in git history, **rotation = issue a new key and revoke the
   old one** (don't rely on overwriting the config value).

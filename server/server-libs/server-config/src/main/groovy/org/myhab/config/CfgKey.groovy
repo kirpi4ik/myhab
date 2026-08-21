@@ -33,7 +33,7 @@ class CfgKey {
 
     // Voice-assistant feature: toggle, LLM provider/model and (optionally) the
     // API key used to map a spoken transcript to a peripheral + action. Stored
-    // in the git-backed ConfigProvider (a trusted, server-only Gitea instance).
+    // in the git-backed ConfigProvider (a trusted, server-only git repository).
     // The API key is read from VOICE_LLM_APIKEY first and falls back to the
     // provider's env var (ANTHROPIC_API_KEY / OPENAI_API_KEY) when absent.
     // Code-side defaults are applied in VoiceCommandService.

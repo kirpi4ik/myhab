@@ -1,0 +1,73 @@
+# Configuration seed for the public demo.
+#
+# This is imported into a standalone bare git repo (see demo/README.md) which the
+# demo's ConfigProvider clones over file://. It is deliberately a repo of its own
+# rather than a branch of any real deployment's config: the demo publishes an admin
+# account, and the `appConfig` GraphQL query returns every key here to any
+# admin-authenticated caller. Nothing secret may be added to this file.
+#
+# Keys that are intentionally absent, because the demo has no outbound network and
+# each degrades cleanly when missing:
+#   telegram.*      - suppressed by myhab.telegram.enabled=false
+#   opsgenie.*      - AlertService only reads them when an alert is raised
+#   push.vapid.*    - WebPushService logs one warning and stays inactive
+
+profile: demo
+
+mqtt:
+  # Resolves to the demo-mqtt container, or to the simulator's embedded broker
+  # on localhost when running via ./gradlew demoRun.
+  hostname: demo-mqtt
+  port: 1883
+  username: demo
+  password: demo
+  # The seed dataset is all ESP-model devices, which publish under the myhab prefix.
+  topics: myhab/#
+
+cors:
+  allowedOrigin:
+    # Plain HTTP for now: the demo has no certificate yet. demo.myhab.app is left out
+    # deliberately — .app is in the HSTS preload list, so browsers refuse it over
+    # HTTP; add it here once a certificate exists.
+    - http://demo.myhab.org
+    - http://localhost:10002
+
+heat:
+  thermostat:
+    enabled: false
+  temp:
+    allDay: 21
+
+admin:
+  devices:
+    autoimport: false
+  ports:
+    autoimport: false
+
+# ---------------------------------------------------------------------------
+# UI-facing config. Only keys under the prefixes allowlisted by `uiConfigList`
+# (specialDevices.*, specialZones.*, ui.*, grafana.*, surveillance.*) reach the
+# browser, and none of them are secret.
+# ---------------------------------------------------------------------------
+
+# The dashboard's quick-access tiles route to these zones. Ids come from
+# demo/seed/demo-entities.sql.
+specialZones:
+  int:
+    id: 1001      # Living Room
+  ext:
+    id: 1003      # Terrace
+  parter:
+    id: 1001      # Living Room
+  etaj:
+    id: 1007      # Upper Floor
+  # The sprinkler dashboard card links to these two.
+  lan:
+    id: 1005      # Lawn
+  garden:
+    id: 1006      # Garden
+
+ui:
+  meteo:
+    # Never publish a real address. The demo house is deliberately fictional.
+    locationName: Demo Town

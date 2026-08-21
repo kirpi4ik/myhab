@@ -133,6 +133,15 @@
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FULL_STACKTRACE"/>
     </logger>
+    <!--
+        Sandbox resets are the demo's most consequential operation (they truncate and
+        reload every table), so they must be visible even though org.myhab.services as
+        a whole is silenced above. More specific logger wins.
+    -->
+    <logger name="org.myhab.services.DemoService" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
     <logger name="org.telegram" level="OFF" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FULL_STACKTRACE"/>

@@ -383,12 +383,16 @@
 		"close": "Close",
 		"alert": "Alert",
 		"cancel": "Cancel",
-		"timestamps": "Timestamps"
+		"timestamps": "Timestamps",
+		"details": "Details",
+		"share_access": "Share Access",
+		"loading": "Loading…"
 	},
 	"door": {
 		"small_gate": "Small Gate",
 		"open": "Open",
-		"confirm_open": "Attention! Do you want to open the door?"
+		"confirm_open": "Attention! Do you want to open the door?",
+		"access_control": "Gate access control"
 	},
 	"meteo": {
 		"title": "Weather Station",
@@ -417,6 +421,8 @@
 		"status_warning": "Warning",
 		"status_error": "Error",
 		"solar_production": "Solar Production",
+		"house_consumption": "House Consumption",
+		"grid": "Grid",
 		"house_from_plant": "House from Solar",
 		"grid_import": "Grid Import",
 		"grid_export": "Grid Export",
@@ -435,7 +441,8 @@
 		"total_yield": "Total Yield",
 		"total_grid_export": "Total Grid Export",
 		"total_grid_import": "Total Grid Import",
-		"not_available": "N/A"
+		"not_available": "N/A",
+		"view_reports": "View Reports & History"
 	},
 	"timeout_selector": {
 		"title": "Auto-Off Timer",
@@ -481,6 +488,103 @@
 		"off": "OFF",
 		"details": "Details",
 		"share": "Share Access",
-		"device_offline": "Device is offline - controls disabled"
+		"device_offline": "Device is offline - controls disabled",
+		"system": "Irrigation System",
+		"lawn": "Lawn",
+		"garden": "Garden"
+	},
+	"dashboard": {
+		"widgets": {
+			"lighting": "Lighting Quick Access",
+			"climate": "Climate Quick Access",
+			"switches": "Switches Quick Access",
+			"temperature": "Temperature Quick Access",
+			"peripheral_lock": "Door Lock",
+			"sprinklers": "Sprinklers",
+			"water_pump": "Water Pump",
+			"meteo_station": "Weather Station",
+			"solar_plant": "Solar Plant",
+			"heat_pump": "Heat Pump",
+			"navimow": "Navimow Mower"
+		},
+		"cards": {
+			"lighting": "Lighting",
+			"climate": "Climate",
+			"switches": "Sockets",
+			"temperature": "Temperature",
+			"interior": "Interior",
+			"exterior": "Exterior",
+			"ground_floor": "Ground Floor",
+			"upper_floor": "Upper Floor"
+		},
+		"config": {
+			"zone_int": "Interior zone",
+			"zone_ext": "Exterior zone",
+			"zone_ground": "Ground-floor zone",
+			"zone_upper": "Upper-floor zone",
+			"zone_lawn": "Lawn zone",
+			"zone_garden": "Garden zone",
+			"peripheral_door_lock": "Door lock peripheral",
+			"peripheral_water_pump": "Water pump peripheral",
+			"device_meteo": "Weather station device",
+			"device_solar_inverter": "Solar inverter device",
+			"device_solar_meter": "Solar meter device",
+			"device_heat_pump": "Heat pump device",
+			"device_navimow": "Robotic mower device"
+		},
+		"not_configured": {
+			"needs": "Not configured — this widget needs a setting before it can show anything. | Not configured — this widget needs {count} settings before it can show anything.",
+			"missing": "Missing:",
+			"admin_hint": "An administrator can set these in Settings → App configuration."
+		},
+		"picker": {
+			"sets_key": "Sets {key}",
+			"no_options": "No matching entries",
+			"saved": "Saved {key}",
+			"save_failed": "Could not save {key}"
+		},
+		"settings": {
+			"title": "Dashboard widgets",
+			"caption": "Choose which widgets are shown on your dashboard. Changes are saved automatically and follow your account across browsers and devices.",
+			"login_required": "You must be logged in to manage widget visibility.",
+			"section_quick_access": "Quick Access",
+			"section_monitoring": "Device Monitoring",
+			"needs": "Needs {items} — set in",
+			"app_config_link": "App configuration"
+		}
+	},
+	"water_pump": {
+		"title": "Water Pump",
+		"on": "ON",
+		"off": "OFF"
+	},
+	"temp_chart": {
+		"not_configured": "Temperature chart not configured",
+		"hint": "Set {keys} via /admin/appconfig"
+	},
+	"navimow": {
+		"states": {
+			"docked": "Docked",
+			"charging": "Charging",
+			"idle": "Idle",
+			"mowing": "Mowing",
+			"paused": "Paused",
+			"returning": "Returning",
+			"error": "Error",
+			"unknown": "Unknown"
+		},
+		"actions": {
+			"start": "Start mowing",
+			"pause": "Pause",
+			"resume": "Resume",
+			"dock": "Return to dock"
+		},
+		"offline": "Mower is offline — token may have expired.",
+		"reconnect": "Reconnect",
+		"command_sent": "Command sent: {action}",
+		"command_rejected": "{action} rejected: {reason}",
+		"command_failed": "{action} failed: {reason}",
+		"unknown_error": "unknown error",
+		"last_update": "Last update"
 	}
 }

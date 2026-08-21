@@ -8,7 +8,7 @@ import kong.unirest.UnirestInstance
  * singleton.
  *
  * <p>{@code ConfigProvider} pins the global Unirest config to a 2-second socket
- * timeout (right for fast Gitea config pings, far too short for LLM inference,
+ * timeout (right for fast config-repo pings, far too short for LLM inference,
  * which routinely takes several seconds). Spawning a separate instance gives the
  * voice providers their own connection pool and generous timeouts without
  * touching — or being reset by — that global config.</p>

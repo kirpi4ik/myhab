@@ -1,0 +1,60 @@
+plugins {
+    id 'groovy'
+    id 'application'
+    id 'idea'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven { url "https://repo.grails.org/grails/core" }
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.apache.groovy:groovy-all:${property('groovy.version')}"
+    // Same Paho client the server uses through Spring Integration MQTT.
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    // Embedded broker for `./gradlew demoSim`, so a local run needs no mosquitto.
+    implementation 'io.moquette:moquette-broker:0.17'
+    implementation 'ch.qos.logback:logback-classic:1.5.6'
+}
+
+application {
+    mainClass = 'org.myhab.demo.DeviceSimulator'
+}
+
+// The application plugin creates `run` whether or not anyone wires it up, and it is
+// what an IDE offers and what `./gradlew run` reaches. Without arguments the simulator
+// looks for ./devices.json in this project directory, which does not exist - so give it
+// the same defaults as the root `demoSim` task and let both entry points work.
+tasks.named('run') {
+    args '--embedded-broker',
+         '--broker', 'tcp://localhost:1883',
+         '--devices', rootProject.file('demo/seed/devices.json').absolutePath
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.myhab.demo.DeviceSimulator'
+    }
+}
+
+// Single self-contained jar, so the Docker image is `java -jar` with no classpath setup.
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Self-contained simulator jar for the myhab-demo image'
+    archiveClassifier = 'all'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest { attributes 'Main-Class': 'org.myhab.demo.DeviceSimulator' }
+    from sourceSets.main.output
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
+}

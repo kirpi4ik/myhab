@@ -138,7 +138,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, ref, computed } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 import { useApolloClient } from '@vue/apollo-composable';
 import { useWebSocketListener } from '@/composables';
 import { DEVICE_GET_BY_ID_WITH_PORT_VALUES } from '@/graphql/queries';
@@ -149,10 +149,13 @@ import _ from 'lodash';
 export default defineComponent({
   name: 'MeteoStationCard',
   props: {
+    // Not `required`, and no numeric default: the registry passes null when the
+    // config key is unset, and Vue only substitutes defaults for undefined — so a
+    // default here never applied and the required flag only logged a warning.
     deviceId: {
       type: Number,
-      required: true,
-      default: 2000
+      required: false,
+      default: null
     },
     locationName: {
       type: String,
@@ -170,6 +173,14 @@ export default defineComponent({
      * Load device data and organize ports by internalRef
      */
     const loadDetails = () => {
+      // Nothing to query without a device. DashboardActions normally renders the
+      // "not configured" placeholder instead of mounting this card, but it is also
+      // reachable directly, and `device(id: $id)` takes a non-null Long — passing
+      // null produces a raw GraphQL error toast rather than an empty card.
+      if (!props.deviceId) {
+        return;
+      }
+
       client.query({
         query: DEVICE_GET_BY_ID_WITH_PORT_VALUES,
         variables: { id: props.deviceId },
@@ -507,6 +518,15 @@ export default defineComponent({
     // Load data on mount
     onMounted(() => {
       loadDetails();
+    });
+
+    // Load once the id resolves. The dashboard normally blocks this card until it is
+    // configured, but an admin can set the key from the placeholder's picker and the
+    // config store is reactive — without this the card would stay blank until reload.
+    watch(() => props.deviceId, (id) => {
+      if (id) {
+        loadDetails();
+      }
     });
 
     // Listen for port value updates via WebSocket

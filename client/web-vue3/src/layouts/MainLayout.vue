@@ -3,6 +3,8 @@
 		<header-layout />
 		<side-bar-layout />
 		<q-page-container class="bg-grey-1">
+			<!-- Renders nothing unless the backend reports a demo deployment. -->
+			<demo-banner />
 			<router-view />
 		</q-page-container>
 	</q-layout>
@@ -11,6 +13,7 @@
 <script>
 import {defineComponent} from 'vue';
 
+import DemoBanner from 'components/DemoBanner.vue';
 import HeaderLayout from 'layouts/components/HeaderLayout.vue';
 import SideBarLayout from 'layouts/components/SideBarLayout.vue';
 
@@ -23,6 +26,7 @@ export default defineComponent({
 	components: {
 		SideBarLayout,
 		HeaderLayout,
+		DemoBanner,
 	},
 	setup() {},
 });
