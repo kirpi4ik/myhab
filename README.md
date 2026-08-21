@@ -1,4 +1,7 @@
 # myHAB - My Home Automation Backend
+[![Latest version](https://img.shields.io/docker/v/kirpi4ik/myhab?sort=semver&label=latest%20release)](https://hub.docker.com/r/kirpi4ik/myhab/tags)
+[![Image size](https://img.shields.io/docker/image-size/kirpi4ik/myhab/latest?label=image)](https://hub.docker.com/r/kirpi4ik/myhab/tags)
+[![Licence](https://img.shields.io/badge/licence-LGPLv3-blue)](https://www.gnu.org/licenses/lgpl-3.0.html)
 
 A comprehensive home automation platform for monitoring and controlling your smart home ecosystem. myHAB provides a unified interface for managing heating systems, solar energy production, weather data, lighting, security, and more.
 
