@@ -1,5 +1,9 @@
 # myHAB
 
+[![Latest version](https://img.shields.io/docker/v/kirpi4ik/myhab?sort=semver&label=latest%20release)](https://hub.docker.com/r/kirpi4ik/myhab/tags)
+[![Image size](https://img.shields.io/docker/image-size/kirpi4ik/myhab/latest?label=image)](https://hub.docker.com/r/kirpi4ik/myhab/tags)
+[![Licence](https://img.shields.io/badge/licence-LGPLv3-blue)](https://www.gnu.org/licenses/lgpl-3.0.html)
+
 **Self-hosted home automation backend, under the LGPLv3.** MQTT device control, solar and
 heat-pump monitoring, floor-plan dashboards, scenario automation, an LLM voice assistant
 and tokenised guest links — running on your own hardware, with no vendor cloud in the
@@ -31,8 +35,8 @@ Data is shared between visitors and resets when idle.
 | Tag | What it is |
 | --- | --- |
 | `latest` | The most recent successful CI build. Convenient, but it can come from a pre-release branch — pin a version for anything you care about. |
-| `2.8.10`, `2.8.9`, … | Release builds from `master`. **Use these in production.** |
-| `2.8.10-a1b2c3` | Version plus short commit SHA — pre-release builds from other branches. |
+| `2.8.12`, `2.8.11`, … | Release builds from `master`. **Use these in production.** |
+| `2.8.12-a1b2c3` | Version plus short commit SHA — pre-release builds from other branches. |
 
 **Platform:** `linux/amd64` only. There is no arm64 image, so a Raspberry Pi or an Apple
 Silicon host needs to build its own (`./gradlew buildImage` on the target, or `docker
@@ -115,7 +119,7 @@ services:
     restart: unless-stopped
 
   myhab:
-    image: kirpi4ik/myhab:2.8.10
+    image: kirpi4ik/myhab:2.8.12   # pin a version; the badge above shows the newest
     depends_on: [postgres, mosquitto]
     ports:
       - "8181:8181"
