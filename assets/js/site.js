@@ -26,6 +26,41 @@
 		});
 	}
 
+	/* ---- version slots ----
+	   Every [data-version] element ships with the version that was current when
+	   the page was published; this replaces it with the newest published GitHub
+	   release. On a 404, a rate limit or no network, the baked-in value stands. */
+	var versionSlots = document.querySelectorAll('[data-version]');
+	if (versionSlots.length && window.fetch) {
+		var VERSION_KEY = 'myhab-version';
+		var VERSION_TTL = 6 * 60 * 60 * 1000;
+
+		var showVersion = function (v) {
+			Array.prototype.forEach.call(versionSlots, function (el) { el.textContent = v; });
+		};
+
+		var cached = null;
+		try { cached = JSON.parse(localStorage.getItem(VERSION_KEY)); } catch (e) { /* private mode */ }
+
+		if (cached && cached.v && (Date.now() - cached.t) < VERSION_TTL) {
+			showVersion(cached.v);
+		} else {
+			fetch('https://api.github.com/repos/kirpi4ik/myhab/releases/latest', {
+				headers: { Accept: 'application/vnd.github+json' }
+			})
+				.then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+				.then(function (data) {
+					var v = String(data.tag_name || '').replace(/^v/, '');
+					if (!/^\d+\.\d+(\.\d+)?$/.test(v)) return;
+					showVersion(v);
+					try {
+						localStorage.setItem(VERSION_KEY, JSON.stringify({ v: v, t: Date.now() }));
+					} catch (e) { /* private mode */ }
+				})
+				.catch(function () { /* keep the published value */ });
+		}
+	}
+
 	/* ---- mobile nav ---- */
 	var toggle = document.querySelector('.nav-toggle');
 	var nav = document.querySelector('.main-nav');
