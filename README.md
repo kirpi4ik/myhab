@@ -1,17 +1,17 @@
 # myHAB - My Home Automation Backend
 [![Latest version](https://img.shields.io/docker/v/kirpi4ik/myhab?sort=semver&label=latest%20release)](https://hub.docker.com/r/kirpi4ik/myhab/tags)
-[![Image size](https://img.shields.io/docker/image-size/kirpi4ik/myhab/latest?label=image)](https://hub.docker.com/r/kirpi4ik/myhab/tags)
+[![Image size](https://img.shields.io/docker/image-size/kirpi4ik/myhab/latest?label=docker%20image)](https://hub.docker.com/r/kirpi4ik/myhab/tags)
 [![Licence](https://img.shields.io/badge/licence-LGPLv3-blue)](https://www.gnu.org/licenses/lgpl-3.0.html)
 
 A comprehensive home automation platform for monitoring and controlling your smart home ecosystem. myHAB provides a unified interface for managing heating systems, solar energy production, weather data, lighting, security, and more.
 
-**Website:** [https://myhab.org/](https://myhab.org/) · **Live demo:** [http://demo.myhab.org/](http://demo.myhab.org/) · **Licence:** [LGPLv3](https://www.gnu.org/licenses/lgpl-3.0.html)
+[![Product website](https://img.shields.io/badge/Product-myhab.org-orange?style=for-the-badge)](https://myhab.org/)   [![Live demo](https://img.shields.io/badge/live-demo.myhab.org-brightgreen?style=for-the-badge)](http://demo.myhab.org/)
 
 ---
 
 ## Try it without installing anything
 
-A complete, fully interactive myHAB installation runs at **[demo.myhab.org](http://demo.myhab.org/)** —
+A complete, fully interactive myHAB installation runs at [![Live demo](https://img.shields.io/badge/demo.myhab.org-brightgreen)](http://demo.myhab.org/) —
 a fictional seven-zone house with twenty-one peripherals and simulated ESP32 controllers answering on a
 real MQTT broker. Switch the lights, open the floor plans, run a scenario, read a scenario, break
 something.
@@ -576,6 +576,7 @@ Key configuration files:
 
 Detailed documentation is available in the `doc/` folder covering:
 - Integration guides (Huawei, NIBE, Meteo, Telegram)
+- Web Push notifications
 - MQTT service reference
 - Quartz job configuration
 - Migration guides

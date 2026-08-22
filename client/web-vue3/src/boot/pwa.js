@@ -3,6 +3,7 @@
  */
 
 import { Notify } from 'quasar';
+import { syncPushSubscription } from '@/composables/usePushNotifications';
 
 export default ({ app }) => {
   // Check if the app is running in PWA mode
@@ -14,6 +15,11 @@ export default ({ app }) => {
         setInterval(() => {
           registration.update();
         }, 1000 * 60 * 60);
+
+        // Re-register the push subscription the worker holds. It survives across
+        // sessions in the browser but the server's row may not — it is pruned on
+        // HTTP 410, and the worker mints a new endpoint on pushsubscriptionchange.
+        syncPushSubscription();
 
         // Listen for new service worker installation
         registration.addEventListener('updatefound', () => {

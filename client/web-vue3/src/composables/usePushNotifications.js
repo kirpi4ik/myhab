@@ -4,13 +4,15 @@
  * Bridges the browser PushManager and the backend push GraphQL:
  *   enable()  → request permission → subscribe → pushSubscribe mutation
  *   disable() → unsubscribe locally → pushUnsubscribe mutation
+ *   syncPushSubscription() → re-register the existing subscription (called on app start)
  *
  * Notifications themselves are rendered by the service worker (public/push-sw.js),
  * so they arrive even when the app/tab is closed. Must be called from a user
  * gesture (browser requirement for Notification.requestPermission).
  */
 import { ref } from 'vue';
-import { useApolloClient } from '@vue/apollo-composable';
+import { apolloClient } from '@/boot/graphql';
+import { authzService } from '@/_services';
 import { PUSH_PUBLIC_KEY, PUSH_SUBSCRIBE, PUSH_UNSUBSCRIBE } from '@/graphql/queries';
 
 const isSupported =
@@ -31,15 +33,61 @@ function urlBase64ToUint8Array(base64String) {
   return output;
 }
 
-function keyToBase64(subscription, name) {
+/**
+ * Subscription keys must travel in the base64url alphabet (RFC 8291): the server decodes
+ * them with Base64.getUrlDecoder(), which rejects the '+' and '/' that btoa() emits.
+ */
+function keyToBase64Url(subscription, name) {
   const key = subscription.getKey(name);
   if (!key) return '';
-  return window.btoa(String.fromCharCode.apply(null, new Uint8Array(key)));
+  return window
+    .btoa(String.fromCharCode.apply(null, new Uint8Array(key)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+/** Register (upsert by endpoint) one browser subscription with the backend. */
+function sendSubscription(subscription) {
+  return apolloClient.mutate({
+    mutation: PUSH_SUBSCRIBE,
+    variables: {
+      endpoint: subscription.endpoint,
+      p256dh: keyToBase64Url(subscription, 'p256dh'),
+      auth: keyToBase64Url(subscription, 'auth'),
+      userAgent: navigator.userAgent
+    }
+  });
+}
+
+/**
+ * Re-register the browser's current subscription with the backend, if there is one.
+ *
+ * The browser holding a subscription is no proof the server still has the matching row:
+ * it is pruned when a push endpoint reports HTTP 410, and the service worker replaces it
+ * with a fresh endpoint after a `pushsubscriptionchange`. Without this the toggle keeps
+ * reading "on" while the server has nothing to deliver to. The mutation is an upsert by
+ * endpoint, so repeating it on every app start is free.
+ *
+ * Standalone (not part of the composable) so app boot can call it outside a component.
+ */
+export async function syncPushSubscription() {
+  if (!isSupported) return false;
+  if (Notification.permission !== 'granted') return false;
+  if (!authzService.currentUserValue?.access_token) return false;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return false;
+    await sendSubscription(sub);
+    return true;
+  } catch (e) {
+    console.warn('Failed to re-register push subscription with the server', e);
+    return false;
+  }
 }
 
 export function usePushNotifications() {
-  const { client } = useApolloClient();
-
   const supported = ref(isSupported);
   const permission = ref(isSupported ? Notification.permission : 'denied');
   const subscribed = ref(false);
@@ -60,6 +108,8 @@ export function usePushNotifications() {
     } catch {
       subscribed.value = false;
     }
+    // A local subscription may no longer be known to the server — re-register it.
+    await syncPushSubscription();
   };
 
   const enable = async () => {
@@ -70,7 +120,7 @@ export function usePushNotifications() {
       permission.value = result;
       if (result !== 'granted') return false;
 
-      const { data } = await client.query({
+      const { data } = await apolloClient.query({
         query: PUSH_PUBLIC_KEY,
         fetchPolicy: 'network-only'
       });
@@ -89,15 +139,7 @@ export function usePushNotifications() {
         });
       }
 
-      await client.mutate({
-        mutation: PUSH_SUBSCRIBE,
-        variables: {
-          endpoint: sub.endpoint,
-          p256dh: keyToBase64(sub, 'p256dh'),
-          auth: keyToBase64(sub, 'auth'),
-          userAgent: navigator.userAgent
-        }
-      });
+      await sendSubscription(sub);
 
       subscribed.value = true;
       return true;
@@ -118,7 +160,7 @@ export function usePushNotifications() {
       if (sub) {
         const endpoint = sub.endpoint;
         await sub.unsubscribe();
-        await client.mutate({
+        await apolloClient.mutate({
           mutation: PUSH_UNSUBSCRIBE,
           variables: { endpoint }
         });
