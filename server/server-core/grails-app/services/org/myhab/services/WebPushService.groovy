@@ -2,6 +2,7 @@ package org.myhab.services
 
 import groovy.json.JsonOutput
 import groovy.util.logging.Slf4j
+import nl.martijndwars.webpush.Encoding
 import nl.martijndwars.webpush.Notification
 import nl.martijndwars.webpush.PushService
 import org.apache.http.HttpResponse
@@ -75,7 +76,11 @@ class WebPushService {
                 byte[] body = payload.getBytes(StandardCharsets.UTF_8)
                 subs.each { PushSubscription sub ->
                     try {
-                        HttpResponse resp = svc.send(new Notification(sub.endpoint, sub.p256dhKey, sub.authKey, body))
+                        Notification notification = new Notification(
+                                sub.endpoint, toBase64Url(sub.p256dhKey), toBase64Url(sub.authKey), body)
+                        // AES128GCM (RFC 8291), not the library's AESGCM default: that is the
+                        // superseded draft-04 scheme and Safari/iOS refuses to decrypt it.
+                        HttpResponse resp = svc.send(notification, Encoding.AES128GCM)
                         int status = resp.statusLine.statusCode
                         if (status == 404 || status == 410) {
                             log.info("Pruning expired push subscription id=${sub.id} (HTTP ${status})")
@@ -91,6 +96,16 @@ class WebPushService {
         } catch (Exception ex) {
             log.error("Web push delivery failed for user=${userId}: ${ex.message}", ex)
         }
+    }
+
+    /**
+     * Translate a subscription key into the base64url alphabet the push library requires:
+     * it decodes p256dh/auth with {@code Base64.getUrlDecoder()}, which throws on the '+'
+     * and '/' that a browser's {@code btoa()} produces. Applied on read rather than by
+     * migrating the table, so rows written by older clients keep working.
+     */
+    static String toBase64Url(String key) {
+        return key == null ? null : key.replace('+', '-').replace('/', '_')
     }
 
     private synchronized PushService pushService() {

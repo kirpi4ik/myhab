@@ -32,6 +32,28 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
+/*
+ * The browser dropped this endpoint (storage pressure, long idle, key rotation) and
+ * expects a fresh subscription. Without re-subscribing here the device goes silent
+ * for good. The new endpoint reaches the backend on the app's next start, which calls
+ * syncPushSubscription() — there is no anonymous API a worker could post it to.
+ */
+self.addEventListener('pushsubscriptionchange', (event) => {
+  if (event.newSubscription) return; // the browser already made one for us
+
+  const old = event.oldSubscription;
+  const key = old && old.options ? old.options.applicationServerKey : null;
+  if (!key) return; // nothing to re-subscribe with; the app subscribes afresh instead
+
+  event.waitUntil(
+    self.registration.pushManager
+      .subscribe({ userVisibleOnly: true, applicationServerKey: key })
+      .catch(() => {
+        /* the app re-subscribes on its next start */
+      })
+  );
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const targetUrl = (event.notification.data && event.notification.data.url) || '/messages';
