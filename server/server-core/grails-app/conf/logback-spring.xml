@@ -142,6 +142,16 @@
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FULL_STACKTRACE"/>
     </logger>
+    <!--
+        Web push is best-effort by design: a missing key pair, a rejected subscription and
+        a pruned endpoint are all caught and reported below ERROR. At the package level
+        above, a device that silently receives nothing looks exactly like one that works,
+        which is how a delivery bug survived unnoticed. Same reasoning as DemoService.
+    -->
+    <logger name="org.myhab.services.WebPushService" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
     <logger name="org.telegram" level="OFF" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FULL_STACKTRACE"/>
