@@ -6,7 +6,9 @@
     "port.code      == device_ports.internal_ref",
     "port.initial   == device_ports.value",
     "esp_shed is offline on purpose - the simulator never answers for it, so the",
-    "demo can show a disabled control without blocking anything useful."
+    "demo can show a disabled control without blocking anything useful.",
+    "A device may set its own 'prefix' (tuya_valve_garden uses 'myhab/tuya') to",
+    "answer on that topic root instead of the spec-level prefix."
   ],
   "prefix": "myhab",
   "sensorIntervalSeconds": 30,
@@ -59,6 +61,14 @@
       "status": "offline",
       "ports": [
         {"type": "switch", "code": "sh_light", "kind": "switch", "initial": "OFF"}
+      ]
+    },
+    {
+      "code": "tuya_valve_garden",
+      "prefix": "myhab/tuya",
+      "status": "online",
+      "ports": [
+        {"type": "switch", "code": "valve", "kind": "switch", "initial": "OFF"}
       ]
     }
   ]

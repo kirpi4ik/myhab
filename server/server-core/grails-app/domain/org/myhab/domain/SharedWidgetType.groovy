@@ -12,7 +12,8 @@ enum SharedWidgetType {
     GATE_ACCESS('evt_intercom_door_lock'),
     LIGHT('evt_light'),
     WATER_PUMP('evt_light'),
-    SPRINKLER('evt_sprinkler')
+    SPRINKLER('evt_sprinkler'),
+    VALVE('evt_valve')
 
     final String topic
 

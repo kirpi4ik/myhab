@@ -139,6 +139,9 @@ async function handlePeripheralAction(peripheral, onDoorLock = null) {
 		case 'HEAT':
 			await toggleWithOptimisticUpdate(peripheral, 'evt_heat');
 			break;
+		case 'VALVE':
+			await toggleWithOptimisticUpdate(peripheral, 'evt_valve');
+			break;
 		default:
 			// Unhandled peripheral category - no action needed
 			break;

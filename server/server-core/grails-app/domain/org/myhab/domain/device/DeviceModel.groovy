@@ -18,5 +18,12 @@ enum DeviceModel {
      * series — the cloud REST API is uniform across SKUs, so we only need
      * separate enum members if a future feature actually diverges per model.
      */
-    NAVIMOW_SEGWAY
+    NAVIMOW_SEGWAY,
+    /**
+     * Generic Tuya-local device reached through the tinytuya MQTT bridge
+     * (bridges/tuya). One value covers any Tuya SKU — per-device DP mapping
+     * lives in the bridge config, so separate enum members are only needed
+     * if server-side behavior actually diverges per model.
+     */
+    TUYA
 }

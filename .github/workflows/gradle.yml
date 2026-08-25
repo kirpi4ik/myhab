@@ -124,6 +124,30 @@ jobs:
           tags: kirpi4ik/myhab-demo:${{steps.get_version.outputs.dockertag}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+      # The Tuya-local bridge (bridges/tuya) is a standalone Python image; its
+      # Dockerfile runs pytest in a build stage, so pushing it implies its
+      # tests passed. Operators pin the tag next to the main image.
+      - name: Build tuya bridge image and push
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: bridges/tuya
+          file: bridges/tuya/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: kirpi4ik/myhab-tuya-bridge:${{steps.get_version.outputs.dockertag}}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Build tuya bridge image and push latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: bridges/tuya
+          file: bridges/tuya/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: kirpi4ik/myhab-tuya-bridge:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Create GitHub tag & release
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:

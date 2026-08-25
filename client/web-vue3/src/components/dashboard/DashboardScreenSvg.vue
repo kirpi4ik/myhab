@@ -303,6 +303,22 @@ defineExpose({ toSvgCoords });
   stroke-opacity: 0.5;
 }
 
+.screen-svg .valve-open polygon,
+.screen-svg .valve-open .marker-disc {
+  fill: #38bdf8;
+  fill-opacity: 0.7;
+  stroke: #0284c7;
+  stroke-opacity: 0.6;
+}
+
+.screen-svg .valve-closed polygon,
+.screen-svg .valve-closed .marker-disc {
+  fill: #94a3b8;
+  fill-opacity: 0.4;
+  stroke: #475569;
+  stroke-width: 0.5;
+}
+
 .screen-svg .lock .marker-disc {
   cursor: pointer;
   fill: rgb(98, 117, 129);

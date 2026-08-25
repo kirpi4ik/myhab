@@ -169,6 +169,7 @@ const TYPE_ICONS = {
 	WATER_PUMP: { on: 'mdi-water-pump', off: 'mdi-water-pump-off', fallbackName: 'Water Pump' },
 	SPRINKLER: { on: 'mdi-sprinkler-variant', off: 'mdi-sprinkler', fallbackName: 'Sprinkler' },
 	LIGHT: { on: 'mdi-lightbulb-on', off: 'mdi-lightbulb-outline', fallbackName: 'Light' },
+	VALVE: { on: 'mdi-valve-open', off: 'mdi-valve-closed', fallbackName: 'Valve' },
 };
 
 const STATE_MESSAGES = {

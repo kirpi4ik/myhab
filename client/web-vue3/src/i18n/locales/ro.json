@@ -493,6 +493,13 @@
     "lawn": "Gazon",
     "garden": "Grădină"
   },
+  "valve_card": {
+    "open": "DESCHIS",
+    "closed": "ÎNCHIS",
+    "details": "Detalii",
+    "share": "Partajează acces",
+    "device_offline": "Dispozitivul este offline - comenzi dezactivate"
+  },
   "dashboard": {
     "widgets": {
       "lighting": "Acces rapid iluminat",

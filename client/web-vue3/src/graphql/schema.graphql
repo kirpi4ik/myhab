@@ -526,6 +526,8 @@ enum DeviceModel {
   HUAWEI_SUN2000_12KTL_M2
   HUAWEI_DONGLE
   OPEN_METEO_API
+  NAVIMOW_SEGWAY
+  TUYA
 }
 
 type DevicePeripheral {

@@ -52,7 +52,8 @@ class MqttTopicService {
             [name: 'COMMON', instance: new MQTTTopic.COMMON()],
             [name: 'ONVIF', instance: new MQTTTopic.ONVIF()],
             [name: 'METEO_STATION', instance: new MQTTTopic.METEO_STATION()],
-            [name: 'NAVIMOW', instance: new MQTTTopic.NAVIMOW()]
+            [name: 'NAVIMOW', instance: new MQTTTopic.NAVIMOW()],
+            [name: 'TUYA', instance: new MQTTTopic.TUYA()]
         ]
         
         // READ topic types (incoming messages from devices)
@@ -89,7 +90,8 @@ class MqttTopicService {
             [model: DeviceModel.HUAWEI_SUN2000_12KTL_M2, topic: new MQTTTopic.INVERTER()],
             [model: DeviceModel.ELECTRIC_METER_DTS, topic: new MQTTTopic.ELECTRIC_METER_DTS()],
             [model: DeviceModel.OPEN_METEO_API, topic: new MQTTTopic.METEO_STATION()],
-            [model: DeviceModel.NAVIMOW_SEGWAY, topic: new MQTTTopic.NAVIMOW()]
+            [model: DeviceModel.NAVIMOW_SEGWAY, topic: new MQTTTopic.NAVIMOW()],
+            [model: DeviceModel.TUYA, topic: new MQTTTopic.TUYA()]
         ]
         
         deviceMappings.each { mapping ->
@@ -157,6 +159,18 @@ class MqttTopicService {
                 )
             }
             
+            // Checked before ELECTRIC_METER/INVERTER: their two-segment
+            // myhab/x/y/status regexes would otherwise swallow myhab/tuya/<code>/status.
+            if (topicName ==~ TOPIC_PATTERNS.TUYA_STATUS) {
+                matcher = topicName =~ TOPIC_PATTERNS.TUYA_STATUS
+                return new MQTTMessage(
+                    deviceType: DeviceModel.TUYA,
+                    deviceCode: matcher[0][1],
+                    portStrValue: message.payload,
+                    eventType: TopicName.EVT_DEVICE_STATUS.id()
+                )
+            }
+
             if (topicName ==~ TOPIC_PATTERNS.ELECTRIC_METER_STATUS) {
                 matcher = topicName =~ TOPIC_PATTERNS.ELECTRIC_METER_STATUS
                 return new MQTTMessage(
@@ -325,6 +339,20 @@ class MqttTopicService {
                     deviceType: DeviceModel.NAVIMOW_SEGWAY,
                     deviceCode: matcher[0][1],
                     portCode: matcher[0][2],
+                    portStrValue: message.payload,
+                    eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
+                )
+            }
+
+            if (topicName ==~ TOPIC_PATTERNS.TUYA_READ) {
+                matcher = topicName =~ TOPIC_PATTERNS.TUYA_READ
+                // The bridge already normalizes boolean DPs to ON/OFF, so the
+                // payload passes through raw, like ESP.
+                return new MQTTMessage(
+                    deviceType: DeviceModel.TUYA,
+                    deviceCode: matcher[0][1],
+                    portType: matcher[0][2],
+                    portCode: matcher[0][3],
                     portStrValue: message.payload,
                     eventType: TopicName.EVT_MQTT_PORT_VALUE_CHANGED.id()
                 )
@@ -548,8 +576,9 @@ class MqttTopicService {
                 return buildMegaPayload(port, actions)
                 
             case DeviceModel.ESP32:
+            case DeviceModel.TUYA:
                 return actions ? actions.first() : actions
-                
+
             case DeviceModel.OPEN_METEO_API:
                 // Virtual device - values published directly, no command payload needed
                 return actions

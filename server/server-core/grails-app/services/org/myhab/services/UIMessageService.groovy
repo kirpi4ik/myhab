@@ -55,6 +55,12 @@ class UIMessageService implements EventPublisher {
         handleSwitchEvent(event)
     }
 
+    @Transactional
+    @Subscriber('evt_valve')
+    def receiveValveEvent(event) {
+        handleSwitchEvent(event)
+    }
+
     /**
      * Common handler for switch/light/heat/sprinkler events
      * Handles PERIPHERAL, PORT, and ZONE entity types

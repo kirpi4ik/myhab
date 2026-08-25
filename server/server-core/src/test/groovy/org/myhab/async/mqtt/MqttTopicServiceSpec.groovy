@@ -99,4 +99,53 @@ class MqttTopicServiceSpec extends Specification implements ServiceUnitTest<Mqtt
         where:
             payload << ['ON', '1', '{}', '{"other":"x"}']
     }
+
+    void "a Tuya port state topic resolves to the port-value event with the raw payload"() {
+        when:
+            def result = service.message('myhab/tuya/water_main_valve/switch/valve/state', msg('ON'))
+
+        then:
+            result.eventType == 'evt_mqtt_port_value_changed'
+            result.deviceType == DeviceModel.TUYA
+            result.deviceCode == 'water_main_valve'
+            result.portType == 'switch'
+            result.portCode == 'valve'
+            result.portStrValue == 'ON'
+    }
+
+    void "a Tuya command topic echo is ignored"() {
+        expect:
+            service.message('myhab/tuya/water_main_valve/switch/valve/cmd', msg('ON')) == null
+    }
+
+    void "a Tuya status topic resolves to the device-status event, not the electric-meter one"() {
+        // myhab/tuya/<code>/status also matches the two-segment ELECTRIC_METER/INVERTER
+        // STATUS regexes — this pins the TUYA branch being checked first.
+        when:
+            def result = service.message('myhab/tuya/water_main_valve/status', msg('offline'))
+
+        then:
+            result.eventType == 'evt_device_status'
+            result.deviceType == DeviceModel.TUYA
+            result.deviceCode == 'water_main_valve'
+            result.portStrValue == 'offline'
+    }
+
+    void "the tuya sub-namespace does not leak into other dialects and vice versa"() {
+        expect: 'an ESP state topic still resolves to ESP32, not TUYA'
+            service.message('myhab/gate_controller/switch/d0/state', msg('ON')).deviceType == DeviceModel.ESP32
+
+        and: 'a two-segment status topic outside the tuya sub-namespace still resolves to the meter'
+            service.message('myhab/em_house/meter1/status', msg('online')).deviceType == DeviceModel.ELECTRIC_METER_DTS
+    }
+
+    void "a TUYA port command payload is the bare action, not a List literal"() {
+        given:
+            def device = new org.myhab.domain.device.Device(model: DeviceModel.TUYA, code: 'water_main_valve')
+            def port = new org.myhab.domain.device.port.DevicePort(device: device, internalRef: 'valve',
+                    type: org.myhab.domain.device.port.PortType.SWITCH)
+
+        expect:
+            service.payload(port, [org.myhab.domain.device.port.PortAction.ON]) == 'ON'
+    }
 }
