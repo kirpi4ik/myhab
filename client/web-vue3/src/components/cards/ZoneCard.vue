@@ -116,6 +116,7 @@ export default defineComponent({
         'HEAT': 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
         'SWITCH': 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         'TEMP': 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+        'VALVE': 'linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%)',
         'default': 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
       };
       return gradients[category] || gradients.default;

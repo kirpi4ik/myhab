@@ -90,6 +90,8 @@ export function useSvgInteraction() {
         return state ? 'bulb-on' : 'bulb-off';
       case 'HEAT':
         return state ? 'heat-on' : 'heat-off';
+      case 'VALVE':
+        return state ? 'valve-open' : 'valve-closed';
       case 'MOTION':
         return state ? 'motion-off' : 'motion-on';
       case 'TEMP':

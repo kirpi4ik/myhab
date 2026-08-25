@@ -493,6 +493,13 @@
 		"lawn": "Lawn",
 		"garden": "Garden"
 	},
+	"valve_card": {
+		"open": "OPEN",
+		"closed": "CLOSED",
+		"details": "Details",
+		"share": "Share Access",
+		"device_offline": "Device is offline - controls disabled"
+	},
 	"dashboard": {
 		"widgets": {
 			"lighting": "Lighting Quick Access",

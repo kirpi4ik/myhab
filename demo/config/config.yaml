@@ -21,7 +21,8 @@ mqtt:
   port: 1883
   username: demo
   password: demo
-  # The seed dataset is all ESP-model devices, which publish under the myhab prefix.
+  # Everything publishes under the myhab prefix — the simulated Tuya valve too,
+  # in its myhab/tuya/ sub-namespace (the TUYA dialect's shape).
   topics: myhab/#
 
 cors:

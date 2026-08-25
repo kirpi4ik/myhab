@@ -249,4 +249,45 @@ enum MQTTTopic {
             return topic(topicTypes)
         }
     }
+
+    /**
+     * Topic shape for Tuya-local devices behind the tinytuya bridge
+     * (bridges/tuya). Lives under {@code MYHAB_PREFIX} like every other
+     * dialect, in its own {@code /tuya/} sub-namespace so the read regexes
+     * cannot overlap ESP_READ ({@code myhab/&lt;3 segments&gt;/state} — the
+     * Tuya read topic has four) — see the NAVIMOW note above. Because the
+     * standard {@code myhab/#} subscription covers it, no {@code mqtt.topics}
+     * change is needed for these topics to arrive.
+     *
+     * <p>Ordering caveat: {@code myhab/tuya/&lt;code&gt;/status} DOES match the
+     * two-segment ELECTRIC_METER/INVERTER STATUS regexes, so the TUYA_STATUS
+     * branch must be checked before those in {@link MqttTopicService#message}.</p>
+     *
+     * <p>The bridge normalizes boolean DPs to literal {@code ON}/{@code OFF}
+     * payloads, publishes retained state on {@code .../state}, listens for
+     * commands on {@code .../cmd}, and reports per-device availability on
+     * {@code myhab/tuya/&lt;deviceCode&gt;/status} ({@code online}/{@code offline}).</p>
+     */
+    class TUYA implements DeviceTopic {
+        static String topic(TopicTypes topicType) {
+            switch (topicType) {
+                case TopicTypes.LISTEN:
+                    return "$MYHAB_PREFIX/#"
+                case TopicTypes.READ_SINGLE_VAL:
+                    return "$MYHAB_PREFIX/tuya/(\\w+)/(\\w+)/(\\w+)/state"
+                case TopicTypes.WRITE_SINGLE_VAL:
+                    return "$MYHAB_PREFIX/tuya/\$map.deviceCode/\$map.portType/\$map.portCode/cmd"
+                case TopicTypes.STATUS:
+                    return "$MYHAB_PREFIX/tuya/(\\w+)/status"
+                case TopicTypes.STAT_IP:   // the bridge owns device IPs, not the server
+                case TopicTypes.STAT_PORT:
+                default: return null
+            }
+        }
+
+        @Override
+        String topicByType(TopicTypes topicTypes) {
+            return topic(topicTypes)
+        }
+    }
 }

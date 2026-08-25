@@ -110,6 +110,7 @@ import PeripheralLightCard from '@/components/cards/PeripheralLightCard';
 import PeripheralSprinklerCard from '@/components/cards/PeripheralSprinklerCard';
 import PeripheralSwitchCard from '@/components/cards/PeripheralSwitchCard';
 import PeripheralTempCard from '@/components/cards/PeripheralTempCard';
+import PeripheralValveCard from '@/components/cards/PeripheralValveCard';
 import TempChartCard from '@/components/cards/TempChartCard';
 import ZoneCard from '@/components/cards/ZoneCard';
 
@@ -138,6 +139,10 @@ const CATEGORY_CONFIG = {
   TEMP: {
     component: 'PeripheralTempCard',
     label: 'temperature sensors'
+  },
+  VALVE: {
+    component: 'PeripheralValveCard',
+    label: 'valves'
   }
 };
 
@@ -150,6 +155,7 @@ export default defineComponent({
     PeripheralSwitchCard,
     PeripheralHeatCard,
     PeripheralTempCard,
+    PeripheralValveCard,
     TempChartCard
   },
   setup() {

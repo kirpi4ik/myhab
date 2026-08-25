@@ -14,6 +14,8 @@ export function getWidgetClass(categoryName, state, deviceStatus) {
 			return state ? 'bulb-on' : 'bulb-off';
 		case 'HEAT':
 			return state ? 'heat-on' : 'heat-off';
+		case 'VALVE':
+			return state ? 'valve-open' : 'valve-closed';
 		case 'MOTION':
 			return state ? 'motion-off' : 'motion-on';
 		case 'TEMP':
@@ -71,6 +73,8 @@ export function defaultIconForCategory(categoryName) {
 			return 'mdi-motion-sensor';
 		case 'HEAT':
 			return 'mdi-radiator';
+		case 'VALVE':
+			return 'mdi-valve';
 		default:
 			return 'mdi-circle-medium';
 	}
@@ -78,7 +82,7 @@ export function defaultIconForCategory(categoryName) {
 
 /** True when clicking the widget should trigger an action. */
 export function isActionableCategory(categoryName) {
-	return ['LIGHT', 'HEAT', 'DOOR_LOCK'].includes(categoryName);
+	return ['LIGHT', 'HEAT', 'DOOR_LOCK', 'VALVE'].includes(categoryName);
 }
 
 /**

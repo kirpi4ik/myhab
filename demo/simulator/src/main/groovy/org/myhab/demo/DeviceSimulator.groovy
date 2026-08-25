@@ -30,6 +30,11 @@ import java.util.concurrent.TimeUnit
  *
  * State topics are retained so a browser refresh, an app restart, or a reconnect all
  * re-derive the same picture without waiting for the next change.
+ *
+ * A device entry may carry its own {@code "prefix"} (e.g. {@code "myhab/tuya"} for
+ * the TUYA dialect's sub-namespace) — it then answers on that root instead of the
+ * spec-level prefix. Prefixes may contain slashes. Device codes must stay unique
+ * across prefixes: live values are keyed by device/type/code alone.
  */
 @Slf4j
 class DeviceSimulator {
@@ -100,22 +105,23 @@ class DeviceSimulator {
     }
 
     private void subscribe() {
-        // Commands for any device/portType/portCode, plus the reset trigger the server
-        // calls after restoring the seed dataset.
-        client.subscribe("${prefix}/+/+/+/cmd" as String, 1)
+        // Commands for any device/portType/portCode on every prefix in use, plus the
+        // reset trigger the server calls after restoring the seed dataset.
+        prefixes().each { client.subscribe("${it}/+/+/+/cmd" as String, 1) }
         client.subscribe("${prefix}/${RESET_SUFFIX}" as String, 1)
     }
 
     /** Seed every device and port so the UI is correct before anything is touched. */
     private void publishAll() {
         eachDevice { Map device ->
+            String devPrefix = prefixOf(device)
             String status = (device.status ?: 'online') as String
             if (status != 'online') offlineDevices << (device.code as String)
-            publish("${prefix}/${device.code}/status", status)
+            publish("${devPrefix}/${device.code}/status", status)
             eachPort(device) { Map port ->
                 String key = keyOf(device.code as String, port)
                 values[key] = (port.initial ?: 'OFF') as String
-                publish("${prefix}/${key}/state", values[key])
+                publish("${devPrefix}/${key}/state", values[key])
             }
         }
     }
@@ -127,19 +133,27 @@ class DeviceSimulator {
             return
         }
 
-        // myhab/<device>/<type>/<code>/cmd
-        def parts = topic.split('/')
-        if (parts.length != 5) {
+        // <prefix>/<device>/<type>/<code>/cmd — prefixes may contain slashes
+        // (myhab/tuya), so strip the longest known prefix rather than splitting
+        // blindly. The prefix is echoed back on the state topic.
+        String cmdPrefix = prefixes().findAll { topic.startsWith("${it}/") }
+                                     .max { it.length() }
+        if (cmdPrefix == null) {
+            log.warn("Ignoring command on unknown prefix: ${topic}")
+            return
+        }
+        def parts = topic.substring(cmdPrefix.length() + 1).split('/')
+        if (parts.length != 4 || parts[3] != 'cmd') {
             log.warn("Ignoring unexpected command topic: ${topic}")
             return
         }
-        String key = "${parts[1]}/${parts[2]}/${parts[3]}"
+        String key = "${parts[0]}/${parts[1]}/${parts[2]}"
 
         // An offline device does not actuate. The UI already disables its controls,
         // but a command can still arrive over the API, and answering it would make
         // the demo contradict the status it is advertising.
-        if (offlineDevices.contains(parts[1])) {
-            log.info("Ignoring command for offline device ${parts[1]}")
+        if (offlineDevices.contains(parts[0])) {
+            log.info("Ignoring command for offline device ${parts[0]}")
             return
         }
 
@@ -159,7 +173,7 @@ class DeviceSimulator {
         long delayMs = 200 + random.nextInt(400)
         scheduler.schedule({
             values[key] = next
-            publish("${prefix}/${key}/state", next)
+            publish("${cmdPrefix}/${key}/state", next)
             log.info("${key}: ${current} -> ${next}")
         } as Runnable, delayMs, TimeUnit.MILLISECONDS)
     }
@@ -173,10 +187,11 @@ class DeviceSimulator {
             try {
                 eachDevice { Map device ->
                     if ((device.status ?: 'online') != 'online') return
+                    String devPrefix = prefixOf(device)
                     eachPort(device) { Map port ->
                         if (port.kind != 'sensor') return
                         String key = keyOf(device.code as String, port)
-                        publish("${prefix}/${key}/state", drift(port, values[key]))
+                        publish("${devPrefix}/${key}/state", drift(port, values[key]))
                     }
                 }
             } catch (Exception e) {
@@ -216,6 +231,16 @@ class DeviceSimulator {
 
     private static String keyOf(String deviceCode, Map port) {
         return "${deviceCode}/${port.type}/${port.code}"
+    }
+
+    private String prefixOf(Map device) {
+        return (device.prefix ?: prefix) as String
+    }
+
+    private Set<String> prefixes() {
+        Set<String> all = [prefix] as Set
+        eachDevice { Map device -> all << prefixOf(device) }
+        return all
     }
 
     private void eachDevice(Closure body) {

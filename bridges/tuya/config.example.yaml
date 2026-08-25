@@ -1,0 +1,33 @@
+# Tuya bridge configuration — EXAMPLE with neutral defaults.
+#
+# Everything in here describes an INSTALLATION, not the myHAB product:
+# device ids, local keys and IPs belong in the operator's private copy of
+# this file (mounted at /config/config.yaml), never in this repository.
+
+mqtt:
+  host: localhost
+  port: 1883
+  username: ""
+  password: ""
+  # Topic root: <mqtt.topic.prefix>/tuya, matching myHAB's TUYA dialect. The
+  # server's standard "<prefix>/#" subscription already covers it, so no
+  # mqtt.topics change is needed. Change "myhab" only if the server's
+  # mqtt.topic.prefix differs.
+  base_topic: myhab/tuya
+  # The bridge's own availability topic: <base_topic>/<bridge_code>/status (LWT).
+  bridge_code: tuya_bridge
+
+devices:
+  # myHAB Device.code — [a-z0-9_] only (hyphens never match the server regex).
+  - code: water_main_valve
+    id: "REPLACE_TUYA_DEVICE_ID"     # from: python -m tinytuya wizard
+    key: "REPLACE_LOCAL_KEY"         # from: python -m tinytuya wizard
+    ip: "127.0.0.1"                  # give the device a static DHCP lease
+    version: "3.3"                   # confirm with: python -m tinytuya scan
+    dps:
+      # Confirm the DP list with `python -m tinytuya scan`; DP 1 is the
+      # open/close boolean on most Tuya valves.
+      - dp: 1
+        port_type: switch            # topic segment == DevicePort.type, lowercased
+        port_ref: valve              # == DevicePort.internalRef in myHAB
+        kind: bool                   # bool -> ON/OFF; value -> raw passthrough
