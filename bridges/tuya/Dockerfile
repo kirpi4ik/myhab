@@ -5,7 +5,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt pytest
 COPY tuya_bridge ./tuya_bridge
 COPY tests ./tests
-RUN pytest -q
+RUN python -m pytest -q
 
 FROM python:3.12-slim
 WORKDIR /app
