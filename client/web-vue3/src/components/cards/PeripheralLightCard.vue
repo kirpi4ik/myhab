@@ -129,7 +129,7 @@
             :model-value="lightState" 
             @update:model-value="handleToggle" 
             :id="String(peripheral.id)"
-            :disabled="isDeviceOffline"
+            :disabled="isDeviceOffline || pending"
             class="light-toggle"
           />
           
@@ -139,6 +139,14 @@
           </div>
         </div>
         
+        <pending-action-indicator
+          :pending="pending"
+          :unconfirmed="unconfirmed"
+          :progress="progress"
+          :label="$t('common.sending')"
+          :warning="$t('common.no_device_response')"
+        />
+
         <div v-if="isDeviceOffline" class="offline-message">
           <q-icon name="mdi-alert-circle-outline" size="18px" class="q-mr-xs"/>
           {{ $t('light_card.device_offline') }}
@@ -162,7 +170,7 @@ import {computed, defineComponent, toRefs, watch, onMounted, ref} from 'vue';
 import {useRouter} from 'vue-router';
 
 import {useApolloClient, useGlobalQueryLoading, useMutation} from '@vue/apollo-composable';
-import {useWebSocketListeners} from '@/composables';
+import {usePendingCommand, useWebSocketListeners} from '@/composables';
 
 import {
   CACHE_DELETE,
@@ -179,6 +187,7 @@ import EventLogger from 'components/EventLogger.vue';
 import humanizeDuration from 'humanize-duration';
 import Toggle from '@vueform/toggle';
 import TimeoutSelector from 'components/TimeoutSelector.vue';
+import PendingActionIndicator from 'components/PendingActionIndicator.vue';
 import ShareWidgetDialog from 'components/ShareWidgetDialog.vue';
 
 export default defineComponent({
@@ -187,6 +196,7 @@ export default defineComponent({
     Toggle,
     EventLogger,
     TimeoutSelector,
+    PendingActionIndicator,
     ShareWidgetDialog,
   },
   props: {
@@ -203,6 +213,17 @@ export default defineComponent({
 
     // Dedicated reactive ref for expiration (fixes reactivity on initial load)
     const expirationTime = ref(null);
+
+    // The toggle never moves on its own: it renders the device-confirmed value, and
+    // this covers the gap until the device reports back. `verify` re-reads the real
+    // state when the window closes, so a dropped echo cannot be mistaken for a
+    // command that never took effect.
+    const {pending, unconfirmed, progress, start, observe, fail} = usePendingCommand({
+      verify: async () => {
+        await loadDetails();
+        return lightState.value;
+      }
+    });
     const shareDialogVisible = ref(false);
 
     /**
@@ -353,6 +374,7 @@ export default defineComponent({
         eventName: 'evt_port_value_persisted',
         callback: (payload) => {
           const newState = payload.p4 === 'ON';
+          observe(newState);
           asset.value.value = payload.p4;
           asset.value.state = newState;
           
@@ -403,8 +425,17 @@ export default defineComponent({
     /**
      * Handle light toggle
      */
-    const handleToggle = () => {
-      peripheralService.toggle(asset.value, 'evt_light');
+    const handleToggle = async () => {
+      // What toggle() is about to ask for — the composable resolves the wait
+      // by comparing this against what the device reports.
+      start(asset.value.state !== true);
+      try {
+        await peripheralService.toggle(asset.value, 'evt_light');
+      } catch {
+        // The command never reached the backend — no echo will ever arrive, so
+        // report it now instead of making the user wait out the window.
+        fail();
+      }
     };
 
     /**
@@ -463,6 +494,9 @@ export default defineComponent({
     return {
       asset,
       shareDialogVisible,
+      pending,
+      unconfirmed,
+      progress,
       isDeviceOffline,
       isLightOn,
       lightState,

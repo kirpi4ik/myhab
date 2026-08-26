@@ -386,7 +386,9 @@
 		"timestamps": "Timestamps",
 		"details": "Details",
 		"share_access": "Share Access",
-		"loading": "Loading…"
+		"loading": "Loading…",
+		"sending": "Sending…",
+		"no_device_response": "No response from the device"
 	},
 	"door": {
 		"small_gate": "Small Gate",

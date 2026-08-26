@@ -386,7 +386,9 @@
     "timestamps": "Marcaje temporale",
     "details": "Detalii",
     "share_access": "Partajează acces",
-    "loading": "Se încarcă…"
+    "loading": "Se încarcă…",
+    "sending": "Se trimite…",
+    "no_device_response": "Niciun răspuns de la dispozitiv"
   },
   "door": {
     "small_gate": "Poarta mica",

@@ -89,7 +89,7 @@
 					label="Start"
 					class="action-btn"
 					:loading="sending === 'on'"
-					:disable="!canStart || sending !== null"
+					:disable="!canStart || sending !== null || pending"
 					@click="confirmStart"
 				/>
 				<q-btn
@@ -101,10 +101,24 @@
 					label="Stop"
 					class="action-btn"
 					:loading="sending === 'off'"
-					:disable="!offAllowed || sending !== null"
+					:disable="!offAllowed || sending !== null || pending"
 					@click="executeAction('off')"
 				/>
 			</div>
+
+			<!--
+				The state above is whatever the device last reported, so the gap between
+				pressing a button and the device answering would otherwise look like
+				nothing happened.
+			-->
+			<pending-action-indicator
+				class="q-mt-md"
+				:pending="pending"
+				:unconfirmed="unconfirmed"
+				:progress="progress"
+				label="Waiting for the device…"
+				warning="The device did not confirm — try refreshing"
+			/>
 
 			<div class="hint-text" v-if="!canStart">
 				No uses remaining — you can still stop it
@@ -163,7 +177,12 @@
 import { computed, defineComponent, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Utils } from '@/_helpers';
+import { usePendingCommand } from '@/composables';
+import PendingActionIndicator from 'components/PendingActionIndicator.vue';
 import humanizeDuration from 'humanize-duration';
+
+/** How often the widget re-reads its state while waiting for the device. */
+const POLL_MS = 1000;
 
 const TYPE_ICONS = {
 	WATER_PUMP: { on: 'mdi-water-pump', off: 'mdi-water-pump-off', fallbackName: 'Water Pump' },
@@ -181,11 +200,15 @@ const STATE_MESSAGES = {
 
 export default defineComponent({
 	name: 'SharedSwitchWidget',
+	components: { PendingActionIndicator },
 	props: {
 		widgetType: { type: String, default: 'LIGHT' },
 	},
 	setup(props) {
 		const route = useRoute();
+		// No `verify`: the loop below already re-reads once a second, so the last poll is
+		// never more than a second stale when the window closes.
+		const { pending, unconfirmed, progress, start, observe } = usePendingCommand();
 
 		const loading = ref(true);
 		const refreshing = ref(false);
@@ -346,15 +369,30 @@ export default defineComponent({
 
 				actionsRemaining.value = data.actionsRemaining;
 				offAllowed.value = data.offAllowed === true;
-				isOn.value = action === 'on';
+				// `isOn` is deliberately not set here. The command has been accepted, not
+				// carried out — the device confirms asynchronously over MQTT, and this
+				// page has no socket, so it polls until the state it shows is the real one.
+				awaitConfirmation(action);
 			} catch {
 				errorState.value = true;
 				errorMessage.value = 'Failed to connect to server';
 			} finally {
 				sending.value = null;
-				// The device confirms asynchronously over MQTT — re-read so the shown
-				// state is the real one rather than the optimistic guess above.
-				setTimeout(() => loadWidget(true), 1500);
+			}
+		};
+
+		/**
+		 * Re-read until the device reports the state that was asked for, or until the
+		 * command's window closes and `pending` goes false on its own — so this loop
+		 * always terminates, whether or not the device ever answers.
+		 */
+		const awaitConfirmation = async (action) => {
+			start(action === 'on');
+			while (pending.value) {
+				await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+				if (!pending.value) return;
+				await loadWidget(true);
+				observe(isOn.value);
 			}
 		};
 
@@ -379,6 +417,9 @@ export default defineComponent({
 			offAllowed,
 			autoOffText,
 			sending,
+			pending,
+			unconfirmed,
+			progress,
 			confirmDialog,
 			canStart,
 			typeIcon,

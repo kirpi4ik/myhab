@@ -120,10 +120,15 @@
             <span class="label-text">{{ $t('water_pump.off') }}</span>
           </div>
           
+          <!--
+            Bound one-way on purpose: v-model let the handle move before the pump had
+            confirmed anything, so a command that never landed still looked applied.
+          -->
           <toggle
-            v-model="asset.data.state"
+            :model-value="asset.data.state"
             :id="String(asset.id)"
-            @change="handleToggle"
+            :disabled="pending"
+            @update:model-value="handleToggle"
             class="pump-toggle"
           />
           
@@ -135,6 +140,14 @@
         <div v-else class="loading-state">
           <q-spinner-dots color="white" size="md" />
         </div>
+
+        <pending-action-indicator
+          :pending="pending"
+          :unconfirmed="unconfirmed"
+          :progress="progress"
+          :label="$t('common.sending')"
+          :warning="$t('common.no_device_response')"
+        />
       </div>
     </q-card-section>
 
@@ -153,7 +166,7 @@
 import {computed, defineComponent, onMounted, ref} from 'vue';
 
 import {useApolloClient, useMutation} from "@vue/apollo-composable";
-import {useWebSocketListener} from "@/composables";
+import {usePendingCommand, useWebSocketListener} from "@/composables";
 
 import {
   CACHE_GET_VALUE,
@@ -171,6 +184,7 @@ import humanizeDuration from 'humanize-duration';
 import Toggle from "@vueform/toggle";
 import TimeoutSelector from "components/TimeoutSelector.vue";
 import ShareWidgetDialog from "components/ShareWidgetDialog.vue";
+import PendingActionIndicator from "components/PendingActionIndicator.vue";
 
 export default defineComponent({
   name: 'WaterPump',
@@ -178,7 +192,8 @@ export default defineComponent({
     Toggle,
     EventLogger,
     TimeoutSelector,
-    ShareWidgetDialog
+    ShareWidgetDialog,
+    PendingActionIndicator
   },
   setup(props, {emit}) {
     const appConfig = useAppConfigStore();
@@ -186,6 +201,14 @@ export default defineComponent({
     const asset = ref({});
     const expirationTime = ref(null);
     const shareDialogVisible = ref(false);
+    // `verify` re-reads the real state when the window closes, so a dropped state
+    // echo cannot be mistaken for a command that never took effect.
+    const {pending, unconfirmed, progress, start, observe, fail} = usePendingCommand({
+      verify: async () => {
+        await init();
+        return asset.value?.data?.state === true;
+      }
+    });
     const {client} = useApolloClient();
     
     const {mutate: setConfigValue} = useMutation(CONFIGURATION_SET_VALUE, {
@@ -291,6 +314,7 @@ export default defineComponent({
     // Listen for port value updates
     useWebSocketListener('evt_port_value_persisted', (payload) => {
       if (asset.value?.data?.connectedTo?.[0]?.id == payload.p2) {
+        observe(payload.p4 === 'ON');
         asset.value['value'] = payload.p4;
         asset.value['state'] = payload.p4 === 'ON';
         asset.value['data']['state'] = payload.p4 === 'ON';
@@ -309,8 +333,17 @@ export default defineComponent({
       }
     });
     
-    const handleToggle = () => {
-      peripheralService.toggle(asset.value, 'evt_light');
+    const handleToggle = async () => {
+      // What toggle() is about to ask for — the composable resolves the wait
+      // by comparing this against what the device reports.
+      start(asset.value.state !== true);
+      try {
+        await peripheralService.toggle(asset.value, 'evt_light');
+      } catch {
+        // The command never reached the backend — no echo will ever arrive, so
+        // report it now instead of making the user wait out the window.
+        fail();
+      }
     };
 
     /**
@@ -342,6 +375,9 @@ export default defineComponent({
       showExpiration,
       expirationTime,
       shareDialogVisible,
+      pending,
+      unconfirmed,
+      progress,
       handleSetTimeout,
       handleDeleteTimeout,
       config,
