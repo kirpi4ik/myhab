@@ -68,6 +68,14 @@ specialZones:
   garden:
     id: 1006      # Garden
 
+# The only specialDevices entry the demo sets: the dashboard's valve tile. The
+# other tiles keyed off this prefix (door lock, water pump) have no seeded
+# peripheral, so they stay in their "not configured" state on purpose.
+specialDevices:
+  waterValve:
+    peripheral:
+      id: 5022      # Garden Water Valve
+
 ui:
   meteo:
     # Never publish a real address. The demo house is deliberately fictional.

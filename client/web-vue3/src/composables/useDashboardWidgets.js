@@ -159,6 +159,18 @@ export function useDashboardWidgets() {
 			],
 			props: () => ({ peripheral: { state: true } }),
 		},
+		{
+			id: 'water_valve',
+			label: t('dashboard.widgets.water_valve'),
+			section: 'quickAccess',
+			kind: 'component',
+			component: 'valve-widget',
+			defaultVisible: true,
+			requiredConfig: [
+				{ key: 'specialDevices.waterValve.peripheral.id', label: t('dashboard.config.peripheral_water_valve'), kind: 'peripheral' },
+			],
+			props: () => ({ peripheralId: n('specialDevices.waterValve.peripheral.id') }),
+		},
 
 		// ──────── Monitoring: device telemetry widgets ────────
 		{

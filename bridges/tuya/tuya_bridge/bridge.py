@@ -197,6 +197,13 @@ class Bridge:
 
     def _on_connect(self, client, userdata, flags, rc):
         log.info("MQTT connected (rc=%s)", rc)
+        if rc != 0:
+            # paho still calls on_connect on a refusal — subscribing/publishing here
+            # would silently no-op against the socket the broker is about to close.
+            log.error("MQTT connect refused: %s (rc=%s) — check host/port/username/password",
+                     mqtt.connack_string(rc), rc)
+            return
+        log.info("MQTT connected")
         client.subscribe(mapping.cmd_subscription(self.base), qos=1)
         self.publish(mapping.status_topic(self.base, self.bridge_code), "online", True)
 
