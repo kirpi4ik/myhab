@@ -28,6 +28,8 @@ STATUS_REFRESH_SEC = 60
 HEARTBEAT_SEC = 9
 RECONNECT_MIN_SEC = 5
 RECONNECT_MAX_SEC = 120
+# The camera repeats an event DP a few times per press; collapse the burst.
+EVENT_DEBOUNCE_SEC = 2
 
 
 def load_config(path):
@@ -63,6 +65,15 @@ def load_config(path):
             dp.setdefault("kind", "bool")
             if not CODE_RE.match(str(dp["port_ref"])) or not CODE_RE.match(str(dp["port_type"])):
                 raise ValueError(f"port_type/port_ref must be [a-z0-9_]+ in {dev['code']}")
+            if dp["kind"] == "event":
+                notify = dp.get("notify") or {}
+                if not notify.get("source") or not notify.get("subject"):
+                    raise ValueError(f"event dp {dp['dp']} of {dev['code']} needs notify.source and notify.subject")
+                notify.setdefault("message", notify["subject"])
+                notify.setdefault("level", "INFO")
+                notify.setdefault("dedup_key", f"{notify['source']}.{dev['code']}.{dp['port_ref']}")
+                notify.setdefault("cooldown", 1)
+                dp["notify"] = notify
     return {"mqtt": mqtt_cfg, "devices": devices}
 
 
@@ -74,12 +85,16 @@ class DeviceWorker(threading.Thread):
         self.cfg = dev_cfg
         self.code = dev_cfg["code"]
         self.base = base_topic
+        # The notify channel lives at the server prefix ('myhab'), one level up
+        # from the bridge's 'myhab/tuya' base.
+        self.prefix = base_topic.split("/", 1)[0]
         self.publish = publish  # (topic, payload, retain) -> None
         self.commands = queue.Queue()
         self.stop_event = threading.Event()
         self.online = False
         # dp index (as str) -> dps config entry
         self.dp_map = {str(dp["dp"]): dp for dp in dev_cfg["dps"]}
+        self._event_last = {}  # dp index -> monotonic ts of last emit (debounce)
 
     def command(self, port_type, port_ref, payload):
         for dp in self.cfg["dps"]:
@@ -107,8 +122,28 @@ class DeviceWorker(threading.Thread):
             dp = self.dp_map.get(str(index))
             if dp is None:
                 continue  # unmapped DP — visible with a scan, deliberately unpublished
+            if dp["kind"] == "event":
+                self._emit_event(dp, raw)
+                continue
             topic = mapping.state_topic(self.base, self.code, dp["port_type"], str(dp["port_ref"]))
             self.publish(topic, mapping.dp_to_payload(dp["kind"], raw), True)
+
+    def _emit_event(self, dp, raw):
+        """A momentary DP (doorbell/motion): fire a notify, and for a picture DP
+        publish the raw reference for the cloud helper to resolve into a JPEG."""
+        idx = str(dp["dp"])
+        now = time.monotonic()
+        if now - self._event_last.get(idx, 0.0) < EVENT_DEBOUNCE_SEC:
+            return
+        self._event_last[idx] = now
+        n = dp["notify"]
+        self.publish(mapping.notify_topic(self.prefix, n["source"]),
+                     mapping.notify_envelope(n["subject"], n["message"], n["level"],
+                                             n["dedup_key"], n["cooldown"]),
+                     False)
+        log.info("%s: event dp %s -> notify %s", self.code, idx, n["source"])
+        if dp.get("pic"):
+            self.publish(mapping.lastpic_topic(self.base, self.code), str(raw), True)
 
     def run(self):
         backoff = RECONNECT_MIN_SEC

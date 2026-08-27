@@ -502,6 +502,16 @@
     "share": "Partajează acces",
     "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   },
+  "intercom": {
+    "unlock": "Deschide",
+    "refresh": "Reîmprospătează",
+    "view_camera": "Vezi camera",
+    "pin": "PIN",
+    "camera_offline": "Camera offline",
+    "stream_unavailable": "Video live indisponibil",
+    "unlock_sent": "Comandă de deschidere trimisă",
+    "unlock_failed": "Deschiderea a eșuat"
+  },
   "dashboard": {
     "widgets": {
       "lighting": "Acces rapid iluminat",
@@ -512,6 +522,7 @@
       "sprinklers": "Stropitoare",
       "water_pump": "Pompă apă",
       "water_valve": "Vană apă",
+      "intercom": "Interfon",
       "meteo_station": "Stație meteo",
       "solar_plant": "Centrală solară",
       "heat_pump": "Pompă de căldură",
@@ -537,6 +548,7 @@
       "peripheral_door_lock": "Periferic încuietoare",
       "peripheral_water_pump": "Periferic pompă apă",
       "peripheral_water_valve": "Periferic vană apă",
+      "peripheral_intercom": "Periferic interfon",
       "device_meteo": "Dispozitiv stație meteo",
       "device_solar_inverter": "Dispozitiv invertor solar",
       "device_solar_meter": "Dispozitiv contor solar",

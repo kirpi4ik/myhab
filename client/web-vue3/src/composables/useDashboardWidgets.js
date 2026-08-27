@@ -171,6 +171,19 @@ export function useDashboardWidgets() {
 			],
 			props: () => ({ peripheralId: n('specialDevices.waterValve.peripheral.id') }),
 		},
+		{
+			id: 'intercom',
+			label: t('dashboard.widgets.intercom'),
+			section: 'quickAccess',
+			kind: 'component',
+			component: 'intercom-widget',
+			defaultVisible: true,
+			// Its own INTERCOM peripheral — never the DOOR_LOCK one the gate widget uses.
+			requiredConfig: [
+				{ key: 'specialDevices.intercom.peripheral.id', label: t('dashboard.config.peripheral_intercom'), kind: 'peripheral' },
+			],
+			props: () => ({ peripheralId: n('specialDevices.intercom.peripheral.id') }),
+		},
 
 		// ──────── Monitoring: device telemetry widgets ────────
 		{

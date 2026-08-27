@@ -8,10 +8,13 @@
     "esp_shed is offline on purpose - the simulator never answers for it, so the",
     "demo can show a disabled control without blocking anything useful.",
     "A device may set its own 'prefix' (tuya_valve_garden uses 'myhab/tuya') to",
-    "answer on that topic root instead of the spec-level prefix."
+    "answer on that topic root instead of the spec-level prefix.",
+    "The 'intercom' block makes the simulator fire periodic doorbell/motion",
+    "notifications on myhab/<source>/notify (no device/ports needed)."
   ],
   "prefix": "myhab",
   "sensorIntervalSeconds": 30,
+  "intercom": {"source": "intercom", "intervalSeconds": 45},
   "devices": [
     {
       "code": "esp_indoor",

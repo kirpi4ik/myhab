@@ -53,6 +53,9 @@ class DeviceSimulator {
     /** Device codes seeded as anything other than online. */
     private final Set<String> offlineDevices = [] as Set
 
+    /** Rolling counter so demo intercom notifications are never deduped away. */
+    private final java.util.concurrent.atomic.AtomicInteger notifySeq = new java.util.concurrent.atomic.AtomicInteger()
+
     DeviceSimulator(Map<String, Object> spec, String brokerUri, String username, String password) {
         this.spec = spec
         this.prefix = spec.prefix ?: 'myhab'
@@ -222,10 +225,46 @@ class DeviceSimulator {
         return next
     }
 
+    /**
+     * Periodically fire an intercom notification so the demo shows a doorbell /
+     * motion message landing in the bell badge, the way the tuya bridge would from
+     * a real TMEZON unit. Published on myhab/&lt;source&gt;/notify (the server NOTIFY
+     * channel), non-retained, alternating doorbell and motion.
+     */
+    void startIntercomDemo() {
+        Map intercom = spec.intercom as Map
+        if (!intercom) return
+        String source = (intercom.source ?: 'intercom') as String
+        int interval = (intercom.intervalSeconds ?: 45) as int
+        List<Map> events = [
+                [subject: 'Doorbell', message: 'Someone is at the gate', key: 'doorbell'],
+                [subject: 'Motion detected', message: 'Motion at the gate camera', key: 'motion'],
+        ]
+        scheduler.scheduleAtFixedRate({
+            try {
+                int seq = notifySeq.getAndIncrement()
+                Map ev = events[seq % events.size()]
+                // Vary the dedupKey each time so successive demo events are not
+                // collapsed by the server's dedup cooldown.
+                String body = groovy.json.JsonOutput.toJson([
+                        subject : ev.subject, message: ev.message, level: 'INFO',
+                        dedupKey: "intercom.${ev.key}.${seq}".toString(), cooldown: 1])
+                publish("myhab/${source}/notify", body, false)
+                log.info("intercom demo notify: ${ev.subject}")
+            } catch (Exception e) {
+                log.error("intercom demo notify failed: ${e.message}", e)
+            }
+        } as Runnable, interval, interval, TimeUnit.SECONDS)
+    }
+
     private void publish(String topic, String payload) {
+        publish(topic, payload, true)
+    }
+
+    private void publish(String topic, String payload, boolean retained) {
         def message = new MqttMessage(payload.getBytes('UTF-8'))
         message.qos = 1
-        message.retained = true
+        message.retained = retained
         client.publish(topic, message)
     }
 
@@ -272,6 +311,7 @@ class DeviceSimulator {
         def simulator = new DeviceSimulator(spec, opts.broker as String,
                 opts.username as String, opts.password as String)
         simulator.startSensorDrift()
+        simulator.startIntercomDemo()
 
         log.info("Simulator running against ${opts.broker} with ${(spec.devices ?: []).size()} device(s)")
         Thread.currentThread().join()

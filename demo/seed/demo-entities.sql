@@ -19,9 +19,11 @@
 -- Ids are fixed in the 1000-9999 band so history remapping and devices.json can
 -- refer to them stably. hibernate_sequence is bumped past them at the end.
 --
--- Peripheral category names must be one of LIGHT / SWITCH / HEAT / SPRINKLER /
--- TEMP / VALVE: ZoneCombinedView.vue's CATEGORY_CONFIG maps exactly those to
--- cards, and anything else renders nothing.
+-- Peripheral category names for zone cards must be one of LIGHT / SWITCH / HEAT /
+-- SPRINKLER / TEMP / VALVE: ZoneCombinedView.vue's CATEGORY_CONFIG maps exactly
+-- those to cards, and anything else renders nothing. INTERCOM is the exception —
+-- it is surfaced only by the dashboard intercom widget, not a zone card, so it is
+-- deliberately not added to any zone's zones_categories.
 -- ---------------------------------------------------------------------------
 
 \set ON_ERROR_STOP on
@@ -72,7 +74,8 @@ INSERT INTO device_peripherals_categories (id, version, name, title, icon, ts_cr
   (2003, 0, 'HEAT',      'Heating',     'mdi-radiator',         now(), now(), 'PERIPHERAL_CATEGORY'),
   (2004, 0, 'SPRINKLER', 'Sprinklers',  'mdi-sprinkler',        now(), now(), 'PERIPHERAL_CATEGORY'),
   (2005, 0, 'TEMP',      'Temperature', 'mdi-thermometer',      now(), now(), 'PERIPHERAL_CATEGORY'),
-  (2006, 0, 'VALVE',     'Valves',      'mdi-valve',            now(), now(), 'PERIPHERAL_CATEGORY');
+  (2006, 0, 'VALVE',     'Valves',      'mdi-valve',            now(), now(), 'PERIPHERAL_CATEGORY'),
+  (2007, 0, 'INTERCOM',  'Intercoms',   'mdi-doorbell-video',   now(), now(), 'PERIPHERAL_CATEGORY');
 
 -- --------------------------------------------------------------------------
 -- Zones
@@ -312,6 +315,40 @@ INSERT INTO zones_categories (zone_id, categories_string) VALUES
 -- A water valve must never stay open unattended: auto-close after 5 minutes.
 INSERT INTO configurations (id, version, entity_id, entity_type, key, value, name, description) VALUES
   (6004, 0, 5022, 'PERIPHERAL', 'key.on.timeout', '300', 'key.on.timeout', 'Auto-close after 5 minutes');
+
+-- --------------------------------------------------------------------------
+-- TMEZON intercom / doorbell
+--
+-- A TMEZON_INTERCOM device with an INTERCOM-category peripheral, surfaced by the
+-- dashboard intercom widget. The demo has no camera and no Tuya cloud, so the
+-- widget's snapshot/stream degrade to a placeholder; motion/doorbell arrive as
+-- notifications via the simulator's myhab/intercom/notify publishes. Unlock is
+-- never exercised here (no reachable device). In a real installation the
+-- bridges/tuya container feeds the events and bridges/intercom-cloud the media.
+-- --------------------------------------------------------------------------
+INSERT INTO device_controllers (id, version, code, name, description, model, status,
+                                ts_created, ts_updated, en_type)
+VALUES
+  (3006, 0, 'intercom', 'Gate intercom', 'TMEZON WiFi video doorbell at the main gate', 'TMEZON_INTERCOM', 'ONLINE', now(), now(), 'DEVICE');
+
+INSERT INTO device_ports (id, version, device_id, internal_ref, name, type, state, value,
+                          ts_created, ts_updated, en_type)
+VALUES
+  (4023, 0, 3006, 'lock', 'Gate lock', 'SWITCH', 'ACTIVE', 'OFF', now(), now(), 'PORT');
+
+INSERT INTO device_peripherals (id, version, name, description, category_id, max_amp,
+                                ts_created, ts_updated, en_type)
+VALUES
+  (5023, 0, 'Gate Intercom', 'Video doorbell and gate release at the main entrance', 2007, 0, now(), now(), 'PERIPHERAL');
+
+INSERT INTO device_ports_peripherals_join (port_id, peripheral_id) VALUES
+  (4023, 5023);
+
+INSERT INTO zones_devices_join (zone_id, device_id) VALUES
+  (1003, 3006);
+
+INSERT INTO zones_peripherals_join (zone_id, peripheral_id) VALUES
+  (1003, 5023);
 
 -- --------------------------------------------------------------------------
 -- Rack, patch panel and cabling

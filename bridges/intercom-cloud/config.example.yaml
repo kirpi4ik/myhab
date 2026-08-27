@@ -1,0 +1,35 @@
+# Intercom cloud helper configuration — EXAMPLE with neutral defaults.
+#
+# Everything here describes an INSTALLATION, not the myHAB product: Tuya Cloud
+# credentials and device ids belong in the operator's private copy of this file
+# (mounted at /config/config.yaml), never in this repository. This service is
+# reachable only from the Grails backend on the internal network — never expose
+# it to the browser.
+
+mqtt:
+  host: localhost
+  port: 1883
+  username: ""
+  password: ""
+  # Must match the Tuya bridge's base_topic; the helper subscribes
+  # <base_topic>/<code>/lastpic/state to learn the latest doorbell/motion image.
+  base_topic: myhab/tuya
+
+http:
+  # Grails proxies this via intercom.cloud.baseUrl; keep it off any public route.
+  port: 8095
+
+tuya:
+  # From the Tuya IoT Platform cloud project (https://iot.tuya.com). Leave blank
+  # to run without cloud media: event (doorbell) images still work, but live
+  # video and on-demand frame grabs degrade to a placeholder.
+  access_id: ""
+  access_secret: ""
+  region: "eu"        # eu | us | cn | in
+
+# myHAB device code -> Tuya device id (same id used in the tuya bridge config).
+devices:
+  intercom: "REPLACE_TUYA_DEVICE_ID"
+
+# Path to the ffmpeg binary used for the live single-frame grab.
+ffmpeg: ffmpeg

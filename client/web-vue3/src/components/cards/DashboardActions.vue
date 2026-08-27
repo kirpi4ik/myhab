@@ -137,6 +137,7 @@ import PeripheralLock from 'components/PeripheralLock.vue';
 import SprinklersDashComponent from "components/SprinklersDashComponent";
 import WaterPump from "components/WaterPump";
 import ValveWidget from "components/ValveWidget.vue";
+import IntercomWidget from "components/IntercomWidget.vue";
 import WidgetNotConfigured from "components/cards/WidgetNotConfigured.vue";
 import {useWidgetConfigStatus} from 'src/composables/useWidgetConfigStatus';
 
@@ -151,6 +152,7 @@ export default defineComponent({
     PeripheralLock,
     SprinklersDashComponent,
     ValveWidget,
+    IntercomWidget,
     WidgetNotConfigured
   },
   setup() {

@@ -32,6 +32,9 @@ class UrlMappings {
         put "/api/screens/$id/background"(controller: "dashboardScreen", action: "update")
         post "/api/screens/$id/background/resize"(controller: "dashboardScreen", action: "resizeBackground")
         post "/api/screens/import-svg"(controller: "dashboardScreen", action: "importSvg")
+        // Intercom media proxied from the cloud helper (REST — binary/JSON stream)
+        get "/api/intercom/$id/snapshot"(controller: "intercom", action: "snapshot")
+        get "/api/intercom/$id/stream"(controller: "intercom", action: "stream")
         "/login/auth"(controller: "login", action: "auth")
 
         // Navimow OAuth2 callback — public path mirroring Home Assistant's

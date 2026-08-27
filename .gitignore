@@ -26,3 +26,8 @@ VERSIONING.md
 
 # Android SDK location — machine-specific, and the file says so itself.
 local.properties
+
+# Python bytecode / test caches from the standalone bridges (bridges/*)
+__pycache__/
+*.py[cod]
+.pytest_cache/
