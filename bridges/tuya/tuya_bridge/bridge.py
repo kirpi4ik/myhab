@@ -23,7 +23,10 @@ from . import mapping
 
 log = logging.getLogger("tuya_bridge")
 
-CODE_RE = re.compile(r"^[a-z0-9_]+$")
+# myHAB matches topic segments with \w+, so codes/refs may be [A-Za-z0-9_]
+# (upper or lower). Hyphens are excluded — \w does not match '-', so a hyphenated
+# code would publish fine but never route on the server.
+CODE_RE = re.compile(r"^\w+$")
 STATUS_REFRESH_SEC = 60
 HEARTBEAT_SEC = 9
 RECONNECT_MIN_SEC = 5
@@ -51,10 +54,8 @@ def load_config(path):
         for key in ("code", "id", "key", "ip", "version"):
             if not dev.get(key):
                 raise ValueError(f"device entry missing '{key}': {dev.get('code', dev)}")
-        # myHAB matches topic segments with \w+ — a hyphenated code would
-        # publish fine but never be routed, so fail fast here.
         if not CODE_RE.match(dev["code"]):
-            raise ValueError(f"device code must be [a-z0-9_]+: {dev['code']!r}")
+            raise ValueError(f"device code must be [A-Za-z0-9_]+ (no hyphens): {dev['code']!r}")
         dps = dev.get("dps") or []
         if not dps:
             raise ValueError(f"device {dev['code']} has no dps mapping")
@@ -64,7 +65,7 @@ def load_config(path):
                     raise ValueError(f"dps entry of {dev['code']} missing '{key}'")
             dp.setdefault("kind", "bool")
             if not CODE_RE.match(str(dp["port_ref"])) or not CODE_RE.match(str(dp["port_type"])):
-                raise ValueError(f"port_type/port_ref must be [a-z0-9_]+ in {dev['code']}")
+                raise ValueError(f"port_type/port_ref must be [A-Za-z0-9_]+ in {dev['code']}")
             if dp["kind"] == "event":
                 notify = dp.get("notify") or {}
                 if not notify.get("source") or not notify.get("subject"):

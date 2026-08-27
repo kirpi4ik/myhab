@@ -18,7 +18,7 @@ mqtt:
   bridge_code: tuya_bridge
 
 devices:
-  # myHAB Device.code — [a-z0-9_] only (hyphens never match the server regex).
+  # myHAB Device.code — [A-Za-z0-9_] (hyphens never match the server \w+ regex).
   - code: water_main_valve
     id: "REPLACE_TUYA_DEVICE_ID"     # from: python -m tinytuya wizard
     key: "REPLACE_LOCAL_KEY"         # from: python -m tinytuya wizard

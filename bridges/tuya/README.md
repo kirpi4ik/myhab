@@ -23,8 +23,9 @@ the ESP dialect's three-segment ones. Anything publishing under `myhab/tuya/` mu
 speak this contract — in
 particular, boolean state is always the literal `ON`/`OFF` (myHAB compares
 port values to those strings for the UI toggle, auditing and auto-off).
-Device codes and port refs are `[a-z0-9_]+` — **no hyphens**; the server-side
-regexes use `\w+` and silently drop hyphenated codes.
+Device codes and port refs are `[A-Za-z0-9_]+` — **no hyphens**; the server-side
+regexes use `\w+` (which allows upper- and lower-case) and silently drop
+hyphenated codes.
 
 ### Event DPs — doorbell & motion (`kind: event`)
 

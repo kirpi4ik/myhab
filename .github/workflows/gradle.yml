@@ -162,6 +162,17 @@ jobs:
           tags: kirpi4ik/myhab-tuya-bridge:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Build tuya bridge image and push beta
+        if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: bridges/tuya
+          file: bridges/tuya/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: kirpi4ik/myhab-tuya-bridge:beta
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
       # The intercom cloud helper (bridges/intercom-cloud) is a standalone Python
       # image (Tuya-Cloud media for the intercom widget); its Dockerfile runs
       # pytest in a build stage, so pushing it implies its tests passed.
@@ -184,6 +195,17 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: kirpi4ik/myhab-intercom-cloud:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Build intercom cloud image and push beta
+        if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: bridges/intercom-cloud
+          file: bridges/intercom-cloud/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: kirpi4ik/myhab-intercom-cloud:beta
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Create GitHub tag & release
