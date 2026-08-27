@@ -320,11 +320,10 @@ INSERT INTO configurations (id, version, entity_id, entity_type, key, value, nam
 -- TMEZON intercom / doorbell
 --
 -- A TMEZON_INTERCOM device with an INTERCOM-category peripheral, surfaced by the
--- dashboard intercom widget. The demo has no camera and no Tuya cloud, so the
--- widget's snapshot/stream degrade to a placeholder; motion/doorbell arrive as
--- notifications via the simulator's myhab/intercom/notify publishes. Unlock is
--- never exercised here (no reachable device). In a real installation the
--- bridges/tuya container feeds the events and bridges/intercom-cloud the media.
+-- dashboard intercom widget. Motion/doorbell arrive as notifications via the
+-- simulator's myhab/intercom/notify publishes. Unlock is never exercised here
+-- (no reachable device). In a real installation the bridges/tuya container feeds
+-- the events.
 -- --------------------------------------------------------------------------
 INSERT INTO device_controllers (id, version, code, name, description, model, status,
                                 ts_created, ts_updated, en_type)

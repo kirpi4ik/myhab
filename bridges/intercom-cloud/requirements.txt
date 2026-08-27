@@ -1,5 +1,0 @@
-tinytuya>=1.15
-paho-mqtt>=1.6,<2
-PyYAML>=6
-requests>=2.28
-cryptography>=41
