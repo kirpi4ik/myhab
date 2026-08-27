@@ -109,6 +109,20 @@ jobs:
           tags: kirpi4ik/myhab:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Build docker and push beta
+        # `beta` is the moving tag the beta.madhouse.app container tracks (Watchtower
+        # auto-deploys it), so only a beta-branch push moves it — never a PR or master.
+        # The immutable `<version>-<sha>` tag above still identifies the exact build.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: build/docker
+          file: build/docker/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: kirpi4ik/myhab:beta
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
       # The demo stack's compose file lives in the ops repo, so the assets it needs
       # (device simulator, seed SQL, ConfigProvider seed) ship as their own image
       # built from this same commit. Ops then pins two tags and nothing else.
