@@ -83,11 +83,11 @@ import {intercomService} from '@/_services/intercom.service';
 import {useWebSocketListeners} from '@/composables';
 
 /**
- * Dashboard intercom tile: last doorbell/motion snapshot, gate unlock (PIN-gated,
- * fires its own evt_intercom_unlock — never the DOOR_LOCK gate), snapshot refresh
- * (live Tuya-Cloud grab) and a live-video popup (HLS). Media comes from the
- * backend IntercomController; when the cloud helper is unconfigured the snapshot
- * endpoint returns 204 and the tile shows a "camera offline" placeholder.
+ * Dashboard intercom tile: live camera snapshot, gate unlock (PIN-gated, fires its
+ * own evt_intercom_unlock — never the DOOR_LOCK gate), snapshot refresh, and a
+ * live-video popup (HLS). Media comes from the backend IntercomController, which
+ * proxies go2rtc (the real Tuya-WebRTC feed); when go2rtc is unconfigured the
+ * snapshot endpoint returns 204 and the tile shows a "camera offline" placeholder.
  */
 const props = defineProps({
   peripheralId: {type: Number, required: true},
@@ -110,21 +110,21 @@ const setSnapshot = (next) => {
   snapshotUrl.value = next;
 };
 
-const loadSnapshot = async (live) => {
+const loadSnapshot = async () => {
   loadingSnap.value = true;
   try {
-    const next = await intercomService.fetchSnapshotBlobUrl(props.peripheralId, {live});
+    const next = await intercomService.fetchSnapshotBlobUrl(props.peripheralId);
     if (next) setSnapshot(next);
   } finally {
     loadingSnap.value = false;
   }
 };
 
-// Refresh = a current live frame from the cloud.
-const refresh = () => loadSnapshot(true);
+// Refresh = a fresh live frame from go2rtc.
+const refresh = () => loadSnapshot();
 
-// A doorbell/motion notification means a fresh event image is waiting.
-useWebSocketListeners([{eventName: 'evt_user_notification', callback: () => loadSnapshot(false)}]);
+// A doorbell/motion notification is a good moment to refresh the still.
+useWebSocketListeners([{eventName: 'evt_user_notification', callback: () => loadSnapshot()}]);
 
 // --- unlock ----------------------------------------------------------------
 const showUnlock = ref(false);
@@ -183,35 +183,40 @@ const openVideo = () => {
 
 const startPlayback = async () => {
   videoError.value = false;
-  const stream = await intercomService.fetchStreamUrl(props.peripheralId);
   const video = videoEl.value;
-  if (!stream?.hls || !video) {
+  if (!video) {
     videoError.value = true;
     return;
   }
-  if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = stream.hls; // Safari / iOS native HLS
-    video.play?.().catch(() => {});
-    return;
-  }
+  // The playlist and its segments are served by the backend under JWT, so we must
+  // send the Bearer on every request — only hls.js (xhrSetup) can do that. Native
+  // <video src> HLS (iOS Safari) can't carry the header, so it's unsupported here.
+  const url = intercomService.streamPlaylistUrl(props.peripheralId);
+  const token = intercomService.authToken();
   try {
     const Hls = (await import('hls.js')).default;
-    if (Hls.isSupported()) {
-      teardownHls();
-      hls = new Hls({enableWorker: true, lowLatencyMode: true});
-      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play?.().catch(() => {}));
-      hls.on(Hls.Events.ERROR, (_evt, data) => {
-        if (data?.fatal) {
-          console.error('HLS fatal error:', data.type, data.details);
-          videoError.value = true;
-        }
-      });
-      hls.loadSource(stream.hls);
-      hls.attachMedia(video);
-    } else {
-      video.src = stream.hls;
-      video.play?.().catch(() => {});
+    if (!Hls.isSupported()) {
+      console.warn('hls.js unsupported (no MSE) — cannot play authenticated HLS here');
+      videoError.value = true;
+      return;
     }
+    teardownHls();
+    hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: true,
+      xhrSetup: (xhr) => {
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      },
+    });
+    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play?.().catch(() => {}));
+    hls.on(Hls.Events.ERROR, (_evt, data) => {
+      if (data?.fatal) {
+        console.error('HLS fatal error:', data.type, data.details);
+        videoError.value = true;
+      }
+    });
+    hls.loadSource(url);
+    hls.attachMedia(video);
   } catch (error) {
     console.error('HLS playback failed:', error);
     videoError.value = true;
@@ -224,7 +229,7 @@ const closeVideo = () => {
   showVideo.value = false;
 };
 
-onMounted(() => loadSnapshot(false));
+onMounted(() => loadSnapshot());
 onUnmounted(() => {
   setSnapshot(null);
   teardownHls();
