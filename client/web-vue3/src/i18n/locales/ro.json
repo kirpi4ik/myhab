@@ -504,13 +504,11 @@
   },
   "intercom": {
     "unlock": "Deschide",
-    "refresh": "Reîmprospătează",
-    "view_camera": "Vezi camera",
     "pin": "PIN",
-    "camera_offline": "Camera offline",
-    "stream_unavailable": "Video live indisponibil",
     "unlock_sent": "Comandă de deschidere trimisă",
-    "unlock_failed": "Deschiderea a eșuat"
+    "unlock_failed": "Deschiderea a eșuat",
+    "no_activity": "Nicio activitate recentă",
+    "view_all": "Vezi toate"
   },
   "dashboard": {
     "widgets": {

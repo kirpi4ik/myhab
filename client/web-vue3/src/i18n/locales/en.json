@@ -504,13 +504,11 @@
 	},
 	"intercom": {
 		"unlock": "Unlock",
-		"refresh": "Refresh",
-		"view_camera": "View camera",
 		"pin": "PIN",
-		"camera_offline": "Camera offline",
-		"stream_unavailable": "Live video unavailable",
 		"unlock_sent": "Unlock command sent",
-		"unlock_failed": "Failed to unlock"
+		"unlock_failed": "Failed to unlock",
+		"no_activity": "No recent activity",
+		"view_all": "View all"
 	},
 	"dashboard": {
 		"widgets": {

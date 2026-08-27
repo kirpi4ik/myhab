@@ -32,10 +32,6 @@ class UrlMappings {
         put "/api/screens/$id/background"(controller: "dashboardScreen", action: "update")
         post "/api/screens/$id/background/resize"(controller: "dashboardScreen", action: "resizeBackground")
         post "/api/screens/import-svg"(controller: "dashboardScreen", action: "importSvg")
-        // Intercom media proxied from go2rtc (REST — binary/HLS stream)
-        get "/api/intercom/$id/snapshot"(controller: "intercom", action: "snapshot")
-        get "/api/intercom/$id/stream.m3u8"(controller: "intercom", action: "streamPlaylist")
-        get "/api/intercom/$id/hls"(controller: "intercom", action: "hlsSegment")
         "/login/auth"(controller: "login", action: "auth")
 
         // Navimow OAuth2 callback — public path mirroring Home Assistant's
