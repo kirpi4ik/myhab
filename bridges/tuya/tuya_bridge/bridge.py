@@ -95,6 +95,9 @@ class DeviceWorker(threading.Thread):
         self.online = False
         # dp index (as str) -> dps config entry
         self.dp_map = {str(dp["dp"]): dp for dp in dev_cfg["dps"]}
+        # Tuya cameras/doorbells don't answer DP_QUERY; they only push event DPs.
+        # Such a device has nothing to poll, so we must not gate on status().
+        self.has_event_dps = any(dp.get("kind") == "event" for dp in dev_cfg["dps"])
         self._event_last = {}  # dp index -> monotonic ts of last emit (debounce)
 
     def command(self, port_type, port_ref, payload):
@@ -156,11 +159,18 @@ class DeviceWorker(threading.Thread):
                 device.set_socketPersistent(True)
 
                 status = device.status()
-                if not status or "dps" not in status:
+                if status and "dps" in status:
+                    self._publish_dps(status["dps"])
+                elif not self.has_event_dps:
+                    # A pollable device that won't answer is genuinely unreachable.
                     raise ConnectionError(f"initial status failed: {status}")
+                else:
+                    # Event-only device (camera/doorbell): the persistent socket is
+                    # up and will deliver doorbell/motion pushes; there is no state
+                    # to query, so proceed straight to the receive loop.
+                    log.info("%s: no queryable state; listening for event pushes", self.code)
                 self._set_online(True)
                 backoff = RECONNECT_MIN_SEC
-                self._publish_dps(status["dps"])
 
                 last_heartbeat = time.monotonic()
                 last_refresh = time.monotonic()
