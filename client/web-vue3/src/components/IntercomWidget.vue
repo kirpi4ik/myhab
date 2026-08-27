@@ -51,7 +51,7 @@
     </q-dialog>
 
     <!-- Live video popup -->
-    <q-dialog v-model="showVideo" :maximized="$q.platform.is.mobile" @hide="closeVideo">
+    <q-dialog v-model="showVideo" :maximized="$q.platform.is.mobile" @show="startPlayback" @hide="closeVideo">
       <q-card class="intercom-video-card">
         <q-bar class="bg-dark text-white">
           <q-icon name="mdi-doorbell-video"/>
@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
 import {useApolloClient, useQuery} from '@vue/apollo-composable';
 import {useQuasar} from 'quasar';
 import {useI18n} from 'vue-i18n';
@@ -173,30 +173,44 @@ const teardownHls = () => {
   }
 };
 
-const openVideo = async () => {
+// Just open the dialog; playback starts from its @show, when the <video> the
+// dialog teleports/animates into the DOM is actually mounted (attaching hls.js
+// before that races the ref to null and silently shows nothing).
+const openVideo = () => {
   videoError.value = false;
   showVideo.value = true;
+};
+
+const startPlayback = async () => {
+  videoError.value = false;
   const stream = await intercomService.fetchStreamUrl(props.peripheralId);
-  if (!stream?.hls) {
+  const video = videoEl.value;
+  if (!stream?.hls || !video) {
     videoError.value = true;
     return;
   }
-  await nextTick();
-  const video = videoEl.value;
-  if (!video) return;
   if (video.canPlayType('application/vnd.apple.mpegurl')) {
     video.src = stream.hls; // Safari / iOS native HLS
+    video.play?.().catch(() => {});
     return;
   }
   try {
     const Hls = (await import('hls.js')).default;
     if (Hls.isSupported()) {
       teardownHls();
-      hls = new Hls();
+      hls = new Hls({enableWorker: true, lowLatencyMode: true});
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play?.().catch(() => {}));
+      hls.on(Hls.Events.ERROR, (_evt, data) => {
+        if (data?.fatal) {
+          console.error('HLS fatal error:', data.type, data.details);
+          videoError.value = true;
+        }
+      });
       hls.loadSource(stream.hls);
       hls.attachMedia(video);
     } else {
       video.src = stream.hls;
+      video.play?.().catch(() => {});
     }
   } catch (error) {
     console.error('HLS playback failed:', error);

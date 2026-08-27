@@ -50,6 +50,9 @@ def load_config(path):
     cfg.setdefault("tuya", {})
     cfg.setdefault("devices", {})  # myHAB device code -> tuya device id
     cfg.setdefault("ffmpeg", "ffmpeg")
+    # Seconds of stream to read before keeping the last frame — long enough to get
+    # past Tuya's black "connecting..." splash.
+    cfg.setdefault("snapshot_grab_seconds", 8)
     return cfg
 
 
@@ -104,6 +107,7 @@ class Helper:
         self.base = cfg["mqtt"]["base_topic"]
         self.devices = cfg["devices"]  # code -> tuya id
         self.ffmpeg = cfg["ffmpeg"]
+        self.grab_seconds = int(cfg["snapshot_grab_seconds"])
         self.state = State()
         t = cfg["tuya"]
         self.cloud = TuyaCloud(t.get("access_id"), t.get("access_secret"), t.get("region"))
@@ -158,7 +162,7 @@ class Helper:
         if jpeg is None:
             tuya_id = self.devices.get(code)
             if tuya_id:
-                jpeg = self.cloud.frame_jpeg(tuya_id, ffmpeg=self.ffmpeg)
+                jpeg = self.cloud.frame_jpeg(tuya_id, ffmpeg=self.ffmpeg, grab_seconds=self.grab_seconds)
         if jpeg:
             self.state.store(code, jpeg)
         return jpeg

@@ -41,8 +41,15 @@ class TuyaCloud:
             log.warning("stream allocate returned no url on %s: %s", endpoint, resp)
         return None
 
-    def frame_jpeg(self, device_id, ffmpeg="ffmpeg", timeout=15):
-        """Grab a single JPEG keyframe from the live HLS stream, or None."""
+    def frame_jpeg(self, device_id, ffmpeg="ffmpeg", grab_seconds=8):
+        """Grab a JPEG from the live HLS stream, or None.
+
+        A freshly allocated Tuya stream opens on a black 'connecting...' splash
+        for the first few seconds; grabbing frame 0 captures that spinner instead
+        of the camera. So read `grab_seconds` of the stream at 1 fps, overwriting a
+        single output file (-update 1), and keep the LAST frame — which is past the
+        splash and shows the real image.
+        """
         url = self.hls_url(device_id)
         if not url:
             return None
@@ -50,8 +57,9 @@ class TuyaCloud:
         os.close(fd)
         try:
             subprocess.run(
-                [ffmpeg, "-y", "-loglevel", "error", "-i", url, "-frames:v", "1", "-q:v", "3", path],
-                timeout=timeout, check=True,
+                [ffmpeg, "-y", "-loglevel", "error", "-i", url,
+                 "-t", str(grab_seconds), "-vf", "fps=1", "-update", "1", "-q:v", "3", path],
+                timeout=grab_seconds + 15, check=True,
             )
             with open(path, "rb") as fh:
                 data = fh.read()
