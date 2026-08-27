@@ -14,6 +14,8 @@ sub-second, no internet dependency at runtime.
 | Command | `myhab/tuya/<code>/<portType>/<portRef>/cmd` | `ON`\|`OFF` | no | myHAB → bridge |
 | Device availability | `myhab/tuya/<code>/status` | `online`\|`offline` | yes | bridge → myHAB |
 | Bridge availability | `myhab/tuya/<bridge_code>/status` | `online`\|`offline` (LWT) | yes | broker/bridge |
+| Event notify | `myhab/<source>/notify` | JSON envelope (see below) | no | bridge → myHAB |
+| Latest picture ref | `myhab/tuya/<code>/lastpic/state` | raw Tuya picture reference | yes | bridge → intercom cloud helper |
 
 Everything lives under the server's standard `myhab` prefix (its `mqtt.topic.prefix`
 config), in a `/tuya/` sub-namespace so the four-segment topics cannot collide with
@@ -21,11 +23,31 @@ the ESP dialect's three-segment ones. Anything publishing under `myhab/tuya/` mu
 speak this contract — in
 particular, boolean state is always the literal `ON`/`OFF` (myHAB compares
 port values to those strings for the UI toggle, auditing and auto-off).
-Device codes and port refs are `[a-z0-9_]+` — **no hyphens**; the server-side
-regexes use `\w+` and silently drop hyphenated codes.
+Device codes and port refs are `[A-Za-z0-9_]+` — **no hyphens**; the server-side
+regexes use `\w+` (which allows upper- and lower-case) and silently drop
+hyphenated codes.
 
-Video streams (Tuya cameras/intercoms) do **not** flow over Tuya-local DPs and
-are out of this bridge's scope — expect no video topics here.
+### Event DPs — doorbell & motion (`kind: event`)
+
+Some Tuya devices push **momentary** data points that have no terminal state — a
+doorbell press, a motion trigger. A `kind: event` DP is not a port value; on each
+push it fans out to:
+
+- **`myhab/<source>/notify`** (QoS 1, not retained) — the JSON envelope
+  `{"subject","message","level","dedupKey","cooldown"}` consumed by myHAB's
+  `NotificationBridgeService`, which writes an inbox message, sends web-push and
+  refreshes the bell badge. Note the topic is at the server **prefix**
+  (`myhab/…/notify`), one level up from the `myhab/tuya` base — that is where the
+  server's NOTIFY pattern lives. `source`, `subject`, `message`, `level`,
+  `dedup_key` and `cooldown` come from the DP's `notify:` config block.
+- **`myhab/tuya/<code>/lastpic/state`** (retained) — for a `pic: true` DP, the raw
+  Tuya picture reference (a presigned URL or a `{bucket,files:[[path,key]]}` blob).
+  The intercom **cloud helper** subscribes to this and resolves it into a JPEG; the
+  server itself ignores it (two segments after the code match neither the read nor
+  status pattern). Bursts are debounced (~2 s) since the camera repeats each push.
+
+Live **video streams** still do **not** flow over Tuya-local DPs — they are served
+separately by the intercom cloud helper (Tuya Cloud HLS), out of this bridge's scope.
 
 ## Getting device credentials (one-time)
 
@@ -61,6 +83,9 @@ to a myHAB port: `port_type` (the `DevicePort.type`, lowercased) and
 
 - `bool` — translated to/from `ON`/`OFF` (switches, valves)
 - `value` — raw passthrough (counters, temperatures); published as state only
+- `event` — momentary signal (doorbell, motion); fires a `notify` (and, with
+  `pic: true`, a `lastpic` picture ref) instead of a port value. Needs a
+  `notify:` block — see the intercom example in `config.example.yaml`.
 
 ## Running
 

@@ -68,6 +68,24 @@ specialZones:
   garden:
     id: 1006      # Garden
 
+# specialDevices tiles the demo configures: the valve and the intercom. The other
+# tiles keyed off this prefix (door lock, water pump) have no seeded peripheral,
+# so they stay in their "not configured" state on purpose.
+specialDevices:
+  waterValve:
+    peripheral:
+      id: 5022      # Garden Water Valve
+  intercom:
+    peripheral:
+      id: 5023      # Gate Intercom
+
+# Server-side intercom settings (NOT UI-safe-prefixed, so never sent to the
+# browser). unlockPin is compared against the PIN the widget submits; the demo
+# has no reachable device, so unlock never actually fires.
+intercom:
+  intercom:         # keyed by device code ('intercom')
+    unlockPin: "1234"
+
 ui:
   meteo:
     # Never publish a real address. The demo house is deliberately fictional.

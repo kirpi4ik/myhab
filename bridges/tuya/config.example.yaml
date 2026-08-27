@@ -18,7 +18,7 @@ mqtt:
   bridge_code: tuya_bridge
 
 devices:
-  # myHAB Device.code — [a-z0-9_] only (hyphens never match the server regex).
+  # myHAB Device.code — [A-Za-z0-9_] (hyphens never match the server \w+ regex).
   - code: water_main_valve
     id: "REPLACE_TUYA_DEVICE_ID"     # from: python -m tinytuya wizard
     key: "REPLACE_LOCAL_KEY"         # from: python -m tinytuya wizard
@@ -31,3 +31,41 @@ devices:
         port_type: switch            # topic segment == DevicePort.type, lowercased
         port_ref: valve              # == DevicePort.internalRef in myHAB
         kind: bool                   # bool -> ON/OFF; value -> raw passthrough
+
+  # A TMEZON/Tuya intercom (category 'sp'). Its doorbell & motion DPs are
+  # push-only 'event' DPs, not port state: each push fires a myHAB notify
+  # (<prefix>/<source>/notify -> inbox + web-push + bell badge) and, for a
+  # picture DP, publishes the raw image reference on <base>/<code>/lastpic/state
+  # for the intercom cloud helper to resolve into a JPEG. Confirm the protocol
+  # version and DP numbers with `python -m tinytuya scan` (v3.3 on the reference
+  # unit; 154=doorbell_pic, 115=movement_detect_pic).
+  - code: intercom
+    id: "REPLACE_TUYA_DEVICE_ID"
+    key: "REPLACE_LOCAL_KEY"
+    ip: "127.0.0.1"
+    version: "3.3"
+    dps:
+      - dp: 154
+        port_type: event
+        port_ref: doorbell
+        kind: event
+        pic: true                    # payload is a picture ref -> publish to lastpic
+        notify:
+          source: intercom           # topic is <prefix>/<source>/notify
+          subject: "Doorbell"
+          message: "Someone is at the gate"
+          level: INFO                # INFO | WARN | ERROR
+          dedup_key: "intercom.doorbell"
+          cooldown: 1                # minutes; server dedups repeats within this
+      - dp: 115
+        port_type: event
+        port_ref: motion
+        kind: event
+        pic: true
+        notify:
+          source: intercom
+          subject: "Motion detected"
+          message: "Motion at the gate camera"
+          level: INFO
+          dedup_key: "intercom.motion"
+          cooldown: 2

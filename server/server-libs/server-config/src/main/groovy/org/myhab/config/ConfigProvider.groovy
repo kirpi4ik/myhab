@@ -261,7 +261,7 @@ class ConfigProvider implements InitializingBean {
                 .call();
         if (syncLoad()) {
             config.keys.each { key ->
-                log.debug "$key = ${config.get(Object.class, key)}"
+                log.debug "$key"
             }
         } else {
             log.error("Error read config")

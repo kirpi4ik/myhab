@@ -11,5 +11,6 @@ export { useTableFilters } from './useTableFilters';
 export { useSvgInteraction } from './useSvgInteraction';
 export { usePeripheralState } from './usePeripheralState';
 export { usePeripheralControl } from './usePeripheralControl';
+export { usePendingCommand } from './usePendingCommand';
 export { useDeviceAdminUrl } from './useDeviceAdminUrl';
 export { useEntityRouter, parseEntityToken, ENTITY_ROUTES } from './useEntityRouter';

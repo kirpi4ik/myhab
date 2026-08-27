@@ -386,7 +386,9 @@
 		"timestamps": "Timestamps",
 		"details": "Details",
 		"share_access": "Share Access",
-		"loading": "Loading…"
+		"loading": "Loading…",
+		"sending": "Sending…",
+		"no_device_response": "No response from the device"
 	},
 	"door": {
 		"small_gate": "Small Gate",
@@ -500,6 +502,14 @@
 		"share": "Share Access",
 		"device_offline": "Device is offline - controls disabled"
 	},
+	"intercom": {
+		"unlock": "Unlock",
+		"pin": "PIN",
+		"unlock_sent": "Unlock command sent",
+		"unlock_failed": "Failed to unlock",
+		"no_activity": "No recent activity",
+		"view_all": "View all"
+	},
 	"dashboard": {
 		"widgets": {
 			"lighting": "Lighting Quick Access",
@@ -509,6 +519,8 @@
 			"peripheral_lock": "Door Lock",
 			"sprinklers": "Sprinklers",
 			"water_pump": "Water Pump",
+			"water_valve": "Water Valve",
+			"intercom": "Intercom",
 			"meteo_station": "Weather Station",
 			"solar_plant": "Solar Plant",
 			"heat_pump": "Heat Pump",
@@ -533,6 +545,8 @@
 			"zone_garden": "Garden zone",
 			"peripheral_door_lock": "Door lock peripheral",
 			"peripheral_water_pump": "Water pump peripheral",
+			"peripheral_water_valve": "Water valve peripheral",
+			"peripheral_intercom": "Intercom peripheral",
 			"device_meteo": "Weather station device",
 			"device_solar_inverter": "Solar inverter device",
 			"device_solar_meter": "Solar meter device",

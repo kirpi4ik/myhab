@@ -386,7 +386,9 @@
     "timestamps": "Marcaje temporale",
     "details": "Detalii",
     "share_access": "Partajează acces",
-    "loading": "Se încarcă…"
+    "loading": "Se încarcă…",
+    "sending": "Se trimite…",
+    "no_device_response": "Niciun răspuns de la dispozitiv"
   },
   "door": {
     "small_gate": "Poarta mica",
@@ -500,6 +502,14 @@
     "share": "Partajează acces",
     "device_offline": "Dispozitivul este offline - comenzi dezactivate"
   },
+  "intercom": {
+    "unlock": "Deschide",
+    "pin": "PIN",
+    "unlock_sent": "Comandă de deschidere trimisă",
+    "unlock_failed": "Deschiderea a eșuat",
+    "no_activity": "Nicio activitate recentă",
+    "view_all": "Vezi toate"
+  },
   "dashboard": {
     "widgets": {
       "lighting": "Acces rapid iluminat",
@@ -509,6 +519,8 @@
       "peripheral_lock": "Încuietoare poartă",
       "sprinklers": "Stropitoare",
       "water_pump": "Pompă apă",
+      "water_valve": "Vană apă",
+      "intercom": "Interfon",
       "meteo_station": "Stație meteo",
       "solar_plant": "Centrală solară",
       "heat_pump": "Pompă de căldură",
@@ -533,6 +545,8 @@
       "zone_garden": "Zona grădinii",
       "peripheral_door_lock": "Periferic încuietoare",
       "peripheral_water_pump": "Periferic pompă apă",
+      "peripheral_water_valve": "Periferic vană apă",
+      "peripheral_intercom": "Periferic interfon",
       "device_meteo": "Dispozitiv stație meteo",
       "device_solar_inverter": "Dispozitiv invertor solar",
       "device_solar_meter": "Dispozitiv contor solar",

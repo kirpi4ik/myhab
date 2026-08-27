@@ -12,6 +12,14 @@ enum TopicName {
     EVT_LOG,
     EVT_DEVICE_STATUS,
     EVT_INTERCOM_DOOR_LOCK,
+    /**
+     * Unlock request sent to a TMEZON intercom over its own HTTP CGI
+     * (doorConnect -> doorUnlock). Deliberately separate from
+     * EVT_INTERCOM_DOOR_LOCK (the MegaD-relay gate): different handler,
+     * different actuator, no fallback between them. The UI-entered PIN travels
+     * in p5 and is validated server-side against intercom.<code>.unlockPin.
+     */
+    EVT_INTERCOM_UNLOCK,
     EVT_DEVICE_PUSH,
     EVT_MQTT_PORT_VALUE_CHANGED,
     EVT_ASYNC_PORT_VALUE_CHANGED,

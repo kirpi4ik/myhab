@@ -23,11 +23,16 @@ from . import mapping
 
 log = logging.getLogger("tuya_bridge")
 
-CODE_RE = re.compile(r"^[a-z0-9_]+$")
+# myHAB matches topic segments with \w+, so codes/refs may be [A-Za-z0-9_]
+# (upper or lower). Hyphens are excluded — \w does not match '-', so a hyphenated
+# code would publish fine but never route on the server.
+CODE_RE = re.compile(r"^\w+$")
 STATUS_REFRESH_SEC = 60
 HEARTBEAT_SEC = 9
 RECONNECT_MIN_SEC = 5
 RECONNECT_MAX_SEC = 120
+# The camera repeats an event DP a few times per press; collapse the burst.
+EVENT_DEBOUNCE_SEC = 2
 
 
 def load_config(path):
@@ -49,10 +54,8 @@ def load_config(path):
         for key in ("code", "id", "key", "ip", "version"):
             if not dev.get(key):
                 raise ValueError(f"device entry missing '{key}': {dev.get('code', dev)}")
-        # myHAB matches topic segments with \w+ — a hyphenated code would
-        # publish fine but never be routed, so fail fast here.
         if not CODE_RE.match(dev["code"]):
-            raise ValueError(f"device code must be [a-z0-9_]+: {dev['code']!r}")
+            raise ValueError(f"device code must be [A-Za-z0-9_]+ (no hyphens): {dev['code']!r}")
         dps = dev.get("dps") or []
         if not dps:
             raise ValueError(f"device {dev['code']} has no dps mapping")
@@ -62,7 +65,16 @@ def load_config(path):
                     raise ValueError(f"dps entry of {dev['code']} missing '{key}'")
             dp.setdefault("kind", "bool")
             if not CODE_RE.match(str(dp["port_ref"])) or not CODE_RE.match(str(dp["port_type"])):
-                raise ValueError(f"port_type/port_ref must be [a-z0-9_]+ in {dev['code']}")
+                raise ValueError(f"port_type/port_ref must be [A-Za-z0-9_]+ in {dev['code']}")
+            if dp["kind"] == "event":
+                notify = dp.get("notify") or {}
+                if not notify.get("source") or not notify.get("subject"):
+                    raise ValueError(f"event dp {dp['dp']} of {dev['code']} needs notify.source and notify.subject")
+                notify.setdefault("message", notify["subject"])
+                notify.setdefault("level", "INFO")
+                notify.setdefault("dedup_key", f"{notify['source']}.{dev['code']}.{dp['port_ref']}")
+                notify.setdefault("cooldown", 1)
+                dp["notify"] = notify
     return {"mqtt": mqtt_cfg, "devices": devices}
 
 
@@ -74,12 +86,19 @@ class DeviceWorker(threading.Thread):
         self.cfg = dev_cfg
         self.code = dev_cfg["code"]
         self.base = base_topic
+        # The notify channel lives at the server prefix ('myhab'), one level up
+        # from the bridge's 'myhab/tuya' base.
+        self.prefix = base_topic.split("/", 1)[0]
         self.publish = publish  # (topic, payload, retain) -> None
         self.commands = queue.Queue()
         self.stop_event = threading.Event()
         self.online = False
         # dp index (as str) -> dps config entry
         self.dp_map = {str(dp["dp"]): dp for dp in dev_cfg["dps"]}
+        # Tuya cameras/doorbells don't answer DP_QUERY; they only push event DPs.
+        # Such a device has nothing to poll, so we must not gate on status().
+        self.has_event_dps = any(dp.get("kind") == "event" for dp in dev_cfg["dps"])
+        self._event_last = {}  # dp index -> monotonic ts of last emit (debounce)
 
     def command(self, port_type, port_ref, payload):
         for dp in self.cfg["dps"]:
@@ -107,8 +126,28 @@ class DeviceWorker(threading.Thread):
             dp = self.dp_map.get(str(index))
             if dp is None:
                 continue  # unmapped DP — visible with a scan, deliberately unpublished
+            if dp["kind"] == "event":
+                self._emit_event(dp, raw)
+                continue
             topic = mapping.state_topic(self.base, self.code, dp["port_type"], str(dp["port_ref"]))
             self.publish(topic, mapping.dp_to_payload(dp["kind"], raw), True)
+
+    def _emit_event(self, dp, raw):
+        """A momentary DP (doorbell/motion): fire a notify, and for a picture DP
+        publish the raw reference for the cloud helper to resolve into a JPEG."""
+        idx = str(dp["dp"])
+        now = time.monotonic()
+        if now - self._event_last.get(idx, 0.0) < EVENT_DEBOUNCE_SEC:
+            return
+        self._event_last[idx] = now
+        n = dp["notify"]
+        self.publish(mapping.notify_topic(self.prefix, n["source"]),
+                     mapping.notify_envelope(n["subject"], n["message"], n["level"],
+                                             n["dedup_key"], n["cooldown"]),
+                     False)
+        log.info("%s: event dp %s -> notify %s", self.code, idx, n["source"])
+        if dp.get("pic"):
+            self.publish(mapping.lastpic_topic(self.base, self.code), str(raw), True)
 
     def run(self):
         backoff = RECONNECT_MIN_SEC
@@ -120,11 +159,18 @@ class DeviceWorker(threading.Thread):
                 device.set_socketPersistent(True)
 
                 status = device.status()
-                if not status or "dps" not in status:
+                if status and "dps" in status:
+                    self._publish_dps(status["dps"])
+                elif not self.has_event_dps:
+                    # A pollable device that won't answer is genuinely unreachable.
                     raise ConnectionError(f"initial status failed: {status}")
+                else:
+                    # Event-only device (camera/doorbell): the persistent socket is
+                    # up and will deliver doorbell/motion pushes; there is no state
+                    # to query, so proceed straight to the receive loop.
+                    log.info("%s: no queryable state; listening for event pushes", self.code)
                 self._set_online(True)
                 backoff = RECONNECT_MIN_SEC
-                self._publish_dps(status["dps"])
 
                 last_heartbeat = time.monotonic()
                 last_refresh = time.monotonic()
@@ -197,6 +243,13 @@ class Bridge:
 
     def _on_connect(self, client, userdata, flags, rc):
         log.info("MQTT connected (rc=%s)", rc)
+        if rc != 0:
+            # paho still calls on_connect on a refusal — subscribing/publishing here
+            # would silently no-op against the socket the broker is about to close.
+            log.error("MQTT connect refused: %s (rc=%s) — check host/port/username/password",
+                     mqtt.connack_string(rc), rc)
+            return
+        log.info("MQTT connected")
         client.subscribe(mapping.cmd_subscription(self.base), qos=1)
         self.publish(mapping.status_topic(self.base, self.bridge_code), "online", True)
 

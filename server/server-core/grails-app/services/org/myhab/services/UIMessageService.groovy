@@ -26,6 +26,7 @@ class UIMessageService implements EventPublisher {
     def heatService
     def intercomService
     def auditService
+    def configProvider
 
     /**
      * Handle light, switch, and heat events
@@ -227,6 +228,48 @@ class UIMessageService implements EventPublisher {
             }
         } catch (Exception ex) {
             log.error("Error handling door lock event for peripheral ${peripheral.id}", ex)
+        }
+    }
+
+    /**
+     * Unlock via the TMEZON intercom's own HTTP CGI. Separate from
+     * evt_intercom_door_lock (the MegaD relay): a wrong PIN never reaches the
+     * device. The peripheral must be in the INTERCOM category and connected to
+     * a TMEZON_INTERCOM device; the PIN is validated against
+     * intercom.<deviceCode>.unlockPin.
+     */
+    @Transactional
+    @Subscriber('evt_intercom_unlock')
+    def evt_intercom_unlock(event) {
+        def peripheral = validatePeripheralEvent(event)
+        if (!peripheral) return
+
+        if (!validatePeripheralCategory(peripheral, "INTERCOM")) {
+            return
+        }
+
+        def connectedPort = getFirstConnectedPort(peripheral)
+        if (!connectedPort) return
+        Device device = connectedPort.device
+        if (!device) {
+            log.warn("Intercom peripheral ${peripheral.id} has no device")
+            return
+        }
+
+        String configuredPin = configProvider.get(String.class, "intercom.${device.code}.unlockPin")
+        if (configuredPin && event.data.p5 != configuredPin) {
+            log.warn("Intercom unlock rejected for peripheral ${peripheral.id}: PIN mismatch")
+            auditService.log(TopicName.EVT_INTERCOM_UNLOCK.id(), PERIPHERAL, peripheral.id,
+                    'rejected', mapSource(event.data.p3), event.data.p6, [reason: 'pin_mismatch'])
+            return
+        }
+
+        try {
+            intercomService.unlockIntercom(device)
+            auditService.log(TopicName.EVT_INTERCOM_UNLOCK.id(), PERIPHERAL, peripheral.id,
+                    'unlock', mapSource(event.data.p3), event.data.p6, [:])
+        } catch (Exception ex) {
+            log.error("Error handling intercom unlock for peripheral ${peripheral.id}", ex)
         }
     }
 
