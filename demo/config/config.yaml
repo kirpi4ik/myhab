@@ -27,9 +27,11 @@ mqtt:
 
 cors:
   allowedOrigin:
-    # Plain HTTP for now: the demo has no certificate yet. demo.myhab.app is left out
-    # deliberately — .app is in the HSTS preload list, so browsers refuse it over
-    # HTTP; add it here once a certificate exists.
+    # WebSocket (STOMP) origins. The demo is served over HTTPS by the production
+    # proxy, and the app does not trust X-Forwarded-Proto, so the https origin must be
+    # listed explicitly. http:// stays while the proxy still rewrites same-site origins
+    # to it (a bridge for images up to 2.8.17). demo.myhab.app: add once it has DNS.
+    - https://demo.myhab.org
     - http://demo.myhab.org
     - http://localhost:10002
 
