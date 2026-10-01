@@ -98,20 +98,7 @@
             </template>
           </q-select>
 
-          <q-input
-            v-model="aliases"
-            label="Voice aliases"
-            hint="Alternate names for voice control, comma-separated (e.g. Romanian names)"
-            clearable
-            clear-icon="close"
-            color="orange"
-            filled
-            dense
-          >
-            <template v-slot:prepend>
-              <q-icon name="mdi-bullhorn-variant-outline"/>
-            </template>
-          </q-input>
+          <VoiceAliasInput v-model="aliases"/>
         </q-card-section>
 
         <q-separator/>
@@ -234,7 +221,9 @@ import PortConnectCard from '@/components/cards/PortConnectCard.vue';
 import LocationSelector from '@/components/selectors/LocationSelector.vue';
 import CableSelector from '@/components/selectors/CableSelector.vue';
 import TimeoutSelector from '@/components/TimeoutSelector.vue';
+import VoiceAliasInput from '@/components/selectors/VoiceAliasInput.vue';
 import humanizeDuration from 'humanize-duration';
+import { VOICE_ALIAS_KEY, parseVoiceAliases } from '@/_helpers';
 
 import {
   PERIPHERAL_CATEGORIES,
@@ -254,15 +243,15 @@ export default defineComponent({
     PortConnectCard,
     LocationSelector,
     CableSelector,
-    TimeoutSelector
+    TimeoutSelector,
+    VoiceAliasInput
   },
   setup() {
     const route = useRoute();
     const { client } = useApolloClient();
     const categoryList = ref([]);
     const deviceList = ref([]);
-    const aliases = ref('');           // voice aliases, comma-separated (Configuration sidecar)
-    const ALIAS_KEY = 'feature.voice.alias';
+    const aliases = ref([]);           // voice aliases (Configuration sidecar, stored comma-separated)
 
     const {
       entity: peripheral,
@@ -354,8 +343,7 @@ export default defineComponent({
     const fetchData = async () => {
       const response = await fetchEntity();
       // Load the current voice aliases from the peripheral's configurations.
-      const aliasCfg = peripheral.value?.configurations?.find(cfg => cfg.key === ALIAS_KEY);
-      aliases.value = aliasCfg?.value || '';
+      aliases.value = parseVoiceAliases(peripheral.value?.configurations);
       if (response) {
         deviceList.value = response.deviceList || [];
         
@@ -399,8 +387,8 @@ export default defineComponent({
         await client.mutate({
           mutation: CONFIGURATION_SET_VALUE,
           variables: {
-            key: ALIAS_KEY,
-            value: (aliases.value || '').trim(),
+            key: VOICE_ALIAS_KEY,
+            value: aliases.value.join(', '),
             entityId: peripheral.value.id,
             entityType: 'PERIPHERAL',
           },
@@ -421,6 +409,7 @@ export default defineComponent({
       peripheral,
       categoryList,
       deviceList,
+      aliases,
       loading,
       saving,
       onSave,

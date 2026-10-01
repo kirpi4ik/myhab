@@ -247,6 +247,8 @@
       "no_ports": "Niciun port conectat",
       "located_zones": "Localizat în zone",
       "no_zones": "Neatribuit niciunei zone",
+      "voice_aliases": "Aliasuri vocale",
+      "no_voice_aliases": "Niciun alias vocal",
       "connected_cables": "Cabluri conectate",
       "no_cables": "Niciun cablu conectat",
       "load_error": "Încărcarea detaliilor perifericului a eșuat"

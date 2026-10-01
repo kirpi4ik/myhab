@@ -101,6 +101,23 @@
           </q-item-section>
         </q-item>
 
+        <q-item>
+          <q-item-section>
+            <q-item-label class="text-h6">
+              <q-icon name="mdi-bullhorn-variant-outline" class="q-mr-sm"/>
+              {{ $t('peripheral.view.voice_aliases') }}
+            </q-item-label>
+            <q-item-label caption class="text-body2">
+              <template v-if="voiceAliases.length > 0">
+                <q-chip v-for="alias in voiceAliases" :key="alias" dense square color="blue-grey-1" text-color="blue-grey-9">
+                  {{ alias }}
+                </q-chip>
+              </template>
+              <span v-else class="text-grey-6">{{ $t('peripheral.view.no_voice_aliases') }}</span>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+
         <q-item v-if="linkedJobs.length > 0">
           <q-item-section>
             <q-item-label class="text-h6">
@@ -317,6 +334,7 @@ import {useI18n} from "vue-i18n";
 
 import {PERIPHERAL_GET_BY_ID, JOB_LIST_WITH_PERIPHERAL} from "@/graphql/queries";
 import {labelService} from '@/_services';
+import {parseVoiceAliases} from '@/_helpers';
 
 import {format} from 'date-fns';
 
@@ -340,6 +358,8 @@ export default defineComponent({
       if (pid == null) return [];
       return jobs.filter((job) => job.peripheral && Number(job.peripheral.id) === Number(pid));
     });
+
+    const voiceAliases = computed(() => parseVoiceAliases(viewItem.value?.configurations));
 
     const pagination = ref({
       sortBy: 'id',
@@ -491,6 +511,7 @@ export default defineComponent({
       labelLoading,
       downloadLabel,
       linkedJobs,
+      voiceAliases,
       pagination,
       zoneColumns,
       portColumns,
