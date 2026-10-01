@@ -25,6 +25,7 @@ import org.myhab.services.voice.AnthropicIntentProvider
 import org.myhab.services.voice.FastDecision
 import org.myhab.services.voice.GoogleTtsProvider
 import org.myhab.services.voice.IntentStage
+import org.myhab.services.voice.JevStage
 import org.myhab.services.voice.LlmTurn
 import org.myhab.services.voice.NluSidecarStage
 import org.myhab.services.voice.OpenAiIntentProvider
@@ -55,7 +56,7 @@ import java.util.concurrent.TimeUnit
  * (SchedulerService.triggerJob), {@code query_state} (read DevicePort state).</p>
  *
  * <p>Fast path: before the loop, the enabled {@link IntentStage}s (the local NLU
- * sidecar) are tried in order. A stage's decision is executed through the same
+ * sidecar, then Jev) are tried in order. A stage's decision is executed through the same
  * tools, with a templated reply, when it is actionable, clears the stage's gate
  * and passes the guards; anything else falls through to the LLM. In shadow mode a
  * stage only logs what it would have done.</p>
@@ -81,7 +82,8 @@ class VoiceCommandService implements EventPublisher {
 
     /** Fast-path stages by name, tried in {@link #STAGE_ORDER}. Replaceable in tests. */
     Map<String, IntentStage> stages = [
-        (NluSidecarStage.NAME): new NluSidecarStage()
+        (NluSidecarStage.NAME): new NluSidecarStage(),
+        (JevStage.NAME)       : new JevStage()
     ]
 
     @Autowired(required = false)
@@ -96,13 +98,15 @@ class VoiceCommandService implements EventPublisher {
     static final int MAX_ITERATIONS = 6
     static final int MAX_HISTORY = 40
     static final List<String> ACTIONS = ['ON', 'OFF', 'TOGGLE']
-    static final List<String> STAGE_ORDER = [NluSidecarStage.NAME]
+    static final List<String> STAGE_ORDER = [NluSidecarStage.NAME, JevStage.NAME]
     static final String DEFAULT_FAST_INTENTS = 'control,scenario,mower'
     static final double DEFAULT_ZONE_OFF_MIN_CONFIDENCE = 0.95d
     static final Map<String, Map> STAGE_DEFAULTS = [
         (NluSidecarStage.NAME): [enabled: CfgKey.VOICE.VOICE_NLU_ENABLED, mode: CfgKey.VOICE.VOICE_NLU_MODE,
                                  // Suggested gate of the sidecar's default encoder (e5-small); 0.9 for minilm.
-                                 gate   : CfgKey.VOICE.VOICE_NLU_GATE, defaultGate: 0.6d]
+                                 gate   : CfgKey.VOICE.VOICE_NLU_GATE, defaultGate: 0.6d],
+        (JevStage.NAME)       : [enabled: CfgKey.VOICE.VOICE_JEV_ENABLED, mode: CfgKey.VOICE.VOICE_JEV_MODE,
+                                 gate   : CfgKey.VOICE.VOICE_JEV_GATE, defaultGate: 0.7d]
     ]
 
     /**
@@ -268,7 +272,7 @@ class VoiceCommandService implements EventPublisher {
             long started = System.nanoTime()
             FastDecision decision
             try {
-                decision = stage.resolve(transcript, locale, stageSettings(name))
+                decision = stage.resolve(transcript, locale, stageSettings(name) + [catalog: catalog])
             } catch (Exception e) {
                 recordStage(name, 'error', started)
                 log.warn("Voice stage '${name}' failed, falling through: ${e.message}")
@@ -658,6 +662,11 @@ class VoiceCommandService implements EventPublisher {
             case NluSidecarStage.NAME:
                 return [url      : cfg(String, CfgKey.VOICE.VOICE_NLU_URL.key(), 'http://localhost:8090'),
                         timeoutMs: cfg(Integer, CfgKey.VOICE.VOICE_NLU_TIMEOUT_MS.key(), 300)]
+            case JevStage.NAME:
+                String key = cfg(String, CfgKey.VOICE.VOICE_JEV_APIKEY.key(), null)?.trim()
+                return [apiKey   : key ?: System.getenv('JEV_API_KEY'),
+                        model    : cfg(String, CfgKey.VOICE.VOICE_JEV_MODEL.key(), 'jev-latest'),
+                        timeoutMs: cfg(Integer, CfgKey.VOICE.VOICE_JEV_TIMEOUT_MS.key(), 1500)]
             default:
                 return [:]
         }

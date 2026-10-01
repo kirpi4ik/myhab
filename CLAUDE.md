@@ -114,7 +114,7 @@ A standalone, hands-free Android companion (Kotlin + Jetpack Compose, minSdk 30 
 
 ### Voice NLU sidecar (`bridges/voice-nlu/`)
 
-This is a standalone Python image (FastAPI + ONNX Runtime) that serves as the voice assistant's local fast path. `VoiceCommandService` asks it before the LLM tool loop, and executes its decision itself when the decision clears `feature.voice.nlu.gate`; anything else falls through to the LLM.
+This is a standalone Python image (FastAPI + ONNX Runtime) that serves as the voice assistant's local fast path. `VoiceCommandService` asks it first, then optionally TypeSafe Jev (`JevStage`, `feature.voice.jev.*`), then the LLM tool loop. A stage's decision is executed when it clears that stage's gate; anything else falls through to the next stage.
 
 - The image ships three int8 encoders, selected with `NLU_ENCODER`.
 - Its classifier heads are trained on the catalog that the `voiceNluSync` job sends.

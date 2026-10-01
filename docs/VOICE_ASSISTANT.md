@@ -241,11 +241,21 @@ The decision goes through the **same tool code** as the LLM's calls (`evt_switch
 
 The fast path's turn is stored in the session as plain user and assistant text, so a following LLM turn has the context.
 
-**Shadow mode** (`feature.voice.nlu.mode=shadow`, the default) resolves and logs only. Each command logs a `Voice shadow: … fast=… llm=… agree=…` line comparing the decision with the LLM's first tool call. Use it to check agreement before switching to `active`.
+**Second stage: Jev.** When `feature.voice.jev.enabled` is set, a command the NLU stage didn't act on goes next to [TypeSafe Jev](https://typesafe.ai) (`JevStage`), a cloud model that answers typed choice questions with calibrated probabilities. One request asks five questions in parallel:
+
+- the intent
+- the target, with every catalog peripheral and zone as an option
+- the on/off action, described with EN/RO/RU verb examples
+- the scenario
+- the mower command
+
+Its decision goes through the same gate, guards and execution, with `resolvedBy: "jev"`. Jev usually answers in 0.4–1 s; a timeout or error falls through to the LLM.
+
+**Shadow mode** (the default `mode=shadow` for each stage) resolves and logs only. Each command logs a `Voice shadow: … fast=… llm=… agree=…` line comparing the decision with the LLM's first tool call. Use it to check agreement before switching to `active`.
 
 **Metrics** are on `/actuator/prometheus`:
 
-- `voice_stage_duration_seconds{stage=nlu|llm|tts, outcome=accepted|fallthrough|error|shadow-accept|shadow-fallthrough}`
+- `voice_stage_duration_seconds{stage=nlu|jev|llm|tts, outcome=accepted|fallthrough|error|shadow-accept|shadow-fallthrough}`
 - `voice_resolved_total{stage}`
 
 The measurements behind this design are in [`VOICE_PERFORMANCE_OPTIONS.md`](VOICE_PERFORMANCE_OPTIONS.md).
@@ -278,6 +288,12 @@ defaults apply when a key is absent.
 | `feature.voice.nlu.url` | `http://localhost:8090` | Base URL of the `voice-nlu` sidecar. |
 | `feature.voice.nlu.gate` | `0.6` | Minimum decision confidence to act. Match the sidecar's `suggestedGate` (`/health`): `0.6` for the e5 encoders (the default), `0.9` for `minilm`. |
 | `feature.voice.nlu.timeoutMs` | `300` | Per-request timeout; on timeout the command falls through to the LLM. |
+| `feature.voice.jev.enabled` | `false` | Ask TypeSafe Jev after the NLU sidecar, before the LLM. |
+| `feature.voice.jev.mode` | `shadow` | `shadow` or `active`, as for the NLU stage. |
+| `feature.voice.jev.gate` | `0.7` | Minimum Jev decision confidence to act. |
+| `feature.voice.jev.timeoutMs` | `1500` | Per-request timeout; on timeout the command falls through to the LLM. |
+| `feature.voice.jev.model` | `jev-latest` | Jev model id. |
+| `feature.voice.jev.apikey` | – (env fallback) | Jev API key; falls back to `JEV_API_KEY`. |
 | `feature.voice.fast.intents` | `control,scenario,mower` | Intents the fast path may execute (comma-separated). |
 | `feature.voice.fast.zoneOffMinConfidence` | `0.95` | Stricter confidence for a zone-wide OFF, which can cut devices the user did not mean. |
 

@@ -2,8 +2,8 @@
 
 Status (2026-10):
 
-- **Implemented:** phase 1, the `bridges/voice-nlu` sidecar; and phase 2, the fast path in `VoiceCommandService` (local NLU → Claude, off by default, with shadow mode). See `docs/VOICE_ASSISTANT.md` §1.9.
-- **Not yet implemented:** the Jev stage (phase 3) and the training loop (phase 4).
+- **Implemented:** phase 1, the `bridges/voice-nlu` sidecar; phase 2, the fast path in `VoiceCommandService`; and phase 3, the Jev stage (`JevStage`). The result is the full local NLU → Jev → Claude cascade. Each stage is off by default and has a shadow mode. See `docs/VOICE_ASSISTANT.md` §1.9.
+- **Not yet implemented:** the training loop (phase 4).
 The evaluation tooling (Jev, Claude, Laya, BERT/SetFit and the cascade simulator) is in [`tools/voice-eval/`](../tools/voice-eval/).
 
 ## 1. Where the time goes today

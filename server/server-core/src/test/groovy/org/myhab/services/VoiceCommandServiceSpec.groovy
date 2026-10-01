@@ -417,6 +417,83 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
             1 * provider.converse(_, _, _, _, _, _) >> textTurn('Done.')
     }
 
+    // ------------------------------------------------------------- Jev stage
+
+    void "when NLU is unsure, an active Jev decision above its gate is executed"() {
+        given:
+            IntentStage jev = Mock(IntentStage)
+            service.stages = ['nlu': stage, 'jev': jev]
+            activeNlu([(CfgKey.VOICE.VOICE_JEV_ENABLED.key()): true, (CfgKey.VOICE.VOICE_JEV_MODE.key()): 'active'])
+
+        when:
+            Map result = service.handleTranscript('stinge lumina de pe terasa', 'ro-RO', null, 'tester')
+
+        then: "NLU first, below its 0.6 gate"
+            1 * stage.resolve(_, _, _) >> decision(intent: 'control', target: 'P15', action: 'OFF', confidence: 0.4d)
+
+        then: "Jev gets the catalog and clears its 0.7 gate"
+            1 * jev.resolve('stinge lumina de pe terasa', 'ro-RO', { it.catalog?.peripherals }) >>
+                    new FastDecision(stage: 'jev', intent: 'control', target: 'P15', action: 'OFF', confidence: 0.8d)
+            0 * provider.converse(_, _, _, _, _, _)
+            published.size() == 1
+            published[0].data.p4 == 'off'
+            result.resolvedBy == 'jev'
+            result.spokenResponse == 'Am oprit Terrace Light.'
+    }
+
+    void "Jev is not asked when NLU already acted, nor when it is disabled"() {
+        given:
+            IntentStage jev = Mock(IntentStage)
+            service.stages = ['nlu': stage, 'jev': jev]
+            activeNlu(jevEnabled ? [(CfgKey.VOICE.VOICE_JEV_ENABLED.key()): true, (CfgKey.VOICE.VOICE_JEV_MODE.key()): 'active'] : [:])
+
+        when:
+            service.handleTranscript('turn on the terrace light', 'en-US', null, 'tester')
+
+        then:
+            1 * stage.resolve(_, _, _) >> decision(intent: 'control', target: 'P15', action: 'ON', confidence: nluConfidence)
+            0 * jev.resolve(_, _, _)
+            (llmCalls) * provider.converse(_, _, _, _, _, _) >> textTurn('Done.')
+
+        where:
+            jevEnabled | nluConfidence | llmCalls
+            true       | 0.97d         | 0
+            false      | 0.3d          | 1
+    }
+
+    void "when both stages are unsure, the LLM decides"() {
+        given:
+            IntentStage jev = Mock(IntentStage)
+            service.stages = ['nlu': stage, 'jev': jev]
+            activeNlu([(CfgKey.VOICE.VOICE_JEV_ENABLED.key()): true, (CfgKey.VOICE.VOICE_JEV_MODE.key()): 'active'])
+
+        when:
+            Map result = service.handleTranscript('turn on the light in the bedroom', 'en-US', null, 'tester')
+
+        then:
+            1 * stage.resolve(_, _, _) >> decision(intent: 'control', target: 'P15', action: 'ON', confidence: 0.3d)
+            1 * jev.resolve(_, _, _) >> new FastDecision(stage: 'jev', intent: 'control', target: 'Z7', action: 'ON', confidence: 0.45d)
+            1 * provider.converse(_, _, _, _, _, _) >> textTurn('Which bedroom?')
+            published.isEmpty()
+            result.resolvedBy == 'llm'
+            result.awaitingReply
+    }
+
+    void "a failing Jev call falls through to the LLM"() {
+        given:
+            IntentStage jev = Mock(IntentStage)
+            service.stages = ['jev': jev]
+            configure([(CfgKey.VOICE.VOICE_JEV_ENABLED.key()): true, (CfgKey.VOICE.VOICE_JEV_MODE.key()): 'active'])
+
+        when:
+            Map result = service.handleTranscript('turn on the terrace light', 'en-US', null, 'tester')
+
+        then:
+            1 * jev.resolve(_, _, _) >> { throw new IllegalStateException('Jev HTTP 529') }
+            1 * provider.converse(_, _, _, _, _, _) >> textTurn('Done.')
+            result.resolvedBy == 'llm'
+    }
+
     void "a fast-path turn is kept in the history as plain text for the next LLM turn"() {
         given:
             activeNlu()
