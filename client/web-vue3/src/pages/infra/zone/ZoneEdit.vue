@@ -53,20 +53,7 @@
             </template>
           </q-input>
 
-          <q-input
-            v-model="aliases"
-            label="Voice aliases"
-            hint="Alternate names for voice control, comma-separated (e.g. Romanian names)"
-            clearable
-            clear-icon="close"
-            color="orange"
-            filled
-            dense
-          >
-            <template v-slot:prepend>
-              <q-icon name="mdi-bullhorn-variant-outline"/>
-            </template>
-          </q-input>
+          <VoiceAliasInput v-model="aliases"/>
         </q-card-section>
 
         <q-separator/>
@@ -157,6 +144,8 @@ import { useApolloClient } from '@vue/apollo-composable';
 import { useEntityCRUD } from '@/composables';
 import EntityInfoPanel from '@/components/EntityInfoPanel.vue';
 import EntityFormActions from '@/components/EntityFormActions.vue';
+import VoiceAliasInput from '@/components/selectors/VoiceAliasInput.vue';
+import { VOICE_ALIAS_KEY, parseVoiceAliases } from '@/_helpers';
 
 import {
   ZONE_GET_BY_ID_MINIMAL,
@@ -170,7 +159,8 @@ export default defineComponent({
   name: 'ZoneEdit',
   components: {
     EntityInfoPanel,
-    EntityFormActions
+    EntityFormActions,
+    VoiceAliasInput
   },
   setup() {
     const route = useRoute();
@@ -179,8 +169,7 @@ export default defineComponent({
     
     // Additional data
     const zoneList = ref([]);
-    const aliases = ref('');           // voice aliases, comma-separated (Configuration sidecar)
-    const ALIAS_KEY = 'feature.voice.alias';
+    const aliases = ref([]);           // voice aliases (Configuration sidecar, stored comma-separated)
     
     // Use CRUD composable
     const {
@@ -229,11 +218,10 @@ export default defineComponent({
       // Load current voice aliases (Configuration sidecar) for this zone.
       client.query({
         query: CONFIGURATION_GET_LIST_VALUE,
-        variables: { key: ALIAS_KEY, entityId: Number(route.params.idPrimary), entityType: 'ZONE' },
+        variables: { key: VOICE_ALIAS_KEY, entityId: Number(route.params.idPrimary), entityType: 'ZONE' },
         fetchPolicy: 'network-only',
       }).then(response => {
-        const values = (response.data.configListByKey || []).map(c => c.value).filter(Boolean);
-        aliases.value = values.join(', ');
+        aliases.value = parseVoiceAliases(response.data.configListByKey);
       }).catch(() => { /* no aliases yet */ });
 
       // Fetch all zones for parent/sub-zone selection
@@ -305,8 +293,8 @@ export default defineComponent({
           await client.mutate({
             mutation: CONFIGURATION_SET_VALUE,
             variables: {
-              key: ALIAS_KEY,
-              value: (aliases.value || '').trim(),
+              key: VOICE_ALIAS_KEY,
+              value: aliases.value.join(', '),
               entityId: route.params.idPrimary,
               entityType: 'ZONE',
             },

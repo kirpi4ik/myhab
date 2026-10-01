@@ -4,3 +4,4 @@ export * from './role';
 export * from './utils';
 export * from './apollo-utils';
 export * from './datetime';
+export * from './voice-aliases';

@@ -247,6 +247,8 @@
 			"no_ports": "No ports connected",
 			"located_zones": "Located in Zones",
 			"no_zones": "Not assigned to any zones",
+			"voice_aliases": "Voice aliases",
+			"no_voice_aliases": "No voice aliases",
 			"connected_cables": "Connected Cables",
 			"no_cables": "No cables connected",
 			"load_error": "Failed to load peripheral details"

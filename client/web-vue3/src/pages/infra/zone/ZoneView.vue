@@ -32,6 +32,19 @@
           <q-item-label caption>{{ viewItem.description }}</q-item-label>
         </q-item-section>
       </q-item>
+      <q-item>
+        <q-item-section>
+          <q-item-label>Voice aliases</q-item-label>
+          <q-item-label caption>
+            <template v-if="voiceAliases.length > 0">
+              <q-chip v-for="alias in voiceAliases" :key="alias" dense square color="blue-grey-1" text-color="blue-grey-9">
+                {{ alias }}
+              </q-chip>
+            </template>
+            <span v-else>No voice aliases</span>
+          </q-item-label>
+        </q-item-section>
+      </q-item>
       <div class="q-pa-md">
         <q-table
           title="List of Devices"
@@ -72,7 +85,8 @@ import {defineComponent, onMounted, ref} from "vue";
 import {useApolloClient} from "@vue/apollo-composable";
 import {useRoute, useRouter} from "vue-router/dist/vue-router";
 
-import {ZONE_GET_BY_ID_MINIMAL} from "@/graphql/queries";
+import {CONFIGURATION_GET_LIST_VALUE, ZONE_GET_BY_ID_MINIMAL} from "@/graphql/queries";
+import {VOICE_ALIAS_KEY, parseVoiceAliases} from "@/_helpers";
 
 
 
@@ -81,6 +95,7 @@ export default defineComponent({
   setup() {
     const uri = '/admin/zones'
     const viewItem = ref()
+    const voiceAliases = ref([])
     const loading = ref(false)
     const {client} = useApolloClient();
     const router = useRouter();
@@ -101,16 +116,24 @@ export default defineComponent({
       {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
       {name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true},
     ]
+    const route = useRoute();
     const fetchData = () => {
       loading.value = true;
       client.query({
         query: ZONE_GET_BY_ID_MINIMAL,
-        variables: {id: useRoute().params.idPrimary},
+        variables: {id: route.params.idPrimary},
         fetchPolicy: 'network-only',
       }).then(response => {
         viewItem.value = response.data.zoneById
         loading.value = false;
       });
+      client.query({
+        query: CONFIGURATION_GET_LIST_VALUE,
+        variables: {key: VOICE_ALIAS_KEY, entityId: Number(route.params.idPrimary), entityType: 'ZONE'},
+        fetchPolicy: 'network-only',
+      }).then(response => {
+        voiceAliases.value = parseVoiceAliases(response.data.configListByKey)
+      }).catch(() => { /* no aliases yet */ });
     }
     onMounted(() => {
       fetchData()
@@ -119,6 +142,7 @@ export default defineComponent({
       uri,
       fetchData,
       viewItem,
+      voiceAliases,
       pagination,
       zoneColumns,
       peripheralColumns,
