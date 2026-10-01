@@ -241,6 +241,8 @@ The decision goes through the **same tool code** as the LLM's calls (`evt_switch
 
 The fast path's turn is stored in the session as plain user and assistant text, so a following LLM turn has the context.
 
+**Learning from the LLM.** While the NLU stage is enabled, myHAB posts every command to the sidecar's `/feedback`, off the request thread. A command carries a training label only when the **LLM** resolved it with exactly one tool call that worked, on a catalog entity. The sidecar adds these real phrasings to its template sentences on the next retrain, which happens on a catalog change and daily when new labels exist. An optional held-out set (`/data/heldout.json`) blocks a daily retrain that would score worse. Details: [`bridges/voice-nlu/README.md`](../bridges/voice-nlu/README.md#learning).
+
 **Second stage: Jev.** When `feature.voice.jev.enabled` is set, a command the NLU stage didn't act on goes next to [TypeSafe Jev](https://typesafe.ai) (`JevStage`), a cloud model that answers typed choice questions with calibrated probabilities. One request asks five questions in parallel:
 
 - the intent
@@ -291,6 +293,7 @@ defaults apply when a key is absent.
 | `feature.voice.nlu.url` | `http://localhost:8090` | Base URL of the `voice-nlu` sidecar. |
 | `feature.voice.nlu.gate` | `0.6` | Minimum decision confidence to act. Match the sidecar's `suggestedGate` (`/health`): `0.6` for the e5 encoders (the default), `0.9` for `minilm`. |
 | `feature.voice.nlu.timeoutMs` | `300` | Per-request timeout; on timeout the command falls through to the LLM. |
+| `feature.voice.nlu.feedback` | `true` | Send each command's decisions and the LLM's label to the sidecar, which keeps them locally and learns from them. |
 | `feature.voice.jev.enabled` | `false` | Ask TypeSafe Jev after the NLU sidecar, before the LLM. |
 | `feature.voice.jev.mode` | `shadow` | `shadow` or `active`, as for the NLU stage. |
 | `feature.voice.jev.gate` | `0.7` | Minimum Jev decision confidence to act. |

@@ -1,0 +1,6 @@
+# Exported catalog, test cases and run results are installation data - never commit.
+data/
+results/
+.venv/
+models/
+checkpoints/

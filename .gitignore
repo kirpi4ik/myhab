@@ -31,4 +31,6 @@ local.properties
 __pycache__/
 *.py[cod]
 .pytest_cache/
-tools
+# Voice evaluation tooling: the scripts are versioned, the installation data and run results are not
+tools/voice-eval/data/
+tools/voice-eval/results/

@@ -2,8 +2,13 @@
 
 Status (2026-10):
 
-- **Implemented:** phase 1, the `bridges/voice-nlu` sidecar; phase 2, the fast path in `VoiceCommandService`; and phase 3, the Jev stage (`JevStage`). The result is the full local NLU → Jev → Claude cascade. Each stage is off by default and has a shadow mode. See `docs/VOICE_ASSISTANT.md` §1.9.
-- **Not yet implemented:** the training loop (phase 4).
+- **Implemented:**
+  - Phase 1: the `bridges/voice-nlu` sidecar.
+  - Phase 2: the fast path in `VoiceCommandService`.
+  - Phase 3: the Jev stage (`JevStage`). With it, the full local NLU → Jev → Claude cascade is in place; each stage is off by default and has a shadow mode.
+  - Phase 4: the training loop. A decision log is kept, with LLM-labelled phrasings learned on retrain, daily retrains, and a held-out promotion gate.
+- **Docs:** `docs/VOICE_ASSISTANT.md` §1.9 and `bridges/voice-nlu/README.md`.
+- **Not built:** an offline encoder fine-tune. It is documented as the next step if accuracy plateaus.
 The evaluation tooling (Jev, Claude, Laya, BERT/SetFit and the cascade simulator) is in [`tools/voice-eval/`](../tools/voice-eval/).
 
 ## 1. Where the time goes today
@@ -117,6 +122,8 @@ python -m venv .venv
 # ablation flags: --heads v1 (old heads), --no-augment, --no-lexicon, --balanced
 .\Summarize-Results.ps1 -File results\<run>.jsonl             # same scoring as the Jev/Claude runners
 .\Simulate-Cascade.ps1 -Bert results\<bert>.jsonl -Jev results\<jev>.jsonl -Claude results\<claude>.jsonl
+$env:VOICE_ALIASES_FILE = '<installation repo>\voice-nlu\aliases.json'   # alias overlay; installation data
+.\Apply-VoiceAliases.ps1 -BaseUrl https://myhab.example.com -WhatIf   # write the aliases to a server (merge; -Replace, -Only P184*)
 ```
 
 Each run writes to `results/` (git-ignored):
@@ -220,7 +227,7 @@ Jev is about 3.4× faster. In production, Claude also needs a second call to phr
 In the third run, both models used a catalog with voice aliases on most entities:
 
 - **Coverage:** 43 of the 75 peripherals and 25 of the 26 zones got natural EN/RO/RU names, 179 aliases in total. They were written like the ones an operator would type into `feature.voice.alias`, for every main device and room, not only the ones that had failed.
-- **Where they were added:** through an eval-only overlay (`tools/voice-eval/data/aliases.json`, merged at export), not in the database.
+- **Where they were added:** through an alias overlay file merged at export (`Export-VoiceCatalog.ps1 -AliasesFile`, or `VOICE_ALIASES_FILE`), not in the database. The file names the installation's devices, so it is kept in the installation's repo, and `Apply-VoiceAliases.ps1` writes it to the server.
 - **Prompt size:** the catalog grew from about 5.5k to 6.8k Jev input tokens.
 - **Caveat:** whoever wrote the aliases knew the test phrases, so the gain is an upper bound. Confirm it on commands that were not in the test set.
 
@@ -400,6 +407,30 @@ The cascade with the int8 runs, using the same Jev and Claude runs as above:
 - Even without Jev, it beats Claude alone on every metric.
 - 0.6 is used rather than 0.5 as a margin for unseen phrasings. Production shadow logs should confirm the gate.
 - `e5-base` remains the option if accuracy matters more than RAM; `minilm` at 0.9 if fewer, safer local decisions are wanted.
+
+### Held-out check (new phrasings)
+
+All numbers above come from `cases.json`, and that set is not independent: the templates, the verb list, the aliases and the encoder choice were all made while looking at it. To measure fairly, a separate held-out set was written: 35 intents × EN/RO/RU = 105 phrasings.
+
+- **What it covers:** mostly devices and rooms `cases.json` doesn't, phrased unlike the templates. That includes verbs outside the verb list ("kill the light", "pune banda led"), typos, a radio request that starts with a control verb, a zone-wide OFF, and two ambiguous requests.
+- **Where it lives:** it names the installation's devices, so it is kept with the deployment (mounted into the sidecar via `NLU_HELDOUT`), not in this repository.
+- **What it is for:** it is also the set that gates the sidecar's daily retrain.
+
+| Encoder (int8 sidecar) | `cases.json` | Held-out | Accuracy, confidence 0.5–0.9 | Wrong at ≥ 0.9 |
+|---|---|---|---|---|
+| **e5-small** | 85.9% | **76.2%** | **97.9%** | 0 |
+| minilm | 85.9% | 67.6% | 79.6% | 0 |
+| e5-base | 91.9% | 70.5% | 91.8% | 0 |
+
+- **Accuracy drops on unseen phrasings,** as expected. **e5-small is the best of the three** there; e5-base's lead on `cases.json` was fitted to that set. This confirms the default.
+- **The gate holds on unseen data.** With e5-small, a gate of 0.6 acts on 32% of the held-out commands, and a gate of 0.5 on 42%, **both with no wrong decisions**. Every miss had confidence ≤ 0.52 and would have fallen through to Jev or Claude. Gate 0.5 is a candidate once production shadow logs agree.
+- **Where it is weakest:**
+  - devices of a different kind sharing a room's name (a room's heater picked when its temperature sensor was meant)
+  - pause and resume for the mower
+  - sprinkler program names
+  - ambiguity, which the model cannot express except as low confidence
+
+  These are the gaps the learning loop and better aliases should close; their effect will show on this held-out set.
 
 ### Conclusion
 

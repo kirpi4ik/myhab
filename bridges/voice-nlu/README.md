@@ -16,13 +16,40 @@ It resolves a transcript to one decision in tens of milliseconds, on CPU and off
 
 | Method | Path | Body → response |
 |---|---|---|
-| `GET` | `/health` | → `{ready, encoder, suggestedGate, model, catalogHash, trainedAt, rows, training, lastError}` |
+| `GET` | `/health` | → `{ready, encoder, suggestedGate, model, catalogHash, trainedAt, rows, learned, heldout, training, lastRetrain, lastError}` |
 | `PUT` | `/catalog` | `{hash, catalog}` → `202 {status: training\|unchanged}` |
 | `POST` | `/resolve` | `{text, locale}` → `{intent, target, action, scenario, mowerAction, confidence, catalogHash, ms, top}`, or `503` before the first training |
+| `POST` | `/feedback` | one record per voice command (see "Learning") → `202 {status, labelled}` |
 
 - `target` is `P<peripheralId>` or `Z<zoneId>`, and `scenario` is `S<jobId>`.
 - `intent` is one of `control`, `scenario`, `query`, `mower`, `clarify` or `other`.
 - `confidence` is the lowest confidence among the heads the intent needed.
+
+## Learning
+
+The sidecar improves from real commands, with the LLM as the teacher.
+
+- **Feedback records.** After every voice command myHAB posts a record to `/feedback` (switch it off with `feature.voice.nlu.feedback=false`). The record holds the transcript, the locale, each stage's decision, the stage that resolved the command, and a `label`.
+- **Labels.** myHAB sets a label only when the **LLM** resolved the command with exactly one tool call that worked, on a catalog entity. Fast-path decisions are logged but never labelled, so the model cannot reinforce its own mistakes. Answers to a clarifying question are never labelled either, because they only make sense together with the earlier turn.
+- **Storage.** Records are kept under `/data/log/feedback-YYYY-MM.jsonl` for `NLU_LOG_RETENTION_DAYS`, and the transcripts never leave the installation.
+- **Retraining.** Every retrain adds the labelled phrasings to the template sentences:
+  - deduplicated by text, with the latest label winning
+  - at most 50 per label
+  - only for entities still in the catalog
+  - repeated `NLU_LEARNED_WEIGHT` times, so real speech outweighs the templates
+- **When retrains happen:**
+  - **Catalog change** (`PUT /catalog`): the new heads always go live.
+  - **Periodic retrain:** every `NLU_RETRAIN_HOURS`, when new labels have arrived.
+- **Held-out set.** Write a set of commands that never went into the templates, the verb list or the aliases, in the `tools/voice-eval/data/cases.json` format. It names your devices, so it is installation data: keep it with the deployment and mount it read-only, then point `NLU_HELDOUT` at it (for example `./voice-nlu/heldout.json:/config/heldout.json:ro` with `NLU_HELDOUT=/config/heldout.json`). Without `NLU_HELDOUT`, the sidecar looks for `/data/heldout.json`.
+  - A periodic retrain then replaces the current heads only if it scores no worse on the held-out set.
+  - Every training reports its held-out accuracy in `/health` (`heldout`, and `lastRetrain` for the periodic ones).
+
+**If accuracy plateaus**, fine-tune the encoder offline:
+
+1. Train jointly on target × action labels, using the templates plus the real phrasings from `/data/log`. Training on target labels alone is what made the evaluated SetFit run worse.
+2. Export it with `export_models.py`.
+3. Place it under `/data/models/<encoder-name>/`, where it overrides the baked-in model.
+4. Keep it only if the held-out score improves.
 
 ## Encoders
 
@@ -46,9 +73,13 @@ A model exported to `/data/models/<name>/` (`model_quantized.onnx` + `tokenizer.
 |---|---|
 | `NLU_ENCODER` | `e5-small` |
 | `NLU_MODELS_DIR` | `/models` |
-| `NLU_DATA_DIR` | `/data` (trained heads; mount a volume) |
+| `NLU_DATA_DIR` | `/data` (trained heads and the feedback log; mount a volume) |
 | `NLU_THREADS` | `2` (ONNX intra-op threads) |
 | `NLU_PORT` | `8090` |
+| `NLU_RETRAIN_HOURS` | `24` (periodic retrain with new labels; `0` = off) |
+| `NLU_LOG_RETENTION_DAYS` | `180` (feedback log retention) |
+| `NLU_LEARNED_WEIGHT` | `3` (how many times each learned phrasing counts) |
+| `NLU_HELDOUT` | `<NLU_DATA_DIR>/heldout.json` (held-out cases that gate the periodic retrain) |
 
 ## Development
 
