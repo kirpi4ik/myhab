@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.myhab.jobs.NibeTokenRefreshJob
 import org.myhab.jobs.NibeInfoSyncJob
 import org.myhab.jobs.ConfigSyncJob
+import org.myhab.jobs.NluCatalogSyncJob
 import org.myhab.jobs.DeviceControllerStateSyncJob
 import org.myhab.jobs.HeatingControlJob
 import org.myhab.jobs.EventLogReaderJob
@@ -60,6 +61,7 @@ if (System.getenv("DB_URL")) {
 def nibeTokenRefreshInterval = config?.getProperty('quartz.jobs.nibeTokenRefresh.interval', Integer, 300)
 def nibeInfoSyncInterval = config?.getProperty('quartz.jobs.nibeInfoSync.interval', Integer, 60)
 def configSyncInterval = config?.getProperty('quartz.jobs.configSync.interval', Integer, 60)
+def voiceNluSyncInterval = config?.getProperty('quartz.jobs.voiceNluSync.interval', Integer, 300)
 def deviceControllerStateSyncInterval = config?.getProperty('quartz.jobs.deviceControllerStateSync.interval', Integer, 60)
 def heatingControlInterval = config?.getProperty('quartz.jobs.heatingControl.interval', Integer, 120)
 def eventLogReaderInterval = config?.getProperty('quartz.jobs.eventLogReader.interval', Integer, 60)
@@ -76,6 +78,7 @@ def rainbowRGBInterval = config?.getProperty('quartz.jobs.rainbowRGB.interval', 
 def nibeTokenRefreshEnabled = config?.getProperty('quartz.jobs.nibeTokenRefresh.enabled', Boolean, true)
 def nibeInfoSyncEnabled = config?.getProperty('quartz.jobs.nibeInfoSync.enabled', Boolean, true)
 def configSyncEnabled = config?.getProperty('quartz.jobs.configSync.enabled', Boolean, true)
+def voiceNluSyncEnabled = config?.getProperty('quartz.jobs.voiceNluSync.enabled', Boolean, false)
 def deviceControllerStateSyncEnabled = config?.getProperty('quartz.jobs.deviceControllerStateSync.enabled', Boolean, true)
 def heatingControlEnabled = config?.getProperty('quartz.jobs.heatingControl.enabled', Boolean, false)
 def eventLogReaderEnabled = config?.getProperty('quartz.jobs.eventLogReader.enabled', Boolean, false)
@@ -103,6 +106,7 @@ def enabledTriggers = []
 if (nibeTokenRefreshEnabled) enabledTriggers << 'nibeTokenRefreshTrigger'
 if (nibeInfoSyncEnabled) enabledTriggers << 'nibeInfoSyncTrigger'
 if (configSyncEnabled) enabledTriggers << 'configSyncTrigger'
+if (voiceNluSyncEnabled) enabledTriggers << 'voiceNluSyncTrigger'
 if (deviceControllerStateSyncEnabled) enabledTriggers << 'deviceControllerStateSyncTrigger'
 if (heatingControlEnabled) enabledTriggers << 'heatingControlTrigger'
 if (eventLogReaderEnabled) enabledTriggers << 'eventLogReaderTrigger'
@@ -254,6 +258,22 @@ beans = {
         group = 'STATIC_JOBS'
     }
     
+    // NluCatalogSyncJob - keeps the voice NLU sidecar trained on the current catalog
+    voiceNluSyncJobDetail(JobDetailFactoryBean) {
+        jobClass = NluCatalogSyncJob
+        durability = true
+        requestsRecovery = false
+        group = 'STATIC_JOBS'
+        description = 'Voice NLU catalog sync - Spring Managed'
+    }
+
+    voiceNluSyncTrigger(SimpleTriggerFactoryBean) {
+        jobDetail = ref('voiceNluSyncJobDetail')
+        startDelay = 30000L
+        repeatInterval = voiceNluSyncInterval * 1000L
+        repeatCount = SimpleTrigger.REPEAT_INDEFINITELY
+        group = 'STATIC_JOBS'
+    }
     // DeviceControllerStateSyncJob - Device controller state sync via HTTP
     deviceControllerStateSyncJobDetail(JobDetailFactoryBean) {
         jobClass = DeviceControllerStateSyncJob
