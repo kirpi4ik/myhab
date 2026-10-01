@@ -255,8 +255,11 @@ Its decision goes through the same gate, guards and execution, with `resolvedBy:
 
 **Metrics** are on `/actuator/prometheus`:
 
-- `voice_stage_duration_seconds{stage=nlu|jev|llm|tts, outcome=accepted|fallthrough|error|shadow-accept|shadow-fallthrough}`
-- `voice_resolved_total{stage}`
+- `voice_stage_duration_seconds{stage=nlu|jev|llm|tts, outcome=accepted|fallthrough|error|shadow-accept|shadow-fallthrough}`: a histogram (5 ms – 30 s buckets) for per-stage p50/p90
+- `voice_resolved_total{stage}`: which stage answered each command
+- `voice_shadow_total{stage, accepted, agree}`: shadow-mode decisions, whether the stage would have acted, and whether it matched the LLM's first tool call
+
+An installation can graph these in Grafana. The share answered per stage, the latency, and the shadow agreement are what decide when to switch a stage from `shadow` to `active`.
 
 The measurements behind this design are in [`VOICE_PERFORMANCE_OPTIONS.md`](VOICE_PERFORMANCE_OPTIONS.md).
 

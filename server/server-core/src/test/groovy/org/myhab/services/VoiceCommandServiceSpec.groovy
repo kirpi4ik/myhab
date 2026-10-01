@@ -494,6 +494,32 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
             result.resolvedBy == 'llm'
     }
 
+    void "metrics: stage timings with histogram buckets, resolutions per stage, shadow agreement"() {
+        given:
+            def registry = new io.micrometer.prometheus.PrometheusMeterRegistry(io.micrometer.prometheus.PrometheusConfig.DEFAULT)
+            service.meterRegistry = registry
+            configure([(CfgKey.VOICE.VOICE_NLU_ENABLED.key()): true])  // shadow
+
+        when:
+            service.handleTranscript('turn on the terrace light', 'en-US', null, 'tester')
+
+        then:
+            1 * stage.resolve(_, _, _) >> decision(intent: 'control', target: 'P15', action: 'ON')
+            2 * provider.converse(_, _, _, _, _, _) >>> [
+                toolTurn(VoiceTools.CONTROL_ENTITY, [entityType: 'PERIPHERAL', id: 15, action: 'ON']),
+                textTurn('Turned on the terrace light.')
+            ]
+            registry.get('voice.stage.duration').tags('stage', 'nlu', 'outcome', 'shadow-accept').timer().count() == 1
+            registry.get('voice.resolved').tags('stage', 'llm').counter().count() == 1
+            registry.get('voice.shadow').tags('stage', 'nlu', 'accepted', 'true', 'agree', 'true').counter().count() == 1
+
+        and: "the series the Grafana dashboard queries"
+            String scrape = registry.scrape()
+            scrape.contains('voice_stage_duration_seconds_bucket{outcome="accepted",stage="llm",le=')
+            scrape.contains('voice_resolved_total{stage="llm"')
+            scrape.contains('voice_shadow_total{accepted="true",agree="true",stage="nlu"')
+    }
+
     void "a fast-path turn is kept in the history as plain text for the next LLM turn"() {
         given:
             activeNlu()

@@ -37,6 +37,7 @@ import org.myhab.services.voice.VoiceTtsProvider
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.security.MessageDigest
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 /**
@@ -384,6 +385,8 @@ class VoiceCommandService implements EventPublisher {
         String llmKey = llmDecisionKey(llmCall)
         shadow.each { Map s ->
             FastDecision d = s.decision as FastDecision
+            meterRegistry?.counter('voice.shadow', 'stage', d.stage, 'accepted', s.accepted.toString(),
+                    'agree', (d.key() == llmKey).toString())?.increment()
             log.info("Voice shadow: stage=${d.stage} fast=${d.key()} confidence=${d.confidence} accepted=${s.accepted} " +
                     "llm=${llmKey} agree=${d.key() == llmKey} transcript='${transcript}'")
         }
@@ -421,7 +424,11 @@ class VoiceCommandService implements EventPublisher {
 
     private void recordStage(String stage, String outcome, long startedNanos) {
         if (!meterRegistry) return
+        // Histogram buckets (bounded to the range a voice stage can take) for p50/p90 in Grafana.
         Timer.builder('voice.stage.duration').tag('stage', stage).tag('outcome', outcome)
+                .publishPercentileHistogram()
+                .minimumExpectedValue(Duration.ofMillis(5))
+                .maximumExpectedValue(Duration.ofSeconds(30))
                 .register(meterRegistry).record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS)
     }
 
