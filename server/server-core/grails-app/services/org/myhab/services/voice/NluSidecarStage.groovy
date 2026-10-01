@@ -63,6 +63,19 @@ class NluSidecarStage implements IntentStage {
         }
     }
 
+    /** One decision-log record (with the LLM's label, when there is one) for training. */
+    void postFeedback(Map settings, Map record) {
+        HttpResponse<String> response = VoiceHttp.INSTANCE.post("${base(settings)}/feedback")
+                .connectTimeout(2000)
+                .socketTimeout(2000)
+                .header('content-type', 'application/json')
+                .body(JsonOutput.toJson(record))
+                .asString()
+        if (response.status >= 400) {
+            throw new IllegalStateException("NLU sidecar rejected feedback: HTTP ${response.status}")
+        }
+    }
+
     private static String base(Map settings) {
         (settings.url as String)?.replaceAll('/+$', '')
     }

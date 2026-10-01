@@ -58,6 +58,9 @@ class CfgKey {
         VOICE_NLU_URL('feature.voice.nlu.url'),
         VOICE_NLU_GATE('feature.voice.nlu.gate'),
         VOICE_NLU_TIMEOUT_MS('feature.voice.nlu.timeoutMs'),
+        // Send each command's decisions and the LLM's label to the sidecar, which
+        // keeps them (locally) and learns from them. Default on while the stage is on.
+        VOICE_NLU_FEEDBACK('feature.voice.nlu.feedback'),
         // Second fast-path stage: TypeSafe Jev (cloud). Same mode/gate semantics as
         // the NLU stage. The API key falls back to the JEV_API_KEY env var.
         VOICE_JEV_ENABLED('feature.voice.jev.enabled'),

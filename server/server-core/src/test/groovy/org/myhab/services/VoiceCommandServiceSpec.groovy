@@ -8,6 +8,7 @@ import org.myhab.config.ConfigProvider
 import org.myhab.services.voice.FastDecision
 import org.myhab.services.voice.IntentStage
 import org.myhab.services.voice.LlmTurn
+import org.myhab.services.voice.NluSidecarStage
 import org.myhab.services.voice.ToolCall
 import org.myhab.services.voice.VoiceIntentProvider
 import org.myhab.services.voice.VoiceTools
@@ -518,6 +519,101 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
             scrape.contains('voice_stage_duration_seconds_bucket{outcome="accepted",stage="llm",le=')
             scrape.contains('voice_resolved_total{stage="llm"')
             scrape.contains('voice_shadow_total{accepted="true",agree="true",stage="nlu"')
+    }
+
+    // ------------------------------------------------------------- training feedback
+
+    private NluSidecarStage feedbackNlu(Map<String, Object> extra = [:]) {
+        NluSidecarStage nlu = Mock(NluSidecarStage)
+        service.stages = ['nlu': nlu]
+        service.feedbackExecutor = { Runnable r -> r.run() } as java.util.concurrent.Executor
+        activeNlu(extra)
+        return nlu
+    }
+
+    void "the LLM's single successful tool call is sent as a training label"() {
+        given:
+            NluSidecarStage nlu = feedbackNlu()
+
+        when:
+            service.handleTranscript('make the porch bright', 'en-US', null, 'tester')
+
+        then:
+            1 * nlu.resolve(_, _, _) >> decision(intent: 'control', target: 'Z7', action: 'ON', confidence: 0.3d, catalogHash: 'h1')
+            2 * provider.converse(_, _, _, _, _, _) >>> [
+                toolTurn(VoiceTools.CONTROL_ENTITY, [entityType: 'PERIPHERAL', id: 15, action: 'on']),
+                textTurn('Turned on the terrace light.')
+            ]
+            1 * nlu.postFeedback(_, { Map r ->
+                r.text == 'make the porch bright' && r.resolvedBy == 'llm' && r.labelSource == 'llm' &&
+                r.label == [intent: 'control', target: 'P15', action: 'ON'] &&
+                r.stages == [[stage: 'nlu', key: 'control|Z7|ON', confidence: 0.3d, accepted: false, mode: 'active', catalogHash: 'h1']]
+            })
+    }
+
+    void "no label when the LLM did not settle it with exactly one working call: #why"() {
+        given:
+            NluSidecarStage nlu = feedbackNlu()
+            service.schedulerService.triggerJob(_, _) >> { throw new IllegalStateException('Quartz down') }
+
+        when:
+            service.handleTranscript('something', 'en-US', null, 'tester')
+
+        then:
+            1 * nlu.resolve(_, _, _) >> null
+            _ * provider.converse(_, _, _, _, _, _) >>> turns
+            1 * nlu.postFeedback(_, { it.label == null && it.resolvedBy == 'llm' })
+
+        where:
+            why                  | turns
+            'two calls'          | [new LlmTurn(toolCalls: [new ToolCall(id: 'a', name: VoiceTools.CONTROL_ENTITY, input: [entityType: 'PERIPHERAL', id: 15, action: 'ON']),
+                                                          new ToolCall(id: 'b', name: VoiceTools.RUN_SCENARIO, input: [jobId: 3])]), textTurn('Done.')]
+            'the call failed'    | [toolTurn(VoiceTools.RUN_SCENARIO, [jobId: 3]), textTurn('Sorry.')]
+            'id not in catalog'  | [toolTurn(VoiceTools.CONTROL_ENTITY, [entityType: 'PERIPHERAL', id: 999, action: 'ON']), textTurn('Not found.')]
+            'asked back'         | [textTurn('Which one?')]
+    }
+
+    void "a fast-path decision is logged, never as a label"() {
+        given:
+            NluSidecarStage nlu = feedbackNlu()
+
+        when:
+            service.handleTranscript('turn on the terrace light', 'en-US', null, 'tester')
+
+        then:
+            1 * nlu.resolve(_, _, _) >> decision(intent: 'control', target: 'P15', action: 'ON')
+            0 * provider.converse(_, _, _, _, _, _)
+            1 * nlu.postFeedback(_, { it.resolvedBy == 'nlu' && it.label == null && it.stages[0].accepted })
+    }
+
+    void "an answer to the assistant's question is never a label"() {
+        given:
+            NluSidecarStage nlu = feedbackNlu()
+
+        when:
+            Map first = service.handleTranscript('turn on the light', 'en-US', null, 'tester')
+            service.handleTranscript('the terrace one', 'en-US', first.sessionId, 'tester')
+
+        then:
+            1 * nlu.resolve(_, _, _) >> decision(intent: 'clarify', confidence: 0.9d)
+            3 * provider.converse(_, _, _, _, _, _) >>> [
+                textTurn('Which light?'),
+                toolTurn(VoiceTools.CONTROL_ENTITY, [entityType: 'PERIPHERAL', id: 15, action: 'ON']),
+                textTurn('Turned on the terrace light.')
+            ]
+            2 * nlu.postFeedback(_, { it.label == null })
+    }
+
+    void "no feedback when it is turned off"() {
+        given:
+            NluSidecarStage nlu = feedbackNlu([(CfgKey.VOICE.VOICE_NLU_FEEDBACK.key()): false])
+
+        when:
+            service.handleTranscript('turn on the terrace light', 'en-US', null, 'tester')
+
+        then:
+            1 * nlu.resolve(_, _, _) >> decision(intent: 'control', target: 'P15', action: 'ON')
+            0 * nlu.postFeedback(_, _)
     }
 
     void "a fast-path turn is kept in the history as plain text for the next LLM turn"() {

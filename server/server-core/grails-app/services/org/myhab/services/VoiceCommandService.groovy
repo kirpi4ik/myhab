@@ -38,6 +38,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import java.security.MessageDigest
 import java.time.Duration
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 
 /**
@@ -90,6 +93,13 @@ class VoiceCommandService implements EventPublisher {
     @Autowired(required = false)
     MeterRegistry meterRegistry
 
+    /** Delivers feedback records to the NLU sidecar off the request thread. Replaceable in tests. */
+    Executor feedbackExecutor = Executors.newSingleThreadExecutor({ Runnable r ->
+        Thread t = new Thread(r, 'voice-nlu-feedback')
+        t.daemon = true
+        t
+    } as ThreadFactory)
+
     static final String EVT_SWITCH = 'evt_switch'
     static final String DEFAULT_PROVIDER = 'anthropic'
     static final String DEFAULT_TTS_PROVIDER = 'google'
@@ -136,11 +146,13 @@ class VoiceCommandService implements EventPublisher {
         boolean followUp = awaitingReply(messages)
         messages << [role: 'user', text: transcript]
 
-        List<Map> shadow = []
+        List<Map> trace = []
         if (!followUp) {
-            Map fast = runFastPath(transcript, locale, catalog, username, shadow)
+            Map fast = runFastPath(transcript, locale, catalog, username, trace)
             if (fast) {
-                return completeFast(fast, transcript, locale, sid, messages)
+                Map result = completeFast(fast, transcript, locale, sid, messages)
+                sendFeedback(transcript, locale, result.resolvedBy as String, trace, null)
+                return result
             }
         }
 
@@ -148,6 +160,7 @@ class VoiceCommandService implements EventPublisher {
         boolean stateChanged = false
         String finalText = null
         ToolCall firstToolCall = null
+        List<Map> llmCalls = []
         long llmStarted = System.nanoTime()
 
         try {
@@ -168,6 +181,7 @@ class VoiceCommandService implements EventPublisher {
                 List<Map> toolResults = []
                 turn.toolCalls.each { ToolCall tc ->
                     Map r
+                    boolean failed = false
                     try {
                         r = executeTool(tc, catalog, transcript, username)
                     } catch (Exception ex) {
@@ -176,7 +190,9 @@ class VoiceCommandService implements EventPublisher {
                         // tool_result pairing stays valid for the next turn.
                         log.warn("Voice tool '${tc.name}' failed: ${ex.message}")
                         r = [content: "ERROR: ${ex.message}", stateChange: false]
+                        failed = true
                     }
+                    llmCalls << [call: tc, stateChange: r.stateChange as boolean, failed: failed]
                     if (r.stateChange) stateChanged = true
                     if (r.action) actions << (r.action as String)
                     toolResults << [id: tc.id, name: tc.name, content: r.content]
@@ -190,7 +206,9 @@ class VoiceCommandService implements EventPublisher {
         }
         recordStage('llm', 'accepted', llmStarted)
         countResolved('llm')
-        logShadow(shadow, firstToolCall, transcript)
+        logShadow(trace.findAll { it.mode == 'shadow' }, firstToolCall, transcript)
+        // An answer to the assistant's question only makes sense with the earlier turn: not a training label.
+        sendFeedback(transcript, locale, 'llm', trace, followUp ? null : llmLabel(llmCalls, catalog))
 
         if (!finalText) {
             finalText = stateChanged ? 'Done.' : 'Sorry, I could not complete that.'
@@ -263,10 +281,10 @@ class VoiceCommandService implements EventPublisher {
 
     /**
      * Try the enabled stages in order. Returns [decision, result, label] for the first
-     * decision that was executed, or null to fall through to the LLM. Shadow-mode
-     * decisions are collected into {@code shadow} and never executed.
+     * decision that was executed, or null to fall through to the LLM. Every stage's
+     * decision is recorded in {@code trace}; shadow-mode decisions are never executed.
      */
-    private Map runFastPath(String transcript, String locale, Map catalog, String username, List<Map> shadow) {
+    private Map runFastPath(String transcript, String locale, Map catalog, String username, List<Map> trace) {
         for (String name : STAGE_ORDER) {
             IntentStage stage = stages[name]
             if (!stage || !stageEnabled(name)) continue
@@ -280,9 +298,10 @@ class VoiceCommandService implements EventPublisher {
                 continue
             }
             boolean accepted = decision != null && acceptable(decision, name, catalog)
-            if (stageMode(name) == 'shadow') {
+            String mode = stageMode(name)
+            if (decision) trace << [decision: decision, accepted: accepted, mode: mode]
+            if (mode == 'shadow') {
                 recordStage(name, accepted ? 'shadow-accept' : 'shadow-fallthrough', started)
-                if (decision) shadow << [decision: decision, accepted: accepted]
                 continue
             }
             if (!accepted) {
@@ -402,6 +421,61 @@ class VoiceCommandService implements EventPublisher {
             case VoiceTools.RUN_SCENARIO:   return "scenario|S${tc.input.jobId}"
             case VoiceTools.MOWER_COMMAND:  return "mower|${tc.input.action}"
             default:                        return tc.name
+        }
+    }
+
+    /**
+     * The LLM as teacher: its decision becomes a training label only when it made exactly
+     * one tool call, on a catalog entity, and that call worked. Null otherwise.
+     */
+    private Map llmLabel(List<Map> calls, Map catalog) {
+        if (calls.size() != 1 || calls[0].failed) return null
+        ToolCall tc = calls[0].call as ToolCall
+        boolean ok = calls[0].stateChange as boolean
+        String type = (tc.input.entityType as String)?.toUpperCase()
+        Long id = tc.input.id == null ? null : (tc.input.id as Long)
+        String target = type in ['PERIPHERAL', 'ZONE'] && validateEntity(type, id, catalog) ? "${type[0]}${id}".toString() : null
+        switch (tc.name) {
+            case VoiceTools.CONTROL_ENTITY:
+                return ok && target ? [intent: 'control', target: target, action: (tc.input.action as String)?.toUpperCase()] : null
+            case VoiceTools.QUERY_STATE:
+                return target ? [intent: 'query', target: target] : null
+            case VoiceTools.RUN_SCENARIO:
+                return ok ? [intent: 'scenario', scenario: "S${tc.input.jobId}".toString()] : null
+            case VoiceTools.MOWER_COMMAND:
+                return ok ? [intent: 'mower', mowerAction: (tc.input.action as String)?.toUpperCase()] : null
+            default:
+                return null
+        }
+    }
+
+    /**
+     * Log the command to the NLU sidecar (decision log + training labels), off the request
+     * thread. Only when the NLU stage is enabled and feature.voice.nlu.feedback is not off.
+     */
+    private void sendFeedback(String transcript, String locale, String resolvedBy, List<Map> trace, Map label) {
+        IntentStage stage = stages[NluSidecarStage.NAME]
+        if (!(stage instanceof NluSidecarStage) || !stageEnabled(NluSidecarStage.NAME)
+                || !cfg(Boolean, CfgKey.VOICE.VOICE_NLU_FEEDBACK.key(), true)) return
+        Map record = [
+            text      : transcript,
+            locale    : locale,
+            resolvedBy: resolvedBy,
+            stages    : trace.collect { Map t ->
+                FastDecision d = t.decision as FastDecision
+                [stage: d.stage, key: d.key(), confidence: d.confidence, accepted: t.accepted, mode: t.mode,
+                 catalogHash: d.catalogHash]
+            },
+            label     : label,
+            labelSource: label ? 'llm' : null
+        ]
+        Map settings = stageSettings(NluSidecarStage.NAME)
+        feedbackExecutor.execute {
+            try {
+                (stage as NluSidecarStage).postFeedback(settings, record)
+            } catch (Exception e) {
+                log.debug("Voice NLU feedback not delivered: ${e.message}")
+            }
         }
     }
 
