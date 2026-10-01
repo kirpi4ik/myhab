@@ -1,0 +1,6 @@
+# Exported ONNX models (built into the image) and the local export venv.
+models/
+data/
+.venv-export/
+__pycache__/
+.pytest_cache/

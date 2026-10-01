@@ -50,7 +50,26 @@ class CfgKey {
         VOICE_TTS_PROVIDER('feature.voice.tts.provider'),
         VOICE_TTS_APIKEY('feature.voice.tts.apikey'),
         VOICE_TTS_VOICE_RO('feature.voice.tts.voice.ro'),
-        VOICE_TTS_VOICE_EN('feature.voice.tts.voice.en')
+        VOICE_TTS_VOICE_EN('feature.voice.tts.voice.en'),
+        // Fast path in front of the LLM: the local NLU sidecar (bridges/voice-nlu).
+        // mode = shadow (resolve and log only; the LLM still acts) | active.
+        VOICE_NLU_ENABLED('feature.voice.nlu.enabled'),
+        VOICE_NLU_MODE('feature.voice.nlu.mode'),
+        VOICE_NLU_URL('feature.voice.nlu.url'),
+        VOICE_NLU_GATE('feature.voice.nlu.gate'),
+        VOICE_NLU_TIMEOUT_MS('feature.voice.nlu.timeoutMs'),
+        // Second fast-path stage: TypeSafe Jev (cloud). Same mode/gate semantics as
+        // the NLU stage. The API key falls back to the JEV_API_KEY env var.
+        VOICE_JEV_ENABLED('feature.voice.jev.enabled'),
+        VOICE_JEV_MODE('feature.voice.jev.mode'),
+        VOICE_JEV_GATE('feature.voice.jev.gate'),
+        VOICE_JEV_TIMEOUT_MS('feature.voice.jev.timeoutMs'),
+        VOICE_JEV_MODEL('feature.voice.jev.model'),
+        VOICE_JEV_APIKEY('feature.voice.jev.apikey'),
+        // Intents the fast path may execute (comma-separated), and the stricter
+        // confidence a zone-wide OFF needs before the fast path acts on it.
+        VOICE_FAST_INTENTS('feature.voice.fast.intents'),
+        VOICE_FAST_ZONE_OFF_MIN_CONFIDENCE('feature.voice.fast.zoneOffMinConfidence')
 
         def key
 

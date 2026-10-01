@@ -112,6 +112,16 @@ A standalone, hands-free Android companion (Kotlin + Jetpack Compose, minSdk 30 
 - **Audio routing gotcha:** replies play via the legacy `STREAM_MUSIC` path (not `AudioAttributes`), which mis-routes to the earpiece on some One UI builds — see `voice/ReplyPlayer.kt`.
 - Full details + setup in `client/android/README.md`.
 
+### Voice NLU sidecar (`bridges/voice-nlu/`)
+
+This is a standalone Python image (FastAPI + ONNX Runtime) that serves as the voice assistant's local fast path. `VoiceCommandService` asks it first, then optionally TypeSafe Jev (`JevStage`, `feature.voice.jev.*`), then the LLM tool loop. A stage's decision is executed when it clears that stage's gate; anything else falls through to the next stage.
+
+- The image ships three int8 encoders, selected with `NLU_ENCODER`.
+- Its classifier heads are trained on the catalog that the `voiceNluSync` job sends.
+- It is off by default (`feature.voice.nlu.*`). See `docs/VOICE_ASSISTANT.md` §1.9.
+- Tests: `pytest` in `bridges/voice-nlu`.
+- Evaluation tooling: `tools/voice-eval/`.
+
 ### Key communication patterns
 1. **Device ↔ Server**: MQTT via Spring Integration (`MqttTopicService` routes messages, `MqttPublishGateway` publishes)
 2. **Client ↔ Server**: GraphQL (Apollo Client) for queries/mutations; WebSocket (STOMP) for real-time updates

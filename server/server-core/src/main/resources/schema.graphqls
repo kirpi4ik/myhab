@@ -179,6 +179,8 @@ type VoiceCommandResult {
     awaitingReply: Boolean
     """Human-readable list of actions executed this turn (for UI/audit)."""
     actions: [String]
+    """Which stage resolved the command: a fast-path stage (e.g. nlu) or llm."""
+    resolvedBy: String
     """Base64 MP3 of the spoken reply when server-side TTS is enabled; null otherwise."""
     audioContent: String
     audioMime: String

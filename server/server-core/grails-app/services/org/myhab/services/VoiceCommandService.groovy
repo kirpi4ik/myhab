@@ -6,6 +6,8 @@ import grails.gorm.transactions.Transactional
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
 import org.myhab.config.CfgKey
 import org.myhab.config.ConfigProvider
 import org.myhab.domain.Configuration
@@ -20,14 +22,22 @@ import org.myhab.domain.job.Job
 import org.myhab.domain.job.JobState
 import org.myhab.services.dsl.action.NavimowCommandService
 import org.myhab.services.voice.AnthropicIntentProvider
+import org.myhab.services.voice.FastDecision
 import org.myhab.services.voice.GoogleTtsProvider
+import org.myhab.services.voice.IntentStage
+import org.myhab.services.voice.JevStage
 import org.myhab.services.voice.LlmTurn
+import org.myhab.services.voice.NluSidecarStage
 import org.myhab.services.voice.OpenAiIntentProvider
 import org.myhab.services.voice.ToolCall
 import org.myhab.services.voice.VoiceIntentProvider
+import org.myhab.services.voice.VoiceReplies
 import org.myhab.services.voice.VoiceTools
 import org.myhab.services.voice.VoiceTtsProvider
+import org.springframework.beans.factory.annotation.Autowired
 
+import java.security.MessageDigest
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 /**
@@ -45,6 +55,12 @@ import java.util.concurrent.TimeUnit
  * <p>Tools: {@code control_entity} (PERIPHERAL/ZONE/PORT on/off/toggle, via the
  * generic {@code evt_switch} → UIMessageService path), {@code run_scenario}
  * (SchedulerService.triggerJob), {@code query_state} (read DevicePort state).</p>
+ *
+ * <p>Fast path: before the loop, the enabled {@link IntentStage}s (the local NLU
+ * sidecar, then Jev) are tried in order. A stage's decision is executed through the same
+ * tools, with a templated reply, when it is actionable, clears the stage's gate
+ * and passes the guards; anything else falls through to the LLM. In shadow mode a
+ * stage only logs what it would have done.</p>
  */
 @Slf4j
 class VoiceCommandService implements EventPublisher {
@@ -65,6 +81,15 @@ class VoiceCommandService implements EventPublisher {
         (new GoogleTtsProvider().name()): new GoogleTtsProvider()
     ]
 
+    /** Fast-path stages by name, tried in {@link #STAGE_ORDER}. Replaceable in tests. */
+    Map<String, IntentStage> stages = [
+        (NluSidecarStage.NAME): new NluSidecarStage(),
+        (JevStage.NAME)       : new JevStage()
+    ]
+
+    @Autowired(required = false)
+    MeterRegistry meterRegistry
+
     static final String EVT_SWITCH = 'evt_switch'
     static final String DEFAULT_PROVIDER = 'anthropic'
     static final String DEFAULT_TTS_PROVIDER = 'google'
@@ -74,6 +99,16 @@ class VoiceCommandService implements EventPublisher {
     static final int MAX_ITERATIONS = 6
     static final int MAX_HISTORY = 40
     static final List<String> ACTIONS = ['ON', 'OFF', 'TOGGLE']
+    static final List<String> STAGE_ORDER = [NluSidecarStage.NAME, JevStage.NAME]
+    static final String DEFAULT_FAST_INTENTS = 'control,scenario,mower'
+    static final double DEFAULT_ZONE_OFF_MIN_CONFIDENCE = 0.95d
+    static final Map<String, Map> STAGE_DEFAULTS = [
+        (NluSidecarStage.NAME): [enabled: CfgKey.VOICE.VOICE_NLU_ENABLED, mode: CfgKey.VOICE.VOICE_NLU_MODE,
+                                 // Suggested gate of the sidecar's default encoder (e5-small); 0.9 for minilm.
+                                 gate   : CfgKey.VOICE.VOICE_NLU_GATE, defaultGate: 0.6d],
+        (JevStage.NAME)       : [enabled: CfgKey.VOICE.VOICE_JEV_ENABLED, mode: CfgKey.VOICE.VOICE_JEV_MODE,
+                                 gate   : CfgKey.VOICE.VOICE_JEV_GATE, defaultGate: 0.7d]
+    ]
 
     /**
      * Resolve and execute a transcript within a conversation. Always returns a
@@ -97,11 +132,23 @@ class VoiceCommandService implements EventPublisher {
 
         String sid = sessionId?.trim() ?: UUID.randomUUID().toString()
         List<Map> messages = loadHistory(sid)
+        // An answer to the assistant's own question belongs to that conversation.
+        boolean followUp = awaitingReply(messages)
         messages << [role: 'user', text: transcript]
+
+        List<Map> shadow = []
+        if (!followUp) {
+            Map fast = runFastPath(transcript, locale, catalog, username, shadow)
+            if (fast) {
+                return completeFast(fast, transcript, locale, sid, messages)
+            }
+        }
 
         List<String> actions = []
         boolean stateChanged = false
         String finalText = null
+        ToolCall firstToolCall = null
+        long llmStarted = System.nanoTime()
 
         try {
             for (int i = 0; i < MAX_ITERATIONS; i++) {
@@ -112,6 +159,7 @@ class VoiceCommandService implements EventPublisher {
                              text      : turn.finalText,
                              toolCalls : turn.toolCalls.collect { [id: it.id, name: it.name, input: it.input] }]
                 finalText = turn.finalText ?: finalText
+                firstToolCall = firstToolCall ?: turn.toolCalls?.find()
 
                 if (!turn.toolCalls) {
                     break
@@ -136,9 +184,13 @@ class VoiceCommandService implements EventPublisher {
                 messages << [role: 'tool', toolResults: toolResults]
             }
         } catch (Exception e) {
+            recordStage('llm', 'error', llmStarted)
             log.error("Voice loop failed (provider=${provider.name()}) for transcript='${transcript}'", e)
             return fail("Could not complete the command: ${e.message}", transcript, sid)
         }
+        recordStage('llm', 'accepted', llmStarted)
+        countResolved('llm')
+        logShadow(shadow, firstToolCall, transcript)
 
         if (!finalText) {
             finalText = stateChanged ? 'Done.' : 'Sorry, I could not complete that.'
@@ -147,7 +199,7 @@ class VoiceCommandService implements EventPublisher {
         // question (a clarification) — not after a plain state answer or error.
         boolean awaiting = !stateChanged && (finalText?.trim()?.endsWith('?') ?: false)
         saveHistory(sid, messages)
-        log.info("Voice: '${transcript}' -> actions=${actions} awaitingReply=${awaiting}")
+        log.info("Voice: '${transcript}' -> actions=${actions} awaitingReply=${awaiting} resolvedBy=llm")
 
         Map result = [
             success      : true,
@@ -157,6 +209,7 @@ class VoiceCommandService implements EventPublisher {
             sessionId    : sid,
             awaitingReply: awaiting,
             actions      : actions,
+            resolvedBy   : 'llm',
             audioContent : null,
             audioMime    : null
         ]
@@ -204,6 +257,183 @@ class VoiceCommandService implements EventPublisher {
         Configuration.where { entityType == type && entityId == id && key == ALIAS_KEY }.list()
                 .collectMany { (it.value ?: '').split(',').collect { s -> s.trim() }.findAll { it } }
                 .unique()
+    }
+
+    // ------------------------------------------------------------- fast path
+
+    /**
+     * Try the enabled stages in order. Returns [decision, result, label] for the first
+     * decision that was executed, or null to fall through to the LLM. Shadow-mode
+     * decisions are collected into {@code shadow} and never executed.
+     */
+    private Map runFastPath(String transcript, String locale, Map catalog, String username, List<Map> shadow) {
+        for (String name : STAGE_ORDER) {
+            IntentStage stage = stages[name]
+            if (!stage || !stageEnabled(name)) continue
+            long started = System.nanoTime()
+            FastDecision decision
+            try {
+                decision = stage.resolve(transcript, locale, stageSettings(name) + [catalog: catalog])
+            } catch (Exception e) {
+                recordStage(name, 'error', started)
+                log.warn("Voice stage '${name}' failed, falling through: ${e.message}")
+                continue
+            }
+            boolean accepted = decision != null && acceptable(decision, name, catalog)
+            if (stageMode(name) == 'shadow') {
+                recordStage(name, accepted ? 'shadow-accept' : 'shadow-fallthrough', started)
+                if (decision) shadow << [decision: decision, accepted: accepted]
+                continue
+            }
+            if (!accepted) {
+                recordStage(name, 'fallthrough', started)
+                continue
+            }
+            Map r
+            try {
+                r = executeTool(toToolCall(decision, catalog), catalog, transcript, username)
+            } catch (Exception e) {
+                recordStage(name, 'error', started)
+                log.warn("Voice stage '${name}' decision ${decision.key()} failed to execute, falling through: ${e.message}")
+                continue
+            }
+            if (!r.stateChange) {
+                recordStage(name, 'fallthrough', started)
+                continue
+            }
+            recordStage(name, 'accepted', started)
+            return [decision: decision, result: r, label: fastLabel(decision, catalog)]
+        }
+        return null
+    }
+
+    private boolean acceptable(FastDecision d, String stageName, Map catalog) {
+        if (!(d.intent in fastIntents()) || d.confidence < stageGate(stageName)) return false
+        switch (d.intent) {
+            case 'control':
+                if (!d.target || !(d.action in ACTIONS)) return false
+                // A zone-wide OFF can cut devices the user did not mean (water, network).
+                return !(d.target.startsWith('Z') && d.action == 'OFF' && d.confidence < zoneOffMinConfidence())
+            case 'scenario':
+                return d.scenario != null
+            case 'mower':
+                return d.mowerAction != null && (catalog.mowers as List).size() == 1
+            default:
+                return false
+        }
+    }
+
+    private static ToolCall toToolCall(FastDecision d, Map catalog) {
+        switch (d.intent) {
+            case 'control':
+                return new ToolCall(id: d.stage, name: VoiceTools.CONTROL_ENTITY,
+                        input: [entityType: d.target.startsWith('Z') ? 'ZONE' : 'PERIPHERAL', id: idOf(d.target), action: d.action])
+            case 'scenario':
+                return new ToolCall(id: d.stage, name: VoiceTools.RUN_SCENARIO, input: [jobId: idOf(d.scenario)])
+            default:
+                return new ToolCall(id: d.stage, name: VoiceTools.MOWER_COMMAND,
+                        input: [deviceId: (catalog.mowers as List<Map>)[0].deviceId, action: d.mowerAction])
+        }
+    }
+
+    /** Catalog id from a stage key such as P12 / Z7 / S3; null when malformed (then validation rejects it). */
+    private static Long idOf(String key) {
+        key?.length() > 1 && key.substring(1).isLong() ? key.substring(1) as Long : null
+    }
+
+    private String fastLabel(FastDecision d, Map catalog) {
+        switch (d.intent) {
+            case 'control':  return entityLabel(d.target.startsWith('Z') ? 'ZONE' : 'PERIPHERAL', idOf(d.target), catalog)
+            case 'scenario': return (catalog.scenarios as List<Map>).find { it.jobId == idOf(d.scenario) }?.name
+            default:         return (catalog.mowers as List<Map>)[0]?.name
+        }
+    }
+
+    private Map completeFast(Map fast, String transcript, String locale, String sid, List<Map> messages) {
+        FastDecision d = fast.decision as FastDecision
+        String reply = VoiceReplies.confirm(d, fast.label as String, locale)
+        // A plain text turn (no tool pair) so a later LLM turn has the context.
+        messages << [role: 'assistant', text: reply]
+        saveHistory(sid, messages)
+        countResolved(d.stage)
+        log.info("Voice: '${transcript}' -> actions=[${fast.result.action}] resolvedBy=${d.stage} confidence=${d.confidence}")
+        Map result = [
+            success       : true,
+            error         : null,
+            transcript    : transcript,
+            spokenResponse: reply,
+            sessionId     : sid,
+            awaitingReply : false,
+            actions       : [fast.result.action as String],
+            resolvedBy    : d.stage,
+            audioContent  : null,
+            audioMime     : null
+        ]
+        attachTts(result, reply, locale)
+        return result
+    }
+
+    /** True when the last turn was the assistant asking the user something. */
+    private static boolean awaitingReply(List<Map> history) {
+        Map last = history ? history[-1] : null
+        last?.role == 'assistant' && !last.toolCalls && ((last.text as String)?.trim()?.endsWith('?') ?: false)
+    }
+
+    /** Shadow mode: compare what each stage would have done with the LLM's first tool call. */
+    private void logShadow(List<Map> shadow, ToolCall llmCall, String transcript) {
+        if (!shadow) return
+        String llmKey = llmDecisionKey(llmCall)
+        shadow.each { Map s ->
+            FastDecision d = s.decision as FastDecision
+            meterRegistry?.counter('voice.shadow', 'stage', d.stage, 'accepted', s.accepted.toString(),
+                    'agree', (d.key() == llmKey).toString())?.increment()
+            log.info("Voice shadow: stage=${d.stage} fast=${d.key()} confidence=${d.confidence} accepted=${s.accepted} " +
+                    "llm=${llmKey} agree=${d.key() == llmKey} transcript='${transcript}'")
+        }
+    }
+
+    /** The LLM's first tool call in the stage key form, e.g. control|Z7|OFF; 'none' when it called no tool. */
+    private static String llmDecisionKey(ToolCall tc) {
+        if (!tc) return 'none'
+        def entity = { -> (tc.input.entityType == 'ZONE' ? 'Z' : tc.input.entityType == 'PORT' ? 'PORT' : 'P') + tc.input.id }
+        switch (tc.name) {
+            case VoiceTools.CONTROL_ENTITY: return "control|${entity()}|${tc.input.action}"
+            case VoiceTools.QUERY_STATE:    return "query|${entity()}"
+            case VoiceTools.RUN_SCENARIO:   return "scenario|S${tc.input.jobId}"
+            case VoiceTools.MOWER_COMMAND:  return "mower|${tc.input.action}"
+            default:                        return tc.name
+        }
+    }
+
+    /**
+     * Send the current catalog to the NLU sidecar when its trained heads are for a
+     * different one. Called by NluCatalogSyncJob; the sidecar retrains in the background.
+     */
+    void syncNluCatalog() {
+        if (!stageEnabled(NluSidecarStage.NAME)) return
+        NluSidecarStage nlu = stages[NluSidecarStage.NAME] as NluSidecarStage
+        if (!nlu) return
+        String catalogJson = VoiceTools.catalogJson(buildCatalog())
+        String hash = MessageDigest.getInstance('SHA-256').digest(catalogJson.getBytes('UTF-8')).encodeHex().toString()
+        Map settings = stageSettings(NluSidecarStage.NAME) + [timeoutMs: 5000]
+        Map health = nlu.health(settings)
+        if (health.catalogHash == hash) return
+        nlu.putCatalog(settings, hash, catalogJson)
+        log.info("Voice NLU: sent catalog ${hash.take(12)} (sidecar had ${(health.catalogHash as String)?.take(12)}, encoder ${health.encoder})")
+    }
+
+    private void recordStage(String stage, String outcome, long startedNanos) {
+        if (!meterRegistry) return
+        // Histogram buckets (bounded to the range a voice stage can take) for p50/p90 in Grafana.
+        Timer.builder('voice.stage.duration').tag('stage', stage).tag('outcome', outcome)
+                .publishPercentileHistogram()
+                .minimumExpectedValue(Duration.ofMillis(5))
+                .maximumExpectedValue(Duration.ofSeconds(30))
+                .register(meterRegistry).record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS)
+    }
+
+    private void countResolved(String stage) {
+        meterRegistry?.counter('voice.resolved', 'stage', stage)?.increment()
     }
 
     // ----------------------------------------------------------- tool execution
@@ -330,13 +560,16 @@ class VoiceCommandService implements EventPublisher {
 
     private void attachTts(Map result, String text, String locale) {
         if (!text || !ttsEnabled()) return
+        long started = System.nanoTime()
         try {
             VoiceTtsProvider tts = ttsProviders[ttsProviderName()]
             if (!tts) return
             byte[] mp3 = tts.synthesizeMp3(text, locale ?: 'en-US', ttsVoice(locale), ttsApiKey())
             result.audioContent = Base64.encoder.encodeToString(mp3)
             result.audioMime = 'audio/mpeg'
+            recordStage('tts', 'accepted', started)
         } catch (Exception e) {
+            recordStage('tts', 'error', started)
             log.warn("Voice TTS failed (client will fall back to browser speech): ${e.message}")
         }
     }
@@ -418,9 +651,46 @@ class VoiceCommandService implements EventPublisher {
         cfg(String, (ro ? CfgKey.VOICE.VOICE_TTS_VOICE_RO : CfgKey.VOICE.VOICE_TTS_VOICE_EN).key(), null)
     }
 
+    private boolean stageEnabled(String stage) {
+        cfg(Boolean, (STAGE_DEFAULTS[stage].enabled as CfgKey.VOICE).key(), false)
+    }
+
+    /** 'active' executes decisions; anything else is shadow (resolve and log only). */
+    private String stageMode(String stage) {
+        cfg(String, (STAGE_DEFAULTS[stage].mode as CfgKey.VOICE).key(), 'shadow')?.trim()?.toLowerCase() == 'active' ? 'active' : 'shadow'
+    }
+
+    private double stageGate(String stage) {
+        cfg(Double, (STAGE_DEFAULTS[stage].gate as CfgKey.VOICE).key(), STAGE_DEFAULTS[stage].defaultGate as Double)
+    }
+
+    private Map stageSettings(String stage) {
+        switch (stage) {
+            case NluSidecarStage.NAME:
+                return [url      : cfg(String, CfgKey.VOICE.VOICE_NLU_URL.key(), 'http://localhost:8090'),
+                        timeoutMs: cfg(Integer, CfgKey.VOICE.VOICE_NLU_TIMEOUT_MS.key(), 300)]
+            case JevStage.NAME:
+                String key = cfg(String, CfgKey.VOICE.VOICE_JEV_APIKEY.key(), null)?.trim()
+                return [apiKey   : key ?: System.getenv('JEV_API_KEY'),
+                        model    : cfg(String, CfgKey.VOICE.VOICE_JEV_MODEL.key(), 'jev-latest'),
+                        timeoutMs: cfg(Integer, CfgKey.VOICE.VOICE_JEV_TIMEOUT_MS.key(), 1500)]
+            default:
+                return [:]
+        }
+    }
+
+    private List<String> fastIntents() {
+        cfg(String, CfgKey.VOICE.VOICE_FAST_INTENTS.key(), DEFAULT_FAST_INTENTS)
+                .split(',').collect { it.trim().toLowerCase() }.findAll { it }
+    }
+
+    private double zoneOffMinConfidence() {
+        cfg(Double, CfgKey.VOICE.VOICE_FAST_ZONE_OFF_MIN_CONFIDENCE.key(), DEFAULT_ZONE_OFF_MIN_CONFIDENCE)
+    }
+
     private static Map fail(String error, String transcript, String sessionId) {
         [success      : false, error: error, transcript: transcript, spokenResponse: null,
-         sessionId    : sessionId, awaitingReply: false, actions: [], audioContent: null, audioMime: null]
+         sessionId    : sessionId, awaitingReply: false, actions: [], resolvedBy: null, audioContent: null, audioMime: null]
     }
 
     /** Null-safe, typed read from the git-backed config with a fallback default. */

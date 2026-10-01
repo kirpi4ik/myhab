@@ -133,6 +133,12 @@ quartz:
     configSync:
       enabled: true
       interval: 60  # seconds
+
+    # Voice NLU sidecar (bridges/voice-nlu): resend the catalog when it changes so
+    # the sidecar retrains. OFF by default; also needs feature.voice.nlu.enabled.
+    voiceNluSync:
+      enabled: false
+      interval: 300  # seconds
     
     # Port value sync trigger (MQTT read)
     portValueSyncTrigger:

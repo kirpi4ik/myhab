@@ -24,6 +24,7 @@ extend it with new commands.
   - [1.6 Conversation state](#16-conversation-state)
   - [1.7 Text-to-speech](#17-text-to-speech)
   - [1.8 Key design decisions](#18-key-design-decisions)
+  - [1.9 Fast path: local NLU before the LLM](#19-fast-path-local-nlu-before-the-llm)
 - [2. Configuration](#2-configuration)
   - [2.1 Config keys](#21-config-keys)
   - [2.2 LLM provider & API key](#22-llm-provider--api-key)
@@ -212,6 +213,56 @@ The spoken reply can be rendered by a neural voice instead of the browser's robo
 
 ---
 
+### 1.9 Fast path: local NLU before the LLM
+
+Most commands are a single "turn X on/off" or "run scenario Y". These don't need an LLM round trip. When `feature.voice.nlu.enabled` is set, `handleTranscript` first asks the local **`voice-nlu` sidecar** ([`bridges/voice-nlu`](../bridges/voice-nlu/README.md)).
+
+**How the sidecar decides:**
+
+- A frozen multilingual sentence encoder (int8 ONNX, CPU) with classifier heads that are trained on this installation's catalog and aliases.
+- An EN/RO/RU verb list for on/off/toggle.
+- It answers in tens of milliseconds, without the cloud.
+
+**When myHAB executes the decision itself:**
+
+- the intent is listed in `feature.voice.fast.intents` (by default `control`, `scenario` or `mower`)
+- its confidence clears `feature.voice.nlu.gate`
+- for a zone-wide OFF, its confidence also clears `zoneOffMinConfidence`
+- the target id is in the catalog
+
+The decision goes through the **same tool code** as the LLM's calls (`evt_switch`, `triggerJob`, `NavimowCommandService`), and a templated reply in the client's language is spoken (`VoiceReplies`). The result carries `resolvedBy: "nlu"`.
+
+**Everything else falls through, unchanged, to the LLM loop:**
+
+- queries, clarifications and off-topic requests
+- low confidence
+- a sidecar error, or a timeout (`timeoutMs`)
+- any answer to a question the assistant just asked
+
+The fast path's turn is stored in the session as plain user and assistant text, so a following LLM turn has the context.
+
+**Second stage: Jev.** When `feature.voice.jev.enabled` is set, a command the NLU stage didn't act on goes next to [TypeSafe Jev](https://typesafe.ai) (`JevStage`), a cloud model that answers typed choice questions with calibrated probabilities. One request asks five questions in parallel:
+
+- the intent
+- the target, with every catalog peripheral and zone as an option
+- the on/off action, described with EN/RO/RU verb examples
+- the scenario
+- the mower command
+
+Its decision goes through the same gate, guards and execution, with `resolvedBy: "jev"`. Jev usually answers in 0.4–1 s; a timeout or error falls through to the LLM.
+
+**Shadow mode** (the default `mode=shadow` for each stage) resolves and logs only. Each command logs a `Voice shadow: … fast=… llm=… agree=…` line comparing the decision with the LLM's first tool call. Use it to check agreement before switching to `active`.
+
+**Metrics** are on `/actuator/prometheus`:
+
+- `voice_stage_duration_seconds{stage=nlu|jev|llm|tts, outcome=accepted|fallthrough|error|shadow-accept|shadow-fallthrough}`: a histogram (5 ms – 30 s buckets) for per-stage p50/p90
+- `voice_resolved_total{stage}`: which stage answered each command
+- `voice_shadow_total{stage, accepted, agree}`: shadow-mode decisions, whether the stage would have acted, and whether it matched the LLM's first tool call
+
+An installation can graph these in Grafana. The share answered per stage, the latency, and the shadow agreement are what decide when to switch a stage from `shadow` to `active`.
+
+The measurements behind this design are in [`VOICE_PERFORMANCE_OPTIONS.md`](VOICE_PERFORMANCE_OPTIONS.md).
+
 ## 2. Configuration
 
 All configuration lives in the **git-backed `ConfigProvider`** (your trusted internal
@@ -235,6 +286,21 @@ defaults apply when a key is absent.
 | `feature.voice.tts.voice.ro` | – (Google default) | Optional ro-RO voice name, e.g. `ro-RO-Wavenet-A`. |
 | `feature.voice.tts.voice.en` | – (Google default) | Optional en-US voice name. |
 | `feature.voice.alias` | – | Per-entity alias list (comma-separated), stored on a PERIPHERAL/ZONE via the `Configuration` sidecar — set it from the entity's edit screen, not as a global key. |
+| `feature.voice.nlu.enabled` | `false` | Try the local NLU sidecar before the LLM ([1.9](#19-fast-path-local-nlu-before-the-llm)). |
+| `feature.voice.nlu.mode` | `shadow` | `shadow`: resolve and log only, the LLM still acts. `active`: execute decisions that clear the gate. |
+| `feature.voice.nlu.url` | `http://localhost:8090` | Base URL of the `voice-nlu` sidecar. |
+| `feature.voice.nlu.gate` | `0.6` | Minimum decision confidence to act. Match the sidecar's `suggestedGate` (`/health`): `0.6` for the e5 encoders (the default), `0.9` for `minilm`. |
+| `feature.voice.nlu.timeoutMs` | `300` | Per-request timeout; on timeout the command falls through to the LLM. |
+| `feature.voice.jev.enabled` | `false` | Ask TypeSafe Jev after the NLU sidecar, before the LLM. |
+| `feature.voice.jev.mode` | `shadow` | `shadow` or `active`, as for the NLU stage. |
+| `feature.voice.jev.gate` | `0.7` | Minimum Jev decision confidence to act. |
+| `feature.voice.jev.timeoutMs` | `1500` | Per-request timeout; on timeout the command falls through to the LLM. |
+| `feature.voice.jev.model` | `jev-latest` | Jev model id. |
+| `feature.voice.jev.apikey` | – (env fallback) | Jev API key; falls back to `JEV_API_KEY`. |
+| `feature.voice.fast.intents` | `control,scenario,mower` | Intents the fast path may execute (comma-separated). |
+| `feature.voice.fast.zoneOffMinConfidence` | `0.95` | Stricter confidence for a zone-wide OFF, which can cut devices the user did not mean. |
+
+The catalog reaches the sidecar through the `voiceNluSync` Quartz job (`quartz.jobs.voiceNluSync.enabled`, off by default; interval 300 s). It sends the catalog whenever its hash differs from the one the sidecar was trained on.
 
 ### 2.2 LLM provider & API key
 
