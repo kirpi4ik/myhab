@@ -39,7 +39,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup node
-        uses: actions/setup-node@v6.2.0
+        uses: actions/setup-node@v7.0.0
         with:
           # Keep in sync with the node version pinned in client/web-vue3/build.gradle
           node-version: 22.13.0
