@@ -122,6 +122,8 @@ python -m venv .venv
 # ablation flags: --heads v1 (old heads), --no-augment, --no-lexicon, --balanced
 .\Summarize-Results.ps1 -File results\<run>.jsonl             # same scoring as the Jev/Claude runners
 .\Simulate-Cascade.ps1 -Bert results\<bert>.jsonl -Jev results\<jev>.jsonl -Claude results\<claude>.jsonl
+$env:VOICE_ALIASES_FILE = '<installation repo>\voice-nlu\aliases.json'   # alias overlay; installation data
+.\Apply-VoiceAliases.ps1 -BaseUrl https://myhab.example.com -WhatIf   # write the aliases to a server (merge; -Replace, -Only P184*)
 ```
 
 Each run writes to `results/` (git-ignored):
@@ -225,7 +227,7 @@ Jev is about 3.4× faster. In production, Claude also needs a second call to phr
 In the third run, both models used a catalog with voice aliases on most entities:
 
 - **Coverage:** 43 of the 75 peripherals and 25 of the 26 zones got natural EN/RO/RU names, 179 aliases in total. They were written like the ones an operator would type into `feature.voice.alias`, for every main device and room, not only the ones that had failed.
-- **Where they were added:** through an eval-only overlay (`tools/voice-eval/data/aliases.json`, merged at export), not in the database.
+- **Where they were added:** through an alias overlay file merged at export (`Export-VoiceCatalog.ps1 -AliasesFile`, or `VOICE_ALIASES_FILE`), not in the database. The file names the installation's devices, so it is kept in the installation's repo, and `Apply-VoiceAliases.ps1` writes it to the server.
 - **Prompt size:** the catalog grew from about 5.5k to 6.8k Jev input tokens.
 - **Caveat:** whoever wrote the aliases knew the test phrases, so the gain is an upper bound. Confirm it on commands that were not in the test set.
 
