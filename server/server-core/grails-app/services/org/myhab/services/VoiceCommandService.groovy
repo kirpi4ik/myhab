@@ -237,17 +237,21 @@ class VoiceCommandService implements EventPublisher {
 
     // ---------------------------------------------------------------- catalog
 
-    /** Build the grounding catalog: controllable peripherals, zones, scenarios. */
+    /**
+     * Build the grounding catalog: controllable peripherals, zones, scenarios. Every list is
+     * sorted, so an unchanged installation always hashes the same (the NLU sidecar retrains
+     * on each new hash).
+     */
     Map buildCatalog() {
         [
             peripherals: DevicePeripheral.list().findAll { it.connectedTo }.collect { p ->
                 [id      : p.id,
                  name    : p.name,
                  category: p.category?.name,
-                 zones   : (p.zones*.name ?: []) as List,
+                 zones   : ((p.zones*.name ?: []) as List).sort(),
                  aliases : aliasesFor(EntityType.PERIPHERAL, p.id)]
             }.sort { it.id },
-            zones      : Zone.list().collect { z -> [zone: z, names: zonePeripheralNames(z)] }
+            zones      : Zone.list().collect { z -> [zone: z, names: zonePeripheralNames(z).sort()] }
                 .findAll { !it.names.isEmpty() }
                 .collect { entry ->
                     [id      : entry.zone.id,
@@ -272,7 +276,7 @@ class VoiceCommandService implements EventPublisher {
     }
 
     private List<String> aliasesFor(EntityType type, Long id) {
-        Configuration.where { entityType == type && entityId == id && key == ALIAS_KEY }.list()
+        Configuration.where { entityType == type && entityId == id && key == ALIAS_KEY }.list(sort: 'id')
                 .collectMany { (it.value ?: '').split(',').collect { s -> s.trim() }.findAll { it } }
                 .unique()
     }
