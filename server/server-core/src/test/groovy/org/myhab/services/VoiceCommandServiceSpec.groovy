@@ -497,7 +497,7 @@ class VoiceCommandServiceSpec extends Specification implements ServiceUnitTest<V
 
     void "metrics: stage timings with histogram buckets, resolutions per stage, shadow agreement"() {
         given:
-            def registry = new io.micrometer.prometheus.PrometheusMeterRegistry(io.micrometer.prometheus.PrometheusConfig.DEFAULT)
+            def registry = new io.micrometer.prometheusmetrics.PrometheusMeterRegistry(io.micrometer.prometheusmetrics.PrometheusConfig.DEFAULT)
             service.meterRegistry = registry
             configure([(CfgKey.VOICE.VOICE_NLU_ENABLED.key()): true])  // shadow
 

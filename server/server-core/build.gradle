@@ -26,7 +26,7 @@ dependencies {
     implementation project(':server-rules')
     implementation project(':server-config')
 
-    implementation 'io.micrometer:micrometer-registry-prometheus:1.11.4'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     implementation "org.springframework.boot:spring-boot-starter-logging"
     implementation "org.springframework.boot:spring-boot-autoconfigure"

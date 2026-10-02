@@ -152,6 +152,18 @@
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FULL_STACKTRACE"/>
     </logger>
+    <!--
+        One line per voice command naming the stage that resolved it (resolvedBy=nlu|jev|llm),
+        shadow-mode decisions, catalog pushes to the NLU sidecar and stage fall-through warnings.
+    -->
+    <logger name="org.myhab.services.VoiceCommandService" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
+    <logger name="org.myhab.services.voice" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FULL_STACKTRACE"/>
+    </logger>
     <logger name="org.telegram" level="OFF" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FULL_STACKTRACE"/>
