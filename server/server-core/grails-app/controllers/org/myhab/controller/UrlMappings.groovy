@@ -17,7 +17,7 @@ class UrlMappings {
         post "/api/public/share/$token/action"(controller: "sharedWidget", action: "executeAction")
 
         // Public demo. Anonymous because the banner and the login page both render
-        // before anyone signs in; DemoController 404s these off a demo deployment.
+        // before anyone signs in. Off the demo, status reports enabled: false and reset 404s.
         get "/api/public/demo"(controller: "demo", action: "status")
         post "/api/public/demo/reset"(controller: "demo", action: "reset")
         

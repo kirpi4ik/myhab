@@ -51,9 +51,12 @@ def load_config(path):
     if not devices:
         raise ValueError("config has no devices")
     for dev in devices:
-        for key in ("code", "id", "key", "ip", "version"):
+        for key in ("code", "id", "key", "version"):
             if not dev.get(key):
                 raise ValueError(f"device entry missing '{key}': {dev.get('code', dev)}")
+        # 'auto' (or no ip) finds the device by id from its LAN UDP broadcasts, so a
+        # DHCP address change (e.g. after a power cut) doesn't strand it.
+        dev["ip"] = str(dev.get("ip") or "auto")
         if not CODE_RE.match(dev["code"]):
             raise ValueError(f"device code must be [A-Za-z0-9_]+ (no hyphens): {dev['code']!r}")
         dps = dev.get("dps") or []
@@ -92,7 +95,9 @@ class DeviceWorker(threading.Thread):
         self.publish = publish  # (topic, payload, retain) -> None
         self.commands = queue.Queue()
         self.stop_event = threading.Event()
-        self.online = False
+        # None = not yet known, so the first _set_online() always publishes and a
+        # stale retained "online" from before a restart gets overwritten.
+        self.online = None
         # dp index (as str) -> dps config entry
         self.dp_map = {str(dp["dp"]): dp for dp in dev_cfg["dps"]}
         # Tuya cameras/doorbells don't answer DP_QUERY; they only push event DPs.
@@ -154,15 +159,17 @@ class DeviceWorker(threading.Thread):
         while not self.stop_event.is_set():
             device = None
             try:
-                device = tinytuya.Device(self.cfg["id"], self.cfg["ip"], self.cfg["key"],
+                address = "Auto" if self.cfg["ip"].lower() == "auto" else self.cfg["ip"]
+                device = tinytuya.Device(self.cfg["id"], address, self.cfg["key"],
                                          version=float(self.cfg["version"]))
                 device.set_socketPersistent(True)
 
                 status = device.status()
                 if status and "dps" in status:
                     self._publish_dps(status["dps"])
-                elif not self.has_event_dps:
-                    # A pollable device that won't answer is genuinely unreachable.
+                elif not self.has_event_dps or (status and status.get("Error")):
+                    # A pollable device that won't answer, or any device we couldn't
+                    # reach at all, is offline.
                     raise ConnectionError(f"initial status failed: {status}")
                 else:
                     # Event-only device (camera/doorbell): the persistent socket is

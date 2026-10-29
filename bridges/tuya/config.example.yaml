@@ -22,7 +22,7 @@ devices:
   - code: water_main_valve
     id: "REPLACE_TUYA_DEVICE_ID"     # from: python -m tinytuya wizard
     key: "REPLACE_LOCAL_KEY"         # from: python -m tinytuya wizard
-    ip: "127.0.0.1"                  # give the device a static DHCP lease
+    ip: "127.0.0.1"                  # static DHCP lease, or "auto": found by id from LAN broadcasts
     version: "3.3"                   # confirm with: python -m tinytuya scan
     dps:
       # Confirm the DP list with `python -m tinytuya scan`; DP 1 is the

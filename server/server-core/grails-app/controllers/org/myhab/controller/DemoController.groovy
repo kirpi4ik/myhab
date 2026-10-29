@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * Anonymous by necessity - the banner and the login page both render before anyone has
  * signed in. Every action first checks {@link DemoService#isDemo()}, so on a normal
- * deployment these are 404s rather than a new attack surface.
+ * deployment status only reports {@code enabled: false} and reset is a 404.
  */
 @Slf4j
 @Secured(['permitAll'])
@@ -31,13 +31,13 @@ class DemoController {
     /**
      * GET /api/public/demo
      *
-     * Drives the demo banner and the credentials shown on the login page. Returns 404
-     * off the demo so the client can treat "is this the demo?" as a single question.
+     * Drives the demo banner and the credentials shown on the login page. Off the demo
+     * it answers {@code enabled: false} with a 200, because every page load asks and a
+     * 404 would show up as a console error on every normal deployment.
      */
     def status() {
         if (!demoService.isDemo()) {
-            response.status = 404
-            render([error: 'Not a demo deployment'] as JSON)
+            render([enabled: false] as JSON)
             return
         }
 
