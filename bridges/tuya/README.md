@@ -60,7 +60,10 @@ You only need its **device id + local key**, held by Tuya's cloud:
 3. `python -m tinytuya scan` — finds the device's LAN IP, protocol version and
    the live DP table (confirm which DP is the open/close boolean; DP 1 on most
    valves).
-4. Give the device a **static DHCP lease** so the configured IP stays valid.
+4. Either give the device a **static DHCP lease**, or set `ip: auto` and the
+   bridge finds it by device id from its LAN UDP broadcasts (ports 6666/6667) on
+   every reconnect — so a DHCP change, e.g. after a power cut, doesn't strand it.
+   Discovery needs the bridge on the devices' L2 segment (host or macvlan network).
 
 Caveats:
 - **Re-pairing regenerates the local key.** If the device is removed/re-added

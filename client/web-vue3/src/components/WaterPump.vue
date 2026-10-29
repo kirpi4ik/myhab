@@ -247,7 +247,7 @@ export default defineComponent({
     const handleSetTimeout = (timeoutValue) => {
       setConfigValue({
         key: 'key.on.timeout',
-        value: timeoutValue,
+        value: String(timeoutValue),
         entityId: asset.value.id,
         entityType: 'PERIPHERAL'
       });

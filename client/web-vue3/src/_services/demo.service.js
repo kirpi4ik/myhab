@@ -4,7 +4,7 @@ import { Utils } from '@/_helpers';
 /**
  * Client-side view of the public demo deployment.
  *
- * `GET /api/public/demo` is anonymous and returns 404 on a normal deployment, so a
+ * `GET /api/public/demo` is anonymous and returns `{enabled: false}` on a normal deployment, so a
  * single call answers "is this the demo?" before anyone has logged in. Every demo
  * affordance in the UI keys off `state.enabled`, which means a production build is
  * visually unchanged without needing a build-time flag.
@@ -34,9 +34,9 @@ async function load() {
 			});
 			if (response.ok) {
 				const body = await response.json();
-				state.value = { ...body, loaded: true };
+				state.value = { ...state.value, ...body, loaded: true };
 			} else {
-				// 404 is the normal answer everywhere except the demo.
+				// Older servers answer 404 off the demo.
 				state.value = { ...state.value, enabled: false, loaded: true };
 			}
 		} catch (err) {

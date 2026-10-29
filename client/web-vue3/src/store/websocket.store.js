@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { Utils } from '@/_helpers';
 import { Client } from '@stomp/stompjs';
 import { authzService } from '@/_services';
-import SockJS from 'sockjs-client';
 
 // Reconnect if the tab was hidden longer than this — defeats the "zombie"
 // socket that mobile browsers leave half-open after the device sleeps, where
@@ -55,8 +54,14 @@ export const useWebSocketStore = defineStore('websocket', {
 			const store = this;
 			// Built fresh on every (re)connect attempt so reconnects always use the
 			// latest access_token (see the JWT refresh flow in authentication.service).
-			const buildUrl = () =>
-				Utils.host() + '/stomp?access_token=' + (authzService.currentUserValue?.access_token ?? '');
+			// /stomp/websocket is the raw WebSocket transport of the server's SockJS
+			// endpoint. Utils.host() is empty in production, so resolve against the page.
+			const buildUrl = () => {
+				const url = new URL(Utils.host() + '/stomp/websocket', window.location.href);
+				url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+				url.searchParams.set('access_token', authzService.currentUserValue?.access_token ?? '');
+				return url.toString();
+			};
 
 			const message_callback = (message) => {
 				if (message.headers['content-type'] === 'application/octet-stream') {
@@ -75,7 +80,7 @@ export const useWebSocketStore = defineStore('websocket', {
 				reconnectDelay: 5000,
 				heartbeatIncoming: 10000,
 				heartbeatOutgoing: 10000,
-				webSocketFactory: () => new SockJS(buildUrl()),
+				webSocketFactory: () => new WebSocket(buildUrl()),
 				onConnect: () => {
 					store.setConnection('ONLINE');
 					store.wsStompClient.subscribe('/topic/events', message_callback, {});

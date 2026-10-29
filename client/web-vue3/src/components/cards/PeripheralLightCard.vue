@@ -444,7 +444,7 @@ export default defineComponent({
     const handleSetTimeout = (timeoutValue) => {
       setTimeoutMutation({
         key: 'key.on.timeout',
-        value: timeoutValue,
+        value: String(timeoutValue),
         entityId: asset.value.id,
         entityType: 'PERIPHERAL'
       });
