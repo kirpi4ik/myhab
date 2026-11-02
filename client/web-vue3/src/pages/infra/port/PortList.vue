@@ -223,7 +223,8 @@ export default defineComponent({
         'INACTIVE': 'grey',
         'ERROR': 'negative',
         'WARNING': 'warning',
-        'UNKNOW': 'grey-5'
+        'UNKNOW': 'grey-5',
+        'BROKEN': 'negative'
       };
       return stateColors[state] || 'grey';
     };

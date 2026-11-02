@@ -276,6 +276,7 @@
 			"ip_address": "IP address",
 			"ip_not_set": "— not set —",
 			"admin_ui": "Admin UI",
+			"port_broken": "Broken",
 			"auth_accounts": "Authentication Accounts",
 			"no_accounts": "No accounts configured.",
 			"no_username": "— no username —",
