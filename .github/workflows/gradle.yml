@@ -87,7 +87,7 @@ jobs:
             echo "dockertag=$VERSION-${GITHUB_SHA::6}" >> $GITHUB_OUTPUT
           fi
       - name: Build docker and push
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: build/docker
           file: build/docker/Dockerfile
@@ -100,7 +100,7 @@ jobs:
         # `latest` is the tag production tracks (Watchtower auto-deploys it within
         # minutes), so only a master release moves it — never a PR or beta build.
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: build/docker
           file: build/docker/Dockerfile
@@ -114,7 +114,7 @@ jobs:
         # auto-deploys it), so only a beta-branch push moves it — never a PR or master.
         # The immutable `<version>-<sha>` tag above still identifies the exact build.
         if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: build/docker
           file: build/docker/Dockerfile
@@ -129,7 +129,7 @@ jobs:
       - name: Build demo simulator jar
         run: ./gradlew :demo-simulator:fatJar
       - name: Build demo assets image and push
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: .
           file: demo/Dockerfile
@@ -142,7 +142,7 @@ jobs:
       # Dockerfile runs pytest in a build stage, so pushing it implies its
       # tests passed. Operators pin the tag next to the main image.
       - name: Build tuya bridge image and push
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: bridges/tuya
           file: bridges/tuya/Dockerfile
@@ -153,7 +153,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Build tuya bridge image and push latest
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: bridges/tuya
           file: bridges/tuya/Dockerfile
@@ -164,7 +164,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Build tuya bridge image and push beta
         if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: bridges/tuya
           file: bridges/tuya/Dockerfile
@@ -177,7 +177,7 @@ jobs:
       # encoders to int8 ONNX and runs pytest in build stages, so pushing it
       # implies its tests passed. Operators pin the tag next to the main image.
       - name: Build voice NLU image and push
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: bridges/voice-nlu
           file: bridges/voice-nlu/Dockerfile
@@ -188,7 +188,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Build voice NLU image and push latest
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: bridges/voice-nlu
           file: bridges/voice-nlu/Dockerfile
@@ -199,7 +199,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Build voice NLU image and push beta
         if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: bridges/voice-nlu
           file: bridges/voice-nlu/Dockerfile
