@@ -269,7 +269,8 @@
           bordered
         >
           <template v-slot:body="props">
-            <q-tr :props="props" @click="onRowClick(props.row)" style="cursor: pointer;">
+            <q-tr :props="props" @click="onRowClick(props.row)" style="cursor: pointer;"
+                  :class="{'bg-red-1': props.row.state === 'BROKEN'}">
               <q-td key="id" style="max-width: 50px">
                 {{ props.row.id }}
               </q-td>
@@ -278,6 +279,8 @@
               </q-td>
               <q-td key="name">
                 {{ props.row.name || '-' }}
+                <q-badge v-if="props.row.state === 'BROKEN'" color="negative" icon="mdi-alert-octagon"
+                         :label="$t('device.view.port_broken')" class="q-ml-sm"/>
               </q-td>
               <q-td key="description">
                 {{ props.row.description ? (props.row.description.length > 50 ? props.row.description.substring(0, 50) + '...' : props.row.description) : '-' }}

@@ -1467,6 +1467,7 @@ enum PortState {
   CONFIGURED
   ACTIVE
   INACTIVE
+  BROKEN
 }
 
 enum PortType {

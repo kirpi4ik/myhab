@@ -276,6 +276,7 @@
       "ip_address": "Adresă IP",
       "ip_not_set": "— nesetat —",
       "admin_ui": "Interfață administrare",
+      "port_broken": "Defect",
       "auth_accounts": "Conturi de autentificare",
       "no_accounts": "Niciun cont configurat.",
       "no_username": "— fără utilizator —",

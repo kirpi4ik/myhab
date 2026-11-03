@@ -48,6 +48,11 @@
           <q-item-label class="q-mt-md">
             <q-btn icon="mdi-eye" :to="'/admin/devices/'+viewItem.device.id+'/view'" 
                    size="sm" label="View Device" color="blue-6" outline/>
+            <q-btn v-if="controllerUrl" icon="mdi-open-in-new" type="a" :href="controllerUrl"
+                   target="_blank" rel="noopener noreferrer"
+                   size="sm" label="Open on controller" color="indigo-7" outline class="q-ml-sm">
+              <q-tooltip>{{ controllerUrl }}</q-tooltip>
+            </q-btn>
           </q-item-label>
         </q-item-section>
       </q-expansion-item>
@@ -331,6 +336,7 @@ import {format} from 'date-fns';
 
 import EventLogger from 'components/EventLogger.vue';
 import MqttRawMonitor from 'components/MqttRawMonitor.vue';
+import {useDevicePortAdminUrl} from '@/composables';
 
 export default defineComponent({
   name: 'PortView',
@@ -343,6 +349,7 @@ export default defineComponent({
     const $q = useQuasar();
     const viewItem = ref();
     const loading = ref(false);
+    const {adminUrl: controllerUrl} = useDevicePortAdminUrl(viewItem);
     const portValues = ref([]);
     const portValuesLoading = ref(false);
     const {client} = useApolloClient();
@@ -406,7 +413,8 @@ export default defineComponent({
         'INACTIVE': 'grey',
         'ERROR': 'negative',
         'WARNING': 'warning',
-        'UNKNOW': 'grey-5'
+        'UNKNOW': 'grey-5',
+        'BROKEN': 'negative'
       };
       return stateColors[state] || 'grey';
     };
@@ -472,6 +480,7 @@ export default defineComponent({
       uri,
       fetchData,
       viewItem,
+      controllerUrl,
       loading,
       portValues,
       portValuesLoading,

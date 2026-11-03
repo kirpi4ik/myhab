@@ -57,6 +57,16 @@ export const PORT_GET_BY_ID = gql`
         code
         name
         description
+        model
+        networkAddress {
+          ip
+          port
+        }
+        authAccounts {
+          username
+          password
+          isDefault
+        }
       }
       peripherals {
         id

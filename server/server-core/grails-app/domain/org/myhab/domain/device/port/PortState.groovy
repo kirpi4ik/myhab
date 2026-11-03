@@ -7,7 +7,8 @@ enum PortState {
   UNKNOW(0),
   CONFIGURED(1),
   ACTIVE(2),
-  INACTIVE(3)
+  INACTIVE(3),
+  BROKEN(4)
   int value;
 
   PortState(int value) {

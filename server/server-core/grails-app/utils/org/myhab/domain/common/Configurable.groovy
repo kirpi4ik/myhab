@@ -34,7 +34,5 @@ trait Configurable<T extends BaseEntity> {
         } else return null
     }
 
-    abstract Long getId()
-
     abstract EntityType getEntityType()
 }
